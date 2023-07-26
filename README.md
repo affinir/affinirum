@@ -3,18 +3,18 @@ Service to compile and evaluate math expressions.
 
 Compact recursive descent expression parser, and evaluation service 
 for closed-form analytic expressions.
-Sentence supports boolean expressions, regular algebraic expressions, 
+Service supports boolean expressions, regular algebraic expressions, 
 numeric and string functions and comparsions.
 
 ## Why
 
 * Parse once, execute multiple times
-* Function arguments type checking
+* Function argument type checking
 * Efficient expression evaluation
 * Fully encapsulated logic is easy to integrate into the project
 * Boolean and arithmetic operators supported
 * Numeric and string comparision operators supported
-* Variadic functions and operators supported
+* Variadic functions supported
 * Standard math functions included
 * Easy to add custom functions or constants
 * All operators support literal equivalent
