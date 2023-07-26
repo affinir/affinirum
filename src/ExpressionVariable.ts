@@ -1,4 +1,4 @@
-export class ExprVariable {
+export class ExpressionVariable {
 
 	constructor(
 		protected _name: string,

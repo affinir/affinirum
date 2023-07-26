@@ -1,0 +1,30 @@
+{
+	"compileOnSave": false,
+	"compilerOptions": {
+		"baseUrl": ".",
+		"declaration": true,
+		"lib": [
+			"es2020",
+			"dom"
+		],
+		"module": "ES2020",
+		"moduleResolution": "node",
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+		"outDir": "./dst",
+		"sourceMap": false,
+		"strict": true,
+		"stripInternal": true,
+		"target": "es2020",
+		"typeRoots": [
+			"node_modules/@types"
+		]
+	},
+	"include": [
+		"src/**/*"
+	],
+	"exclude": [
+		"dst",
+		"node_modules"
+	]
+}
