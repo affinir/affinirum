@@ -30,16 +30,16 @@ Multiplication (\*, "mul"), Division (/, "div"), Percent (%, "pct").
 Greater than (>, "gt"), Less than (<, "lt"),
 Greater than or equal to (>=, "ge"), Less than or equal to (<=, "le"),
 #### String comparisions
-Like - case insensitive comparision (\~, "like"), unlike - case insensitive comparision (!\~, "unlike"),
+Like [case insensitive comparision] (\~, "like"), Unlike [case insensitive comparision] (!\~, "unlike"),
 Begin of (\~\*, "beginof"), End of (\*\~, "endof"), Part of (\*\*, "partof").
 #### Generic comparisions
 Equal to (=, "eq"), Not equal to (!=, "ne").
 #### Numeric functions
-pow, rt, sq, sqrt, abs, round, ceil, floor, log, exp, min, max
+pow, rt, sq, sqrt, abs, round, ceil, floor, log, exp, min, max.
 #### String functions
-Length ("len"), Substring ("substr").
+len, substr.
 #### Numeric constants
-e, pi
+e, pi.
 
 The expression parsing is performed using the following grammar:
 

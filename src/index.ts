@@ -47,6 +47,11 @@ export class ExpressionService {
 	protected readonly _expr: string;
 	protected readonly _root: ExpressionNode;
 
+	/**
+		Creates compiled expression.
+		@param expr Math expression to compile.
+		@param config Optional constants and functions to add for compilation.
+	*/
 	constructor( expr: string, config?: {
 		constants?: {
 			name: string,
