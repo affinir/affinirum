@@ -1,7 +1,7 @@
 import { ExpressionVariable } from './ExpressionVariable';
 import { ExpressionFunction, orFunc, andFunc, notFunc, gtFunc, ltFunc, geFunc, leFunc, eqFunc, neFunc, likeFunc, unlikeFunc, beginofFunc, endofFunc, partofFunc,
 	addFunc, subFunc, negFunc, mulFunc, divFunc, remFunc, modFunc, pctFunc, expFunc, logFunc, powFunc, rtFunc, sqFunc, sqrtFunc,
-	absFunc, ceilFunc, floorFunc, roundFunc, maxFunc, minFunc, lenFunc, substrFunc } from './ExpressionFunction';
+	absFunc, ceilFunc, floorFunc, roundFunc, maxFunc, minFunc, lenFunc, trimFunc, atFunc, substrFunc, concatFunc } from './ExpressionFunction';
 import { ExpressionState } from './ExpressionState';
 import { ExpressionNode } from './ExpressionNode';
 
@@ -26,6 +26,9 @@ const mulOper = mulFunc.clone();
 const divOper = divFunc.clone();
 const pctOper = pctFunc.clone();
 const powOper = powFunc.clone();
+const lenOper = lenFunc.clone();
+const atOper = atFunc.clone();
+const concatOper = concatFunc.clone();
 
 export class ExpressionService {
 
@@ -37,8 +40,8 @@ export class ExpressionService {
 		[ 'add', addFunc ], [ 'sub', subFunc ], [ 'neg', negFunc ],
 		[ 'mul', mulFunc ], [ 'div', divFunc ], [ 'rem', remFunc ], [ 'mod', modFunc ], [ 'pct', pctFunc ],
 		[ 'exp', expFunc ], [ 'log', logFunc ], [ 'pow', powFunc ], [ 'rt', rtFunc ], [ 'sq', sqFunc ], [ 'sqrt', sqrtFunc ],
-		[ 'abs', absFunc ], [ 'ceil', ceilFunc ], [ 'floor', floorFunc ], [ 'round', roundFunc ],
-		[ 'max', maxFunc ], [ 'min', minFunc ], [ 'len', lenFunc ], [ 'substr', substrFunc ],
+		[ 'abs', absFunc ], [ 'ceil', ceilFunc ], [ 'floor', floorFunc ], [ 'round', roundFunc ], [ 'max', maxFunc ], [ 'min', minFunc ],
+		[ 'len', lenFunc ], [ 'trim', trimFunc ], [ 'at', atFunc ], [ 'substr', substrFunc ], [ 'concat', concatFunc ],
 	] );
 	protected _consts = new Map<string, boolean | number | string>( [
 		[ 'true', true ], [ 'false', false ],
@@ -108,6 +111,7 @@ export class ExpressionService {
 				}
 				case '=': switch ( this._expr.charAt( state.end ) ) {
 					case '*': state.advance(); return state.set( beginofOper );
+					case '=': state.advance();
 					default: return state.set( eqOper );
 				}
 				case '>': switch ( this._expr.charAt( state.end ) ) {
@@ -129,6 +133,9 @@ export class ExpressionService {
 				case '/': return state.set( divOper );
 				case '%': return state.set( pctOper );
 				case '^': return state.set( powOper );
+				case '$': return state.set( lenOper );
+				case '@': return state.set( atOper );
+				case '#': return state.set( concatOper )
 				default:
 					if ( ExpressionService.alpha( c ) ) {
 						while ( ExpressionService.alphanumeric( this._expr.charAt( state.end ) ) ) {
@@ -202,7 +209,7 @@ export class ExpressionService {
 
 	protected summator( state: ExpressionState ): ExpressionNode {
 		let node = this.product( state );
-		while ( state.func === addOper || state.func === subOper ) {
+		while ( state.func === concatOper || state.func === addOper || state.func === subOper ) {
 			node = new ExpressionNode( state.pos, state.func, [ node, this.product( this.next( state ) ) ] );
 		}
 		return node;
@@ -210,7 +217,7 @@ export class ExpressionService {
 
 	protected product( state: ExpressionState ): ExpressionNode {
 		let node = this.factor( state );
-		while ( state.func === mulOper || state.func === divOper || state.func === pctOper ) {
+		while ( state.func === atOper || state.func === mulOper || state.func === divOper || state.func === pctOper ) {
 			node = new ExpressionNode( state.pos, state.func, [ node, this.factor( this.next( state ) ) ] );
 		}
 		return node;
@@ -227,6 +234,13 @@ export class ExpressionService {
 		let node = this.atom( state );
 		while ( state.func === powOper ) {
 			node = new ExpressionNode( state.pos, state.func, [ node, this.atom( this.next( state ) ) ] );
+		}
+		if ( state.func === lenOper ) {
+			node = new ExpressionNode( state.pos, state.func, [ node ] );
+			this.next( state );
+			if ( state.func === lenOper ) {
+				throw new Error( `unexpected operator` );
+			}
 		}
 		if ( neg ) {
 			node = new ExpressionNode( pos, negOper, [ node ] );
@@ -254,6 +268,7 @@ export class ExpressionService {
 				}
 				throw new Error( `missing closing parenthesis` );
 			}
+			throw new Error( `unexpected operator or missing opening parenthesis` );
 		}
 		else if ( state.isVariable ) {
 			const variable = state.variable;
@@ -276,7 +291,7 @@ export class ExpressionService {
 		throw new Error( `unknown state ${ JSON.stringify( state ) }` );
 	}
 
-	protected static alpha = ( c: string ) => ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) || ( c === '_' ) || ( c === '$' );
+	protected static alpha = ( c: string ) => ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) || ( c === '_' );
 	protected static numeric = ( c: string ) => ( c >= '0' && c <= '9' ) || ( c === '.' );
 	protected static alphanumeric = ( c: string ) => ( ExpressionService.alpha( c ) || ExpressionService.numeric( c ) );
 	protected static quotation = ( c: string ) => ( c === '\'' || c === '\"' || c === '\`' );

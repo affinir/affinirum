@@ -29,11 +29,11 @@ export class ExpressionFunction {
 }
 
 export const orFunc = new ExpressionFunction(
-	( value1: boolean, value2: boolean ) => value1 || value2,
+	( ...args: boolean[] ) => args.some( v => v ),
 	[ 'boolean', 'boolean' ], 'boolean'
 );
 export const andFunc = new ExpressionFunction(
-	( value1: boolean, value2: boolean ) => value1 && value2,
+	( ...args: boolean[] ) => args.every( v => v ),
 	[ 'boolean', 'boolean' ], 'boolean'
 );
 export const notFunc = new ExpressionFunction(
@@ -113,7 +113,7 @@ export const modFunc = new ExpressionFunction(
 	[ 'number', 'number' ], 'number'
 );
 export const pctFunc = new ExpressionFunction(
-	( value: number, div: number ) => Math.round( 100 * value / div ),
+	( value: number, pct: number ) => Math.round( value * pct / 100 ),
 	[ 'number', 'number' ], 'number'
 );
 export const expFunc = new ExpressionFunction(
@@ -168,7 +168,19 @@ export const lenFunc = new ExpressionFunction(
 	( value: string ) => value.length,
 	[ 'string' ], 'number'
 );
+export const trimFunc = new ExpressionFunction(
+	( value: string ) => value.trim(),
+	[ 'string' ], 'string'
+);
+export const atFunc = new ExpressionFunction(
+	( value: string, pos: number ) => value.charAt( pos ),
+	[ 'string', 'number' ], 'string'
+);
 export const substrFunc = new ExpressionFunction(
 	( value: string, ...args: number[] ) => value.substring( args[ 0 ], args[ 1 ] ),
 	[ 'string', 'number' ], 'string'
+);
+export const concatFunc = new ExpressionFunction(
+	( value: string, ...args: string[] ) => value.concat( ...args ),
+	[ 'string', 'string' ], 'string'
 );
