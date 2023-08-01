@@ -9,7 +9,7 @@ console.log( `testExpressionService started...` );
 	[ '"0"', [ { result: '0' } ] ],
 	[ '"my long string"$ + 100', [ { result: 114 } ] ],
 	[ 'abc$ * 10 - 5', [ { abc: 'abc', result: 25 } ] ],
-	[ 'a@1', [ { a: 'abc', result: 'b' } ] ],
+	[ '(a@1 # `def`)$^2', [ { a: 'abc', result: 16 } ] ],
 	[ '"0"#"1"#`2`', [ { result: '012' } ] ],
 	[ 'a$ % 50', [ { a: 'abcd', result: 2 } ] ],
 	[ 'trim(a)$ = 6', [ { a: '  abcdef  ', result: true } ] ],

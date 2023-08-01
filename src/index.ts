@@ -72,7 +72,7 @@ export class ExpressionService {
 		config?.functions?.forEach( f => this._funcs.set( f.name, new ExpressionFunction( f.func, f.argTypes, f.retType ) ) );
 		const state = new ExpressionState();
 		try {
-			this._root = this.disjunctor( this.next( state ) );
+			this._root = this.disjunction( this.next( state ) );
 		}
 		catch ( err ) {
 			throw new Error( `parser failed at position ${ state.pos }: ${ this._expr.substring( state.pos ) }\n${ ( err as Error ).message }` );
@@ -171,23 +171,23 @@ export class ExpressionService {
 		return state;
 	}
 
-	protected disjunctor( state: ExpressionState ): ExpressionNode {
-		let node = this.conjunctor( state );
+	protected disjunction( state: ExpressionState ): ExpressionNode {
+		let node = this.conjunction( state );
 		while ( state.func === orOper ) {
-			node = new ExpressionNode( state.pos, state.func, [ node, this.conjunctor( this.next( state ) ) ] );
+			node = new ExpressionNode( state.pos, state.func, [ node, this.conjunction( this.next( state ) ) ] );
 		}
 		return node;
 	}
 
-	protected conjunctor( state: ExpressionState ): ExpressionNode {
-		let node = this.comparator( state );
+	protected conjunction( state: ExpressionState ): ExpressionNode {
+		let node = this.comparison( state );
 		while ( state.func === andOper ) {
-			node = new ExpressionNode( state.pos, state.func, [ node, this.comparator( this.next( state ) ) ] );
+			node = new ExpressionNode( state.pos, state.func, [ node, this.comparison( this.next( state ) ) ] );
 		}
 		return node;
 	}
 
-	protected comparator( state: ExpressionState ): ExpressionNode {
+	protected comparison( state: ExpressionState ): ExpressionNode {
 		let not = false;
 		let pos = -1;
 		while ( state.func === notOper ) {
@@ -195,11 +195,11 @@ export class ExpressionService {
 			pos = state.pos;
 			this.next( state );
 		}
-		let node = this.summator( state );
+		let node = this.aggregate( state );
 		while ( state.func === gtOper || state.func === ltOper || state.func === geOper || state.func === leOper ||
 			state.func === eqOper || state.func === neOper || state.func === likeOper || state.func === unlikeOper ||
 			state.func === beginofOper || state.func === endofOper || state.func === partofOper ) {
-			node = new ExpressionNode( state.pos, state.func, [ node, this.summator( this.next( state ) ) ] );
+			node = new ExpressionNode( state.pos, state.func, [ node, this.aggregate( this.next( state ) ) ] );
 		}
 		if ( not ) {
 			node = new ExpressionNode( pos, notOper, [ node ] );
@@ -207,7 +207,7 @@ export class ExpressionService {
 		return node;
 	}
 
-	protected summator( state: ExpressionState ): ExpressionNode {
+	protected aggregate( state: ExpressionState ): ExpressionNode {
 		let node = this.product( state );
 		while ( state.func === concatOper || state.func === addOper || state.func === subOper ) {
 			node = new ExpressionNode( state.pos, state.func, [ node, this.product( this.next( state ) ) ] );
@@ -231,8 +231,19 @@ export class ExpressionService {
 			pos = state.pos;
 			this.next( state );
 		}
-		let node = this.atom( state );
+		let node = this.term( state );
 		while ( state.func === powOper ) {
+			node = new ExpressionNode( state.pos, state.func, [ node, this.term( this.next( state ) ) ] );
+		}
+		if ( neg ) {
+			node = new ExpressionNode( pos, negOper, [ node ] );
+		}
+		return node;
+	}
+
+	protected term( state: ExpressionState ): ExpressionNode {
+		let node = this.atom( state );
+		while ( state.func === atOper ) {
 			node = new ExpressionNode( state.pos, state.func, [ node, this.atom( this.next( state ) ) ] );
 		}
 		if ( state.func === lenOper ) {
@@ -242,13 +253,10 @@ export class ExpressionService {
 				throw new Error( `unexpected operator` );
 			}
 		}
-		if ( neg ) {
-			node = new ExpressionNode( pos, negOper, [ node ] );
-		}
 		return node;
 	}
 
-	protected atom( state: ExpressionState ) : ExpressionNode {
+	protected atom( state: ExpressionState ): ExpressionNode {
 		const pos = state.pos;
 		if ( state.isFunc ) {
 			const func = state.func;
@@ -256,7 +264,7 @@ export class ExpressionService {
 			this.next( state );
 			if ( state.isOpen ) {
 				do {
-					subs.push( this.disjunctor( this.next( state ) ) );
+					subs.push( this.disjunction( this.next( state ) ) );
 				}
 				while ( state.isSeparator );
 				if ( state.isClose ) {
@@ -281,7 +289,7 @@ export class ExpressionService {
 			return new ExpressionNode( pos, value );
 		}
 		else if ( state.isOpen ) {
-			const node = this.disjunctor( this.next( state ) );
+			const node = this.disjunction( this.next( state ) );
 			if ( state.isClose ) {
 				this.next( state );
 				return node;

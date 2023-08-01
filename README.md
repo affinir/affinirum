@@ -77,13 +77,14 @@ Target: ES2020 [browser or NodeJS].
 ### Grammar
 The expression parsing is performed using the following grammar:
 
-	<disjunctor> = {<disjunctor>"|"}<conjunctor>
-	<conjunctor> = {<conjunctor>"&"}<comparator>
-	<comparator> = {"!"}{<comparator>(">"|">="|"<"|"<="|"="|"=="|"!="|"~"|"!~"|"=*"|"*="|"**")}<summator>
-	<summator> = {<summator>("#"|"+"|"-")}<product>
-	<product> = {<product>("@"|"*"|"/"|"%")}<factor>
-	<factor> = {"-"}{<factor>"^"}<atom>{"$"}
-	<atom> = <boolean>|<number>|<string>|<variable>|<function>"("<disjunctor>{","<disjunctor>}")"|"("<disjunctor>")"
+	<disjunction> = {<disjunction>"|"}<conjunction>
+	<conjunction> = {<conjunction>"&"}<comparison>
+	<comparison> = {"!"}{<comparison>(">"|">="|"<"|"<="|"="|"=="|"!="|"~"|"!~"|"=*"|"*="|"**")}<aggregate>
+	<aggregate> = {<aggregate>("#"|"+"|"-")}<product>
+	<product> = {<product>("*"|"/"|"%")}<factor>
+	<factor> = {"-"}{<factor>"^"}<term>
+	<term> = {<term>"@"}<atom>{"$"}
+	<atom> = <boolean>|<number>|<string>|<variable>|<function>"("<disjunction>{","<disjunction>}")"|"("<disjunction>")"
 
 Whitespace characters are ignored.
 
