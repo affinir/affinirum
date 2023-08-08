@@ -9,19 +9,22 @@ export class ExpressionNode {
 		protected _subnodes: ExpressionNode[] | undefined = undefined,
 	) {}
 
-	evaluate( vars: Record<string, boolean | number | string> ): boolean | number | string {
+	evaluate( variables: Record<string, boolean | number | string> ): boolean | number | string {
 		if ( this._obj instanceof ExpressionFunction ) {
-			return this._obj.func( ...this._subnodes!.map( node => node.evaluate( vars ) ) );
+			return this._obj.func( ...this._subnodes!.map( node => node.evaluate( variables ) ) );
 		}
 		if ( this._obj instanceof ExpressionVariable ) {
-			const value = vars[ this._obj.name ];
-			if ( value === undefined ) {
-				throw new ReferenceError( `undefined variable ${ this._obj.name }` );
+			const value = variables[ this._obj.name ];
+			if ( value == null ) {
+				throw new ReferenceError( `undefined variable ${ this._obj.name } at postion ${ this._pos }` );
 			}
 			else {
-				const type = ( typeof value ) as 'boolean' | 'number' | 'string';
+				const type = typeof value;
+				if ( type !== 'boolean' && type !== 'number' && type !== 'string' ) {
+					throw new TypeError( `unsupported type ${ type } for variable ${ this._obj.name } at postion ${ this._pos }` );
+				}
 				if ( this._obj.type && this._obj.type !== type ) {
-					throw new TypeError( `type mismatch for variable ${ this._obj.name }: expected ${ this._obj.type } not ${ type } ` );
+					throw new TypeError( `unexpected type ${ type } for ${ this._obj.type } variable ${ this._obj.name } at postion ${ this._pos }` );
 				}
 			}
 			return value;
@@ -34,7 +37,7 @@ export class ExpressionNode {
 			const func = this._obj;
 			const subs = this._subnodes!;
 			let value = true;
-			for ( let i = 0; i < subs.length && value; ++i ) {
+			for ( let i = 0; i < subs.length; ++i ) {
 				const sub = subs[ i ];
 				const pos = sub.compile();
 				if ( pos !== undefined ) {
@@ -51,7 +54,7 @@ export class ExpressionNode {
 					if ( type && sub._obj.type && sub._obj.type !== type ) {
 						return pos;
 					}
-					else if ( !sub._obj.type ) {
+					else if ( sub._obj.type == null ) {
 						sub._obj.type = type;
 					}
 					value = false;

@@ -47,13 +47,14 @@ export class ExpressionService {
 		[ 'true', true ], [ 'false', false ],
 		[ 'nan', Number.NaN ], [ 'e', 2.718281828459045 ], [ 'pi', 3.141592653589793 ],
 	] );
+	protected _vars = new Map<string, ExpressionVariable>();
 	protected readonly _expr: string;
 	protected readonly _root: ExpressionNode;
 
 	/**
-		Creates compiled expression.
+		Creates compiled expression. Any parsed token not recognized as a constant or a function will be compiled as a variable.
 		@param expr Math expression to compile.
-		@param config Optional constants and functions to add for compilation.
+		@param config Optional constants and functions to add for the compilation.
 	*/
 	constructor( expr: string, config?: {
 		constants?: {
@@ -84,8 +85,20 @@ export class ExpressionService {
 	}
 
 	/**
-		Evaluates compiled expression with provided variable values.
-		@param variables Record object with variable values set.
+		Returns record with compiled variable names and expected types.
+		@returns Record with variable names and types.
+	*/
+	variables(): Record<string, 'boolean' | 'number' | 'string' | undefined> {
+		const variables: Record<string, 'boolean' | 'number' | 'string' | undefined> = {};
+		for( const [ name, variable ] of this._vars ) {
+			variables[ name ] = variable.type;
+		}
+		return variables;
+	}
+
+	/**
+		Evaluates compiled expression using provided variable values.
+		@param variables Record with variable names and values.
 		@returns Calculated value.
 	*/
 	evaluate( variables: Record<string, boolean | number | string> ): boolean | number | string {
@@ -135,7 +148,7 @@ export class ExpressionService {
 				case '^': return state.set( powOper );
 				case '$': return state.set( lenOper );
 				case '@': return state.set( atOper );
-				case '#': return state.set( concatOper )
+				case '#': return state.set( concatOper );
 				default:
 					if ( ExpressionService.alpha( c ) ) {
 						while ( ExpressionService.alphanumeric( this._expr.charAt( state.end ) ) ) {
@@ -150,7 +163,12 @@ export class ExpressionService {
 						if ( value !== undefined ) {
 							return state.set( value );
 						}
-						return state.set( new ExpressionVariable( token ) );
+						let variable = this._vars.get( token );
+						if ( variable === undefined ) {
+							variable = new ExpressionVariable( token );
+							this._vars.set( token, variable );
+						}
+						return state.set( variable );
 					}
 					else if ( ExpressionService.numeric( c ) ) {
 						while ( ExpressionService.numeric( this._expr.charAt( state.end ) ) ) {
