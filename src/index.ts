@@ -43,11 +43,11 @@ export class ExpressionService {
 		[ 'abs', absFunc ], [ 'ceil', ceilFunc ], [ 'floor', floorFunc ], [ 'round', roundFunc ], [ 'max', maxFunc ], [ 'min', minFunc ],
 		[ 'len', lenFunc ], [ 'trim', trimFunc ], [ 'at', atFunc ], [ 'substr', substrFunc ], [ 'concat', concatFunc ],
 	] );
+	protected _varis = new Map<string, ExpressionVariable>();
 	protected _consts = new Map<string, boolean | number | string>( [
 		[ 'true', true ], [ 'false', false ],
 		[ 'nan', Number.NaN ], [ 'e', 2.718281828459045 ], [ 'pi', 3.141592653589793 ],
 	] );
-	protected _vars = new Map<string, ExpressionVariable>();
 	protected readonly _expr: string;
 	protected readonly _root: ExpressionNode;
 
@@ -57,31 +57,40 @@ export class ExpressionService {
 		@param config Optional constants and functions to add for the compilation.
 	*/
 	constructor( expr: string, config?: {
-		constants?: {
-			name: string,
-			value: boolean | number | string
-		}[],
 		functions?: {
 			name: string,
 			func:( ...values: any[] ) => boolean | number | string,
 			argTypes: ( 'boolean' | 'number' | 'string' | undefined )[],
 			retType: 'boolean' | 'number' | 'string'
 		}[]
+		constants?: {
+			name: string,
+			value: boolean | number | string
+		}[],
 	} ) {
 		this._expr = expr;
-		config?.constants?.forEach( c => this._consts.set( c.name, c.value ) );
 		config?.functions?.forEach( f => this._funcs.set( f.name, new ExpressionFunction( f.func, f.argTypes, f.retType ) ) );
+		config?.constants?.forEach( c => this._consts.set( c.name, c.value ) );
 		const state = new ExpressionState();
 		try {
 			this._root = this.disjunction( this.next( state ) );
 		}
 		catch ( err ) {
-			throw new Error( `parser failed at position ${ state.pos }: ${ this._expr.substring( state.pos ) }\n${ ( err as Error ).message }` );
+			throw new Error( `compilation error on ${ ( err as Error ).message } at position ${ state.pos }:\n` +
+				`${ this._expr.substring( state.pos ) }` );
 		}
-		const pos = this._root.compile();
-		if ( pos ) {
-			throw new Error( `compiler failed at position ${ pos }: ${ this._expr.substring( pos ) }` );
+		const errnode = this._root.compile();
+		if ( errnode ) {
+			throw new TypeError( `compilation error on unexpected type ${ errnode.type } at position ${ errnode.pos }:\n` +
+				`${ this._expr.substring( errnode.pos ) }` );
 		}
+	}
+
+	/**
+		Returns compiled expression return value type.
+	*/
+	get type(): 'boolean' | 'number' | 'string' | undefined {
+		return this._root.type;
 	}
 
 	/**
@@ -90,7 +99,7 @@ export class ExpressionService {
 	*/
 	variables(): Record<string, 'boolean' | 'number' | 'string' | undefined> {
 		const variables: Record<string, 'boolean' | 'number' | 'string' | undefined> = {};
-		for( const [ name, variable ] of this._vars ) {
+		for ( const [ name, variable ] of this._varis ) {
 			variables[ name ] = variable.type;
 		}
 		return variables;
@@ -102,7 +111,16 @@ export class ExpressionService {
 		@returns Calculated value.
 	*/
 	evaluate( variables: Record<string, boolean | number | string> ): boolean | number | string {
-		return this._root.evaluate( variables );
+		for ( const [ name, vari ] of this._varis ) {
+			if ( variables[ name ] == null ) {
+				throw new Error( `evaluation error on undefined variable ${ name }` );
+			}
+			if ( vari.type != null && vari.type !== typeof variables[ name ] ) {
+				throw new TypeError( `evaluation error on unexpected type ${ typeof variables[ name ] } for ${ vari.type } variable ${ name }` );
+			}
+			vari.value = variables[ name ];
+		}
+		return this._root.evaluate();
 	}
 
 	protected next( state: ExpressionState ): ExpressionState {
@@ -124,7 +142,7 @@ export class ExpressionService {
 				}
 				case '=': switch ( this._expr.charAt( state.end ) ) {
 					case '*': state.advance(); return state.set( beginofOper );
-					case '=': state.advance();
+					case '=': state.advance(); return state.set( eqOper );
 					default: return state.set( eqOper );
 				}
 				case '>': switch ( this._expr.charAt( state.end ) ) {
@@ -156,19 +174,20 @@ export class ExpressionService {
 						}
 						const token = this._expr.substring( state.pos, state.end );
 						const func = this._funcs.get( token );
-						if ( func !== undefined ) {
+						if ( func != null ) {
 							return state.set( func );
 						}
+						const vari = this._varis.get( token );
+						if ( vari != null ) {
+							return state.set( vari );
+						}
 						const value = this._consts.get( token );
-						if ( value !== undefined ) {
+						if ( value != null ) {
 							return state.set( value );
 						}
-						let variable = this._vars.get( token );
-						if ( variable === undefined ) {
-							variable = new ExpressionVariable( token );
-							this._vars.set( token, variable );
-						}
-						return state.set( variable );
+						const nvari = new ExpressionVariable();
+						this._varis.set( token, nvari );
+						return state.set( nvari );
 					}
 					else if ( ExpressionService.numeric( c ) ) {
 						while ( ExpressionService.numeric( this._expr.charAt( state.end ) ) ) {
@@ -183,7 +202,7 @@ export class ExpressionService {
 						}
 						return state.set( this._expr.substring( pos, state.advance() ) );
 					}
-					throw new Error();
+					throw new Error( `unknown symbol ${ c }` );
 			}
 		}
 		return state;

@@ -5,69 +5,61 @@ export class ExpressionNode {
 
 	constructor(
 		protected _pos: number,
-		protected _obj: boolean | number | string | ExpressionVariable | ExpressionFunction,
+		protected _obj: ExpressionFunction | ExpressionVariable | boolean | number | string,
 		protected _subnodes: ExpressionNode[] | undefined = undefined,
 	) {}
 
-	evaluate( variables: Record<string, boolean | number | string> ): boolean | number | string {
-		if ( this._obj instanceof ExpressionFunction ) {
-			return this._obj.func( ...this._subnodes!.map( node => node.evaluate( variables ) ) );
-		}
-		if ( this._obj instanceof ExpressionVariable ) {
-			const value = variables[ this._obj.name ];
-			if ( value == null ) {
-				throw new ReferenceError( `undefined variable ${ this._obj.name } at postion ${ this._pos }` );
-			}
-			else {
-				const type = typeof value;
-				if ( type !== 'boolean' && type !== 'number' && type !== 'string' ) {
-					throw new TypeError( `unsupported type ${ type } for variable ${ this._obj.name } at postion ${ this._pos }` );
-				}
-				if ( this._obj.type && this._obj.type !== type ) {
-					throw new TypeError( `unexpected type ${ type } for ${ this._obj.type } variable ${ this._obj.name } at postion ${ this._pos }` );
-				}
-			}
-			return value;
-		}
-		return this._obj;
+	get pos(): number {
+		return this._pos;
 	}
 
-	compile(): number | undefined {
+	get type(): 'boolean' | 'number' | 'string' | undefined {
+		return this._obj instanceof ExpressionFunction || this._obj instanceof ExpressionVariable ?
+			this._obj.type :
+			typeof this._obj as 'boolean' | 'number' | 'string';
+	}
+
+	compile(): ExpressionNode | undefined {
 		if ( this._obj instanceof ExpressionFunction ) {
 			const func = this._obj;
 			const subs = this._subnodes!;
-			let value = true;
+			let constant = true;
 			for ( let i = 0; i < subs.length; ++i ) {
 				const sub = subs[ i ];
-				const pos = sub.compile();
-				if ( pos !== undefined ) {
-					return pos;
+				const errnode = sub.compile();
+				if ( errnode != null ) {
+					return errnode;
 				}
 				const type = func.getArgType( i );
-				if ( sub._obj instanceof ExpressionFunction ) {
-					if ( type && type !== sub._obj.type ) {
-						return pos;
+				if ( type != null ) {
+					if ( sub.type != null ) {
+						if ( sub.type !== type ) {
+							return sub;
+						}
 					}
-					value = false;
+					else {
+						( sub._obj as ExpressionVariable ).type = type;
+					}
 				}
-				else if ( sub._obj instanceof ExpressionVariable ) {
-					if ( type && sub._obj.type && sub._obj.type !== type ) {
-						return pos;
-					}
-					else if ( sub._obj.type == null ) {
-						sub._obj.type = type;
-					}
-					value = false;
-				}
-				else if ( type && type !== typeof sub._obj ) {
-					return pos;
+				if ( sub._obj instanceof ExpressionFunction || sub._obj instanceof ExpressionVariable ) {
+					constant = false;
 				}
 			}
-			if ( value ) {
+			if ( constant ) {
 				this._obj = func.func( ...subs.map( node => node._obj ) );
 			}
 		}
-		return undefined;
+		return;
+	}
+
+	evaluate(): boolean | number | string {
+		if ( this._obj instanceof ExpressionFunction ) {
+			return this._obj.func( ...this._subnodes!.map( node => node.evaluate() ) );
+		}
+		if ( this._obj instanceof ExpressionVariable ) {
+			return this._obj.value!;
+		}
+		return this._obj;
 	}
 
 }
