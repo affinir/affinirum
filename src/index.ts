@@ -1,9 +1,9 @@
-import { ExpressionVariable } from './ExpressionVariable';
+import { ExpressionVariable } from './ExpressionVariable.js';
 import { ExpressionFunction, orFunc, andFunc, notFunc, gtFunc, ltFunc, geFunc, leFunc, eqFunc, neFunc, likeFunc, unlikeFunc, beginofFunc, endofFunc, partofFunc,
 	addFunc, subFunc, negFunc, mulFunc, divFunc, remFunc, modFunc, pctFunc, expFunc, logFunc, powFunc, rtFunc, sqFunc, sqrtFunc,
-	absFunc, ceilFunc, floorFunc, roundFunc, maxFunc, minFunc, lenFunc, trimFunc, atFunc, substrFunc, concatFunc } from './ExpressionFunction';
-import { ExpressionState } from './ExpressionState';
-import { ExpressionNode } from './ExpressionNode';
+	absFunc, ceilFunc, floorFunc, roundFunc, maxFunc, minFunc, lenFunc, trimFunc, atFunc, substrFunc, concatFunc } from './ExpressionFunction.js';
+import { ExpressionState } from './ExpressionState.js';
+import { ExpressionNode } from './ExpressionNode.js';
 
 const orOper = orFunc.clone();
 const andOper = andFunc.clone();

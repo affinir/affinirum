@@ -1,5 +1,5 @@
-import { ExpressionFunction } from './ExpressionFunction';
-import { ExpressionVariable } from './ExpressionVariable';
+import { ExpressionFunction } from './ExpressionFunction.js';
+import { ExpressionVariable } from './ExpressionVariable.js';
 
 export class ExpressionNode {
 

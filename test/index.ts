@@ -1,4 +1,4 @@
-import { ExpressionService } from '../src';
+import { ExpressionService } from '../src/index.js';
 
 let passed = 0, failed = 0;
 console.log( `testExpressionService started...` );
