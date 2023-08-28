@@ -1,17 +1,22 @@
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
+import { ExpressionConstant } from './ExpressionConstant.js';
 
-const openSymbol = Symbol();
-const closeSymbol = Symbol();
+const bracketsOpenSymbol = Symbol();
+const bracketsCloseSymbol = Symbol();
+const parenthesesOpenSymbol = Symbol();
+const parenthesesCloseSymbol = Symbol();
 const separatorSymbol = Symbol();
+const specifierSymbol = Symbol();
+const endSymbol = Symbol();
 
 export class ExpressionState {
 
-	protected _obj: ExpressionFunction | ExpressionVariable | boolean | number | string | symbol | undefined;
+	protected _obj: ExpressionFunction | ExpressionVariable | ExpressionConstant | symbol | undefined;
 	protected _pos = 0;
-	protected _end = 0;
+	protected _next = 0;
 
-	get isFunc(): boolean {
+	get isFunction(): boolean {
 		return this._obj instanceof ExpressionFunction;
 	}
 
@@ -19,20 +24,36 @@ export class ExpressionState {
 		return this._obj instanceof ExpressionVariable;
 	}
 
-	get isValue(): boolean {
-		return typeof this._obj === 'boolean' || typeof this._obj === 'number' || typeof this._obj === 'string';
+	get isConstant(): boolean {
+		return this._obj instanceof ExpressionConstant;
 	}
 
-	get isOpen(): boolean {
-		return this._obj === openSymbol;
+	get isBracketsOpen(): boolean {
+		return this._obj === bracketsOpenSymbol;
 	}
 
-	get isClose(): boolean {
-		return this._obj === closeSymbol;
+	get isBracketsClose(): boolean {
+		return this._obj === bracketsCloseSymbol;
+	}
+
+	get isParenthesesOpen(): boolean {
+		return this._obj === parenthesesOpenSymbol;
+	}
+
+	get isParenthesesClose(): boolean {
+		return this._obj === parenthesesCloseSymbol;
 	}
 
 	get isSeparator(): boolean {
 		return this._obj === separatorSymbol;
+	}
+
+	get isSprecifier(): boolean {
+		return this._obj === specifierSymbol;
+	}
+
+	get isEnd(): boolean {
+		return this._obj === endSymbol;
 	}
 
 	get func(): ExpressionFunction {
@@ -43,25 +64,35 @@ export class ExpressionState {
 		return this._obj as ExpressionVariable;
 	}
 
-	get value(): boolean | number | string {
-		return this._obj as boolean | number | string;
+	get constant(): ExpressionConstant {
+		return this._obj as ExpressionConstant;
 	}
 
 	get pos(): number {
 		return this._pos;
 	}
 
-	get end(): number {
-		return this._end;
+	get next(): number {
+		return this._next;
 	}
 
-	setOpen(): ExpressionState {
-		this._obj = openSymbol;
+	setBracketsOpen(): ExpressionState {
+		this._obj = bracketsOpenSymbol;
 		return this;
 	}
 
-	setClose(): ExpressionState {
-		this._obj = closeSymbol;
+	setBracketsClose(): ExpressionState {
+		this._obj = bracketsCloseSymbol;
+		return this;
+	}
+
+	setParenthesesOpen(): ExpressionState {
+		this._obj = parenthesesOpenSymbol;
+		return this;
+	}
+
+	setParenthesesClose(): ExpressionState {
+		this._obj = parenthesesCloseSymbol;
 		return this;
 	}
 
@@ -70,18 +101,28 @@ export class ExpressionState {
 		return this;
 	}
 
-	set( value: boolean | number | string | ExpressionVariable | ExpressionFunction ): ExpressionState {
+	setSpecifier(): ExpressionState {
+		this._obj = specifierSymbol;
+		return this;
+	}
+
+	setEnd(): ExpressionState {
+		this._obj = endSymbol;
+		return this;
+	}
+
+	set( value: ExpressionFunction | ExpressionVariable | ExpressionConstant ): ExpressionState {
 		this._obj = value;
 		return this;
 	}
 
 	reset(): void {
 		this._obj = undefined;
-		this._pos = this._end;
+		this._pos = this._next;
 	}
 
 	advance(): number {
-		return this._end++;
+		return this._next++;
 	}
 
 }

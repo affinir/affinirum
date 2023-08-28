@@ -1,22 +1,24 @@
+import { ExpressionValueType, ExpressionType, typeAny } from './ExpressionType.js';
+
 export class ExpressionVariable {
 
-	protected _value: boolean | number | string | undefined = undefined;
-	protected _type: 'boolean' | 'number' | 'string' | undefined = undefined;
+	protected _value: ExpressionValueType | undefined = undefined;
+	protected _type: ExpressionType = typeAny;
 
-	get value(): boolean | number | string | undefined {
+	get value(): ExpressionValueType | undefined {
 		return this._value!;
 	}
 
-	set value( v: boolean | number | string | undefined ) {
-		this._value = v;
+	set value( value: ExpressionValueType | undefined ) {
+		this._value = value;
 	}
 
-	get type(): 'boolean' | 'number' | 'string' | undefined {
+	get type(): ExpressionType {
 		return this._type;
 	}
 
-	set type( t: 'boolean' | 'number' | 'string' | undefined ) {
-		this._type = t;
+	set type( type: ExpressionType ) {
+		this._type = type;
 	}
 
 }
