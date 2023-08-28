@@ -2,7 +2,7 @@ import { ExpressionFunction, orFunc, andFunc, notFunc, gtFunc, ltFunc, geFunc, l
 	likeFunc, unlikeFunc, beginofFunc, endofFunc, partofFunc,
 	addFunc, subFunc, negFunc, mulFunc, divFunc, remFunc, modFunc, pctFunc, expFunc, logFunc, powFunc, rtFunc, sqFunc, sqrtFunc,
 	absFunc, ceilFunc, floorFunc, roundFunc, maxFunc, minFunc,
-	lenFunc, trimFunc, lowercaseFunc, uppercaseFunc, substrFunc, atFunc, concatFunc, accessFunc } from './ExpressionFunction.js';
+	lenFunc, trimFunc, lowercaseFunc, uppercaseFunc, substrFunc, concatFunc, atFunc } from './ExpressionFunction.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionValueType, ExpressionType } from './ExpressionType.js';
@@ -12,31 +12,29 @@ import { ExpressionFunctionNode } from './ExpressionFunctionNode.js';
 import { ExpressionVariableNode } from './ExpressionVariableNode.js';
 import { ExpressionConstantNode } from './ExpressionConstantNode.js';
 
-const orOper = orFunc.clone();
-const andOper = andFunc.clone();
-const notOper = notFunc.clone();
-const gtOper = gtFunc.clone();
-const ltOper = ltFunc.clone();
-const geOper = geFunc.clone();
-const leOper = leFunc.clone();
-const eqOper = eqFunc.clone();
-const neOper = neFunc.clone();
-const likeOper = likeFunc.clone();
-const unlikeOper = unlikeFunc.clone();
-const beginofOper = beginofFunc.clone();
-const endofOper = endofFunc.clone();
-const partofOper = partofFunc.clone();
-const addOper = addFunc.clone();
-const subOper = subFunc.clone();
-const negOper = negFunc.clone();
-const mulOper = mulFunc.clone();
-const divOper = divFunc.clone();
-const pctOper = pctFunc.clone();
-const powOper = powFunc.clone();
-const lenOper = lenFunc.clone();
-const atOper = atFunc.clone();
-const concatOper = concatFunc.clone();
-const accessOper = accessFunc.clone();
+const operOr = orFunc.clone();
+const operAnd = andFunc.clone();
+const operNot = notFunc.clone();
+const operGt = gtFunc.clone();
+const operLt = ltFunc.clone();
+const operGe = geFunc.clone();
+const operLe = leFunc.clone();
+const operEq = eqFunc.clone();
+const operNe = neFunc.clone();
+const operLike = likeFunc.clone();
+const operUnlike = unlikeFunc.clone();
+const operBeginof = beginofFunc.clone();
+const operEndof = endofFunc.clone();
+const operPartof = partofFunc.clone();
+const operAdd = addFunc.clone();
+const operSub = subFunc.clone();
+const operNeg = negFunc.clone();
+const operMul = mulFunc.clone();
+const operDiv = divFunc.clone();
+const operPct = pctFunc.clone();
+const operPow = powFunc.clone();
+const operConcat = concatFunc.clone();
+const operAt = atFunc.clone();
 
 export class ExpressionService {
 
@@ -96,7 +94,7 @@ export class ExpressionService {
 			this._root = this._root.compile( type );
 		}
 		catch ( errnode: any ) {
-			throw new TypeError( `compilation error on unexpected type ${ errnode.types } at position ${ errnode.pos }:\n` +
+			throw new TypeError( `compilation error on unexpected type ${ errnode.type } at position ${ errnode.pos }:\n` +
 				`${ this._expr.substring( errnode.pos ) }` );
 		}
 	}
@@ -150,47 +148,48 @@ export class ExpressionService {
 				case '(': return state.setParenthesesOpen();
 				case ')': return state.setParenthesesClose();
 				case ',': return state.setSeparator();
-				case '|': return state.set( orOper );
-				case '&': return state.set( andOper );
+				case '.': state.setAccess(); return state.set( operAt );
+				case '|': return state.set( operOr );
+				case '&': return state.set( operAnd );
 				case '!': switch ( this._expr.charAt( state.next ) ) {
-					case '=': state.advance(); return state.set( neOper );
-					case '~': state.advance(); return state.set( unlikeOper );
-					default: return state.set( notOper );
+					case '=': state.advance(); return state.set( operNe );
+					case '~': state.advance(); return state.set( operUnlike );
+					default: return state.set( operNot );
 				}
 				case '=': switch ( this._expr.charAt( state.next ) ) {
-					case '*': state.advance(); return state.set( beginofOper );
-					case '=': state.advance(); return state.set( eqOper );
-					default: return state.set( eqOper );
+					case '*': state.advance(); return state.set( operBeginof );
+					case '=': state.advance(); return state.set( operEq );
+					default: return state.set( operEq );
 				}
 				case '>': switch ( this._expr.charAt( state.next ) ) {
-					case '=': state.advance(); return state.set( geOper );
-					default: return state.set( gtOper );
+					case '=': state.advance(); return state.set( operGe );
+					default: return state.set( operGt );
 				}
 				case '<': switch ( this._expr.charAt( state.next ) ) {
-					case '=': state.advance(); return state.set( leOper );
-					default: return state.set( ltOper );
+					case '=': state.advance(); return state.set( operLe );
+					default: return state.set( operLt );
 				}
-				case '+': return state.set( addOper );
-				case '-': return state.set( subOper );
+				case '+': return state.set( operAdd );
+				case '-': return state.set( operSub );
 				case '*': switch ( this._expr.charAt( state.next ) ) {
-					case '=': state.advance(); return state.set( endofOper );
-					case '*': state.advance(); return state.set( partofOper );
-					default: return state.set( mulOper );
+					case '=': state.advance(); return state.set( operEndof );
+					case '*': state.advance(); return state.set( operPartof );
+					default: return state.set( operMul );
 				}
-				case '~': return state.set( likeOper );
-				case '/': return state.set( divOper );
-				case '%': return state.set( pctOper );
-				case '^': return state.set( powOper );
-				case '$': return state.set( lenOper );
-				case '@': return state.set( atOper );
-				case '#': return state.set( concatOper );
-				case '.': return state.set( accessFunc );
+				case '~': return state.set( operLike );
+				case '/': return state.set( operDiv );
+				case '%': return state.set( operPct );
+				case '^': return state.set( operPow );
+				case '#': return state.set( operConcat );
 				default:
 					if ( ExpressionService.alpha( c ) ) {
 						while ( ExpressionService.alphanumeric( this._expr.charAt( state.next ) ) ) {
 							state.advance();
 						}
 						const token = this._expr.substring( state.pos, state.next );
+						if ( state.resetAccess() ) {
+							return state.set( new ExpressionConstant( token ) );
+						}
 						const func = this._functions.get( token );
 						if ( func != null ) {
 							return state.set( func );
@@ -208,7 +207,7 @@ export class ExpressionService {
 						return state.set( nvariable );
 					}
 					else if ( ExpressionService.numeric( c ) ) {
-						while ( ExpressionService.numeric( this._expr.charAt( state.next ) ) ) {
+						while ( ExpressionService.decinumeric( this._expr.charAt( state.next ) ) ) {
 							state.advance();
 						}
 						return state.set( new ExpressionConstant( parseFloat( this._expr.substring( state.pos, state.next ) ) ) );
@@ -223,12 +222,12 @@ export class ExpressionService {
 					throw new Error( `unknown symbol ${ c }` );
 			}
 		}
-		return state.setEnd();
+		return state;
 	}
 
 	protected disjunction( state: ExpressionState ): ExpressionNode {
 		let node = this.conjunction( state );
-		while ( state.func === orOper ) {
+		while ( state.func === operOr ) {
 			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.conjunction( this.next( state ) ) ] );
 		}
 		return node;
@@ -236,7 +235,7 @@ export class ExpressionService {
 
 	protected conjunction( state: ExpressionState ): ExpressionNode {
 		let node = this.comparison( state );
-		while ( state.func === andOper ) {
+		while ( state.func === operAnd ) {
 			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.comparison( this.next( state ) ) ] );
 		}
 		return node;
@@ -245,26 +244,26 @@ export class ExpressionService {
 	protected comparison( state: ExpressionState ): ExpressionNode {
 		let not = false;
 		let pos = -1;
-		while ( state.func === notOper ) {
+		while ( state.func === operNot ) {
 			not = !not;
 			pos = state.pos;
 			this.next( state );
 		}
 		let node = this.aggregate( state );
-		while ( state.func === gtOper || state.func === ltOper || state.func === geOper || state.func === leOper ||
-			state.func === eqOper || state.func === neOper || state.func === likeOper || state.func === unlikeOper ||
-			state.func === beginofOper || state.func === endofOper || state.func === partofOper ) {
+		while ( state.func === operGt || state.func === operLt || state.func === operGe || state.func === operLe ||
+			state.func === operEq || state.func === operNe || state.func === operLike || state.func === operUnlike ||
+			state.func === operBeginof || state.func === operEndof || state.func === operPartof ) {
 			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.aggregate( this.next( state ) ) ] );
 		}
 		if ( not ) {
-			node = new ExpressionFunctionNode( pos, notOper, [ node ] );
+			node = new ExpressionFunctionNode( pos, operNot, [ node ] );
 		}
 		return node;
 	}
 
 	protected aggregate( state: ExpressionState ): ExpressionNode {
 		let node = this.product( state );
-		while ( state.func === concatOper || state.func === addOper || state.func === subOper ) {
+		while ( state.func === operConcat || state.func === operAdd || state.func === operSub ) {
 			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.product( this.next( state ) ) ] );
 		}
 		return node;
@@ -272,7 +271,7 @@ export class ExpressionService {
 
 	protected product( state: ExpressionState ): ExpressionNode {
 		let node = this.factor( state );
-		while ( state.func === atOper || state.func === mulOper || state.func === divOper || state.func === pctOper ) {
+		while ( state.func === operMul || state.func === operDiv || state.func === operPct ) {
 			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.factor( this.next( state ) ) ] );
 		}
 		return node;
@@ -281,45 +280,44 @@ export class ExpressionService {
 	protected factor( state: ExpressionState ): ExpressionNode {
 		let neg = false;
 		let pos = -1;
-		while ( state.func === subOper ) {
+		while ( state.func === operSub ) {
 			neg = !neg;
 			pos = state.pos;
 			this.next( state );
 		}
-		let node = this.index( state );
-		while ( state.func === powOper ) {
-			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.index( this.next( state ) ) ] );
+		let node = this.accessor( state );
+		while ( state.func === operPow ) {
+			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.accessor( this.next( state ) ) ] );
 		}
 		if ( neg ) {
-			node = new ExpressionFunctionNode( pos, negOper, [ node ] );
+			node = new ExpressionFunctionNode( pos, operNeg, [ node ] );
+		}
+		return node;
+	}
+
+	protected accessor( state: ExpressionState ): ExpressionNode {
+		let node = this.index( state );
+		while ( state.func === operAt ) {
+			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.index( this.next( state ) ) ] );
 		}
 		return node;
 	}
 
 	protected index( state: ExpressionState ): ExpressionNode {
 		let node = this.term( state );
-		while ( state.func === atOper ) {
-			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.term( this.next( state ) ) ] );
-		}
-		if ( state.func === lenOper ) {
-			node = new ExpressionFunctionNode( state.pos, state.func, [ node ] );
-			this.next( state );
-			if ( !state.isEnd && state.func === lenOper ) {
-				throw new Error( `unexpected operator` );
+		while ( state.isBracketsOpen ) {
+			node = new ExpressionFunctionNode( state.pos, operAt, [ node, this.disjunction( this.next( state ) ) ] );
+			if ( state.isBracketsClose ) {
+				this.next( state );
+			}
+			else {
+				throw new Error( `missing closing brackets` );
 			}
 		}
 		return node;
 	}
 
 	protected term( state: ExpressionState ): ExpressionNode {
-		let node = this.atom( state );
-		while ( state.func === accessOper ) {
-			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.atom( this.next( state ) ) ] );
-		}
-		return node;
-	}
-
-	protected atom( state: ExpressionState ): ExpressionNode {
 		const pos = state.pos;
 		if ( state.isFunction ) {
 			const func = state.func;
@@ -344,13 +342,6 @@ export class ExpressionService {
 		else if ( state.isVariable ) {
 			const node = new ExpressionVariableNode( pos, state.variable );
 			this.next( state );
-			if ( state.isBracketsOpen ) {
-				const sub = this.disjunction( this.next( state ) );
-				if ( state.isBracketsClose ) {
-					this.next( state );
-					return new ExpressionFunctionNode( pos, atFunc, [ node, sub ] );
-				}
-			}
 			return node;
 		}
 		else if ( state.isConstant ) {
@@ -366,7 +357,7 @@ export class ExpressionService {
 			while ( state.isSeparator );
 			if ( state.isBracketsClose ) {
 				this.next( state );
-				return new ExpressionFunctionNode( pos, concatFunc, subs );
+				return new ExpressionFunctionNode( pos, operConcat, subs );
 			}
 			throw new Error( `missing closing brackets` );
 		}
@@ -388,8 +379,9 @@ export class ExpressionService {
 	}
 
 	protected static alpha = ( c: string ) => ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) || ( c === '_' );
-	protected static numeric = ( c: string ) => ( c >= '0' && c <= '9' ) || ( c === '.' );
-	protected static alphanumeric = ( c: string ) => ( ExpressionService.alpha( c ) || ExpressionService.numeric( c ) );
+	protected static numeric = ( c: string ) => ( c >= '0' && c <= '9' );
+	protected static alphanumeric = ( c: string ) => ExpressionService.alpha( c ) || ExpressionService.numeric( c );
+	protected static decinumeric = ( c: string ) => ( c === '.' ) || ExpressionService.numeric( c );
 	protected static quotation = ( c: string ) => ( c === '\'' || c === '\"' || c === '\`' );
 
 }

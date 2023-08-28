@@ -20,8 +20,12 @@ export class ExpressionType {
 		return new ExpressionType( this._typenames.filter( tn => type._typenames.includes( tn ) ) );
 	}
 
-	refer( type: ExpressionType ): ExpressionType {
-		return new ExpressionType( this._typenames.filter( tn => type._typenames.some( t => t.substring( 0, 6 ) === tn.substring( 0, 6 ) ) ) );
+	filter( fn: ( tn: ExpressionValueTypename ) => boolean ): ExpressionType {
+		return new ExpressionType( this._typenames.filter( fn ) );
+	}
+
+	anyone( fn: ( tn: ExpressionValueTypename ) => boolean ): boolean {
+		return this._typenames.some( fn );
 	}
 
 	toString(): string {
@@ -50,3 +54,5 @@ export const typeStringArray = new ExpressionType( [ 'string[]' ] );
 export const typeObjectArray = new ExpressionType( [ 'object[]' ] );
 export const typeBooleanNumberStringObjectArray = new ExpressionType( [ 'boolean[]', 'number[]', 'string[]', 'object[]' ] );
 export const typeAny = new ExpressionType( [ 'boolean', 'number', 'string', 'object', 'boolean[]', 'number[]', 'string[]', 'object[]' ] );
+export const inferenceByConstituency = ( ix: number, type: ExpressionType, mask: ExpressionType ) =>
+	type.filter( tn => mask.anyone( mtn => mtn.split( '[]' )[ 0 ] === tn.split( '[]' )[ 0 ] ) );

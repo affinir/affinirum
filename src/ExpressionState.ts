@@ -7,12 +7,11 @@ const bracketsCloseSymbol = Symbol();
 const parenthesesOpenSymbol = Symbol();
 const parenthesesCloseSymbol = Symbol();
 const separatorSymbol = Symbol();
-const specifierSymbol = Symbol();
-const endSymbol = Symbol();
 
 export class ExpressionState {
 
 	protected _obj: ExpressionFunction | ExpressionVariable | ExpressionConstant | symbol | undefined;
+	protected _access: boolean = false;
 	protected _pos = 0;
 	protected _next = 0;
 
@@ -48,14 +47,6 @@ export class ExpressionState {
 		return this._obj === separatorSymbol;
 	}
 
-	get isSprecifier(): boolean {
-		return this._obj === specifierSymbol;
-	}
-
-	get isEnd(): boolean {
-		return this._obj === endSymbol;
-	}
-
 	get func(): ExpressionFunction {
 		return this._obj as ExpressionFunction;
 	}
@@ -74,6 +65,18 @@ export class ExpressionState {
 
 	get next(): number {
 		return this._next;
+	}
+
+	setAccess(): void {
+		this._access = true;
+	}
+
+	resetAccess(): boolean {
+		if ( this._access ) {
+			this._access = false;
+			return true;
+		}
+		return false;
 	}
 
 	setBracketsOpen(): ExpressionState {
@@ -98,16 +101,6 @@ export class ExpressionState {
 
 	setSeparator(): ExpressionState {
 		this._obj = separatorSymbol;
-		return this;
-	}
-
-	setSpecifier(): ExpressionState {
-		this._obj = specifierSymbol;
-		return this;
-	}
-
-	setEnd(): ExpressionState {
-		this._obj = endSymbol;
 		return this;
 	}
 

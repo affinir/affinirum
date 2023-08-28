@@ -33,7 +33,7 @@ export class ExpressionFunctionNode implements ExpressionNode {
 		let constant = true;
 		for ( let i = 0; i < this._subnodes.length; ++i ) {
 			const argType = this._function.argTypes[ i ] ?? this._function.argTypes.slice( -1 )[ 0 ];
-			const inferredArgType = this._function.type.exact || argType.exact || i > 0 ? argType : argType.refer( inferredType );
+			const inferredArgType = this._function.inference ? this._function.inference( i, argType, inferredType ) : argType;
 			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile( inferredArgType );
 			constant &&= ( subnode instanceof ExpressionConstantNode );
 		}

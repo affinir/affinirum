@@ -18,7 +18,7 @@ export class ExpressionConstantNode implements ExpressionNode {
 	}
 
 	compile( type: ExpressionType ): ExpressionNode {
-		if ( type.refer( this.type ).invalid ) {
+		if ( type.infer( this.type ).invalid ) {
 			throw this;
 		}
 		return this;

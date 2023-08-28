@@ -13,7 +13,7 @@ Target: ES2020 [browser or NodeJS].
 * Parse once, execute multiple times
 * Efficient expression evaluation
 * Function argument type checking
-* Boolean, arithmetic and string operators supported
+* Boolean, arithmetic, string and access operators supported
 * Numeric and string comparision operators supported
 * Variadic functions supported
 * Standard math functions included
@@ -34,8 +34,12 @@ Target: ES2020 [browser or NodeJS].
 * Division: /, div
 * Percentage: %, pct
 #### String operations
-* String length: $, len
-* Character at: @, at
+* Char at: [], at
+* Addition: +, add
+#### Object operations
+* Property at: [], at
+#### Array operations
+* Element at: [], at
 * Concatination: #, concat
 #### Numeric comparisions
 * Greater than: >, gt
