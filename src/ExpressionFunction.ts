@@ -37,13 +37,13 @@ export class ExpressionFunction {
 
 }
 
-export const funcOr = new ExpressionFunction(
-	( ...args: ( boolean | boolean[] )[] ) => args.flat().some( v => v ),
+export const funcAnd = new ExpressionFunction(
+	( ...args: ( boolean | boolean[] )[] ) => args.flat().every( v => v ),
 	[ new ExpressionType( [ 'boolean', 'boolean[]' ] ) ],
 	typeBoolean
 );
-export const funcAnd = new ExpressionFunction(
-	( ...args: ( boolean | boolean[] )[] ) => args.flat().every( v => v ),
+export const funcOr = new ExpressionFunction(
+	( ...args: ( boolean | boolean[] )[] ) => args.flat().some( v => v ),
 	[ new ExpressionType( [ 'boolean', 'boolean[]' ] ) ],
 	typeBoolean
 );
@@ -246,5 +246,5 @@ export const funcAt = new ExpressionFunction(
 	[ new ExpressionType( [ 'string', 'object', 'boolean[]', 'number[]', 'string[]', 'object[]' ] ), new ExpressionType( [ 'number', 'string' ] ) ],
 	typeAny,
 	( ix: number, type: ExpressionType, mask: ExpressionType ) =>
-		ix > 0 ? type : type.filter( tn => tn === 'object' || mask.anyone( mtn => mtn.split( '[]' )[ 0 ] === tn.split( '[]' )[ 0 ] ) )
+		ix > 0 ? type : type.filter( tn => tn === 'object' || mask.or( mtn => mtn.split( '[]' )[ 0 ] === tn.split( '[]' )[ 0 ] ) )
 );

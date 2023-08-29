@@ -2,8 +2,10 @@ import { ExpressionValueType, ExpressionType, typeAny } from './ExpressionType.j
 
 export class ExpressionVariable {
 
-	protected _value: ExpressionValueType | undefined = undefined;
-	protected _type: ExpressionType = typeAny;
+	constructor(
+		protected _value: ExpressionValueType | undefined = undefined,
+		protected _type: ExpressionType = typeAny
+	) {}
 
 	get value(): ExpressionValueType | undefined {
 		return this._value!;

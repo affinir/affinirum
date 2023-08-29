@@ -75,7 +75,7 @@ Target: ES2020 [browser or NodeJS].
 * true
 * false
 #### Numeric constants
-* e
+* epsilon
 * pi
 
 ### Grammar
@@ -87,8 +87,10 @@ The expression parsing is performed using the following grammar:
 	<aggregate> = {<aggregate>("#"|"+"|"-")}<product>
 	<product> = {<product>("*"|"/"|"%")}<factor>
 	<factor> = {"-"}{<factor>"^"}<term>
-	<term> = {<term>"@"}<atom>{"$"}
-	<atom> = <boolean>|<number>|<string>|<variable>|<function>"("<disjunction>{","<disjunction>}")"|"("<disjunction>")"
+	<index> = <term>|{<index>("."<property>|"["<disjunction>"]")}
+	<term> = <value|<variable>|<function>"("<disjunction>{","<disjunction>}")"|"("<disjunction>")"
+	<constant> = <boolean>|<boolean[]>|<number>|<number[]>|<string>|<string[]>|<object>|<object[]>
+	<object> = "{"<property>":"<constant>,{",""<property>":"<constant>}"}"
 
 Whitespace characters are ignored.
 

@@ -24,8 +24,12 @@ export class ExpressionType {
 		return new ExpressionType( this._typenames.filter( fn ) );
 	}
 
-	anyone( fn: ( tn: ExpressionValueTypename ) => boolean ): boolean {
+	or( fn: ( tn: ExpressionValueTypename ) => boolean ): boolean {
 		return this._typenames.some( fn );
+	}
+
+	and( fn: ( tn: ExpressionValueTypename ) => boolean ): boolean {
+		return this._typenames.every( fn );
 	}
 
 	toString(): string {
@@ -55,4 +59,4 @@ export const typeObjectArray = new ExpressionType( [ 'object[]' ] );
 export const typeBooleanNumberStringObjectArray = new ExpressionType( [ 'boolean[]', 'number[]', 'string[]', 'object[]' ] );
 export const typeAny = new ExpressionType( [ 'boolean', 'number', 'string', 'object', 'boolean[]', 'number[]', 'string[]', 'object[]' ] );
 export const inferenceByConstituency = ( ix: number, type: ExpressionType, mask: ExpressionType ) =>
-	type.filter( tn => mask.anyone( mtn => mtn.split( '[]' )[ 0 ] === tn.split( '[]' )[ 0 ] ) );
+	type.filter( tn => mask.or( mtn => mtn.split( '[]' )[ 0 ] === tn.split( '[]' )[ 0 ] ) );
