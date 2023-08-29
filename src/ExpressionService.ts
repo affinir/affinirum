@@ -1,8 +1,8 @@
-import { ExpressionFunction, orFunc, andFunc, notFunc, gtFunc, ltFunc, geFunc, leFunc, eqFunc, neFunc,
-	likeFunc, unlikeFunc, beginofFunc, endofFunc, partofFunc,
-	addFunc, subFunc, negFunc, mulFunc, divFunc, remFunc, modFunc, pctFunc, expFunc, logFunc, powFunc, rtFunc, sqFunc, sqrtFunc,
-	absFunc, ceilFunc, floorFunc, roundFunc, maxFunc, minFunc,
-	lenFunc, trimFunc, lowercaseFunc, uppercaseFunc, substrFunc, concatFunc, atFunc } from './ExpressionFunction.js';
+import { ExpressionFunction, funcOr, funcAnd, funcNot, funcGt, funcLt, funcGe, funcLe, funcEq, funcNe,
+	funcLike, funcUnlike, funcBeginof, funcEndof, funcPartof,
+	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
+	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin,
+	funcLen, funcTrim, funcLowercase, funcUppercase, funcSubstr, funcConcat, funcAt } from './ExpressionFunction.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionValueType, ExpressionType } from './ExpressionType.js';
@@ -12,43 +12,43 @@ import { ExpressionFunctionNode } from './ExpressionFunctionNode.js';
 import { ExpressionVariableNode } from './ExpressionVariableNode.js';
 import { ExpressionConstantNode } from './ExpressionConstantNode.js';
 
-const operOr = orFunc.clone();
-const operAnd = andFunc.clone();
-const operNot = notFunc.clone();
-const operGt = gtFunc.clone();
-const operLt = ltFunc.clone();
-const operGe = geFunc.clone();
-const operLe = leFunc.clone();
-const operEq = eqFunc.clone();
-const operNe = neFunc.clone();
-const operLike = likeFunc.clone();
-const operUnlike = unlikeFunc.clone();
-const operBeginof = beginofFunc.clone();
-const operEndof = endofFunc.clone();
-const operPartof = partofFunc.clone();
-const operAdd = addFunc.clone();
-const operSub = subFunc.clone();
-const operNeg = negFunc.clone();
-const operMul = mulFunc.clone();
-const operDiv = divFunc.clone();
-const operPct = pctFunc.clone();
-const operPow = powFunc.clone();
-const operConcat = concatFunc.clone();
-const operAt = atFunc.clone();
+const operOr = funcOr.clone();
+const operAnd = funcAnd.clone();
+const operNot = funcNot.clone();
+const operGt = funcGt.clone();
+const operLt = funcLt.clone();
+const operGe = funcGe.clone();
+const operLe = funcLe.clone();
+const operEq = funcEq.clone();
+const operNe = funcNe.clone();
+const operLike = funcLike.clone();
+const operUnlike = funcUnlike.clone();
+const operBeginof = funcBeginof.clone();
+const operEndof = funcEndof.clone();
+const operPartof = funcPartof.clone();
+const operAdd = funcAdd.clone();
+const operSub = funcSub.clone();
+const operNeg = funcNeg.clone();
+const operMul = funcMul.clone();
+const operDiv = funcDiv.clone();
+const operPct = funcPct.clone();
+const operPow = funcPow.clone();
+const operConcat = funcConcat.clone();
+const operAt = funcAt.clone();
 
 export class ExpressionService {
 
 	protected _functions = new Map<string, ExpressionFunction>( [
-		[ 'or', orFunc ], [ 'and', andFunc ], [ 'not', notFunc ],
-		[ 'gt', gtFunc ], [ 'lt', ltFunc ], [ 'ge', geFunc ], [ 'le', leFunc ],
-		[ 'eq', eqFunc ], [ 'ne', neFunc ], [ 'like', likeFunc ], [ 'nlike', unlikeFunc ],
-		[ 'beginof', beginofFunc ], [ 'endof', endofFunc ], [ 'partof', partofFunc ],
-		[ 'add', addFunc ], [ 'sub', subFunc ], [ 'neg', negFunc ],
-		[ 'mul', mulFunc ], [ 'div', divFunc ], [ 'rem', remFunc ], [ 'mod', modFunc ], [ 'pct', pctFunc ],
-		[ 'exp', expFunc ], [ 'log', logFunc ], [ 'pow', powFunc ], [ 'rt', rtFunc ], [ 'sq', sqFunc ], [ 'sqrt', sqrtFunc ],
-		[ 'abs', absFunc ], [ 'ceil', ceilFunc ], [ 'floor', floorFunc ], [ 'round', roundFunc ], [ 'max', maxFunc ], [ 'min', minFunc ],
-		[ 'len', lenFunc ], [ 'trim', trimFunc ], [ 'lowercase', lowercaseFunc ], [ 'uppercase', uppercaseFunc ],
-		[ 'substr', substrFunc ], [ 'at', atFunc ], [ 'concat', concatFunc ],
+		[ 'or', funcOr ], [ 'and', funcAnd ], [ 'not', funcNot ],
+		[ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
+		[ 'eq', funcEq ], [ 'ne', funcNe ], [ 'like', funcLike ], [ 'nlike', funcUnlike ],
+		[ 'beginof', funcBeginof ], [ 'endof', funcEndof ], [ 'partof', funcPartof ],
+		[ 'add', funcAdd ], [ 'sub', funcSub ], [ 'neg', funcNeg ],
+		[ 'mul', funcMul ], [ 'div', funcDiv ], [ 'rem', funcRem ], [ 'mod', funcMod ], [ 'pct', funcPct ],
+		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
+		[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ], [ 'max', funcMax ], [ 'min', funcMin ],
+		[ 'len', funcLen ], [ 'trim', funcTrim ], [ 'lowercase', funcLowercase ], [ 'uppercase', funcUppercase ],
+		[ 'substr', funcSubstr ], [ 'at', funcAt ], [ 'concat', funcConcat ],
 	] );
 	protected _variables = new Map<string, ExpressionVariable>();
 	protected _constants = new Map<string, ExpressionConstant>( [
@@ -148,7 +148,7 @@ export class ExpressionService {
 				case '(': return state.setParenthesesOpen();
 				case ')': return state.setParenthesesClose();
 				case ',': return state.setSeparator();
-				case '.': state.setAccess(); return state.set( operAt );
+				case '.': return state.set( operAt );
 				case '|': return state.set( operOr );
 				case '&': return state.set( operAnd );
 				case '!': switch ( this._expr.charAt( state.next ) ) {
@@ -187,7 +187,7 @@ export class ExpressionService {
 							state.advance();
 						}
 						const token = this._expr.substring( state.pos, state.next );
-						if ( state.resetAccess() ) {
+						if ( state.isFunction && state.func === operAt ) {
 							return state.set( new ExpressionConstant( token ) );
 						}
 						const func = this._functions.get( token );
@@ -285,9 +285,9 @@ export class ExpressionService {
 			pos = state.pos;
 			this.next( state );
 		}
-		let node = this.accessor( state );
+		let node = this.property( state );
 		while ( state.func === operPow ) {
-			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.accessor( this.next( state ) ) ] );
+			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.property( this.next( state ) ) ] );
 		}
 		if ( neg ) {
 			node = new ExpressionFunctionNode( pos, operNeg, [ node ] );
@@ -295,7 +295,7 @@ export class ExpressionService {
 		return node;
 	}
 
-	protected accessor( state: ExpressionState ): ExpressionNode {
+	protected property( state: ExpressionState ): ExpressionNode {
 		let node = this.index( state );
 		while ( state.func === operAt ) {
 			node = new ExpressionFunctionNode( state.pos, state.func, [ node, this.index( this.next( state ) ) ] );

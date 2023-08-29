@@ -11,7 +11,6 @@ const separatorSymbol = Symbol();
 export class ExpressionState {
 
 	protected _obj: ExpressionFunction | ExpressionVariable | ExpressionConstant | symbol | undefined;
-	protected _access: boolean = false;
 	protected _pos = 0;
 	protected _next = 0;
 
@@ -67,18 +66,6 @@ export class ExpressionState {
 		return this._next;
 	}
 
-	setAccess(): void {
-		this._access = true;
-	}
-
-	resetAccess(): boolean {
-		if ( this._access ) {
-			this._access = false;
-			return true;
-		}
-		return false;
-	}
-
 	setBracketsOpen(): ExpressionState {
 		this._obj = bracketsOpenSymbol;
 		return this;
@@ -110,7 +97,6 @@ export class ExpressionState {
 	}
 
 	reset(): void {
-		this._obj = undefined;
 		this._pos = this._next;
 	}
 
