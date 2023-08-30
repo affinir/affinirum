@@ -2,19 +2,17 @@ import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionType, ExpressionValueType } from './ExpressionType.js';
 
-export class ExpressionConstantNode implements ExpressionNode {
+export class ExpressionConstantNode extends ExpressionNode {
 
 	constructor(
 		protected _pos: number,
 		protected _constant: ExpressionConstant
-	) {}
-
-	get pos(): number {
-		return this._pos;
+	) {
+		super( _pos );
 	}
 
 	get type(): ExpressionType {
-		return ExpressionType.of( this._constant.value );
+		return this._constant.type;
 	}
 
 	compile( type: ExpressionType ): ExpressionNode {

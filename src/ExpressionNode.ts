@@ -1,10 +1,17 @@
 import { ExpressionValueType, ExpressionType } from './ExpressionType.js';
 
-export interface ExpressionNode {
+export abstract class ExpressionNode {
 
-	pos: number;
-	type: ExpressionType;
-	compile( types: ExpressionType ): ExpressionNode;
-	evaluate(): ExpressionValueType;
+	constructor(
+		protected _pos: number,
+	) {}
+
+	get pos(): number {
+		return this._pos;
+	}
+
+	abstract type: ExpressionType;
+	abstract compile( types: ExpressionType ): ExpressionNode;
+	abstract evaluate(): ExpressionValueType;
 
 }

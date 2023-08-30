@@ -64,9 +64,9 @@ export class ExpressionService {
 		config?.constants?.forEach( c => this._constants.set( c.name, new ExpressionConstant( c.value ) ) );
 		config?.functions?.forEach( f => this._functions.set( f.name, new ExpressionFunction( f.func, f.argTypes, f.type ) ) );
 		config?.variables?.forEach( v => this._variables.set( v.name, new ExpressionVariable( undefined, v.type ) ) );
-		const state = new ExpressionState();
+		const state = new ExpressionState( this._constants, this._functions, this._variables, this._expr );
 		try {
-			this._root = this.disjunction( this.next( state ) );
+			this._root = this.disjunction( state.next() );
 		}
 		catch ( err ) {
 			throw new Error( `compilation error on ${ ( err as Error ).message } at position ${ state.pos }:\n` +
@@ -118,91 +118,11 @@ export class ExpressionService {
 		return this._root.evaluate();
 	}
 
-	protected next( state: ExpressionState ): ExpressionState {
-		while ( state.next < this._expr.length ) {
-			state.reset();
-			const c = this._expr.charAt( state.pos );
-			state.advance();
-			switch ( c ) {
-				case ' ': case '\t': case '\n': case '\r': break;
-				case '[': return state.setBracketsOpen();
-				case ']': return state.setBracketsClose();
-				case '(': return state.setParenthesesOpen();
-				case ')': return state.setParenthesesClose();
-				case ',': return state.setSeparator();
-				case '.': return state.setIndexer();
-				case '|': return state.set( operOr );
-				case '&': return state.set( operAnd );
-				case '!': switch ( this._expr.charAt( state.next ) ) {
-					case '=': state.advance(); return state.set( operNe );
-					case '~': state.advance(); return state.set( operUnlike );
-					default: return state.set( operNot );
-				}
-				case '=': switch ( this._expr.charAt( state.next ) ) {
-					case '*': state.advance(); return state.set( operBeginof );
-					case '=': state.advance(); return state.set( operEq );
-					default: return state.set( operEq );
-				}
-				case '>': switch ( this._expr.charAt( state.next ) ) {
-					case '=': state.advance(); return state.set( operGe );
-					default: return state.set( operGt );
-				}
-				case '<': switch ( this._expr.charAt( state.next ) ) {
-					case '=': state.advance(); return state.set( operLe );
-					default: return state.set( operLt );
-				}
-				case '+': return state.set( operAdd );
-				case '-': return state.set( operSub );
-				case '*': switch ( this._expr.charAt( state.next ) ) {
-					case '=': state.advance(); return state.set( operEndof );
-					case '*': state.advance(); return state.set( operPartof );
-					default: return state.set( operMul );
-				}
-				case '~': return state.set( operLike );
-				case '/': return state.set( operDiv );
-				case '%': return state.set( operPct );
-				case '^': return state.set( operPow );
-				case '#': return state.set( operConcat );
-				default:
-					if ( ExpressionService.alpha( c ) ) {
-						while ( ExpressionService.alphanumeric( this._expr.charAt( state.next ) ) ) {
-							state.advance();
-						}
-						const token = this._expr.substring( state.pos, state.next );
-						const constant = this._constants.get( token );
-						if ( constant != null ) {
-							return state.set( constant );
-						}
-						const func = this._functions.get( token );
-						if ( func != null ) {
-							return state.set( func );
-						}
-						return state.set( token );
-					}
-					else if ( ExpressionService.numeric( c ) ) {
-						while ( ExpressionService.decinumeric( this._expr.charAt( state.next ) ) ) {
-							state.advance();
-						}
-						return state.set( new ExpressionConstant( parseFloat( this._expr.substring( state.pos, state.next ) ) ) );
-					}
-					else if ( ExpressionService.quotation( c ) ) {
-						const pos = state.next;
-						while ( this._expr.charAt( state.next ) !== '' && this._expr.charAt( state.next ) !== c ) {
-							state.advance();
-						}
-						return state.set( new ExpressionConstant( this._expr.substring( pos, state.advance() ) ) );
-					}
-					throw new Error( `unknown symbol ${ c }` );
-			}
-		}
-		return state;
-	}
-
 	protected disjunction( state: ExpressionState ): ExpressionNode {
 		let node = this.conjunction( state );
 		while ( state.func === operOr ) {
 			node = new ExpressionFunctionNode( state.pos, state.func,
-				[ node, this.conjunction( this.next( state ) ) ] );
+				[ node, this.conjunction( state.next() ) ] );
 		}
 		return node;
 	}
@@ -211,7 +131,7 @@ export class ExpressionService {
 		let node = this.comparison( state );
 		while ( state.func === operAnd ) {
 			node = new ExpressionFunctionNode( state.pos, state.func,
-				[ node, this.comparison( this.next( state ) ) ] );
+				[ node, this.comparison( state.next() ) ] );
 		}
 		return node;
 	}
@@ -222,14 +142,14 @@ export class ExpressionService {
 		while ( state.func === operNot ) {
 			not = !not;
 			pos = state.pos;
-			this.next( state );
+			state.next();
 		}
 		let node = this.aggregate( state );
 		while ( state.func === operGt || state.func === operLt || state.func === operGe || state.func === operLe ||
 			state.func === operEq || state.func === operNe || state.func === operLike || state.func === operUnlike ||
 			state.func === operBeginof || state.func === operEndof || state.func === operPartof ) {
 			node = new ExpressionFunctionNode( state.pos, state.func,
-				[ node, this.aggregate( this.next( state ) ) ] );
+				[ node, this.aggregate( state.next() ) ] );
 		}
 		if ( not ) {
 			node = new ExpressionFunctionNode( pos, operNot, [ node ] );
@@ -241,7 +161,7 @@ export class ExpressionService {
 		let node = this.product( state );
 		while ( state.func === operConcat || state.func === operAdd || state.func === operSub ) {
 			node = new ExpressionFunctionNode( state.pos, state.func,
-				[ node, this.product( this.next( state ) ) ] );
+				[ node, this.product( state.next() ) ] );
 		}
 		return node;
 	}
@@ -250,7 +170,7 @@ export class ExpressionService {
 		let node = this.factor( state );
 		while ( state.func === operMul || state.func === operDiv || state.func === operPct ) {
 			node = new ExpressionFunctionNode( state.pos, state.func,
-				[ node, this.factor( this.next( state ) ) ] );
+				[ node, this.factor( state.next() ) ] );
 		}
 		return node;
 	}
@@ -261,12 +181,12 @@ export class ExpressionService {
 		while ( state.func === operSub ) {
 			neg = !neg;
 			pos = state.pos;
-			this.next( state );
+			state.next();
 		}
 		let node = this.index( state );
 		while ( state.func === operPow ) {
 			node = new ExpressionFunctionNode( state.pos, state.func,
-				[ node, this.index( this.next( state ) ) ] );
+				[ node, this.index( state.next() ) ] );
 		}
 		if ( neg ) {
 			node = new ExpressionFunctionNode( pos, operNeg, [ node ] );
@@ -279,9 +199,9 @@ export class ExpressionService {
 		while ( state.isIndexer || state.isBracketsOpen ) {
 			if ( state.isIndexer ) {
 				node = new ExpressionFunctionNode( state.pos, operAt,
-					[ node, new ExpressionConstantNode( state.pos, new ExpressionConstant( this.next( state ).token ) ) ] );
+					[ node, new ExpressionConstantNode( state.pos, new ExpressionConstant( state.next().token ) ) ] );
 				if ( state.isToken ) {
-					this.next( state );
+					state.next();
 				}
 				else {
 					throw new Error( `missing property name` );
@@ -289,9 +209,9 @@ export class ExpressionService {
 			}
 			else {
 				node = new ExpressionFunctionNode( state.pos, operAt,
-					[ node, this.disjunction( this.next( state ) ) ] );
+					[ node, this.disjunction( state.next() ) ] );
 				if ( state.isBracketsClose ) {
-					this.next( state );
+					state.next();
 				}
 				else {
 					throw new Error( `missing closing brackets` );
@@ -306,15 +226,15 @@ export class ExpressionService {
 		if ( state.isFunction ) {
 			const func = state.func;
 			const subs = [];
-			this.next( state );
+			state.next();
 			if ( state.isParenthesesOpen ) {
 				do {
-					subs.push( this.disjunction( this.next( state ) ) );
+					subs.push( this.disjunction( state.next() ) );
 				}
 				while ( state.isSeparator );
 				if ( state.isParenthesesClose ) {
 					if ( subs.length >= func.arity ) {
-						this.next( state );
+						state.next();
 						return new ExpressionFunctionNode( pos, func, subs );
 					}
 					throw new Error( `missing function arguments` );
@@ -329,22 +249,22 @@ export class ExpressionService {
 				variable = new ExpressionVariable();
 				this._variables.set( state.token, variable );
 			}
-			this.next( state );
+			state.next();
 			return new ExpressionVariableNode( pos, variable );
 		}
 		else if ( state.isConstant ) {
 			const node = new ExpressionConstantNode( pos, state.constant );
-			this.next( state );
+			state.next();
 			return node;
 		}
 		else if ( state.isBracketsOpen ) {
 			const subs = [];
 			do {
-				subs.push( this.disjunction( this.next( state ) ) );
+				subs.push( this.disjunction( state.next() ) );
 			}
 			while ( state.isSeparator );
 			if ( state.isBracketsClose ) {
-				this.next( state );
+				state.next();
 				return new ExpressionFunctionNode( pos, operConcat, subs );
 			}
 			throw new Error( `missing closing brackets` );
@@ -353,9 +273,9 @@ export class ExpressionService {
 			throw new Error( `empty brackets` );
 		}
 		else if ( state.isParenthesesOpen ) {
-			const node = this.disjunction( this.next( state ) );
+			const node = this.disjunction( state.next() );
 			if ( state.isParenthesesClose ) {
-				this.next( state );
+				state.next();
 				return node;
 			}
 			throw new Error( `missing closing parenthesis` );
@@ -365,11 +285,5 @@ export class ExpressionService {
 		}
 		throw new Error( `unknown state ${ JSON.stringify( state ) }` );
 	}
-
-	protected static alpha = ( c: string ) => ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) || ( c === '_' );
-	protected static numeric = ( c: string ) => ( c >= '0' && c <= '9' );
-	protected static alphanumeric = ( c: string ) => ExpressionService.alpha( c ) || ExpressionService.numeric( c );
-	protected static decinumeric = ( c: string ) => ( c === '.' ) || ExpressionService.numeric( c );
-	protected static quotation = ( c: string ) => ( c === '\'' || c === '\"' || c === '\`' );
 
 }

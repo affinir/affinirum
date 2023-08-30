@@ -1,4 +1,4 @@
-import { ExpressionValueType } from './ExpressionType.js';
+import { ExpressionType, ExpressionValueType } from './ExpressionType.js';
 
 export class ExpressionConstant {
 
@@ -8,6 +8,10 @@ export class ExpressionConstant {
 
 	get value(): ExpressionValueType {
 		return this._value;
+	}
+
+	get type(): ExpressionType {
+		return ExpressionType.of( this._value );
 	}
 
 }

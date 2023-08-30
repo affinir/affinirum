@@ -2,15 +2,13 @@ import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { ExpressionValueType, ExpressionType } from './ExpressionType.js';
 
-export class ExpressionVariableNode implements ExpressionNode {
+export class ExpressionVariableNode extends ExpressionNode {
 
 	constructor(
 		protected _pos: number,
 		protected _variable: ExpressionVariable,
-	) {}
-
-	get pos(): number {
-		return this._pos;
+	) {
+		super( _pos );
 	}
 
 	get type(): ExpressionType {

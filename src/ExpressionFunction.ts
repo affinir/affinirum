@@ -1,6 +1,6 @@
 import { ExpressionObjectType, ExpressionValueType, ExpressionType,
 	typeBoolean, typeNumber, typeString,
-	typeBooleanNumberStringObjectArray, typeAny, inferenceByConstituency } from './ExpressionType.js';
+	typeAnyArray, typeAny, inferenceByConstituency } from './ExpressionType.js';
 
 export class ExpressionFunction {
 
@@ -237,7 +237,7 @@ export const funcConcat = new ExpressionFunction(
 	( ...args: ( boolean | boolean[] )[] | ( number | number[] )[] | ( string | string[] )[] | ( ExpressionObjectType | ExpressionObjectType[] )[] ) =>
 		args.flat() as ExpressionValueType,
 	[ typeAny ],
-	typeBooleanNumberStringObjectArray,
+	typeAnyArray,
 	inferenceByConstituency
 );
 export const funcAt = new ExpressionFunction(

@@ -4,7 +4,7 @@ import { ExpressionConstantNode } from './ExpressionConstantNode.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { ExpressionValueType, ExpressionType } from './ExpressionType.js';
 
-export class ExpressionFunctionNode implements ExpressionNode {
+export class ExpressionFunctionNode extends ExpressionNode {
 
 	protected _type: ExpressionType;
 
@@ -13,11 +13,8 @@ export class ExpressionFunctionNode implements ExpressionNode {
 		protected _function: ExpressionFunction,
 		protected _subnodes: ExpressionNode[],
 	) {
+		super( _pos );
 		this._type = _function.type;
-	}
-
-	get pos(): number {
-		return this._pos;
 	}
 
 	get type(): ExpressionType {
