@@ -1,12 +1,12 @@
-import { ExpressionType, ExpressionValueType } from './ExpressionType.js';
+import { ExpressionType, ExpressionValue } from './ExpressionType.js';
 
 export class ExpressionConstant {
 
 	constructor(
-		protected _value: ExpressionValueType
+		protected _value: ExpressionValue
 	) {}
 
-	get value(): ExpressionValueType {
+	get value(): ExpressionValue {
 		return this._value;
 	}
 

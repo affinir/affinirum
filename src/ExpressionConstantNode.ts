@@ -1,6 +1,6 @@
 import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
-import { ExpressionType, ExpressionValueType } from './ExpressionType.js';
+import { ExpressionType, ExpressionValue } from './ExpressionType.js';
 
 export class ExpressionConstantNode extends ExpressionNode {
 
@@ -15,14 +15,18 @@ export class ExpressionConstantNode extends ExpressionNode {
 		return this._constant.type;
 	}
 
+	get subnodes(): ExpressionNode[] {
+		return [];
+	}
+
 	compile( type: ExpressionType ): ExpressionNode {
-		if ( type.infer( this.type ).invalid ) {
+		if ( !type.infer( this.type ) ) {
 			throw this;
 		}
 		return this;
 	}
 
-	evaluate(): ExpressionValueType {
+	evaluate(): ExpressionValue {
 		return this._constant.value;
 	}
 

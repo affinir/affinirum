@@ -1,8 +1,9 @@
 import { ExpressionNode } from './ExpressionNode.js';
-import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionConstantNode } from './ExpressionConstantNode.js';
+import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
-import { ExpressionValueType, ExpressionType } from './ExpressionType.js';
+import { ExpressionVariable } from './ExpressionVariable.js';
+import { ExpressionValue, ExpressionType } from './ExpressionType.js';
 
 export class ExpressionFunctionNode extends ExpressionNode {
 
@@ -21,16 +22,23 @@ export class ExpressionFunctionNode extends ExpressionNode {
 		return this._type;
 	}
 
+	get subnodes(): ExpressionNode[] {
+		return this._subnodes;
+	}
+
 	compile( type: ExpressionType ): ExpressionNode {
 		const inferredType = this._function.type.infer( type );
-		if ( inferredType.invalid ) {
+		if ( !inferredType ) {
 			throw this;
 		}
 		this._type = inferredType;
 		let constant = true;
 		for ( let i = 0; i < this._subnodes.length; ++i ) {
 			const argType = this._function.argTypes[ i ] ?? this._function.argTypes.slice( -1 )[ 0 ];
-			const inferredArgType = this._function.inference ? this._function.inference( i, argType, inferredType ) : argType;
+			const inferredArgType = i === 0 && this._function.inference ? argType.infer( inferredType, this._function.inference ) : argType;
+			if ( !inferredArgType ) {
+				throw this;
+			}
 			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile( inferredArgType );
 			constant &&= ( subnode instanceof ExpressionConstantNode );
 		}
@@ -41,7 +49,7 @@ export class ExpressionFunctionNode extends ExpressionNode {
 		return this;
 	}
 
-	evaluate(): ExpressionValueType {
+	evaluate(): ExpressionValue {
 		return this._function.evaluate( ...this._subnodes.map( node => node.evaluate() ) );
 	}
 

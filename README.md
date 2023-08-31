@@ -71,6 +71,8 @@ Target: ES2020 [browser or NodeJS].
 #### String functions
 * Trim: trim
 * Substring: substr
+#### Array functions
+* Flatten: flat
 #### Boolean constants
 * true
 * false

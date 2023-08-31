@@ -1,6 +1,9 @@
-import { ExpressionValueType, ExpressionType } from './ExpressionType.js';
+import { ExpressionValue, ExpressionType } from './ExpressionType.js';
+import { ExpressionVariable } from './ExpressionVariable.js';
 
 export abstract class ExpressionNode {
+
+	protected _variables = new Map<string, ExpressionVariable>();
 
 	constructor(
 		protected _pos: number,
@@ -11,7 +14,8 @@ export abstract class ExpressionNode {
 	}
 
 	abstract type: ExpressionType;
+	abstract subnodes: ExpressionNode[];
 	abstract compile( types: ExpressionType ): ExpressionNode;
-	abstract evaluate(): ExpressionValueType;
+	abstract evaluate(): ExpressionValue;
 
 }

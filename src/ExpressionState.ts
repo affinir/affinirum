@@ -21,7 +21,6 @@ export class ExpressionState {
 	constructor(
 		protected _constants: Map<string, ExpressionConstant>,
 		protected _functions: Map<string, ExpressionFunction>,
-		protected _variables: Map<string, ExpressionVariable>,
 		protected readonly _expr: string
 	) {}
 

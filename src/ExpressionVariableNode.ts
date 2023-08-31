@@ -1,6 +1,6 @@
 import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
-import { ExpressionValueType, ExpressionType } from './ExpressionType.js';
+import { ExpressionValue, ExpressionType } from './ExpressionType.js';
 
 export class ExpressionVariableNode extends ExpressionNode {
 
@@ -15,16 +15,20 @@ export class ExpressionVariableNode extends ExpressionNode {
 		return this._variable.type;
 	}
 
+	get subnodes(): ExpressionNode[] {
+		return [];
+	}
+
 	compile( type: ExpressionType ): ExpressionNode {
 		const inferredType = this._variable.type.infer( type );
-		if ( inferredType.invalid ) {
+		if ( !inferredType ) {
 			throw this;
 		}
 		this._variable.type = inferredType;
 		return this;
 	}
 
-	evaluate(): ExpressionValueType {
+	evaluate(): ExpressionValue {
 		return this._variable.value!;
 	}
 

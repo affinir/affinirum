@@ -1,62 +1,50 @@
-export type ExpressionObjectType = Record<string, boolean | number | string | boolean[] | number[] | string[]>;
-export type ExpressionValueType = boolean | number | string | boolean[] | number[] | string[] | ExpressionObjectType | ExpressionObjectType[];
-export type ExpressionValueTypename = 'boolean' | 'number' | 'string' | 'boolean[]' | 'number[]' | 'string[]' | 'object' | 'object[]';
+export type ExpressionValue = boolean | number | string | object | ExpressionValue[];
+type ExpressionValueType = 'boolean' | 'number' | 'string' | 'array' | 'object';
 
 export class ExpressionType {
 
+	protected _vtypes: string[];
+
 	constructor(
-		protected _typenames: ExpressionValueTypename[]
-	) {}
+		...args: ExpressionValueType[]
+	) {
+		this._vtypes = args.length ? args : [ 'boolean', 'number', 'string', 'array', 'object' ];
+	}
 
 	get exact(): boolean {
-		return this._typenames.length === 1;
+		return this._vtypes.length === 1;
 	}
 
-	get invalid(): boolean {
-		return this._typenames.length === 0;
+	get isArray(): boolean {
+		return this.exact && this._vtypes[ 0 ] === 'array';
 	}
 
-	infer( type: ExpressionType ): ExpressionType {
-		return new ExpressionType( this._typenames.filter( tn => type._typenames.includes( tn ) ) );
+	get isObject(): boolean {
+		return this.exact && this._vtypes[ 0 ] === 'object';
 	}
 
-	filter( fn: ( tn: ExpressionValueTypename ) => boolean ): ExpressionType {
-		return new ExpressionType( this._typenames.filter( fn ) );
-	}
-
-	or( fn: ( tn: ExpressionValueTypename ) => boolean ): boolean {
-		return this._typenames.some( fn );
-	}
-
-	and( fn: ( tn: ExpressionValueTypename ) => boolean ): boolean {
-		return this._typenames.every( fn );
-	}
-
-	toElement(): ExpressionType {
-		return new ExpressionType( this._typenames.map( tn => tn.slice( 0, -2 ) ) as ExpressionValueTypename[] );
-	}
-
-	toArray(): ExpressionType {
-		return new ExpressionType( this._typenames.map( tn => tn + '[]' ) as ExpressionValueTypename[] );
+	infer( mask: ExpressionType, func = ( vtype: string, vmask: string ) => vtype === vmask ): ExpressionType | undefined {
+		const vtypes = this._vtypes.filter( vtype => mask._vtypes.some( mvtype => func( vtype, mvtype ) ) ) as ExpressionValueType[];
+		return vtypes.length ? new ExpressionType( ...vtypes ) : undefined;
 	}
 
 	toString(): string {
-		return this.invalid ? 'invalid' : this._typenames.join( '|' );
+		return this._vtypes.join( '|' );
 	}
 
-	static of( value: ExpressionValueType ): ExpressionType {
-		const tn = Array.isArray( value ) ? ExpressionType.of( value[ 0 ] ) + '[]' : typeof value;
-		return new ExpressionType( [ tn as ExpressionValueTypename ] );
+	static of( value: ExpressionValue ): ExpressionType {
+		const vtype = Array.isArray( value ) ? 'array' : typeof value;
+		return new ExpressionType( vtype as ExpressionValueType );
 	}
 
-	static equate( value1: ExpressionValueType, value2: ExpressionValueType ): boolean {
+	static equate( value1: ExpressionValue, value2: ExpressionValue ): boolean {
 		if ( typeof value1 === 'boolean' || typeof value1 === 'number' || typeof value1 === 'string' ) {
 			return value1 === value2;
 		}
 		if ( Array.isArray( value1 ) && Array.isArray( value2 ) ) {
 			if ( value1.length === value2.length ) {
 				for ( let i = 0; i < value1.length; ++i ) {
-					if ( ExpressionType.equate( value1[ i ], value2[ i ] ) ) {
+					if ( !ExpressionType.equate( value1[ i ], value2[ i ] ) ) {
 						return false;
 					}
 				}
@@ -66,7 +54,7 @@ export class ExpressionType {
 		}
 		const props = new Set( [ ...Object.getOwnPropertyNames( value1 ), ...Object.getOwnPropertyNames( value2 ) ] );
 		for ( let p of props ) {
-			if ( ( value1 as any )[ p ] !== ( value2 as any )[ p ] ) {
+			if ( !ExpressionType.equate( ( value1 as any )[ p ], ( value2 as any )[ p ] ) ) {
 				return false;
 			}
 		}
@@ -75,16 +63,9 @@ export class ExpressionType {
 
 }
 
-export const typeBoolean = new ExpressionType( [ 'boolean' ] );
-export const typeNumber = new ExpressionType( [ 'number' ] );
-export const typeString = new ExpressionType( [ 'string' ] );
-export const typeObject = new ExpressionType( [ 'object' ] );
-export const typeAnyElement = new ExpressionType( [ 'boolean', 'number', 'string', 'object' ] );
-export const typeBooleanArray = new ExpressionType( [ 'boolean[]' ] );
-export const typeNumberArray = new ExpressionType( [ 'number[]' ] );
-export const typeStringArray = new ExpressionType( [ 'string[]' ] );
-export const typeObjectArray = new ExpressionType( [ 'object[]' ] );
-export const typeAnyArray = new ExpressionType( [ 'boolean[]', 'number[]', 'string[]', 'object[]' ] );
-export const typeAny = new ExpressionType( [ 'boolean', 'number', 'string', 'object', 'boolean[]', 'number[]', 'string[]', 'object[]' ] );
-export const inferenceByConstituency = ( ix: number, type: ExpressionType, mask: ExpressionType ) =>
-	type.filter( tn => mask.or( mtn => mtn.split( '[]' )[ 0 ] === tn.split( '[]' )[ 0 ] ) );
+export const typeBoolean = new ExpressionType( 'boolean' );
+export const typeNumber = new ExpressionType( 'number' );
+export const typeString = new ExpressionType( 'string' );
+export const typeArray = new ExpressionType( 'array' );
+export const typeObject = new ExpressionType( 'object' );
+export const typeAny = new ExpressionType();
