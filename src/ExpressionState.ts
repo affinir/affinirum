@@ -2,14 +2,16 @@ import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
 	operLike, operUnlike, operBeginof, operEndof, operPartof,
-	operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat } from './ExpressionOperator.js';
+	operAdd, operSub, operMul, operDiv, operPct, operPow, operJoin } from './ExpressionOperator.js';
 
-const bracketsOpenSymbol = Symbol();
-const bracketsCloseSymbol = Symbol();
-const parenthesesOpenSymbol = Symbol();
-const parenthesesCloseSymbol = Symbol();
-const separatorSymbol = Symbol();
-const indexerSymbol = Symbol();
+const symbolBracketsOpen = Symbol();
+const symbolBracketsClose = Symbol();
+const symbolParenthesesOpen = Symbol();
+const symbolParenthesesClose = Symbol();
+const symbolSeparator = Symbol();
+const symbolIndexer = Symbol();
+const symbolDeclaration = Symbol();
+const symbolScope = Symbol();
 
 export class ExpressionState {
 
@@ -49,36 +51,36 @@ export class ExpressionState {
 		return typeof this._obj === 'string';
 	}
 
-	get isDeclaration(): boolean {
-		return this.isToken && this._obj === 'var';
-	}
-
-	get isScope(): boolean {
-		return this.isToken && this._obj === 'in';
-	}
-
 	get isBracketsOpen(): boolean {
-		return this._obj === bracketsOpenSymbol;
+		return this._obj === symbolBracketsOpen;
 	}
 
 	get isBracketsClose(): boolean {
-		return this._obj === bracketsCloseSymbol;
+		return this._obj === symbolBracketsClose;
 	}
 
 	get isParenthesesOpen(): boolean {
-		return this._obj === parenthesesOpenSymbol;
+		return this._obj === symbolParenthesesOpen;
 	}
 
 	get isParenthesesClose(): boolean {
-		return this._obj === parenthesesCloseSymbol;
+		return this._obj === symbolParenthesesClose;
 	}
 
 	get isSeparator(): boolean {
-		return this._obj === separatorSymbol;
+		return this._obj === symbolSeparator;
 	}
 
 	get isIndexer(): boolean {
-		return this._obj === indexerSymbol;
+		return this._obj === symbolIndexer;
+	}
+
+	get isDeclaration(): boolean {
+		return this._obj === symbolDeclaration;
+	}
+
+	get isScope(): boolean {
+		return this._obj === symbolScope;
 	}
 
 	next(): ExpressionState {
@@ -89,12 +91,13 @@ export class ExpressionState {
 			++this._next;
 			switch ( c ) {
 				case ' ': case '\t': case '\n': case '\r': break;
-				case '[': this._obj = bracketsOpenSymbol; return this;
-				case ']': this._obj = bracketsCloseSymbol; return this;
-				case '(': this._obj = parenthesesOpenSymbol; return this;
-				case ')': this._obj = parenthesesCloseSymbol; return this;
-				case ',': this._obj = separatorSymbol; return this;
-				case '.': this._obj = indexerSymbol; return this;
+				case '[': this._obj = symbolBracketsOpen; return this;
+				case ']': this._obj = symbolBracketsClose; return this;
+				case '(': this._obj = symbolParenthesesOpen; return this;
+				case ')': this._obj = symbolParenthesesClose; return this;
+				case ',': this._obj = symbolSeparator; return this;
+				case '.': this._obj = symbolIndexer; return this;
+				case '@': this._obj = symbolDeclaration; return this;
 				case '|': this._obj = operOr; return this;
 				case '&': this._obj = operAnd; return this;
 				case '!': switch ( this._expr.charAt( this._next ) ) {
@@ -116,7 +119,10 @@ export class ExpressionState {
 					default: this._obj = operLt; return this;
 				}
 				case '+': this._obj = operAdd; return this;
-				case '-': this._obj = operSub; return this;
+				case '-': switch ( this._expr.charAt( this._next ) ) {
+					case '>': ++this._next; this._obj = symbolScope; return this;
+					default: this._obj = operSub; return this;
+				}
 				case '*': switch ( this._expr.charAt( this._next ) ) {
 					case '=': ++this._next; this._obj = operEndof; return this;
 					case '*': ++this._next; this._obj = operPartof; return this;
@@ -126,7 +132,7 @@ export class ExpressionState {
 				case '/': this._obj = operDiv; return this;
 				case '%': this._obj = operPct; return this;
 				case '^': this._obj = operPow; return this;
-				case '#': this._obj = operConcat; return this;
+				case '#': this._obj = operJoin; return this;
 				default:
 					if ( ExpressionState.alpha( c ) ) {
 						while ( ExpressionState.alphanumeric( this._expr.charAt( this._next ) ) ) {

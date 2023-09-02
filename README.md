@@ -12,13 +12,15 @@ Target: ES2020 [browser or NodeJS].
 
 * Parse once, execute multiple times
 * Efficient expression evaluation
-* Function argument type checking
-* Boolean, arithmetic, string and access operators supported
+* Type checking
+* Boolean, arithmetic, string and index operators supported
 * Numeric and string comparision operators supported
-* Variadic functions supported
+* Variadic and iterator functions supported
 * Standard math functions included
 * Easy to add custom functions or constants
 * All operators support literal equivalent
+* Method-style invocation is supported for all functions,
+  i.e. pow(a,2) is the same as a.pow(2)
 
 ## What
 
@@ -72,7 +74,11 @@ Target: ES2020 [browser or NodeJS].
 * Trim: trim
 * Substring: substr
 #### Array functions
-* Flatten: flat
+* Reverse: reverse
+* Flatten: flatten
+* Slice: slice
+* Map iterator: map
+* Filter iterator: filter
 #### Boolean constants
 * true
 * false

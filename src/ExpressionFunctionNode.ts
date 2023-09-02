@@ -46,19 +46,18 @@ export class ExpressionFunctionNode extends ExpressionNode {
 	}
 
 	evaluate(): ExpressionValue {
-		const ix = this._function.argTypes.findIndex( arg => arg.isFunction );
-		if ( ix > -1 ) {
-			const func = this._subnodes[ ix ];
-			const variable = this._subnodes[ ix - 1 ] as ExpressionVariableNode;
+		if ( this._function.argTypes.some( arg => arg.isFunction ) ) {
+			const fnode = this._subnodes[ 2 ];
+			const vnode = this._subnodes[ 1 ] as ExpressionVariableNode;
 			return this._function.evaluate( this._subnodes[ 0 ].evaluate(), ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => {
-				if ( variable ) {
-					variable.value = {
+				if ( vnode ) {
+					vnode.value = {
 						value: v,
 						index: i,
 						array: a,
 					};
 				}
-				return func;
+				return fnode.evaluate();
 			} )
 		}
 		return this._function.evaluate( ...this._subnodes.map( node => node.evaluate() ) );

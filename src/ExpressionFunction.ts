@@ -232,22 +232,31 @@ export const funcSubstr = new ExpressionFunction(
 	[ typeString, typeNumber ],
 	typeString
 );
-export const funcConcat = new ExpressionFunction(
-	( ...args: ExpressionValue[] ) =>
-		args as ExpressionValue,
+export const funcJoin = new ExpressionFunction(
+	( ...args: ExpressionValue[] ) => args,
 	[ typeAny ],
+	typeArray,
+);
+export const funcConcat = new ExpressionFunction(
+	( ...args: ExpressionValue[][] ) => [ ...args ],
+	[ typeArray ],
 	typeArray,
 );
 export const funcFlatten = new ExpressionFunction(
 	( args: ExpressionValue[], arg: number ) =>
 		( args as [] ).flat( arg ) as ExpressionValue,
-	[ typeAny, typeNumber ],
+	[ typeArray, typeNumber ],
 	typeArray,
 );
-export const funcSubarr = new ExpressionFunction(
+export const funcReverse = new ExpressionFunction(
+	( arg: ExpressionValue[] ) => arg.reverse(),
+	[ typeArray ],
+	typeArray
+);
+export const funcSlice = new ExpressionFunction(
 	( args: ExpressionValue[], arg1: number, arg2: number ) =>
 		args.slice( arg1, arg2 ) as ExpressionValue,
-	[ typeAny, typeNumber, typeNumber ],
+	[ typeArray, typeNumber, typeNumber ],
 	typeArray,
 );
 export const funcAt = new ExpressionFunction(
@@ -257,7 +266,7 @@ export const funcAt = new ExpressionFunction(
 	typeAny,
 	( vtype, vmask ) => vtype === 'object' || vtype ==='array' || vtype === vmask
 );
-export const funcConvert = new ExpressionFunction(
+export const funcMap = new ExpressionFunction(
 	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => ExpressionValue ) =>
 		arg1.map( ( v, i, a ) => arg2( v, i, a ) ),
 	[ typeArray, typeFunction ],

@@ -3,7 +3,8 @@ import { ExpressionService } from '../src/index.js';
 let passed = 0, failed = 0;
 console.log( `testExpressionService started...` );
 [
-	//[ '0+(', [ { result: 0 } ] ],
+	//[ '(arr.map(@a->a.value*2)#8)', [ { arr: [ 1, 2, 3 ], result: 7 } ] ],
+	[ 'arr.map(@a->a.value*2).filter(@a->a.value>3)[1]+[9].len()', [ { arr: [ 1, 2, 3 ], result: 7 } ] ],
 	[ 'false', [ { result: false } ] ],
 	[ 'true', [ { result: true } ] ],
 	[ '0.5', [ { result: 0.5 } ] ],

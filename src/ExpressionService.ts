@@ -4,13 +4,13 @@ import { ExpressionFunction, funcOr, funcAnd, funcNot, funcGt, funcLt, funcGe, f
 	funcLike, funcUnlike, funcBeginof, funcEndof, funcPartof,
 	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
 	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin,
-	funcLen, funcTrim, funcLowercase, funcUppercase, funcSubstr, funcConcat, funcFlatten, funcSubarr, funcAt,
-	funcConvert, funcFilter } from './ExpressionFunction.js';
+	funcLen, funcTrim, funcLowercase, funcUppercase, funcSubstr, funcJoin, funcConcat, funcFlatten, funcReverse, funcSlice,
+	funcAt, funcMap, funcFilter } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
 	operLike, operUnlike, operBeginof, operEndof, operPartof,
-	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt } from './ExpressionOperator.js';
+	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operJoin, operAt } from './ExpressionOperator.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
-import { ExpressionValue, ExpressionType, typeAny, typeArray } from './ExpressionType.js';
+import { ExpressionValue, ExpressionType, typeAny } from './ExpressionType.js';
 import { ExpressionState } from './ExpressionState.js';
 import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionConstantNode } from './ExpressionConstantNode.js';
@@ -23,7 +23,7 @@ export class ExpressionService {
 	protected readonly _root: ExpressionNode;
 	protected readonly _scope = Symbol();
 	protected _constants = new Map<string, ExpressionConstant>( [
-		[ 'true', constTrue ], [ 'false', constFalse ], [ 'nan', constNan ], [ 'pi', constPi ], [ 'epsilon', constEpsilon ],
+		[ 'true', constTrue ], [ 'false', constFalse ], [ 'NaN', constNan ], [ 'Pi', constPi ], [ 'Epsilon', constEpsilon ],
 	] );
 	protected _functions = new Map<string, ExpressionFunction>( [
 		[ 'or', funcOr ], [ 'and', funcAnd ], [ 'not', funcNot ],
@@ -34,9 +34,9 @@ export class ExpressionService {
 		[ 'mul', funcMul ], [ 'div', funcDiv ], [ 'rem', funcRem ], [ 'mod', funcMod ], [ 'pct', funcPct ],
 		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
 		[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ], [ 'max', funcMax ], [ 'min', funcMin ],
-		[ 'len', funcLen ], [ 'trim', funcTrim ], [ 'lowercase', funcLowercase ], [ 'uppercase', funcUppercase ],
-		[ 'substr', funcSubstr ], [ 'concat', funcConcat ], [ 'flatten', funcFlatten ], [ 'subarr', funcSubarr ], [ 'at', funcAt ],
-		[ 'convert', funcConvert ], [ 'filter', funcFilter ],
+		[ 'len', funcLen ], [ 'trim', funcTrim ], [ 'lowercase', funcLowercase ], [ 'uppercase', funcUppercase ], [ 'substr', funcSubstr ],
+		[ 'concat', funcJoin ], [ 'concat', funcConcat ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ],
+		[ 'at', funcAt ], [ 'map', funcMap ], [ 'filter', funcFilter ],
 	] );
 	protected _variables = new Map<symbol, Map<string, ExpressionVariable>>( [ [ this._scope, new Map<string, ExpressionVariable>() ] ] );
 
@@ -73,14 +73,16 @@ export class ExpressionService {
 		}
 		catch ( err ) {
 			throw new Error( `compilation error on ${ ( err as Error ).message } at position ${ state.pos }:\n` +
-				`${ this._expr.substring( state.pos ) }` );
+				`${ this._expr.substring( state.pos - 16, state.pos + 17 ) }\n` +
+				`${ ' '.repeat( this._expr.substring( state.pos - 16, state.pos ).length ) }^` );
 		}
 		try {
 			this._root = this._root.compile( type );
 		}
 		catch ( errnode: any ) {
 			throw new TypeError( `compilation error on unexpected type ${ errnode.type } at position ${ errnode.pos }:\n` +
-				`${ this._expr.substring( errnode.pos ) }` );
+			`${ this._expr.substring( state.pos - 16, state.pos + 17 ) }\n` +
+			`${ ' '.repeat( this._expr.substring( state.pos - 16, state.pos ).length ) }^` );
 		}
 	}
 
@@ -164,7 +166,7 @@ export class ExpressionService {
 
 	protected aggregate( state: ExpressionState, scope: symbol ): ExpressionNode {
 		let node = this.product( state, scope );
-		while ( state.func === operConcat || state.func === operAdd || state.func === operSub ) {
+		while ( state.func === operJoin || state.func === operAdd || state.func === operSub ) {
 			node = new ExpressionFunctionNode( state.pos, state.func,
 				[ node, this.product( state.next(), scope ) ] );
 		}
@@ -204,7 +206,7 @@ export class ExpressionService {
 		while ( state.isIndexer || state.isBracketsOpen ) {
 			if ( state.isIndexer ) {
 				if ( !state.next().isToken ) {
-					throw new Error( `` );
+					throw new Error( `missing index specifier` );
 				}
 				const pos = state.pos;
 				const token = state.token;
@@ -212,15 +214,17 @@ export class ExpressionService {
 				if ( func != null ) {
 					const subs = [ node, ...this.arguments( func.arity - 1, state, scope ) ];
 					state.next();
-					return new ExpressionFunctionNode( pos, func, subs );
-				}
-				node = new ExpressionFunctionNode( state.pos, operAt,
-					[ node, new ExpressionConstantNode( state.pos, new ExpressionConstant( state.token ) ) ] );
-				if ( state.isToken ) {
-					state.next();
+					node = new ExpressionFunctionNode( pos, func, subs );
 				}
 				else {
-					throw new Error( `missing property name` );
+					node = new ExpressionFunctionNode( state.pos, operAt,
+						[ node, new ExpressionConstantNode( state.pos, new ExpressionConstant( state.token ) ) ] );
+					if ( state.isToken ) {
+						state.next();
+					}
+					else {
+						throw new Error( `missing property name` );
+					}
 				}
 			}
 			else {
@@ -271,15 +275,17 @@ export class ExpressionService {
 		}
 		else if ( state.isBracketsOpen ) {
 			const subs = [];
-			do {
-				subs.push( this.disjunction( state.next(), scope ) );
+			while ( !state.next().isBracketsClose ) {
+				subs.push( this.disjunction( state, scope ) );
+				if ( !state.isSeparator ) {
+					break;
+				}
 			}
-			while ( state.isSeparator );
 			if ( !state.isBracketsClose ) {
 				throw new Error( `missing closing brackets` );
 			}
 			state.next();
-			return new ExpressionFunctionNode( pos, operConcat, subs );
+			return new ExpressionFunctionNode( pos, operJoin, subs );
 		}
 		else if ( state.isBracketsClose ) {
 			throw new Error( `empty brackets` );
@@ -303,16 +309,16 @@ export class ExpressionService {
 		if ( !state.next().isParenthesesOpen ) {
 			throw new Error( `missing opening parenthesis` );
 		}
-		do {
-			if ( state.next().isParenthesesClose ) {
-				break;
-			}
+		while ( !state.next().isParenthesesClose ) {
 			if ( state.isDeclaration ) {
 				if ( !state.next().isToken ) {
 					throw new Error( `missing variable name` );
 				}
 				const pos = state.pos;
 				const token = state.token;
+				if ( this._variables.get( scope )?.get( token ) ) {
+					throw new Error( `variable redefinition` );
+				}
 				if ( !state.next().isScope ) {
 					throw new Error( `missing scope operator` );
 				}
@@ -322,13 +328,15 @@ export class ExpressionService {
 				const variable = new ExpressionVariable();
 				variables.set( token, variable );
 				this._variables.set( subscope, variables );
-				nodes.push( new ExpressionVariableNode( pos, variable ), this.disjunction( state, subscope ) );
+				nodes.push( new ExpressionVariableNode( pos, variable ), this.disjunction( state.next(), subscope ) );
 			}
 			else {
 				nodes.push( this.disjunction( state, scope ) );
 			}
+			if ( !state.isSeparator ) {
+				break;
+			}
 		}
-		while ( state.isSeparator );
 		if ( !state.isParenthesesClose ) {
 			throw new Error( `missing closing parenthesis` );
 		}
