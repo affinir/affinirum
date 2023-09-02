@@ -4,7 +4,7 @@ export class ExpressionVariable {
 
 	constructor(
 		protected _value: ExpressionValue | undefined = undefined,
-		protected _type: ExpressionType = typeAny
+		protected _type: ExpressionType = typeAny,
 	) {}
 
 	get value(): ExpressionValue | undefined {

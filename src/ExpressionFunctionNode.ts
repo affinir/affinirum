@@ -1,9 +1,9 @@
 import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionConstantNode } from './ExpressionConstantNode.js';
+import { ExpressionVariableNode } from './ExpressionVariableNode.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
-import { ExpressionVariable } from './ExpressionVariable.js';
-import { ExpressionValue, ExpressionType } from './ExpressionType.js';
+import { ExpressionValue, ExpressionType, typeAny } from './ExpressionType.js';
 
 export class ExpressionFunctionNode extends ExpressionNode {
 
@@ -22,10 +22,6 @@ export class ExpressionFunctionNode extends ExpressionNode {
 		return this._type;
 	}
 
-	get subnodes(): ExpressionNode[] {
-		return this._subnodes;
-	}
-
 	compile( type: ExpressionType ): ExpressionNode {
 		const inferredType = this._function.type.infer( type );
 		if ( !inferredType ) {
@@ -39,8 +35,8 @@ export class ExpressionFunctionNode extends ExpressionNode {
 			if ( !inferredArgType ) {
 				throw this;
 			}
-			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile( inferredArgType );
-			constant &&= ( subnode instanceof ExpressionConstantNode );
+			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile( inferredArgType.isFunction ? typeAny : inferredArgType );
+			constant &&= ( subnode instanceof ExpressionConstantNode && !subnode.type.isFunction );
 		}
 		if ( constant ) {
 			return new ExpressionConstantNode( this._pos,
@@ -50,6 +46,21 @@ export class ExpressionFunctionNode extends ExpressionNode {
 	}
 
 	evaluate(): ExpressionValue {
+		const ix = this._function.argTypes.findIndex( arg => arg.isFunction );
+		if ( ix > -1 ) {
+			const func = this._subnodes[ ix ];
+			const variable = this._subnodes[ ix - 1 ] as ExpressionVariableNode;
+			return this._function.evaluate( this._subnodes[ 0 ].evaluate(), ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => {
+				if ( variable ) {
+					variable.value = {
+						value: v,
+						index: i,
+						array: a,
+					};
+				}
+				return func;
+			} )
+		}
 		return this._function.evaluate( ...this._subnodes.map( node => node.evaluate() ) );
 	}
 

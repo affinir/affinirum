@@ -3,6 +3,7 @@ import { ExpressionService } from '../src/index.js';
 let passed = 0, failed = 0;
 console.log( `testExpressionService started...` );
 [
+	//[ '0+(', [ { result: 0 } ] ],
 	[ 'false', [ { result: false } ] ],
 	[ 'true', [ { result: true } ] ],
 	[ '0.5', [ { result: 0.5 } ] ],
@@ -14,10 +15,10 @@ console.log( `testExpressionService started...` );
 	[ 'or(a <= b, c)', [ { a: 1, b: -1, c: true, result: true } ] ],
 	[ 'and(a <= b, c, true)', [ { a: 1, b: -1, c: true, result: false } ] ],
 	[ 'len("my long string") + 100', [ { result: 114 } ] ],
-	[ 'len(abc) * 10 - 5', [ { abc: 'abc', result: 25 } ] ],
+	[ 'abc.len() * 10 - 5', [ { abc: 'abc', result: 25 } ] ],
 	[ '(a[n+1] + 2)^2', [ { a: [ 0, 1, 2 ], n: 1, result: 16 } ] ],
 	[ '"0"+"1"+`2`', [ { result: '012' } ] ],
-	[ 'len(a) % 50', [ { a: 'abcd', result: 2 }, { a: 'abcdef', result: 3 } ] ],
+	[ 'a.len() % 50', [ { a: 'abcd', result: 2 }, { a: 'abcdef', result: 3 } ] ],
 	[ 'len(trim(a)) = 6', [ { a: '  abcdef  ', result: true } ] ],
 	[ '-a^2 == b', [ { a: 2, b: -4, result: true } ] ],
 	[ '(x + 10) * (y - 10)>0', [ { x: 10, y: 10, result: false }, { x: 100, y: 100, result: true } ] ],

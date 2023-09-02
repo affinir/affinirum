@@ -15,8 +15,8 @@ export class ExpressionVariableNode extends ExpressionNode {
 		return this._variable.type;
 	}
 
-	get subnodes(): ExpressionNode[] {
-		return [];
+	set value( value: ExpressionValue ) {
+		this._variable.value = value;
 	}
 
 	compile( type: ExpressionType ): ExpressionNode {

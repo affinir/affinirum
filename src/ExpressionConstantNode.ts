@@ -15,10 +15,6 @@ export class ExpressionConstantNode extends ExpressionNode {
 		return this._constant.type;
 	}
 
-	get subnodes(): ExpressionNode[] {
-		return [];
-	}
-
 	compile( type: ExpressionType ): ExpressionNode {
 		if ( !type.infer( this.type ) ) {
 			throw this;
