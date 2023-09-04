@@ -3,7 +3,7 @@ import { ExpressionConstantNode } from './ExpressionConstantNode.js';
 import { ExpressionVariableNode } from './ExpressionVariableNode.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
-import { ExpressionValue, ExpressionType, typeAny } from './ExpressionType.js';
+import { ExpressionValue, ExpressionType, typeVar } from './ExpressionType.js';
 
 export class ExpressionFunctionNode extends ExpressionNode {
 
@@ -35,7 +35,7 @@ export class ExpressionFunctionNode extends ExpressionNode {
 			if ( !inferredArgType ) {
 				throw this;
 			}
-			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile( inferredArgType.isFunction ? typeAny : inferredArgType );
+			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile( inferredArgType.isFunction ? typeVar : inferredArgType );
 			constant &&= ( subnode instanceof ExpressionConstantNode && !subnode.type.isFunction );
 		}
 		if ( constant ) {

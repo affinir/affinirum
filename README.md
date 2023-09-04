@@ -38,11 +38,11 @@ Target: ES2020 [browser or NodeJS].
 #### String operations
 * Char at: [], at
 * Addition: +, add
-#### Object operations
-* Property at: [], at
 #### Array operations
 * Element at: [], at
-* Concatination: #, concat
+* Concat: #, concat
+#### Object operations
+* Property by name: ., [], at
 #### Numeric comparisions
 * Greater than: >, gt
 * Less than: <, lt
@@ -55,7 +55,7 @@ Target: ES2020 [browser or NodeJS].
 * End of: \*\=, endof
 * Part of: \*\*, partof
 #### Generic comparisions
-* Equal to: =, eq
+* Equal to: ==, eq
 * Not equal to: !=, ne
 #### Numeric functions
 * Power: pow
@@ -74,17 +74,21 @@ Target: ES2020 [browser or NodeJS].
 * Trim: trim
 * Substring: substr
 #### Array functions
-* Reverse: reverse
-* Flatten: flatten
-* Slice: slice
-* Map iterator: map
-* Filter iterator: filter
+* Reverse order of items in array: reverse
+* Flatten array items to specified depth: flatten
+* Slice items into new array: slice
+* Map items iterator: map
+* Filter items iterator: filter
+* Any item iterator: anyone
+* Every item iterator: everyone
 #### Boolean constants
 * true
 * false
 #### Numeric constants
-* epsilon
-* pi
+* NaN
+* Infinity
+* Epsilon
+* Pi
 
 ### Grammar
 The expression parsing is performed using the following grammar:
@@ -112,7 +116,7 @@ Constants can be strings or numbers.
 
 Create instance of ExpressionService for math expression.
 During the parsing any alphanumeric sequence not identified as
-number value, string value, operator, or function name is assumed to be variable.
+number value, string value, operator, or a function name is assumed to be variable.
 Evaluate the expression by providing variable values.
 
 Sample code:
@@ -120,7 +124,18 @@ Sample code:
 ```ts
 ...
 const expr = new ExpressionService( 'x * (y + abc / 5) > 10' );
-const value1 = expr.evaluate( { x: 10, y: 20, abc: 10 } );
-const value2 = expr.evaluate( { x: 1, y: 4, abc: 50 } );
+const value1 = expr.evaluate( { x: 10, y: 20, abc: 10 } ); // true
+const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
+...
+const arrExpr = new ExpressionService( '[ 1, 2, 3, a, b, c ].add()' );
+const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
+...
+const objExpr = new ExpressionService( '[number prop1=a,var prop2=`abc`].prop1+10' );
+const oValue = objExpr.evaluate( { a: 50 } ); // 60
+...
+const iteratorExpr = new ExpressionService(
+	'arr.map(var a -> a.value*2).filter(var a -> a.value>3).add()'
+);
+const iValue = iteratorExpr.evaluate( { arr: [ 1, 2, 3 ] } ); // 10
 ...
 ```

@@ -73,4 +73,4 @@ export const typeString = new ExpressionType( 'string' );
 export const typeArray = new ExpressionType( 'array' );
 export const typeObject = new ExpressionType( 'object' );
 export const typeFunction = new ExpressionType( 'function' );
-export const typeAny = new ExpressionType();
+export const typeVar = new ExpressionType();

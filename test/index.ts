@@ -3,8 +3,6 @@ import { ExpressionService } from '../src/index.js';
 let passed = 0, failed = 0;
 console.log( `testExpressionService started...` );
 [
-	//[ '(arr.map(@a->a.value*2)#8)', [ { arr: [ 1, 2, 3 ], result: 7 } ] ],
-	[ 'arr.map(@a->a.value*2).filter(@a->a.value>3)[1]+[9].len()', [ { arr: [ 1, 2, 3 ], result: 7 } ] ],
 	[ 'false', [ { result: false } ] ],
 	[ 'true', [ { result: true } ] ],
 	[ '0.5', [ { result: 0.5 } ] ],
@@ -15,12 +13,13 @@ console.log( `testExpressionService started...` );
 	[ 'a <= b', [ { a: 1, b: -1, result: false } ] ],
 	[ 'or(a <= b, c)', [ { a: 1, b: -1, c: true, result: true } ] ],
 	[ 'and(a <= b, c, true)', [ { a: 1, b: -1, c: true, result: false } ] ],
+	[ 'add([[100, [[10]]], [10], 13])', [ { result: 133 } ] ],
 	[ 'len("my long string") + 100', [ { result: 114 } ] ],
 	[ 'abc.len() * 10 - 5', [ { abc: 'abc', result: 25 } ] ],
 	[ '(a[n+1] + 2)^2', [ { a: [ 0, 1, 2 ], n: 1, result: 16 } ] ],
 	[ '"0"+"1"+`2`', [ { result: '012' } ] ],
 	[ 'a.len() % 50', [ { a: 'abcd', result: 2 }, { a: 'abcdef', result: 3 } ] ],
-	[ 'len(trim(a)) = 6', [ { a: '  abcdef  ', result: true } ] ],
+	[ 'len(trim(a)) == 6', [ { a: '  abcdef  ', result: true } ] ],
 	[ '-a^2 == b', [ { a: 2, b: -4, result: true } ] ],
 	[ '(x + 10) * (y - 10)>0', [ { x: 10, y: 10, result: false }, { x: 100, y: 100, result: true } ] ],
 	[ '(a + b + c + d) * ( a -b-c + 1 ) / b + 10', [ { a: 20, b: 10, c: 1, d: 2, result: 43 } ] ],
@@ -31,14 +30,23 @@ console.log( `testExpressionService started...` );
 	[ 'lowercase(trim(x))', [ { x: '  ABC  ', result: 'abc' }, { x: 'ABCD  ', result: 'abcd' } ] ],
 	[ 'uppercase(substr(a,3,4))', [ { a: 'abcdef', result: 'D' }, { a: 'abcDef---', result: 'D' } ] ],
 	[ 'a+b+(c+d)', [ { a: '1', b: 'b', c: 'c', d: '3', result: '1bc3' } ] ],
+	[ 'concat([0,1,2,3], [10,20,30,40])[1][0]', [ { result: 10 } ] ],
+	[ 'flatten([0,1,2,3]#[10,20,30,40]#100, 0).add()', [ { result: 206 } ] ],
 	[ '[a, b, c][ 0 ]', [ { a: 1, b: 2, c: 3, result: 1 } ] ],
 	[ '[a, b, c] + [ 1, 2, 3, 4 ]', [ { a: 1, b: 2, c: 3, result: 16 } ] ],
 	[ 'len([a, b, c]) + len([ 1, 2, 3, 4 ])', [ { a: 1, b: 2, c: 3, result: 7 } ] ],
-	[ 'obj.a0', [ { obj: { a0: 10 }, result: 10 }, { obj: { a0: '10' }, result: '10' } ] ],
-	[ 'obj["prop"].a', [ { obj: { prop: { a: 10 } }, result: 10 }, { obj: { prop: { a: '10' } }, result: '10' } ] ],
-	[ 'val*obj[a["prop"]]+1', [ { val: 1, obj: { test: 10 }, a: { prop: 'test' }, result: 11 } ] ],
-	[ 'obj["first"]+obj["second"]', [ { obj: { first: 1, second: 2 }, result: 3 } ] ],
-	[ 'test[0].first=test[1]["second"]', [ { test: [ { first: 1, second: 2 }, { first: 2, second: 1 } ], result: true } ] ],
+	[ 'obj1.a0', [ { obj1: { a0: 10 }, result: 10 }, { obj1: { a0: '10' }, result: '10' } ] ],
+	[ 'obj2["prop"].a', [ { obj2: { prop: { a: 10 } }, result: 10 }, { obj2: { prop: { a: '10' } }, result: '10' } ] ],
+	[ 'val*myobj[a["prop"]]+1', [ { val: 1, myobj: { test: 10 }, a: { prop: 'test' }, result: 11 } ] ],
+	[ 'obj3["first"]+obj3["second"]', [ { obj3: { first: 1, second: 2 }, result: 3 } ] ],
+	[ 'test[0].first==test[1]["second"]', [ { test: [ { first: 1, second: 2 }, { first: 2, second: 1 } ], result: true } ] ],
+	[ 'arr1.map(object a->a.value*2)[1]', [ { arr1: [ 1, 2, 3 ], result: 4 } ] ],
+	[ 'arr.map(object a->a.value*2).filter(var a->a.value>3)[1]+[9].len()', [ { arr: [ 1, 2, 3 ], result: 7 } ] ],
+	[ 'arr.map(object a->a.value.map(object b->b.value+12)).add()', [ { arr: [ [ 1 ], [ 1, 2 ], [ 2, 3, 4 ] ], result: 85 } ] ],
+	[ 'arr.any(object a->a.value < 0)', [ { arr: [ 1, 2, 3, 4 ], result: false } ] ],
+	[ 'arr.every(object a->a.value > 0)', [ { arr: [ 1, 2, 3, 4 ], result: true } ] ],
+	[ '[50,number a = 10,string b=`my string`][`0`]', [ { result: 50 } ] ],
+	[ 'constr([`a`, 10],[`b`, `my string`]).a', [ { result: 10 } ] ],
 ].forEach( ( prm, ix ) => {
 	const expr = prm[ 0 ] as string;
 	const args = prm[ 1 ] as Record<string, any>[];
@@ -51,7 +59,7 @@ console.log( `testExpressionService started...` );
 			}
 			else {
 				++failed;
-				console.log( `test ${ ix }:${ i } failed on ${ value } expected ${ v.result }` );
+				console.log( `test ${ ix }:${ i } failed on ${ JSON.stringify( value ) } expected ${ v.result }` );
 			}
 		} );
 	}

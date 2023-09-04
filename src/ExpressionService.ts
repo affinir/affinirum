@@ -1,16 +1,16 @@
 import { ExpressionConstant,
-	constTrue, constFalse, constNan, constPi, constEpsilon } from './ExpressionConstant.js';
+	constTrue, constFalse, constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
 import { ExpressionFunction, funcOr, funcAnd, funcNot, funcGt, funcLt, funcGe, funcLe, funcEq, funcNe,
 	funcLike, funcUnlike, funcBeginof, funcEndof, funcPartof,
 	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
 	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin,
-	funcLen, funcTrim, funcLowercase, funcUppercase, funcSubstr, funcJoin, funcConcat, funcFlatten, funcReverse, funcSlice,
-	funcAt, funcMap, funcFilter } from './ExpressionFunction.js';
+	funcLen, funcTrim, funcLowercase, funcUppercase, funcSubstr, funcConcat, funcFlatten, funcReverse, funcSlice,
+	funcAt, funcMap, funcFilter, funcAny, funcEvery, funcConstr } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
 	operLike, operUnlike, operBeginof, operEndof, operPartof,
-	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operJoin, operAt } from './ExpressionOperator.js';
+	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operConstr } from './ExpressionOperator.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
-import { ExpressionValue, ExpressionType, typeAny } from './ExpressionType.js';
+import { ExpressionValue, ExpressionType, typeVar } from './ExpressionType.js';
 import { ExpressionState } from './ExpressionState.js';
 import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionConstantNode } from './ExpressionConstantNode.js';
@@ -23,7 +23,8 @@ export class ExpressionService {
 	protected readonly _root: ExpressionNode;
 	protected readonly _scope = Symbol();
 	protected _constants = new Map<string, ExpressionConstant>( [
-		[ 'true', constTrue ], [ 'false', constFalse ], [ 'NaN', constNan ], [ 'Pi', constPi ], [ 'Epsilon', constEpsilon ],
+		[ 'true', constTrue ], [ 'false', constFalse ],
+		[ 'NaN', constNaN ], [ 'PosInf', constPosInf ], [ 'NegInf', constNegInf ], [ 'Epsilon', constEpsilon ], [ 'Pi', constPi ],
 	] );
 	protected _functions = new Map<string, ExpressionFunction>( [
 		[ 'or', funcOr ], [ 'and', funcAnd ], [ 'not', funcNot ],
@@ -35,8 +36,9 @@ export class ExpressionService {
 		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
 		[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ], [ 'max', funcMax ], [ 'min', funcMin ],
 		[ 'len', funcLen ], [ 'trim', funcTrim ], [ 'lowercase', funcLowercase ], [ 'uppercase', funcUppercase ], [ 'substr', funcSubstr ],
-		[ 'concat', funcJoin ], [ 'concat', funcConcat ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ],
-		[ 'at', funcAt ], [ 'map', funcMap ], [ 'filter', funcFilter ],
+		[ 'concat', funcConcat ], [ 'concat', funcConcat ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ],
+		[ 'at', funcAt ], [ 'map', funcMap ], [ 'filter', funcFilter ], [ 'any', funcAny ], [ 'every', funcEvery ],
+		[ 'constr', funcConstr ],
 	] );
 	protected _variables = new Map<symbol, Map<string, ExpressionVariable>>( [ [ this._scope, new Map<string, ExpressionVariable>() ] ] );
 
@@ -63,7 +65,7 @@ export class ExpressionService {
 		}[],
 	} ) {
 		this._expr = expr;
-		const type = config?.type ?? typeAny;
+		const type = config?.type ?? typeVar;
 		config?.constants?.forEach( c => this._constants.set( c.name, new ExpressionConstant( c.value ) ) );
 		config?.functions?.forEach( f => this._functions.set( f.name, new ExpressionFunction( f.func, f.argTypes, f.type ) ) );
 		config?.variables?.forEach( v => this._variables.get( this._scope )?.set( v.name, new ExpressionVariable( undefined, v.type ) ) );
@@ -72,17 +74,21 @@ export class ExpressionService {
 			this._root = this.disjunction( state.next(), this._scope );
 		}
 		catch ( err ) {
+			let pos = state.pos - 20;
+			pos = pos < 0 ? 0 : pos;
 			throw new Error( `compilation error on ${ ( err as Error ).message } at position ${ state.pos }:\n` +
-				`${ this._expr.substring( state.pos - 16, state.pos + 17 ) }\n` +
-				`${ ' '.repeat( this._expr.substring( state.pos - 16, state.pos ).length ) }^` );
+				`${ this._expr.substring( pos, pos + 36 ) }\n` +
+				`${ ' '.repeat( this._expr.substring( pos, state.pos ).length ) }^` );
 		}
 		try {
 			this._root = this._root.compile( type );
 		}
 		catch ( errnode: any ) {
+			let pos = errnode.pos - 20;
+			pos = pos < 0 ? 0 : pos;
 			throw new TypeError( `compilation error on unexpected type ${ errnode.type } at position ${ errnode.pos }:\n` +
-			`${ this._expr.substring( state.pos - 16, state.pos + 17 ) }\n` +
-			`${ ' '.repeat( this._expr.substring( state.pos - 16, state.pos ).length ) }^` );
+				`${ this._expr.substring( pos, pos + 36 ) }\n` +
+				`${ ' '.repeat( this._expr.substring( pos, errnode.pos ).length ) }^` );
 		}
 	}
 
@@ -166,7 +172,7 @@ export class ExpressionService {
 
 	protected aggregate( state: ExpressionState, scope: symbol ): ExpressionNode {
 		let node = this.product( state, scope );
-		while ( state.func === operJoin || state.func === operAdd || state.func === operSub ) {
+		while ( state.func === operConcat || state.func === operAdd || state.func === operSub ) {
 			node = new ExpressionFunctionNode( state.pos, state.func,
 				[ node, this.product( state.next(), scope ) ] );
 		}
@@ -203,8 +209,8 @@ export class ExpressionService {
 
 	protected index( state: ExpressionState, scope: symbol ): ExpressionNode {
 		let node = this.term( state, scope );
-		while ( state.isIndexer || state.isBracketsOpen ) {
-			if ( state.isIndexer ) {
+		while ( state.isIndex || state.isBracketsOpen ) {
+			if ( state.isIndex ) {
 				if ( !state.next().isToken ) {
 					throw new Error( `missing index specifier` );
 				}
@@ -274,9 +280,24 @@ export class ExpressionService {
 			return new ExpressionConstantNode( pos, constant );
 		}
 		else if ( state.isBracketsOpen ) {
-			const subs = [];
+			let index = 0;
+			const subs = new Map<number | string, ExpressionNode>();
 			while ( !state.next().isBracketsClose ) {
-				subs.push( this.disjunction( state, scope ) );
+				if ( state.isType ) {
+					const type = state.type;
+					if ( !state.next().isToken ) {
+						throw new Error( `missing property name` );
+					}
+					const token = state.token;
+					if ( !state.next().isAssignment ) {
+						throw new Error( `missing assignment operator` );
+					}
+					subs.set( token, this.cast( type, this.disjunction( state.next(), scope ) ) );
+				}
+				else {
+					subs.set( index, this.disjunction( state, scope ) );
+				}
+				++index;
 				if ( !state.isSeparator ) {
 					break;
 				}
@@ -285,10 +306,18 @@ export class ExpressionService {
 				throw new Error( `missing closing brackets` );
 			}
 			state.next();
-			return new ExpressionFunctionNode( pos, operJoin, subs );
+			const keys = Array.from( subs.keys() );
+			return keys.every( key => typeof key === 'number' ) ?
+				new ExpressionFunctionNode( pos, operConcat, Array.from( subs.values() ) ) :
+				new ExpressionFunctionNode( pos, operConstr, keys.map( key => 
+					new ExpressionFunctionNode( pos, operConcat, [
+						new ExpressionConstantNode( pos, new ExpressionConstant( key.toString() ) ),
+						subs.get( key )!
+					] )
+				) ) ;
 		}
 		else if ( state.isBracketsClose ) {
-			throw new Error( `empty brackets` );
+			throw new Error( `unexpected closing brackets` );
 		}
 		else if ( state.isParenthesesOpen ) {
 			const node = this.disjunction( state.next(), scope );
@@ -299,7 +328,10 @@ export class ExpressionService {
 			return node;
 		}
 		else if ( state.isParenthesesClose ) {
-			throw new Error( `empty parentheses` );
+			throw new Error( `unexpected closing parentheses` );
+		}
+		else if ( state.isType ) {
+			throw new Error( `unexpected type declaration` );
 		}
 		throw new Error( `unknown state ${ JSON.stringify( state ) }` );
 	}
@@ -310,7 +342,8 @@ export class ExpressionService {
 			throw new Error( `missing opening parenthesis` );
 		}
 		while ( !state.next().isParenthesesClose ) {
-			if ( state.isDeclaration ) {
+			if ( state.isType ) {
+				const type = state.type;
 				if ( !state.next().isToken ) {
 					throw new Error( `missing variable name` );
 				}
@@ -325,7 +358,7 @@ export class ExpressionService {
 				const subscope = Symbol();
 				const variables = new Map<string, ExpressionVariable>();
 				this._variables.get( scope )?.forEach( ( value, key ) => variables.set( key, value ) );
-				const variable = new ExpressionVariable();
+				const variable = new ExpressionVariable( undefined, type );
 				variables.set( token, variable );
 				this._variables.set( subscope, variables );
 				nodes.push( new ExpressionVariableNode( pos, variable ), this.disjunction( state.next(), subscope ) );
@@ -344,6 +377,10 @@ export class ExpressionService {
 			throw new Error( `missing function arguments: found ${ nodes.length } expected ${ arity }` );
 		}
 		return nodes;
+	}
+
+	protected cast( type: ExpressionType, node: ExpressionNode ): ExpressionNode {
+		return new ExpressionFunctionNode( node.pos, new ExpressionFunction( ( value: ExpressionValue ) => value, [ typeVar ], type ), [ node ] );
 	}
 
 }

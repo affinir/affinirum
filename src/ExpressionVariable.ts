@@ -1,10 +1,10 @@
-import { ExpressionValue, ExpressionType, typeAny } from './ExpressionType.js';
+import { ExpressionValue, ExpressionType, typeVar } from './ExpressionType.js';
 
 export class ExpressionVariable {
 
 	constructor(
 		protected _value: ExpressionValue | undefined = undefined,
-		protected _type: ExpressionType = typeAny,
+		protected _type: ExpressionType = typeVar,
 	) {}
 
 	get value(): ExpressionValue | undefined {

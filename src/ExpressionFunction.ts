@@ -1,4 +1,4 @@
-import { ExpressionValue, ExpressionType, typeBoolean, typeNumber, typeString, typeAny, typeArray, typeFunction } from './ExpressionType.js';
+import { ExpressionValue, ExpressionType, typeBoolean, typeNumber, typeString, typeVar, typeArray, typeFunction, typeObject } from './ExpressionType.js';
 import { ExpressionNode } from './ExpressionNode.js';
 
 export class ExpressionFunction {
@@ -73,12 +73,12 @@ export const funcLe = new ExpressionFunction(
 );
 export const funcEq = new ExpressionFunction(
 	( arg1: boolean | number | string, arg2: boolean | number | string ) => ExpressionType.equate( arg1, arg2 ),
-	[ typeAny, typeAny ],
+	[ typeVar, typeVar ],
 	typeBoolean
 );
 export const funcNe = new ExpressionFunction(
 	( arg1: boolean | number | string, arg2: boolean | number | string ) => !ExpressionType.equate( arg1, arg2 ),
-	[ typeAny, typeAny ],
+	[ typeVar, typeVar ],
 	typeBoolean
 );
 export const funcLike = new ExpressionFunction(
@@ -107,7 +107,7 @@ export const funcPartof = new ExpressionFunction(
 	typeBoolean
 );
 export const funcAdd = new ExpressionFunction(
-	( ...args: ( number | number[] | string | string[] )[] ) => args.flat().reduce( ( acc: any, val: any ) => acc += val ),
+	( ...args: ( number | number[] | string | string[] )[] ) => args.flat( Infinity ).reduce( ( acc: any, val: any ) => acc += val ),
 	[ new ExpressionType( 'number', 'string', 'array' ) ],
 	new ExpressionType( 'number', 'string' ),
 	( vtype, vmask ) => vtype === 'array' || vtype === vmask
@@ -123,7 +123,7 @@ export const funcNeg = new ExpressionFunction(
 	typeNumber
 );
 export const funcMul = new ExpressionFunction(
-	( ...args: ( number | number[] )[] ) => args.flat().reduce( ( acc, val ) => acc *= val ),
+	( ...args: ( number | number[] )[] ) => args.flat( Infinity ).reduce( ( acc: any, val: any ) => acc *= val ),
 	[ new ExpressionType( 'number', 'array' ) ],
 	typeNumber
 );
@@ -232,14 +232,9 @@ export const funcSubstr = new ExpressionFunction(
 	[ typeString, typeNumber ],
 	typeString
 );
-export const funcJoin = new ExpressionFunction(
-	( ...args: ExpressionValue[] ) => args,
-	[ typeAny ],
-	typeArray,
-);
 export const funcConcat = new ExpressionFunction(
-	( ...args: ExpressionValue[][] ) => [ ...args ],
-	[ typeArray ],
+	( ...args: ExpressionValue[] ) => args,
+	[ typeVar ],
 	typeArray,
 );
 export const funcFlatten = new ExpressionFunction(
@@ -263,7 +258,7 @@ export const funcAt = new ExpressionFunction(
 	( arg1: string | object | ExpressionValue[], arg2: number | string ) =>
 		typeof arg1 === 'string' ? arg1.charAt( arg2 as number ) : Array.isArray( arg1 ) ? arg1[ arg2 as number ] : ( arg1 as any )[ arg2 ],
 	[ new ExpressionType( 'string', 'object', 'array' ), new ExpressionType( 'number', 'string' ) ],
-	typeAny,
+	typeVar,
 	( vtype, vmask ) => vtype === 'object' || vtype ==='array' || vtype === vmask
 );
 export const funcMap = new ExpressionFunction(
@@ -277,4 +272,27 @@ export const funcFilter = new ExpressionFunction(
 		arg1.filter( ( v, i, a ) => arg2( v, i, a ) ),
 	[ typeArray, typeFunction ],
 	typeArray
+);
+export const funcAny = new ExpressionFunction(
+	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) =>
+		arg1.some( ( v, i, a ) => arg2( v, i, a ) ),
+	[ typeArray, typeFunction ],
+	typeBoolean
+);
+export const funcEvery = new ExpressionFunction(
+	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) =>
+		arg1.every( ( v, i, a ) => arg2( v, i, a ) ),
+	[ typeArray, typeFunction ],
+	typeBoolean
+);
+export const funcConstr = new ExpressionFunction(
+	( ...args: ExpressionValue[][] ) => {
+		const obj: Record<string, any> = {};
+		for ( let i = 0; i < args.length; ++i ) {
+			obj[ args[ i ][ 0 ].toString() ] = args[ i ][ 1 ];
+		}
+		return obj;
+	},
+	[ typeArray ],
+	typeObject,
 );

@@ -2,20 +2,21 @@ import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
 	operLike, operUnlike, operBeginof, operEndof, operPartof,
-	operAdd, operSub, operMul, operDiv, operPct, operPow, operJoin } from './ExpressionOperator.js';
+	operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat } from './ExpressionOperator.js';
+import { ExpressionType, typeBoolean, typeNumber, typeString, typeObject, typeFunction, typeVar, typeArray } from './ExpressionType.js';
 
 const symbolBracketsOpen = Symbol();
 const symbolBracketsClose = Symbol();
 const symbolParenthesesOpen = Symbol();
 const symbolParenthesesClose = Symbol();
+const symbolAssignment = Symbol();
 const symbolSeparator = Symbol();
-const symbolIndexer = Symbol();
-const symbolDeclaration = Symbol();
+const symbolIndex = Symbol();
 const symbolScope = Symbol();
 
 export class ExpressionState {
 
-	protected _obj: ExpressionConstant | ExpressionFunction | string | symbol | undefined;
+	protected _obj: ExpressionConstant | ExpressionFunction | ExpressionType | string | symbol | undefined;
 	protected _pos = 0;
 	protected _next = 0;
 
@@ -35,6 +36,10 @@ export class ExpressionState {
 		return this._obj as ExpressionFunction;
 	}
 
+	get type(): ExpressionType {
+		return this._obj as ExpressionType;
+	}
+
 	get token(): string {
 		return this._obj as string;
 	}
@@ -45,6 +50,10 @@ export class ExpressionState {
 
 	get isFunction(): boolean {
 		return this._obj instanceof ExpressionFunction;
+	}
+
+	get isType(): boolean {
+		return this._obj instanceof ExpressionType;
 	}
 
 	get isToken(): boolean {
@@ -67,16 +76,16 @@ export class ExpressionState {
 		return this._obj === symbolParenthesesClose;
 	}
 
+	get isAssignment(): boolean {
+		return this._obj === symbolAssignment;
+	}
+
 	get isSeparator(): boolean {
 		return this._obj === symbolSeparator;
 	}
 
-	get isIndexer(): boolean {
-		return this._obj === symbolIndexer;
-	}
-
-	get isDeclaration(): boolean {
-		return this._obj === symbolDeclaration;
+	get isIndex(): boolean {
+		return this._obj === symbolIndex;
 	}
 
 	get isScope(): boolean {
@@ -96,8 +105,7 @@ export class ExpressionState {
 				case '(': this._obj = symbolParenthesesOpen; return this;
 				case ')': this._obj = symbolParenthesesClose; return this;
 				case ',': this._obj = symbolSeparator; return this;
-				case '.': this._obj = symbolIndexer; return this;
-				case '@': this._obj = symbolDeclaration; return this;
+				case '.': this._obj = symbolIndex; return this;
 				case '|': this._obj = operOr; return this;
 				case '&': this._obj = operAnd; return this;
 				case '!': switch ( this._expr.charAt( this._next ) ) {
@@ -108,7 +116,7 @@ export class ExpressionState {
 				case '=': switch ( this._expr.charAt( this._next ) ) {
 					case '*': ++this._next; this._obj = operBeginof; return this;
 					case '=': ++this._next; this._obj = operEq; return this;
-					default: this._obj = operEq; return this;
+					default: this._obj = symbolAssignment; return this;
 				}
 				case '>': switch ( this._expr.charAt( this._next ) ) {
 					case '=': ++this._next; this._obj = operGe; return this;
@@ -132,14 +140,23 @@ export class ExpressionState {
 				case '/': this._obj = operDiv; return this;
 				case '%': this._obj = operPct; return this;
 				case '^': this._obj = operPow; return this;
-				case '#': this._obj = operJoin; return this;
+				case '#': this._obj = operConcat; return this;
 				default:
 					if ( ExpressionState.alpha( c ) ) {
 						while ( ExpressionState.alphanumeric( this._expr.charAt( this._next ) ) ) {
 							++this._next;
 						}
 						const token = this._expr.substring(  this._pos, this._next );
-						this._obj = token;
+						switch ( token ) {
+							case 'boolean': this._obj = typeBoolean; break;
+							case 'number': this._obj = typeNumber; break;
+							case 'string': this._obj = typeString; break;
+							case 'array': this._obj = typeArray; break;
+							case 'object': this._obj = typeObject; break;
+							case 'function': this._obj = typeFunction; break;
+							case 'var': this._obj = typeVar; break;
+							default: this._obj = token; break;
+						}
 						return this;
 					}
 					else if ( ExpressionState.numeric( c ) ) {
