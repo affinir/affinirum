@@ -146,7 +146,7 @@ export class ExpressionState {
 						while ( ExpressionState.alphanumeric( this._expr.charAt( this._next ) ) ) {
 							++this._next;
 						}
-						const token = this._expr.substring(  this._pos, this._next );
+						const token = this._expr.substring( this._pos, this._next );
 						switch ( token ) {
 							case 'boolean': this._obj = typeBoolean; break;
 							case 'number': this._obj = typeNumber; break;
@@ -163,7 +163,7 @@ export class ExpressionState {
 						while ( ExpressionState.decinumeric( this._expr.charAt( this._next ) ) ) {
 							++this._next;
 						}
-						this._obj = new ExpressionConstant( parseFloat( this._expr.substring(  this._pos, this._next ) ) );
+						this._obj = new ExpressionConstant( parseFloat( this._expr.substring( this._pos, this._next ) ) );
 						return this;
 					}
 					else if ( ExpressionState.quotation( c ) ) {

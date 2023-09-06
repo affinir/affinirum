@@ -58,7 +58,7 @@ export class ExpressionFunctionNode extends ExpressionNode {
 					};
 				}
 				return fnode.evaluate();
-			} )
+			} );
 		}
 		return this._function.evaluate( ...this._subnodes.map( node => node.evaluate() ) );
 	}

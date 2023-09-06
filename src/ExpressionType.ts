@@ -57,8 +57,8 @@ export class ExpressionType {
 			return false;
 		}
 		const props = new Set( [ ...Object.getOwnPropertyNames( value1 ), ...Object.getOwnPropertyNames( value2 ) ] );
-		for ( let p of props ) {
-			if ( !ExpressionType.equate( ( value1 as any )[ p ], ( value2 as any )[ p ] ) ) {
+		for ( const prop of props ) {
+			if ( !ExpressionType.equate( ( value1 as any )[ prop ], ( value2 as any )[ prop ] ) ) {
 				return false;
 			}
 		}

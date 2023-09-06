@@ -15,7 +15,7 @@ Target: ES2020 [browser or NodeJS].
 * Type checking
 * Boolean, arithmetic, string and index operators supported
 * Numeric and string comparision operators supported
-* Variadic and iterator functions supported
+* Variadic and iterating functions supported
 * Standard math functions included
 * Easy to add custom functions or constants
 * All operators support literal equivalent
@@ -25,68 +25,91 @@ Target: ES2020 [browser or NodeJS].
 ## What
 
 #### Boolean operations
-* Disjunction: |, or
-* Conjunction: &, and
-* Negation: !, not
+* Disjunction: |
+* Conjunction: &
+* Negation: !
 #### Numeric operations
-* Addition: +, add
-* Subtraction: -, sub
-* Negation: -, neg
-* Multiplication: \*, mul
-* Division: /, div
-* Percentage: %, pct
+* Addition: +
+* Subtraction: -
+* Negation: -
+* Multiplication: \*
+* Division: /
+* Percentage: %
 #### String operations
-* Char at: [], at
-* Addition: +, add
+* Addition: +
+* Character by numeric index: []
 #### Array operations
-* Element at: [], at
-* Concat: #, concat
+* Concatination: #
+* Element by numeric index: []
 #### Object operations
-* Property by name: ., [], at
-#### Numeric comparisions
-* Greater than: >, gt
-* Less than: <, lt
-* Greater than or equal to: >=, ge
-* Less than or equal to: <=, le
-#### String comparisions
-* Like [case insensitive comparision]: \~, like
-* Unlike [case insensitive comparision]: !\~, unlike
-* Begin of: \=\*, beginof
-* End of: \*\=, endof
-* Part of: \*\*, partof
-#### Generic comparisions
-* Equal to: ==, eq
-* Not equal to: !=, ne
-#### Numeric functions
-* Power: pow
-* Root: rt
-* Square: sq
-* Square root: sqrt
-* Absolute value: abs
-* Rounded value: round
-* Ceil: ceil
-* Floor: floor
-* Logarithm: log
-* Exponent: exp
-* Minimum: min
-* Maximum: max
-#### String functions
-* Trim: trim
-* Substring: substr
-#### Array functions
-* Reverse order of items in array: reverse
-* Flatten array items to specified depth: flatten
-* Slice items into new array: slice
-* Map items iterator: map
-* Filter items iterator: filter
-* Any item iterator: anyone
-* Every item iterator: everyone
+* Property by string index: []
+* Property by name: .
+#### Comparisons
+* Equals to: ==
+* Not equals to: !=
+* Greater than: >
+* Less than: <
+* Greater than or equal to: >=
+* Less than or equal to: <=
+* Case insensitive comparison: \~
+* Case insensitive comparison: !\~
+* Begin of: \=\*
+* End of: \*\=
+* Part of: \*\*
+#### Functions
+* Disjunction: or(boolean ...args)
+* Conjunction: and(boolean ...args)
+* Negation: not(boolean arg)
+* Equals to: eq(var arg1, var arg2)
+* Not equals to: ne(var arg1, var arg2)
+* Greater than: gt(number arg1, number arg2)
+* Less than: lt(number arg1, number arg2)
+* Greater than or equals to: ge(number arg1, number arg2)
+* Less than or equals to: le(number arg1, number arg2)
+* Case insensitive equals: like(string arg1, string arg2)
+* Case insensitive not equals: unlike(string arg1, string arg2)
+* Begin of: beginof(string arg1, string arg2)
+* End of: endof(string arg1, string arg2)
+* Part of: partof(string arg1, string arg2)
+* Addition: add(number|string arg1, number|string arg2)
+* Subtraction: sub(number arg1, number arg2)
+* Negation: neg(number arg)
+* Multiplication: mul(number arg1, number arg2)
+* Division: div(number arg1, number arg2)
+* Percentage: pct(number arg1, number arg2)
+* Power: pow(number arg1, number arg2)
+* Root: rt(number arg1, number arg2)
+* Square: sq(number arg)
+* Square root: sqrt(number arg)
+* Absolute value: abs(number arg)
+* Rounded value: round(number arg)
+* Ceil: ceil(number arg)
+* Floor: floor(number arg)
+* Logarithm: log(number arg)
+* Exponent: exp(number arg)
+* Minimum: min(number ...args)
+* Maximum: max(number ...args)
+* Char/Element/Property at index: at(string|array arg1, number|string arg2)
+* Trim: trim(string arg)
+* Substring: substr(string arg1, number arg2)
+* Concatination into array: concat(array ...args)
+* Reverse order of items in array: reverse(array arg)
+* Flatten array items to specified depth: flatten(array arg1, number arg2)
+* Slice items into new array: slice(array arg1, number ...args)
+* Map items iterator: map(array arg1, function arg2)
+* Filter items iterator: filter(array arg1, function arg2)
+* First item iterator: first(array arg1, function arg2)
+* Last item iterator: last(array arg1, function arg2)
+* Any item iterator: any(array arg1, function arg2)
+* Every item iterator: every(array arg1, function arg2)
+* Construction of object: constr(array ...args)
 #### Boolean constants
 * true
 * false
 #### Numeric constants
 * NaN
-* Infinity
+* PosInf
+* NegInf
 * Epsilon
 * Pi
 
@@ -101,15 +124,19 @@ The expression parsing is performed using the following grammar:
 	<factor> = {"-"}{<factor>"^"}<term>
 	<index> = <term>|{<index>("."<property>|"["<disjunction>"]")}
 	<term> = <value|<variable>|<function>"("<disjunction>{","<disjunction>}")"|"("<disjunction>")"
-	<constant> = <boolean>|<boolean[]>|<number>|<number[]>|<string>|<string[]>|<object>|<object[]>
+	<constant> = <boolean>|<number>|<string>|<array>|<object>|<function>
 	<object> = "{"<property>":"<constant>,{",""<property>":"<constant>}"}"
 
 Whitespace characters are ignored.
 
 Valid variable or function names consist of a letter, or "\_" characters followed by any combination
-of alphanumeric characters, and "\_". For example *x*, *\_a1*, *abc25*
+of alphanumeric characters, and "\_". For example: *x*, *\_a1*, *abc25*
 
-Constants can be strings or numbers.
+Declaration of array: [value1, value2, ...]
+Declaration of object: [type name1=value1, type name2=value2, ...]
+Declaration of iterating function: object iterator-><disjunction>
+  where type is boolean, number, string, array, object, function or var (type variation, i.e. any type)
+Iterator object has 3 properties: value, index and array.
 
 
 ## How

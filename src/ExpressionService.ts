@@ -4,8 +4,8 @@ import { ExpressionFunction, funcOr, funcAnd, funcNot, funcGt, funcLt, funcGe, f
 	funcLike, funcUnlike, funcBeginof, funcEndof, funcPartof,
 	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
 	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin,
-	funcLen, funcTrim, funcLowercase, funcUppercase, funcSubstr, funcConcat, funcFlatten, funcReverse, funcSlice,
-	funcAt, funcMap, funcFilter, funcAny, funcEvery, funcConstr } from './ExpressionFunction.js';
+	funcLen, funcTrim, funcLowercase, funcUppercase, funcSubstr, funcConcat, funcFlatten, funcReverse, funcSlice, funcAt,
+	funcMap, funcFilter, funcFirst, funcLast, funcAny, funcEvery, funcConstr } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
 	operLike, operUnlike, operBeginof, operEndof, operPartof,
 	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operConstr } from './ExpressionOperator.js';
@@ -36,8 +36,8 @@ export class ExpressionService {
 		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
 		[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ], [ 'max', funcMax ], [ 'min', funcMin ],
 		[ 'len', funcLen ], [ 'trim', funcTrim ], [ 'lowercase', funcLowercase ], [ 'uppercase', funcUppercase ], [ 'substr', funcSubstr ],
-		[ 'concat', funcConcat ], [ 'concat', funcConcat ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ],
-		[ 'at', funcAt ], [ 'map', funcMap ], [ 'filter', funcFilter ], [ 'any', funcAny ], [ 'every', funcEvery ],
+		[ 'concat', funcConcat ], [ 'concat', funcConcat ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ], [ 'at', funcAt ],
+		[ 'map', funcMap ], [ 'filter', funcFilter ], [ 'first', funcFirst ], [ 'last', funcLast ], [ 'any', funcAny ], [ 'every', funcEvery ],
 		[ 'constr', funcConstr ],
 	] );
 	protected _variables = new Map<symbol, Map<string, ExpressionVariable>>( [ [ this._scope, new Map<string, ExpressionVariable>() ] ] );
@@ -262,7 +262,7 @@ export class ExpressionService {
 				state.next();
 				return new ExpressionFunctionNode( pos, func, subs );
 			}
-			let variables = this._variables.get( scope );
+			const variables = this._variables.get( scope );
 			if ( !variables ) {
 				throw new Error( `unknown scope` );
 			}
@@ -309,12 +309,12 @@ export class ExpressionService {
 			const keys = Array.from( subs.keys() );
 			return keys.every( key => typeof key === 'number' ) ?
 				new ExpressionFunctionNode( pos, operConcat, Array.from( subs.values() ) ) :
-				new ExpressionFunctionNode( pos, operConstr, keys.map( key => 
+				new ExpressionFunctionNode( pos, operConstr, keys.map( key =>
 					new ExpressionFunctionNode( pos, operConcat, [
 						new ExpressionConstantNode( pos, new ExpressionConstant( key.toString() ) ),
 						subs.get( key )!
 					] )
-				) ) ;
+				) );
 		}
 		else if ( state.isBracketsClose ) {
 			throw new Error( `unexpected closing brackets` );

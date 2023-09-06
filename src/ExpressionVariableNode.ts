@@ -15,6 +15,10 @@ export class ExpressionVariableNode extends ExpressionNode {
 		return this._variable.type;
 	}
 
+	get value(): ExpressionValue {
+		return this._variable.value!;
+	}
+
 	set value( value: ExpressionValue ) {
 		this._variable.value = value;
 	}
