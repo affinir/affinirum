@@ -55,7 +55,7 @@ Target: ES2020 [browser or NodeJS].
 * Case insensitive comparison: !\~
 * Begin of: \=\*
 * End of: \*\=
-* Part of: \*\*
+* Part of: \*\=\*
 #### Functions
 * Disjunction: or(boolean ...args)
 * Conjunction: and(boolean ...args)

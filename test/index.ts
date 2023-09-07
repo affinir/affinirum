@@ -32,7 +32,7 @@ console.log( `testExpressionService started...` );
 	[ 'a+b+(c+d)', [ { a: '1', b: 'b', c: 'c', d: '3', result: '1bc3' } ] ],
 	[ 'concat([0,1,2,3], [10,20,30,40])[1][0]', [ { result: 10 } ] ],
 	[ 'flatten([0,1,2,3]#[10,20,30,40]#100, 0).add()', [ { result: 206 } ] ],
-	[ '[a, b, c][ 0 ]', [ { a: 1, b: 2, c: 3, result: 1 } ] ],
+	[ 'str *=* `abc def abc`', [ { str: 'abc', result: true } ] ],
 	[ '[a, b, c] + [ 1, 2, 3, 4 ]', [ { a: 1, b: 2, c: 3, result: 16 } ] ],
 	[ 'len([a, b, c]) + len([ 1, 2, 3, 4 ])', [ { a: 1, b: 2, c: 3, result: 7 } ] ],
 	[ 'obj1.a0', [ { obj1: { a0: 10 }, result: 10 }, { obj1: { a0: '10' }, result: '10' } ] ],
