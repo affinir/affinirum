@@ -1,6 +1,6 @@
 import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
-import { ExpressionValue, ExpressionType } from './ExpressionType.js';
+import { ExpressionType, ExpressionValue } from './ExpressionType.js';
 
 export class ExpressionVariableNode extends ExpressionNode {
 

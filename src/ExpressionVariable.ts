@@ -1,4 +1,4 @@
-import { ExpressionValue, ExpressionType, typeVar } from './ExpressionType.js';
+import { ExpressionType, ExpressionValue, typeVar } from './ExpressionType.js';
 
 export class ExpressionVariable {
 

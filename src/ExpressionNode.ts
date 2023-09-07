@@ -1,5 +1,4 @@
-import { ExpressionValue, ExpressionType } from './ExpressionType.js';
-import { ExpressionVariable } from './ExpressionVariable.js';
+import { ExpressionType, ExpressionValue } from './ExpressionType.js';
 
 export abstract class ExpressionNode {
 

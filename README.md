@@ -77,16 +77,17 @@ Target: ES2020 [browser or NodeJS].
 * Multiplication: mul(number arg1, number arg2)
 * Division: div(number arg1, number arg2)
 * Percentage: pct(number arg1, number arg2)
+* Exponent: exp(number arg)
+* Logarithm: log(number arg)
 * Power: pow(number arg1, number arg2)
 * Root: rt(number arg1, number arg2)
 * Square: sq(number arg)
 * Square root: sqrt(number arg)
 * Absolute value: abs(number arg)
-* Rounded value: round(number arg)
 * Ceil: ceil(number arg)
 * Floor: floor(number arg)
-* Logarithm: log(number arg)
-* Exponent: exp(number arg)
+* Rounded value: round(number arg)
+* Condition: if(boolean arg1, var arg2, var arg3)
 * Minimum: min(number ...args)
 * Maximum: max(number ...args)
 * Char/Element/Property at index: at(string|array arg1, number|string arg2)
@@ -96,10 +97,12 @@ Target: ES2020 [browser or NodeJS].
 * Reverse order of items in array: reverse(array arg)
 * Flatten array items to specified depth: flatten(array arg1, number arg2)
 * Slice items into new array: slice(array arg1, number ...args)
-* Map items iterator: map(array arg1, function arg2)
-* Filter items iterator: filter(array arg1, function arg2)
 * First item iterator: first(array arg1, function arg2)
 * Last item iterator: last(array arg1, function arg2)
+* First index iterator: firstindex(array arg1, function arg2)
+* Last index iterator: lastindex(array arg1, function arg2)
+* Map items iterator: map(array arg1, function arg2)
+* Filter items iterator: filter(array arg1, function arg2)
 * Any item iterator: any(array arg1, function arg2)
 * Every item iterator: every(array arg1, function arg2)
 * Construction of object: constr(array ...args)
@@ -123,20 +126,18 @@ The expression parsing is performed using the following grammar:
 	<product> = {<product>("*"|"/"|"%")}<factor>
 	<factor> = {"-"}{<factor>"^"}<term>
 	<index> = <term>|{<index>("."<property>|"["<disjunction>"]")}
-	<term> = <value|<variable>|<function>"("<disjunction>{","<disjunction>}")"|"("<disjunction>")"
-	<constant> = <boolean>|<number>|<string>|<array>|<object>|<function>
-	<object> = "{"<property>":"<constant>,{",""<property>":"<constant>}"}"
+	<term> = <constant>|<variable>|<function>|<lambda>|"("<disjunction>")"
+	<constant> = <boolean-value>|<numberic-value>|<string-value>|<array>|<object>
+	<array> = "["<disjunction>,{","<disjunction>}"]"
+	<object> = "["<property-name>"="<disjunction>,{",""<property-name>"="<disjunction>}"]"
+	<function> = <function-name>"("<disjunction>{","<disjunction>}")"
+	<lambda> = <type>"("<type> <argument>{,<type> <argument>}")"
+	<type> = "boolean"|"number"|"string"|"array"|"object"|"function"|"var"
 
 Whitespace characters are ignored.
 
 Valid variable or function names consist of a letter, or "\_" characters followed by any combination
 of alphanumeric characters, and "\_". For example: *x*, *\_a1*, *abc25*
-
-Declaration of array: [value1, value2, ...]
-Declaration of object: [type name1=value1, type name2=value2, ...]
-Declaration of iterating function: object iterator-><disjunction>
-  where type is boolean, number, string, array, object, function or var (type variation, i.e. any type)
-Iterator object has 3 properties: value, index and array.
 
 
 ## How
@@ -157,11 +158,11 @@ const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
 const arrExpr = new ExpressionService( '[ 1, 2, 3, a, b, c ].add()' );
 const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
 ...
-const objExpr = new ExpressionService( '[number prop1=a,var prop2=`abc`].prop1+10' );
+const objExpr = new ExpressionService( '[prop1=a,prop2=`abc`].prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new ExpressionService(
-	'arr.map(var a -> a.value*2).filter(var a -> a.value>3).add()'
+	'arr.map(number(number a) -> a*2).filter(boolean(number a) -> a>3).add()'
 );
 const iValue = iteratorExpr.evaluate( { arr: [ 1, 2, 3 ] } ); // 10
 ...

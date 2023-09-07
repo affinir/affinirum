@@ -32,7 +32,7 @@ export class ExpressionState {
 		return this._obj as ExpressionConstant;
 	}
 
-	get func(): ExpressionFunction {
+	get operator(): ExpressionFunction {
 		return this._obj as ExpressionFunction;
 	}
 
@@ -48,7 +48,7 @@ export class ExpressionState {
 		return this._obj instanceof ExpressionConstant;
 	}
 
-	get isFunction(): boolean {
+	get isOperator(): boolean {
 		return this._obj instanceof ExpressionFunction;
 	}
 
@@ -132,8 +132,10 @@ export class ExpressionState {
 					default: this._obj = operSub; return this;
 				}
 				case '*': switch ( this._expr.charAt( this._next ) ) {
-					case '=': ++this._next; this._obj = operEndof; return this;
-					case '*': ++this._next; this._obj = operPartof; return this;
+					case '=': switch( this._expr.charAt( ++this._next ) ) {
+						case '*': ++this._next; this._obj = operPartof; return this;
+						default: this._obj = operEndof; return this;
+					}
 					default: this._obj = operMul; return this;
 				}
 				case '~': this._obj = operLike; return this;
