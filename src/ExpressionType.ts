@@ -1,5 +1,5 @@
-export type ExpressionValue = boolean | number | string | object | ( ( ...args: ExpressionValue[] ) => ExpressionValue ) | ExpressionValue[];
-type ExpressionValueType = 'boolean' | 'number' | 'string' | 'array' | 'object' | 'function';
+export type ExpressionValue = undefined | boolean | number | string | object | ( ( ...args: ExpressionValue[] ) => ExpressionValue ) | ExpressionValue[];
+type ExpressionValueType = 'null' | 'boolean' | 'number' | 'string' | 'array' | 'object' | 'function';
 
 export class ExpressionType {
 
@@ -8,7 +8,7 @@ export class ExpressionType {
 	constructor(
 		...args: ExpressionValueType[]
 	) {
-		this._vtypes = args.length ? args : [ 'boolean', 'number', 'string', 'array', 'object', 'function' ];
+		this._vtypes = args.length ? Array.from( new Set( args ) ) : [ 'null', 'boolean', 'number', 'string', 'array', 'object', 'function' ];
 	}
 
 	get exact(): boolean {
@@ -32,16 +32,23 @@ export class ExpressionType {
 		return vtypes.length ? new ExpressionType( ...vtypes ) : undefined;
 	}
 
+	nullable(): ExpressionType {
+		return new ExpressionType( 'null', ...this._vtypes as ExpressionValueType[] );
+	}
+
 	toString(): string {
 		return this._vtypes.join( '|' );
 	}
 
 	static of( value: ExpressionValue ): ExpressionType {
-		const vtype = Array.isArray( value ) ? 'array' : typeof value;
+		const vtype = value == null ? 'null' : Array.isArray( value ) ? 'array' : typeof value;
 		return new ExpressionType( vtype as ExpressionValueType );
 	}
 
 	static equate( value1: ExpressionValue, value2: ExpressionValue ): boolean {
+		if ( value1 == null || value2 == null ) {
+			return value1 == value2;
+		}
 		if ( typeof value1 === 'boolean' || typeof value1 === 'number' || typeof value1 === 'string' || typeof value1 === 'function' ) {
 			return value1 === value2;
 		}

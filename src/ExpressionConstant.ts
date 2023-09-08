@@ -16,6 +16,7 @@ export class ExpressionConstant {
 
 }
 
+export const constNull = new ExpressionConstant( undefined );
 export const constTrue = new ExpressionConstant( true );
 export const constFalse = new ExpressionConstant( false );
 export const constNaN = new ExpressionConstant( Number.NaN );

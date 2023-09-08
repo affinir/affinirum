@@ -1,14 +1,14 @@
 import { ExpressionConstant,
-	constTrue, constFalse, constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
+	constNull, constTrue, constFalse, constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
 import { ExpressionFunction, funcOr, funcAnd, funcNot, funcGt, funcLt, funcGe, funcLe, funcEq, funcNe,
 	funcLike, funcUnlike, funcBeginof, funcEndof, funcPartof,
 	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
 	funcAbs, funcCeil, funcFloor, funcRound, funcIf, funcMax, funcMin,
 	funcLen, funcTrim, funcLowercase, funcUppercase, funcSubstr, funcConcat, funcFlatten, funcReverse, funcSlice, funcAt,
-	funcFirst, funcLast, funcFirstindex, funcLastindex, funcMap, funcFilter, funcAny, funcEvery, funcConstr } from './ExpressionFunction.js';
+	funcFirst, funcLast, funcFirstindex, funcLastindex, funcMap, funcFilter, funcAny, funcEvery, funcConstr, funcCoal } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
 	operLike, operUnlike, operBeginof, operEndof, operPartof,
-	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operConstr } from './ExpressionOperator.js';
+	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operConstr, operCoal } from './ExpressionOperator.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { ExpressionLambda } from './ExpressionLambda.js';
 import { ExpressionType, ExpressionValue, typeVar } from './ExpressionType.js';
@@ -25,7 +25,7 @@ export class ExpressionService {
 	protected readonly _root: ExpressionNode;
 	protected readonly _scope = Symbol();
 	protected _constants = new Map<string, ExpressionConstant>( [
-		[ 'true', constTrue ], [ 'false', constFalse ],
+		[ 'null', constNull ], [ 'true', constTrue ], [ 'false', constFalse ],
 		[ 'NaN', constNaN ], [ 'PosInf', constPosInf ], [ 'NegInf', constNegInf ], [ 'Epsilon', constEpsilon ], [ 'Pi', constPi ],
 	] );
 	protected _functions = new Map<string, ExpressionFunction>( [
@@ -42,7 +42,7 @@ export class ExpressionService {
 		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstindex', funcFirstindex ], [ 'lastindex', funcLastindex ],
 		[ 'map', funcMap ], [ 'filter', funcFilter ],
 		[ 'any', funcAny ], [ 'every', funcEvery ],
-		[ 'constr', funcConstr ],
+		[ 'constr', funcConstr ], [ 'coal', funcCoal ],
 	] );
 	protected _variables = new Map<symbol, Map<string, ExpressionVariable>>( [ [ this._scope, new Map<string, ExpressionVariable>() ] ] );
 
@@ -125,7 +125,7 @@ export class ExpressionService {
 		const globals = this._variables.get( this._scope )!;
 		for ( const [ name, variable ] of globals ) {
 			if ( variables[ name ] == null ) {
-				throw new Error( `evaluation error on undefined variable ${ name }` );
+				variables[ name ] = undefined;
 			}
 			if ( !variable.type.infer( ExpressionType.of( variables[ name ] ) ) ) {
 				throw new TypeError( `evaluation error on unexpected type ${ typeof variables[ name ] } for ${ variable.type } variable ${ name }` );
@@ -200,13 +200,22 @@ export class ExpressionService {
 			pos = state.pos;
 			state.next();
 		}
-		let node = this.index( state, scope );
+		let node = this.coalescence( state, scope );
 		while ( state.operator === operPow ) {
 			node = new ExpressionFunctionNode( state.pos, state.operator,
-				[ node, this.index( state.next(), scope ) ] );
+				[ node, this.coalescence( state.next(), scope ) ] );
 		}
 		if ( neg ) {
 			node = new ExpressionFunctionNode( pos, operNeg, [ node ] );
+		}
+		return node;
+	}
+
+	protected coalescence( state: ExpressionState, scope: symbol ): ExpressionNode {
+		let node = this.index( state, scope );
+		while ( state.operator === operCoal ) {
+			node = new ExpressionFunctionNode( state.pos, state.operator,
+				[ node, this.index( state.next(), scope ) ] );
 		}
 		return node;
 	}
@@ -264,8 +273,12 @@ export class ExpressionService {
 			return this.token( pos, token, state, scope );
 		}
 		else if ( state.isType ) {
-			const type = state.type;
-			if ( !state.next().isParenthesesOpen ) {
+			let type = state.type;
+			if ( state.next().isNullable ) {
+				type = type.nullable();
+				state.next();
+			}
+			if ( !state.isParenthesesOpen ) {
 				throw new Error( `missing openning parentheses` );
 			}
 			const variables = this._variables.get( scope );
@@ -277,8 +290,12 @@ export class ExpressionService {
 				if ( !state.isType ) {
 					throw new Error( `missing argument type` );
 				}
-				const argType = state.type;
-				if ( !state.next().isToken ) {
+				let argType = state.type;
+				if ( state.next().isNullable ) {
+					argType = argType.nullable();
+					state.next();
+				}
+				if ( !state.isToken ) {
 					throw new Error( `missing argument name` );
 				}
 				const token = state.token;
@@ -392,7 +409,7 @@ export class ExpressionService {
 			throw new Error( `missing closing parentheses` );
 		}
 		if ( nodes.length < arity ) {
-			throw new Error( `missing function arguments: found ${ nodes.length } expected ${ arity }` );
+			throw new Error( `missing arguments as function requires ${ arity } not ${ nodes.length }` );
 		}
 		return nodes;
 	}

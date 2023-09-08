@@ -44,7 +44,7 @@ Target: ES2020 [browser or NodeJS].
 #### Object operations
 * Property by string index: []
 * Property by name: .
-#### Comparisons
+#### Comparison operations
 * Equals to: ==
 * Not equals to: !=
 * Greater than: >
@@ -56,6 +56,7 @@ Target: ES2020 [browser or NodeJS].
 * Begin of: \=\*
 * End of: \*\=
 * Part of: \*\=\*
+* Coalescence: ?=
 #### Functions
 * Disjunction: or(boolean ...args)
 * Conjunction: and(boolean ...args)
@@ -71,6 +72,7 @@ Target: ES2020 [browser or NodeJS].
 * Begin of: beginof(string arg1, string arg2)
 * End of: endof(string arg1, string arg2)
 * Part of: partof(string arg1, string arg2)
+* Coalescence: coal(var arg1, var arg2)
 * Addition: add(number|string arg1, number|string arg2)
 * Subtraction: sub(number arg1, number arg2)
 * Negation: neg(number arg)
@@ -106,10 +108,10 @@ Target: ES2020 [browser or NodeJS].
 * Any item iterator: any(array arg1, function arg2)
 * Every item iterator: every(array arg1, function arg2)
 * Construction of object: constr(array ...args)
-#### Boolean constants
+#### Constants
+* null
 * true
 * false
-#### Numeric constants
 * NaN
 * PosInf
 * NegInf
@@ -121,10 +123,11 @@ The expression parsing is performed using the following grammar:
 
 	<disjunction> = {<disjunction>"|"}<conjunction>
 	<conjunction> = {<conjunction>"&"}<comparison>
-	<comparison> = {"!"}{<comparison>(">"|">="|"<"|"<="|"="|"=="|"!="|"~"|"!~"|"=*"|"*="|"**")}<aggregate>
+	<comparison> = {"!"}{<comparison>(">"|">="|"<"|"<="|"="|"=="|"!="|"~"|"!~"|"=*"|"*="|"*=*")}<aggregate>
 	<aggregate> = {<aggregate>("#"|"+"|"-")}<product>
 	<product> = {<product>("*"|"/"|"%")}<factor>
-	<factor> = {"-"}{<factor>"^"}<term>
+	<factor> = {"-"}{<factor>"^"}<coalescence>
+	<coalescence> = {<coalescence>("?=")}<index>
 	<index> = <term>|{<index>("."<property>|"["<disjunction>"]")}
 	<term> = <constant>|<variable>|<function>|<lambda>|"("<disjunction>")"
 	<constant> = <boolean-value>|<numberic-value>|<string-value>|<array>|<object>
@@ -132,7 +135,7 @@ The expression parsing is performed using the following grammar:
 	<object> = "["<property-name>"="<disjunction>,{",""<property-name>"="<disjunction>}"]"
 	<function> = <function-name>"("<disjunction>{","<disjunction>}")"
 	<lambda> = <type>"("<type> <argument>{,<type> <argument>}")"
-	<type> = "boolean"|"number"|"string"|"array"|"object"|"function"|"var"
+	<type> = "boolean"|"number"|"string"|"array"|"object"|"function"|"var"{"?"}
 
 Whitespace characters are ignored.
 

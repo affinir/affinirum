@@ -2,7 +2,7 @@ import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
 	operLike, operUnlike, operBeginof, operEndof, operPartof,
-	operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat } from './ExpressionOperator.js';
+	operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operCoal } from './ExpressionOperator.js';
 import { ExpressionType, typeBoolean, typeNumber, typeString, typeObject, typeFunction, typeVar, typeArray } from './ExpressionType.js';
 
 const symbolBracketsOpen = Symbol();
@@ -13,6 +13,7 @@ const symbolAssignment = Symbol();
 const symbolSeparator = Symbol();
 const symbolIndex = Symbol();
 const symbolScope = Symbol();
+const symbolNullable = Symbol();
 
 export class ExpressionState {
 
@@ -92,6 +93,10 @@ export class ExpressionState {
 		return this._obj === symbolScope;
 	}
 
+	get isNullable(): boolean {
+		return this._obj === symbolNullable;
+	}
+
 	next(): ExpressionState {
 		while ( this._next < this._expr.length ) {
 			this._obj = undefined;
@@ -106,6 +111,10 @@ export class ExpressionState {
 				case ')': this._obj = symbolParenthesesClose; return this;
 				case ',': this._obj = symbolSeparator; return this;
 				case '.': this._obj = symbolIndex; return this;
+				case '?': switch ( this._expr.charAt( this._next ) ) {
+					case '=': ++this._next; this._obj = operCoal; return this;
+					default: this._obj = symbolNullable; return this;
+				}
 				case '|': this._obj = operOr; return this;
 				case '&': this._obj = operAnd; return this;
 				case '!': switch ( this._expr.charAt( this._next ) ) {
@@ -132,7 +141,7 @@ export class ExpressionState {
 					default: this._obj = operSub; return this;
 				}
 				case '*': switch ( this._expr.charAt( this._next ) ) {
-					case '=': switch( this._expr.charAt( ++this._next ) ) {
+					case '=': switch ( this._expr.charAt( ++this._next ) ) {
 						case '*': ++this._next; this._obj = operPartof; return this;
 						default: this._obj = operEndof; return this;
 					}

@@ -3,10 +3,13 @@ import { ExpressionService } from '../src/index.js';
 let passed = 0, failed = 0;
 console.log( `testExpressionService started...` );
 [
+	[ 'null', [ { result: undefined } ] ],
 	[ 'false', [ { result: false } ] ],
 	[ 'true', [ { result: true } ] ],
 	[ '0.5', [ { result: 0.5 } ] ],
 	[ '"0"', [ { result: '0' } ] ],
+	[ '[0,1][2]==null', [ { result: true } ] ],
+	[ '[0,1][2]?=5', [ { result: 5 } ] ],
 	[ 'a == b', [ { a: 1, b: '1', result: false } ] ],
 	[ 'a != b', [ { a: 1, b: '1', result: true } ] ],
 	[ 'a > b', [ { a: 1, b: -1, result: true } ] ],
@@ -40,6 +43,8 @@ console.log( `testExpressionService started...` );
 	[ 'val*myobj[a["prop"]]+1', [ { val: 1, myobj: { test: 10 }, a: { prop: 'test' }, result: 11 } ] ],
 	[ 'obj3["prop1"]+obj3["prop2"]', [ { obj3: { prop1: 1, prop2: 2 }, result: 3 } ] ],
 	[ 'test[0].prop1==test[1]["prop2"]', [ { test: [ { prop1: 1, prop2: 2 }, { prop1: 2, prop2: 1 } ], result: true } ] ],
+	[ '[p,11].map(number?(number a)->if(a>10,10,null))[1]', [ { p: 10, result: 10 } ] ],
+	[ '[p,p,1, 2, 3].map(number?(number? a)->a?=10)[1]', [ { p: undefined, result: 10 }, { p: 0, result: 0 } ] ],
 	[ 'arr1.firstindex(boolean(number v, number i)->v==2)', [ { arr1: [ 1, 2, 3 ], result: 1 } ] ],
 	[ 'arr1.lastindex(boolean(number v, number i)->i==1)', [ { arr1: [ 1, 2, 3 ], result: 1 } ] ],
 	[ 'arr1.first(boolean(number v, number i)->v==2)', [ { arr1: [ 1, 2, 3 ], result: 2 } ] ],
