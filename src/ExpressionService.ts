@@ -1,14 +1,14 @@
 import { ExpressionConstant,
 	constNull, constTrue, constFalse, constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
 import { ExpressionFunction, funcOr, funcAnd, funcNot, funcGt, funcLt, funcGe, funcLe, funcEq, funcNe,
-	funcLike, funcUnlike, funcBeginof, funcEndof, funcPartof,
+	funcLike, funcUnlike, funcBeginof, funcEndof, funcPartof, funcSwitch, funcNullco,
 	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
-	funcAbs, funcCeil, funcFloor, funcRound, funcIf, funcMax, funcMin,
+	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin,
 	funcLen, funcTrim, funcLowercase, funcUppercase, funcSubstr, funcConcat, funcFlatten, funcReverse, funcSlice, funcAt,
-	funcFirst, funcLast, funcFirstindex, funcLastindex, funcMap, funcFilter, funcAny, funcEvery, funcConstr, funcCoal } from './ExpressionFunction.js';
+	funcFirst, funcLast, funcFirstindex, funcLastindex, funcMap, funcFilter, funcAny, funcEvery, funcConstr } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
-	operLike, operUnlike, operBeginof, operEndof, operPartof,
-	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operConstr, operCoal } from './ExpressionOperator.js';
+	operLike, operUnlike, operBeginof, operEndof, operPartof, operNullco,
+	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operConstr } from './ExpressionOperator.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { ExpressionLambda } from './ExpressionLambda.js';
 import { ExpressionType, ExpressionValue, typeVar } from './ExpressionType.js';
@@ -36,13 +36,13 @@ export class ExpressionService {
 		[ 'add', funcAdd ], [ 'sub', funcSub ], [ 'neg', funcNeg ],
 		[ 'mul', funcMul ], [ 'div', funcDiv ], [ 'rem', funcRem ], [ 'mod', funcMod ], [ 'pct', funcPct ],
 		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
-		[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ], [ 'if', funcIf ], [ 'max', funcMax ], [ 'min', funcMin ],
+		[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ], [ 'switch', funcSwitch ], [ 'max', funcMax ], [ 'min', funcMin ],
 		[ 'len', funcLen ], [ 'trim', funcTrim ], [ 'lowercase', funcLowercase ], [ 'uppercase', funcUppercase ], [ 'substr', funcSubstr ],
-		[ 'concat', funcConcat ], [ 'concat', funcConcat ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ], [ 'at', funcAt ],
+		[ 'concat', funcConcat ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ], [ 'at', funcAt ],
 		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstindex', funcFirstindex ], [ 'lastindex', funcLastindex ],
 		[ 'map', funcMap ], [ 'filter', funcFilter ],
 		[ 'any', funcAny ], [ 'every', funcEvery ],
-		[ 'constr', funcConstr ], [ 'coal', funcCoal ],
+		[ 'constr', funcConstr ], [ 'nullco', funcNullco ],
 	] );
 	protected _variables = new Map<symbol, Map<string, ExpressionVariable>>( [ [ this._scope, new Map<string, ExpressionVariable>() ] ] );
 
@@ -61,7 +61,8 @@ export class ExpressionService {
 			name: string,
 			func:( ...values: any[] ) => ExpressionValue,
 			argTypes: ExpressionType[],
-			type: ExpressionType
+			type: ExpressionType,
+			inference?: ( index: number, type: string, mask: string ) => boolean
 		}[],
 		variables?: {
 			name: string,
@@ -71,27 +72,27 @@ export class ExpressionService {
 		this._expr = expr;
 		const type = config?.type ?? typeVar;
 		config?.constants?.forEach( c => this._constants.set( c.name, new ExpressionConstant( c.value ) ) );
-		config?.functions?.forEach( f => this._functions.set( f.name, new ExpressionFunction( f.func, f.argTypes, f.type ) ) );
+		config?.functions?.forEach( f => this._functions.set( f.name, new ExpressionFunction( f.func, f.argTypes, f.type, f.inference ) ) );
 		config?.variables?.forEach( v => this._variables.get( this._scope )?.set( v.name, new ExpressionVariable( undefined, v.type ) ) );
 		const state = new ExpressionState( this._expr );
 		try {
 			this._root = this.disjunction( state.next(), this._scope );
 		}
 		catch ( err ) {
-			let pos = state.pos - 20;
+			let pos = state.pos - 32;
 			pos = pos < 0 ? 0 : pos;
 			throw new Error( `compilation error on ${ ( err as Error ).message } at position ${ state.pos }:\n` +
-				`${ this._expr.substring( pos, pos + 36 ) }\n` +
+				`${ this._expr.substring( pos, pos + 60 ) }\n` +
 				`${ ' '.repeat( this._expr.substring( pos, state.pos ).length ) }^` );
 		}
 		try {
 			this._root = this._root.compile( type );
 		}
 		catch ( errnode: any ) {
-			let pos = errnode.pos - 20;
+			let pos = errnode.pos - 32;
 			pos = pos < 0 ? 0 : pos;
 			throw new TypeError( `compilation error on unexpected type ${ errnode.type } at position ${ errnode.pos }:\n` +
-				`${ this._expr.substring( pos, pos + 36 ) }\n` +
+				`${ this._expr.substring( pos, pos + 60 ) }\n` +
 				`${ ' '.repeat( this._expr.substring( pos, errnode.pos ).length ) }^` );
 		}
 	}
@@ -213,7 +214,7 @@ export class ExpressionService {
 
 	protected coalescence( state: ExpressionState, scope: symbol ): ExpressionNode {
 		let node = this.index( state, scope );
-		while ( state.operator === operCoal ) {
+		while ( state.operator === operNullco ) {
 			node = new ExpressionFunctionNode( state.pos, state.operator,
 				[ node, this.index( state.next(), scope ) ] );
 		}

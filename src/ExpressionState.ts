@@ -2,7 +2,7 @@ import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
 	operLike, operUnlike, operBeginof, operEndof, operPartof,
-	operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operCoal } from './ExpressionOperator.js';
+	operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operNullco } from './ExpressionOperator.js';
 import { ExpressionType, typeBoolean, typeNumber, typeString, typeObject, typeFunction, typeVar, typeArray } from './ExpressionType.js';
 
 const symbolBracketsOpen = Symbol();
@@ -112,7 +112,7 @@ export class ExpressionState {
 				case ',': this._obj = symbolSeparator; return this;
 				case '.': this._obj = symbolIndex; return this;
 				case '?': switch ( this._expr.charAt( this._next ) ) {
-					case '=': ++this._next; this._obj = operCoal; return this;
+					case '=': ++this._next; this._obj = operNullco; return this;
 					default: this._obj = symbolNullable; return this;
 				}
 				case '|': this._obj = operOr; return this;

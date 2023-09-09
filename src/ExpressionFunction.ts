@@ -36,15 +36,15 @@ export class ExpressionFunction {
 
 }
 
-export const funcAnd = new ExpressionFunction(
-	( ...args: ( boolean | boolean[] )[] ) =>
-		args.flat().every( v => v ),
-	[ new ExpressionType( 'boolean', 'array' ) ],
-	typeBoolean
-);
 export const funcOr = new ExpressionFunction(
 	( ...args: ( boolean | boolean[] )[] ) =>
 		args.flat().some( v => v ),
+	[ new ExpressionType( 'boolean', 'array' ) ],
+	typeBoolean
+);
+export const funcAnd = new ExpressionFunction(
+	( ...args: ( boolean | boolean[] )[] ) =>
+		args.flat().every( v => v ),
 	[ new ExpressionType( 'boolean', 'array' ) ],
 	typeBoolean
 );
@@ -120,12 +120,26 @@ export const funcPartof = new ExpressionFunction(
 	[ typeString, typeString ],
 	typeBoolean
 );
+export const funcSwitch = new ExpressionFunction(
+	( arg1: boolean, arg2: ExpressionValue, arg3: ExpressionValue ) =>
+		arg1 ? arg2 : arg3,
+	[ typeBoolean, typeVar, typeVar ],
+	typeVar,
+	( index, vtype, vmask ) => index === 0 || vtype === vmask
+);
+export const funcNullco = new ExpressionFunction(
+	( arg1: ExpressionValue, arg2: ExpressionValue ) =>
+		arg1 ?? arg2,
+	[ typeVar, typeVar ],
+	typeVar,
+	( index, vtype, vmask ) => vtype === vmask
+);
 export const funcAdd = new ExpressionFunction(
 	( ...args: ( number | number[] | string | string[] )[] ) =>
 		args.flat( Infinity ).reduce( ( acc: any, val: any ) => ( acc += val ) ),
 	[ new ExpressionType( 'number', 'string', 'array' ) ],
 	new ExpressionType( 'number', 'string' ),
-	( index, vtype, vmask ) => index > 0 || vtype === 'array' || vtype === vmask
+	( index, vtype, vmask ) => vtype === 'array' || vtype === vmask
 );
 export const funcSub = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
@@ -228,13 +242,6 @@ export const funcRound = new ExpressionFunction(
 		Math.round( arg ),
 	[ typeNumber ],
 	typeNumber
-);
-export const funcIf = new ExpressionFunction(
-	( arg1: boolean, arg2: ExpressionValue, arg3: ExpressionValue ) =>
-		arg1 ? arg2 : arg3,
-	[ typeBoolean, typeVar, typeVar ],
-	typeVar,
-	( index, vtype, vmask ) => index === 0 || vtype === vmask
 );
 export const funcMax = new ExpressionFunction(
 	( ...args: ( number | number[] )[] ) =>
@@ -367,10 +374,4 @@ export const funcConstr = new ExpressionFunction(
 	},
 	[ typeArray ],
 	typeObject,
-);
-export const funcCoal = new ExpressionFunction(
-	( arg1: ExpressionValue, arg2: ExpressionValue ) =>
-		arg1 ?? arg2,
-	[ typeVar, typeVar ],
-	typeVar
 );

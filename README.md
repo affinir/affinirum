@@ -11,8 +11,7 @@ Target: ES2020 [browser or NodeJS].
 ## Why
 
 * Parse once, execute multiple times
-* Efficient expression evaluation
-* Type checking
+* Efficient expression evaluation and type checking
 * Boolean, arithmetic, string and index operators supported
 * Numeric and string comparision operators supported
 * Variadic and iterating functions supported
@@ -56,7 +55,7 @@ Target: ES2020 [browser or NodeJS].
 * Begin of: \=\*
 * End of: \*\=
 * Part of: \*\=\*
-* Coalescence: ?=
+* Null coalescence: ?=
 #### Functions
 * Disjunction: or(boolean ...args)
 * Conjunction: and(boolean ...args)
@@ -72,7 +71,8 @@ Target: ES2020 [browser or NodeJS].
 * Begin of: beginof(string arg1, string arg2)
 * End of: endof(string arg1, string arg2)
 * Part of: partof(string arg1, string arg2)
-* Coalescence: coal(var arg1, var arg2)
+* Conditional switch: switch(boolean arg1, var arg2, var arg3)
+* Null coalescence: nullco(var arg1, var arg2)
 * Addition: add(number|string arg1, number|string arg2)
 * Subtraction: sub(number arg1, number arg2)
 * Negation: neg(number arg)
@@ -89,7 +89,6 @@ Target: ES2020 [browser or NodeJS].
 * Ceil: ceil(number arg)
 * Floor: floor(number arg)
 * Rounded value: round(number arg)
-* Condition: if(boolean arg1, var arg2, var arg3)
 * Minimum: min(number ...args)
 * Maximum: max(number ...args)
 * Char/Element/Property at index: at(string|array arg1, number|string arg2)
