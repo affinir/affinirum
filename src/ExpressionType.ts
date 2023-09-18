@@ -15,6 +15,18 @@ export class ExpressionType {
 		return this._vtypes.length === 1;
 	}
 
+	get isBoolean(): boolean {
+		return this.exact && this._vtypes[ 0 ] === 'boolean';
+	}
+
+	get isNumber(): boolean {
+		return this.exact && this._vtypes[ 0 ] === 'number';
+	}
+
+	get isString(): boolean {
+		return this.exact && this._vtypes[ 0 ] === 'string';
+	}
+
 	get isArray(): boolean {
 		return this.exact && this._vtypes[ 0 ] === 'array';
 	}

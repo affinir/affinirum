@@ -13,8 +13,9 @@ Target: ES2020 [browser or NodeJS].
 * Parse once, execute multiple times
 * Efficient expression evaluation and type checking
 * Boolean, arithmetic, string and index operators supported
-* Numeric and string comparision operators supported
-* Variadic and iterating functions supported
+* Numeric and string comparison operators supported
+* Variadic and lambda functions supported
+* Input and statement variables supported
 * Standard math functions included
 * Easy to add custom functions or constants
 * All operators support literal equivalent
@@ -23,27 +24,27 @@ Target: ES2020 [browser or NodeJS].
 
 ## What
 
-#### Boolean operations
+#### Boolean operators
 * Disjunction: |
 * Conjunction: &
 * Negation: !
-#### Numeric operations
+#### Numeric operators
 * Addition: +
 * Subtraction: -
 * Negation: -
 * Multiplication: \*
 * Division: /
 * Percentage: %
-#### String operations
+#### String operators
 * Addition: +
-* Character by numeric index: []
-#### Array operations
+#### Array operators
+* Element at index: @
+* Element at numeric value: []
 * Concatination: #
-* Element by numeric index: []
-#### Object operations
-* Property by string index: []
+#### Object operators
 * Property by name: .
-#### Comparison operations
+* Property by string value: {}
+#### Comparison operators
 * Equals to: ==
 * Not equals to: !=
 * Greater than: >
@@ -91,10 +92,11 @@ Target: ES2020 [browser or NodeJS].
 * Rounded value: round(number arg)
 * Minimum: min(number ...args)
 * Maximum: max(number ...args)
-* Char/Element/Property at index: at(string|array arg1, number|string arg2)
 * Trim: trim(string arg)
 * Substring: substr(string arg1, number arg2)
+* Char at index: char(string arg1, number arg2)
 * Concatination into array: concat(array ...args)
+* Element at index: at(array arg1, number arg2)
 * Reverse order of items in array: reverse(array arg)
 * Flatten array items to specified depth: flatten(array arg1, number arg2)
 * Slice items into new array: slice(array arg1, number ...args)
@@ -107,6 +109,7 @@ Target: ES2020 [browser or NodeJS].
 * Any item iterator: any(array arg1, function arg2)
 * Every item iterator: every(array arg1, function arg2)
 * Construction of object: constr(array ...args)
+* Property by name: by(object arg1, string arg2)
 #### Constants
 * null
 * true
@@ -128,13 +131,14 @@ The expression parsing is performed using the following grammar:
 	<factor> = {"-"}{<factor>"^"}<coalescence>
 	<coalescence> = {<coalescence>("?=")}<index>
 	<index> = <term>|{<index>("."<property>|"["<disjunction>"]")}
-	<term> = <constant>|<variable>|<function>|<lambda>|"("<disjunction>")"
-	<constant> = <boolean-value>|<numberic-value>|<string-value>|<array>|<object>
+	<term> = <constant>|<array>|<object>|<variable>|<function>|<lambda>|<statement>|"("<disjunction>")"
+	<constant> = <boolean-value>|<numberic-value>|<string-value>
 	<array> = "["<disjunction>,{","<disjunction>}"]"
-	<object> = "["<property-name>"="<disjunction>,{",""<property-name>"="<disjunction>}"]"
+	<object> = "{"<property-name>"="<disjunction>,{",""<property-name>"="<disjunction>}"}"
 	<function> = <function-name>"("<disjunction>{","<disjunction>}")"
-	<lambda> = <type>"("<type> <argument>{,<type> <argument>}")"
-	<type> = "boolean"|"number"|"string"|"array"|"object"|"function"|"var"{"?"}
+	<lambda> = <type-name>"("<type-name> <argument>{,<type-name> <argument>}")"
+	<statement> = {<variable>"="<disjunction>,}<disjunction>
+	<type-name> = "boolean"|"number"|"string"|"array"|"object"|"function"|"var"{"?"}
 
 Whitespace characters are ignored.
 
@@ -160,12 +164,16 @@ const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
 const arrExpr = new ExpressionService( '[ 1, 2, 3, a, b, c ].add()' );
 const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
 ...
-const objExpr = new ExpressionService( '[prop1=a,prop2=`abc`].prop1+10' );
+const objExpr = new ExpressionService( '{prop1=a,prop2=`abc`}.prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new ExpressionService(
 	'arr.map(number(number a) -> a*2).filter(boolean(number a) -> a>3).add()'
 );
 const iValue = iteratorExpr.evaluate( { arr: [ 1, 2, 3 ] } ); // 10
+...
+const complexExpr = new ExpressionService( 'a=myvar1/10, b=myvar2-100, a/b'
+);
+const value = complexExpr.evaluate( { myvar1: 40, myvar2: 104 } ); // 1
 ...
 ```

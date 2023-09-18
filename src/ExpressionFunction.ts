@@ -40,85 +40,85 @@ export const funcOr = new ExpressionFunction(
 	( ...args: ( boolean | boolean[] )[] ) =>
 		args.flat().some( v => v ),
 	[ new ExpressionType( 'boolean', 'array' ) ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcAnd = new ExpressionFunction(
 	( ...args: ( boolean | boolean[] )[] ) =>
 		args.flat().every( v => v ),
 	[ new ExpressionType( 'boolean', 'array' ) ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcNot = new ExpressionFunction(
 	( arg: boolean ) =>
 		!arg,
 	[ typeBoolean ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcGt = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
 		arg1 > arg2,
 	[ typeNumber, typeNumber ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcLt = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
 		arg1 < arg2,
 	[ typeNumber, typeNumber ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcGe = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
 		arg1 >= arg2,
 	[ typeNumber, typeNumber ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcLe = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
 		arg1 <= arg2,
 	[ typeNumber, typeNumber ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcEq = new ExpressionFunction(
 	( arg1: boolean | number | string, arg2: boolean | number | string ) =>
 		ExpressionType.equate( arg1, arg2 ),
 	[ typeVar, typeVar ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcNe = new ExpressionFunction(
 	( arg1: boolean | number | string, arg2: boolean | number | string ) =>
 		!ExpressionType.equate( arg1, arg2 ),
 	[ typeVar, typeVar ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcLike = new ExpressionFunction(
 	( arg1: string, arg2: string ) =>
 		arg1.toLowerCase() === arg2.toLowerCase(),
 	[ typeString, typeString ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcUnlike = new ExpressionFunction(
 	( arg1: string, arg2: string ) =>
 		arg1.toLowerCase() !== arg2.toLowerCase(),
 	[ typeString, typeString ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcBeginof = new ExpressionFunction(
 	( arg1: string, arg2: string ) =>
 		arg2.startsWith( arg1 ),
 	[ typeString, typeString ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcEndof = new ExpressionFunction(
 	( arg1: string, arg2: string ) =>
 		arg2.endsWith( arg1 ),
 	[ typeString, typeString ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcPartof = new ExpressionFunction(
 	( arg1: string, arg2: string ) =>
 		arg2.includes( arg1 ),
 	[ typeString, typeString ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcSwitch = new ExpressionFunction(
 	( arg1: boolean, arg2: ExpressionValue, arg3: ExpressionValue ) =>
@@ -145,121 +145,115 @@ export const funcSub = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
 		arg1 - arg2,
 	[ typeNumber, typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcNeg = new ExpressionFunction(
 	( arg: number ) =>
 		-arg,
 	[ typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcMul = new ExpressionFunction(
 	( ...args: ( number | number[] )[] ) =>
 		args.flat( Infinity ).reduce( ( acc: any, val: any ) => ( acc *= val ) ),
 	[ new ExpressionType( 'number', 'array' ) ],
-	typeNumber
+	typeNumber,
 );
 export const funcDiv = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
 		arg1 / arg2,
 	[ typeNumber, typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcRem = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
 		arg1 % arg2,
 	[ typeNumber, typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcMod = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
 		( ( arg1 % arg2 ) + arg2 ) % arg2,
 	[ typeNumber, typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcPct = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
 		Math.round( arg1 * arg2 / 100 ),
 	[ typeNumber, typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcExp = new ExpressionFunction(
 	( arg: number ) =>
 		Math.exp( arg ),
 	[ typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcLog = new ExpressionFunction(
 	( arg: number ) =>
 		Math.log( arg ),
 	[ typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcPow = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
 		Math.pow( arg1, arg2 ),
 	[ typeNumber, typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcRt = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
 		Math.pow( arg1, 1 / arg2 ),
 	[ typeNumber, typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcSq = new ExpressionFunction(
 	( arg: number ) =>
 		arg * arg,
 	[ typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcSqrt = new ExpressionFunction(
 	( arg: number ) =>
 		Math.sqrt( arg ),
 	[ typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcAbs = new ExpressionFunction(
 	( arg: number ) =>
 		Math.abs( arg ),
 	[ typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcCeil = new ExpressionFunction(
 	( arg: number ) =>
 		Math.ceil( arg ),
 	[ typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcFloor = new ExpressionFunction(
 	( arg: number ) =>
 		Math.floor( arg ),
 	[ typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcRound = new ExpressionFunction(
 	( arg: number ) =>
 		Math.round( arg ),
 	[ typeNumber ],
-	typeNumber
+	typeNumber,
 );
 export const funcMax = new ExpressionFunction(
 	( ...args: ( number | number[] )[] ) =>
 		Math.max( ...args.flat() ),
 	[ new ExpressionType( 'number', 'array' ) ],
-	typeNumber
+	typeNumber,
 );
 export const funcMin = new ExpressionFunction(
 	( ...args: ( number | number[] )[] ) =>
 		Math.min( ...args.flat() ),
 	[ new ExpressionType( 'number', 'array' ) ],
-	typeNumber
-);
-export const funcLen = new ExpressionFunction(
-	( arg: string | ExpressionValue[] ) =>
-		arg.length,
-	[ new ExpressionType( 'string', 'array' ) ],
-	typeNumber
+	typeNumber,
 );
 export const funcTrim = new ExpressionFunction(
 	( arg: string ) =>
@@ -271,25 +265,49 @@ export const funcLowercase = new ExpressionFunction(
 	( arg: string ) =>
 		arg.toLowerCase(),
 	[ typeString ],
-	typeString
+	typeString,
 );
 export const funcUppercase = new ExpressionFunction(
 	( arg: string ) =>
 		arg.toUpperCase(),
 	[ typeString ],
-	typeString
+	typeString,
 );
 export const funcSubstr = new ExpressionFunction(
 	( arg: string, ...args: number[] ) =>
 		arg.substring( args[ 0 ], args[ 1 ] ),
 	[ typeString, typeNumber ],
-	typeString
+	typeString,
+);
+export const funcChar = new ExpressionFunction(
+	( arg1: string, arg2: number ) =>
+		arg1.charAt( arg2 < 0 ? arg1.length + arg2 : arg2 ),
+	[ typeString, typeNumber ],
+	typeString,
+);
+export const funcCharcode = new ExpressionFunction(
+	( arg1: string, arg2: number ) =>
+		arg1.charCodeAt( arg2 < 0 ? arg1.length + arg2 : arg2 ),
+	[ typeString, typeNumber ],
+	typeNumber,
+);
+export const funcLen = new ExpressionFunction(
+	( arg: string | ExpressionValue[] ) =>
+		arg.length,
+	[ new ExpressionType( 'string', 'array' ) ],
+	typeNumber,
 );
 export const funcConcat = new ExpressionFunction(
 	( ...args: ExpressionValue[] ) =>
 		args,
 	[ typeVar ],
 	typeArray,
+);
+export const funcAt = new ExpressionFunction(
+	( arg1: ExpressionValue[], arg2: number ) =>
+		arg1[ arg2 < 0 ? arg1.length + arg2 : arg2 ],
+	[ typeArray, typeNumber ],
+	typeVar,
 );
 export const funcFlatten = new ExpressionFunction(
 	( args: ExpressionValue[], arg: number ) =>
@@ -301,7 +319,7 @@ export const funcReverse = new ExpressionFunction(
 	( arg: ExpressionValue[] ) =>
 		[ ...arg ].reverse(),
 	[ typeArray ],
-	typeArray
+	typeArray,
 );
 export const funcSlice = new ExpressionFunction(
 	( args: ExpressionValue[], arg1: number, arg2: number ) =>
@@ -309,18 +327,11 @@ export const funcSlice = new ExpressionFunction(
 	[ typeArray, typeNumber, typeNumber ],
 	typeArray,
 );
-export const funcAt = new ExpressionFunction(
-	( arg1: string | object | ExpressionValue[], arg2: number | string ) =>
-		( typeof arg1 === 'string' ? arg1.charAt( arg2 as number ) : Array.isArray( arg1 ) ? arg1[ arg2 as number ] : ( arg1 as any )[ arg2 ] ),
-	[ new ExpressionType( 'string', 'object', 'array' ), new ExpressionType( 'number', 'string' ) ],
-	typeVar,
-	( index, vtype, vmask ) => index > 0 || vtype === 'object' || vtype === 'array' || vtype === vmask
-);
 export const funcFirst = new ExpressionFunction(
 	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) =>
 		arg1.find( ( v, i, a ) => arg2( v, i, a ) ),
 	[ typeArray, typeFunction ],
-	typeVar
+	typeVar,
 );
 export const funcLast = new ExpressionFunction(
 	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) =>
@@ -329,14 +340,18 @@ export const funcLast = new ExpressionFunction(
 	typeVar
 );
 export const funcFirstindex = new ExpressionFunction(
-	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) =>
-		arg1.findIndex( ( v, i, a ) => arg2( v, i, a ) ),
+	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) => {
+		const ix = arg1.findIndex( ( v, i, a ) => arg2( v, i, a ) );
+		return ix < 0 ? Number.NaN : ix;
+	},
 	[ typeArray, typeFunction ],
-	typeNumber
+	typeNumber,
 );
 export const funcLastindex = new ExpressionFunction(
-	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) =>
-		[ ...arg1 ].reverse().findIndex( ( v, i, a ) => arg2( v, i, a ) ),
+	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) => {
+		const ix = [ ...arg1 ].reverse().findIndex( ( v, i, a ) => arg2( v, i, a ) );
+		return ix < 0 ? Number.NaN : ix;
+	},
 	[ typeArray, typeFunction ],
 	typeNumber
 );
@@ -344,25 +359,25 @@ export const funcMap = new ExpressionFunction(
 	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => ExpressionValue ) =>
 		arg1.map( ( v, i, a ) => arg2( v, i, a ) ),
 	[ typeArray, typeFunction ],
-	typeArray
+	typeArray,
 );
 export const funcFilter = new ExpressionFunction(
 	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) =>
 		arg1.filter( ( v, i, a ) => arg2( v, i, a ) ),
 	[ typeArray, typeFunction ],
-	typeArray
+	typeArray,
 );
 export const funcAny = new ExpressionFunction(
 	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) =>
 		arg1.some( ( v, i, a ) => arg2( v, i, a ) ),
 	[ typeArray, typeFunction ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcEvery = new ExpressionFunction(
 	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) =>
 		arg1.every( ( v, i, a ) => arg2( v, i, a ) ),
 	[ typeArray, typeFunction ],
-	typeBoolean
+	typeBoolean,
 );
 export const funcConstr = new ExpressionFunction(
 	( ...args: ExpressionValue[][] ) => {
@@ -374,4 +389,10 @@ export const funcConstr = new ExpressionFunction(
 	},
 	[ typeArray ],
 	typeObject,
+);
+export const funcBy = new ExpressionFunction(
+	( arg1: object, arg2: string ) =>
+		( arg1 as any )[ arg2 ],
+	[ typeObject, typeString ],
+	typeVar,
 );

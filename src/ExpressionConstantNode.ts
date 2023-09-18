@@ -5,8 +5,8 @@ import { ExpressionType, ExpressionValue } from './ExpressionType.js';
 export class ExpressionConstantNode extends ExpressionNode {
 
 	constructor(
-		protected _pos: number,
-		protected _constant: ExpressionConstant
+		_pos: number,
+		protected _constant: ExpressionConstant,
 	) {
 		super( _pos );
 	}
