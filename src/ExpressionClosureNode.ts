@@ -2,7 +2,7 @@ import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { ExpressionType, ExpressionValue } from './ExpressionType.js';
 
-export class ExpressionLambdaNode extends ExpressionNode {
+export class ExpressionClosureNode extends ExpressionNode {
 
 	constructor(
 		_pos: number,

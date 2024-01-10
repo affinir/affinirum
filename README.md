@@ -12,11 +12,11 @@ Target: ES2020 [browser or NodeJS].
 
 * Parse once, execute multiple times
 * Efficient expression evaluation and type checking
-* Boolean, arithmetic, string and index operators supported
-* Numeric and string comparison operators supported
-* Variadic and lambda functions supported
-* Input and statement variables supported
-* Standard math functions included
+* Boolean, arithmetic, string and index operators
+* Numeric and string comparison operators
+* Variadic functions and closures
+* Input and statement variables
+* Standard math functions
 * Easy to add custom functions or constants
 * All operators support literal equivalent
 * Method-style invocation is supported for all functions,
@@ -24,60 +24,61 @@ Target: ES2020 [browser or NodeJS].
 
 ## What
 
-#### Boolean operators
+#### Operators
 * Disjunction: |
 * Conjunction: &
 * Negation: !
-#### Numeric operators
-* Addition: +
+* Number or string addition: +
 * Subtraction: -
 * Negation: -
 * Multiplication: \*
 * Division: /
 * Percentage: %
-#### String operators
-* Addition: +
-#### Array operators
-* Element at index: @
-* Element at numeric value: []
-* Concatination: #
-#### Object operators
-* Property by name: .
-* Property by string value: {}
-#### Comparison operators
-* Equals to: ==
-* Not equals to: !=
+* Array element at literal index: @
+* Array element at numeric value: []
+* Array concatination: #
+* Object property by literal name: .
+* Object property by string value: {}
+* Object join: $
 * Greater than: >
 * Less than: <
 * Greater than or equal to: >=
 * Less than or equal to: <=
-* Case insensitive comparison: \~
-* Case insensitive comparison: !\~
-* Begin of: \=\*
-* End of: \*\=
-* Part of: \*\=\*
+* Equals to: =
+* Not equals to: !=
+* String begins with: \=\*
+* String ends with: \*\=
+* String contains substring: \*\=\*
+* String similar to: \~
+* String not similar: !\~
+* String begins similar to: \~\*
+* String ends similar to: \*\~
+* String contains substring similar to: \*\~\*
 * Null coalescence: ?=
 #### Functions
 * Disjunction: or(boolean ...args)
 * Conjunction: and(boolean ...args)
 * Negation: not(boolean arg)
-* Equals to: eq(var arg1, var arg2)
-* Not equals to: ne(var arg1, var arg2)
 * Greater than: gt(number arg1, number arg2)
 * Less than: lt(number arg1, number arg2)
 * Greater than or equals to: ge(number arg1, number arg2)
 * Less than or equals to: le(number arg1, number arg2)
-* Case insensitive equals: like(string arg1, string arg2)
-* Case insensitive not equals: unlike(string arg1, string arg2)
-* Begin of: beginof(string arg1, string arg2)
-* End of: endof(string arg1, string arg2)
-* Part of: partof(string arg1, string arg2)
+* Equals to: eq(var arg1, var arg2)
+* Not equals to: ne(var arg1, var arg2)
+* String begins with: beginsWith(string arg1, string arg2, number? arg3)
+* String ends with: endsWith(string arg1, string arg2, number? arg3)
+* String contains substring: contains(string arg1, string arg2, number? arg3)
+* String similar to: like(string arg1, string arg2)
+* String not similar to: unlike(string arg1, string arg2)
+* String begins similar to: beginslike(string arg1, string arg2, number? arg3)
+* String ends similar to: endsLike(string arg1, string arg2, number? arg3)
+* String contains substring similar to: containsLike(string arg1, string arg2, number? arg3)
 * Conditional switch: switch(boolean arg1, var arg2, var arg3)
 * Null coalescence: nullco(var arg1, var arg2)
-* Addition: add(number|string arg1, number|string arg2)
+* Number or string addition: add(number|string ...args)
 * Subtraction: sub(number arg1, number arg2)
 * Negation: neg(number arg)
-* Multiplication: mul(number arg1, number arg2)
+* Multiplication: mul(number ...args)
 * Division: div(number arg1, number arg2)
 * Percentage: pct(number arg1, number arg2)
 * Exponent: exp(number arg)
@@ -108,8 +109,9 @@ Target: ES2020 [browser or NodeJS].
 * Filter items iterator: filter(array arg1, function arg2)
 * Any item iterator: any(array arg1, function arg2)
 * Every item iterator: every(array arg1, function arg2)
-* Construction of object: constr(array ...args)
-* Property by name: by(object arg1, string arg2)
+* Object construction from name-value pairs: constr(array ...args)
+* Object join: join(array ...args)
+* Object property by name: by(object arg1, string arg2)
 #### Constants
 * null
 * true
@@ -125,18 +127,18 @@ The expression parsing is performed using the following grammar:
 
 	<disjunction> = {<disjunction>"|"}<conjunction>
 	<conjunction> = {<conjunction>"&"}<comparison>
-	<comparison> = {"!"}{<comparison>(">"|">="|"<"|"<="|"="|"=="|"!="|"~"|"!~"|"=*"|"*="|"*=*")}<aggregate>
-	<aggregate> = {<aggregate>("#"|"+"|"-")}<product>
+	<comparison> = {"!"}{<comparison>(">"|">="|"<"|"<="|"="|"=="|"!="|"=*"|"*="|"*=*"|"~"|"!~"|"~*"|"*~"|"*~*)}<aggregate>
+	<aggregate> = {<aggregate>("$"|"#"|"+"|"-")}<product>
 	<product> = {<product>("*"|"/"|"%")}<factor>
 	<factor> = {"-"}{<factor>"^"}<coalescence>
 	<coalescence> = {<coalescence>("?=")}<index>
 	<index> = <term>|{<index>("."<property>|"["<disjunction>"]")}
-	<term> = <constant>|<array>|<object>|<variable>|<function>|<lambda>|<statement>|"("<disjunction>")"
+	<term> = <constant>|<array>|<object>|<variable>|<function>|<closure>|<statement>|"("<disjunction>")"
 	<constant> = <boolean-value>|<numberic-value>|<string-value>
 	<array> = "["<disjunction>,{","<disjunction>}"]"
 	<object> = "{"<property-name>"="<disjunction>,{",""<property-name>"="<disjunction>}"}"
 	<function> = <function-name>"("<disjunction>{","<disjunction>}")"
-	<lambda> = <type-name>"("<type-name> <argument>{,<type-name> <argument>}")"
+	<closure> = <type-name>"("<type-name> <argument>{,<type-name> <argument>}")"
 	<statement> = {<variable>"="<disjunction>,}<disjunction>
 	<type-name> = "boolean"|"number"|"string"|"array"|"object"|"function"|"var"{"?"}
 
@@ -164,7 +166,7 @@ const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
 const arrExpr = new ExpressionService( '[ 1, 2, 3, a, b, c ].add()' );
 const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
 ...
-const objExpr = new ExpressionService( '{prop1=a,prop2=`abc`}.prop1+10' );
+const objExpr = new ExpressionService( '{prop1:a,prop2:`abc`}.prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new ExpressionService(
@@ -172,7 +174,7 @@ const iteratorExpr = new ExpressionService(
 );
 const iValue = iteratorExpr.evaluate( { arr: [ 1, 2, 3 ] } ); // 10
 ...
-const complexExpr = new ExpressionService( 'a=myvar1/10, b=myvar2-100, a/b'
+const complexExpr = new ExpressionService( 'a:myvar1/10, b:myvar2-100, a/b'
 );
 const value = complexExpr.evaluate( { myvar1: 40, myvar2: 104 } ); // 1
 ...

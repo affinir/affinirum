@@ -1,16 +1,16 @@
 import { ExpressionConstant,
 	constNull, constTrue, constFalse, constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
 import { ExpressionFunction, funcOr, funcAnd, funcNot, funcGt, funcLt, funcGe, funcLe, funcEq, funcNe,
-	funcLike, funcUnlike, funcBeginof, funcEndof, funcPartof, funcSwitch, funcNullco,
+	funcBeginsWith, funcEndsWith, funcContains, funcSwitch, funcNullco, funcLike, funcUnlike, funcBeginsLike, funcEndsLike, funcContainsLike,
 	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
 	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin,
-	funcTrim, funcLowercase, funcUppercase, funcSubstr, funcChar, funcCharcode, funcLen,
+	funcTrim, funcLowerCase, funcUpperCase, funcSubstr, funcChar, funcCharCode, funcLen,
 	funcConcat, funcAt, funcFlatten, funcReverse, funcSlice,
-	funcFirst, funcLast, funcFirstindex, funcLastindex, funcMap, funcFilter, funcAny, funcEvery,
-	funcConstr, funcBy } from './ExpressionFunction.js';
+	funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcMap, funcFilter, funcAny, funcEvery,
+	funcConstr, funcJoin, funcBy } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
-	operLike, operUnlike, operBeginof, operEndof, operPartof, operNullco,
-	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operConstr, operBy } from './ExpressionOperator.js';
+	operLike, operUnlike, operBeginsWith, operEndsWith, operContains, operNullco,
+	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operConstr, operJoin, operBy, operBeginsLike, operEndsLike, operContainsLike } from './ExpressionOperator.js';
 import { ExpressionScope } from './ExpressionScope.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { ExpressionType, ExpressionValue, typeVar } from './ExpressionType.js';
@@ -19,7 +19,7 @@ import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionConstantNode } from './ExpressionConstantNode.js';
 import { ExpressionFunctionNode } from './ExpressionFunctionNode.js';
 import { ExpressionVariableNode } from './ExpressionVariableNode.js';
-import { ExpressionLambdaNode } from './ExpressionLambdaNode.js';
+import { ExpressionClosureNode } from './ExpressionClosureNode.js';
 import { ExpressionStatementNode } from './ExpressionStatementNode.js';
 
 export class ExpressionService {
@@ -33,18 +33,19 @@ export class ExpressionService {
 	protected _functions = new Map<string, ExpressionFunction>( [
 		[ 'or', funcOr ], [ 'and', funcAnd ], [ 'not', funcNot ],
 		[ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
-		[ 'eq', funcEq ], [ 'ne', funcNe ], [ 'like', funcLike ], [ 'nlike', funcUnlike ],
-		[ 'beginof', funcBeginof ], [ 'endof', funcEndof ], [ 'partof', funcPartof ], [ 'switch', funcSwitch ], [ 'nullco', funcNullco ],
+		[ 'eq', funcEq ], [ 'ne', funcNe ],
+		[ 'beginsWith', funcBeginsWith ], [ 'endsWith', funcEndsWith ], [ 'contains', funcContains ], [ 'switch', funcSwitch ], [ 'nullco', funcNullco ],
+		[ 'like', funcLike ], [ 'unlike', funcUnlike ], [ 'beginsLike', funcBeginsLike ], [ 'endsLike', funcEndsLike ], [ 'containsLike', funcContainsLike ],
 		[ 'add', funcAdd ], [ 'sub', funcSub ], [ 'neg', funcNeg ],
 		[ 'mul', funcMul ], [ 'div', funcDiv ], [ 'rem', funcRem ], [ 'mod', funcMod ], [ 'pct', funcPct ],
 		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
 		[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ], [ 'max', funcMax ], [ 'min', funcMin ],
-		[ 'trim', funcTrim ], [ 'lowercase', funcLowercase ], [ 'uppercase', funcUppercase ],
-		[ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charcode', funcCharcode ], [ 'len', funcLen ],
+		[ 'trim', funcTrim ], [ 'lowerCase', funcLowerCase ], [ 'upperCase', funcUpperCase ],
+		[ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'len', funcLen ],
 		[ 'concat', funcConcat ], [ 'at', funcAt ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ],
-		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstindex', funcFirstindex ], [ 'lastindex', funcLastindex ],
+		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
 		[ 'map', funcMap ], [ 'filter', funcFilter ], [ 'any', funcAny ], [ 'every', funcEvery ],
-		[ 'constr', funcConstr ], [ 'by', funcBy ],
+		[ 'constr', funcConstr ], [ 'join', funcJoin ], [ 'by', funcBy ],
 	] );
 	protected _scope = new ExpressionScope();
 
@@ -62,9 +63,11 @@ export class ExpressionService {
 		functions?: {
 			name: string,
 			func:( ...values: any[] ) => ExpressionValue,
-			argTypes: ExpressionType[],
 			type: ExpressionType,
-			inference?: ( index: number, type: string, mask: string ) => boolean
+			argTypes: ExpressionType[],
+			minArity?: number,
+			maxArity?: number,
+			typeInference?: ( index: number, type: string, mask: string ) => boolean
 		}[],
 		variables?: {
 			name: string,
@@ -74,7 +77,7 @@ export class ExpressionService {
 		this._expr = expr;
 		const type = config?.type ?? typeVar;
 		config?.constants?.forEach( c => this._constants.set( c.name, new ExpressionConstant( c.value ) ) );
-		config?.functions?.forEach( f => this._functions.set( f.name, new ExpressionFunction( f.func, f.argTypes, f.type, f.inference ) ) );
+		config?.functions?.forEach( f => this._functions.set( f.name, new ExpressionFunction( f.func, f.type, f.argTypes, f.minArity, f.maxArity, f.typeInference ) ) );
 		config?.variables?.forEach( v => this._scope.set( v.name, new ExpressionVariable( undefined, v.type ) ) );
 		const state = new ExpressionState( this._expr );
 		try {
@@ -93,7 +96,7 @@ export class ExpressionService {
 		catch ( errnode: any ) {
 			let pos = errnode.pos - 32;
 			pos = pos < 0 ? 0 : pos;
-			throw new TypeError( `compilation error on unexpected type ${ errnode.type } at position ${ errnode.pos }:\n` +
+			throw new TypeError( `compilation error on unexpected value not matching type ${ errnode.type } at position ${ errnode.pos }:\n` +
 				`${ this._expr.substring( pos, pos + 60 ) }\n` +
 				`${ ' '.repeat( this._expr.substring( pos, errnode.pos ).length ) }^` );
 		}
@@ -167,8 +170,10 @@ export class ExpressionService {
 		}
 		let node = this.aggregate( state, scope );
 		while ( state.operator === operGt || state.operator === operLt || state.operator === operGe || state.operator === operLe ||
-			state.operator === operEq || state.operator === operNe || state.operator === operLike || state.operator === operUnlike ||
-			state.operator === operBeginof || state.operator === operEndof || state.operator === operPartof ) {
+			state.operator === operEq || state.operator === operNe ||
+			state.operator === operBeginsWith || state.operator === operEndsWith || state.operator === operContains ||
+			state.operator === operLike || state.operator === operUnlike ||
+			state.operator === operBeginsLike || state.operator === operEndsLike || state.operator === operContainsLike ) {
 			node = new ExpressionFunctionNode( state.pos, state.operator,
 				[ node, this.aggregate( state.next(), scope ) ] );
 		}
@@ -180,7 +185,7 @@ export class ExpressionService {
 
 	protected aggregate( state: ExpressionState, scope: ExpressionScope ): ExpressionNode {
 		let node = this.product( state, scope );
-		while ( state.operator === operConcat || state.operator === operAdd || state.operator === operSub ) {
+		while ( state.operator === operJoin || state.operator === operConcat || state.operator === operAdd || state.operator === operSub ) {
 			node = new ExpressionFunctionNode( state.pos, state.operator,
 				[ node, this.product( state.next(), scope ) ] );
 		}
@@ -264,7 +269,7 @@ export class ExpressionService {
 				const func = this._functions.get( state.token );
 				node = func != null ?
 					new ExpressionFunctionNode( pos, func,
-						[ node, ...this.arguments( func.arity - 1, state.next(), scope ) ] ) :
+						[ node, ...this.arguments( func.minArity - 1, func.maxArity - 1, state.next(), scope ) ] ) :
 					new ExpressionFunctionNode( pos, operBy,
 						[ node, new ExpressionConstantNode( state.pos, new ExpressionConstant( state.token ) ) ] );
 				state.next();
@@ -290,7 +295,7 @@ export class ExpressionService {
 			}
 			const func = this._functions.get( token );
 			if ( func != null ) {
-				const subnodes = this.arguments( func.arity, state.next(), scope );
+				const subnodes = this.arguments( func.minArity, func.maxArity, state.next(), scope );
 				state.next();
 				return new ExpressionFunctionNode( pos, func, subnodes );
 			}
@@ -349,7 +354,7 @@ export class ExpressionService {
 			if ( !state.next().isScope ) {
 				throw new Error( `missing scope operator` );
 			}
-			return new ExpressionLambdaNode( pos, Array.from( variables.values() ), type, this.disjunction( state.next(), scope.subscope( variables ) ) );
+			return new ExpressionClosureNode( pos, Array.from( variables.values() ), type, this.disjunction( state.next(), scope.subscope( variables ) ) );
 		}
 		else if ( state.isParenthesesOpen ) {
 			const node = this.disjunction( state.next(), scope );
@@ -408,7 +413,7 @@ export class ExpressionService {
 		throw new Error( `unknown state ${ JSON.stringify( state ) }` );
 	}
 
-	protected arguments( arity: number, state: ExpressionState, scope: ExpressionScope ): ExpressionNode[] {
+	protected arguments( minArity: number, maxArity: number, state: ExpressionState, scope: ExpressionScope ): ExpressionNode[] {
 		const nodes: ExpressionNode[] = [];
 		if ( !state.isParenthesesOpen ) {
 			throw new Error( `missing opening parentheses` );
@@ -422,8 +427,11 @@ export class ExpressionService {
 		if ( !state.isParenthesesClose ) {
 			throw new Error( `missing closing parentheses` );
 		}
-		if ( nodes.length < arity ) {
-			throw new Error( `missing arguments as function requires ${ arity } not ${ nodes.length }` );
+		if ( nodes.length < minArity ) {
+			throw new Error( `insufficient number of arguments ${ nodes.length } is less than ${ minArity } that function requires` );
+		}
+		if ( nodes.length > maxArity ) {
+			throw new Error( `excessive number of arguments ${ nodes.length } is more than ${ minArity } that function requires` );
 		}
 		return nodes;
 	}

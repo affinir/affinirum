@@ -1,7 +1,7 @@
 import { funcOr, funcAnd, funcNot, funcGt, funcLt, funcGe, funcLe, funcEq, funcNe,
-	funcLike, funcUnlike, funcBeginof, funcEndof, funcPartof, funcNullco,
+	funcBeginsWith, funcEndsWith, funcContains, funcNullco, funcLike, funcUnlike, funcBeginsLike, funcEndsLike, funcContainsLike,
 	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcPct, funcPow,
-	funcChar, funcConcat, funcAt, funcConstr, funcBy } from './ExpressionFunction.js';
+	funcConcat, funcAt, funcConstr, funcBy, funcJoin } from './ExpressionFunction.js';
 
 export const operOr = funcOr.clone();
 export const operAnd = funcAnd.clone();
@@ -12,11 +12,14 @@ export const operGe = funcGe.clone();
 export const operLe = funcLe.clone();
 export const operEq = funcEq.clone();
 export const operNe = funcNe.clone();
+export const operBeginsWith = funcBeginsWith.clone();
+export const operEndsWith = funcEndsWith.clone();
+export const operContains = funcContains.clone();
 export const operLike = funcLike.clone();
 export const operUnlike = funcUnlike.clone();
-export const operBeginof = funcBeginof.clone();
-export const operEndof = funcEndof.clone();
-export const operPartof = funcPartof.clone();
+export const operBeginsLike = funcBeginsLike.clone();
+export const operEndsLike = funcEndsLike.clone();
+export const operContainsLike = funcContainsLike.clone();
 export const operNullco = funcNullco.clone();
 export const operAdd = funcAdd.clone();
 export const operSub = funcSub.clone();
@@ -29,3 +32,4 @@ export const operConcat = funcConcat.clone();
 export const operAt = funcAt.clone();
 export const operConstr = funcConstr.clone();
 export const operBy = funcBy.clone();
+export const operJoin = funcJoin.clone();
