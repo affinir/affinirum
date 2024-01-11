@@ -1,8 +1,7 @@
 import { ExpressionConstant } from './ExpressionConstant.js';
-import { ExpressionFunction, isAlpha, isNumeric, isAlphanumeric, isDecinumeric, isQuotation } from './ExpressionFunction.js';
-import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
-	operBeginsWith, operEndsWith, operContains, operNullco, operLike, operUnlike, operBeginsLike, operEndsLike, operContainsLike,
-	operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operAt, operBy, operJoin } from './ExpressionOperator.js';
+import { ExpressionFunction } from './ExpressionFunction.js';
+import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
+	operNullco, operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operAt, operBy, operJoin } from './ExpressionOperator.js';
 import { ExpressionType, typeBoolean, typeNumber, typeString, typeObject, typeFunction, typeVar, typeArray } from './ExpressionType.js';
 
 const symbolParenthesesOpen = Symbol();
@@ -124,11 +123,6 @@ export class ExpressionState {
 				}
 				case '|': this._obj = operOr; return this;
 				case '&': this._obj = operAnd; return this;
-				case '!': switch ( this._expr.charAt( this._next ) ) {
-					case '=': ++this._next; this._obj = operNe; return this;
-					case '~': ++this._next; this._obj = operUnlike; return this;
-					default: this._obj = operNot; return this;
-				}
 				case '>': switch ( this._expr.charAt( this._next ) ) {
 					case '=': ++this._next; this._obj = operGe; return this;
 					default: this._obj = operGt; return this;
@@ -137,30 +131,19 @@ export class ExpressionState {
 					case '=': ++this._next; this._obj = operLe; return this;
 					default: this._obj = operLt; return this;
 				}
+				case '!': switch ( this._expr.charAt( this._next ) ) {
+					case '=': ++this._next; this._obj = operNotEqual; return this;
+					case '~': ++this._next; this._obj = operNotLike; return this;
+					default: this._obj = operNot; return this;
+				}
 				case '=': switch ( this._expr.charAt( this._next ) ) {
-					case '*': ++this._next; this._obj = operBeginsWith; return this;
-					default: this._obj = operEq; return this;
-				}
-				case '~': switch ( this._expr.charAt( this._next )) {
-					case '*': ++this._next; this._obj = operBeginsLike; return this;
-					default: this._obj = operLike; return this;
-				}
-				case '+': this._obj = operAdd; return this;
-				case '-': switch ( this._expr.charAt( this._next ) ) {
 					case '>': ++this._next; this._obj = symbolScope; return this;
-					default: this._obj = operSub; return this;
+					default: this._obj = operEqual; return this;
 				}
-				case '*': switch ( this._expr.charAt( this._next ) ) {
-					case '=': switch ( this._expr.charAt( ++this._next ) ) {
-						case '*': ++this._next; this._obj = operContains; return this;
-						default: this._obj = operEndsWith; return this;
-					}
-					case '~': switch ( this._expr.charAt( ++this._next ) ) {
-						case '*': ++this._next; this._obj = operContainsLike; return this;
-						default: this._obj = operEndsLike; return this;
-					}
-					default: this._obj = operMul; return this;
-				}
+				case '~': this._obj = operLike; return this;
+				case '+': this._obj = operAdd; return this;
+				case '-': this._obj = operSub; return this;
+				case '*': this._obj = operMul; return this;
 				case '/': this._obj = operDiv; return this;
 				case '%': this._obj = operPct; return this;
 				case '^': this._obj = operPow; return this;
@@ -169,8 +152,8 @@ export class ExpressionState {
 				case '$': this._obj = operJoin; return this;
 				case '.': this._obj = operBy; return this;
 				default:
-					if ( isAlpha( c ) ) {
-						while ( isAlphanumeric( this._expr.charAt( this._next ) ) ) {
+					if ( ExpressionState.isAlpha( c ) ) {
+						while ( ExpressionState.isAlphanumeric( this._expr.charAt( this._next ) ) ) {
 							++this._next;
 						}
 						const token = this._expr.substring( this._pos, this._next );
@@ -186,14 +169,14 @@ export class ExpressionState {
 						}
 						return this;
 					}
-					else if ( isNumeric( c ) ) {
-						while ( isDecinumeric( this._expr.charAt( this._next ) ) ) {
+					else if ( ExpressionState.isNumeric( c ) ) {
+						while ( ExpressionState.isDecinumeric( this._expr.charAt( this._next ) ) ) {
 							++this._next;
 						}
 						this._obj = new ExpressionConstant( parseFloat( this._expr.substring( this._pos, this._next ) ) );
 						return this;
 					}
-					else if ( isQuotation( c ) ) {
+					else if ( ExpressionState.isQuotation( c ) ) {
 						const pos = this._next;
 						while ( this._expr.charAt( this._next ) !== '' && this._expr.charAt( this._next ) !== c ) {
 							++this._next;
@@ -209,5 +192,11 @@ export class ExpressionState {
 		}
 		return this;
 	}
+
+	static isAlpha = ( c: string ) => ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) || ( c === '_' );
+	static isNumeric = ( c: string ) => ( c >= '0' && c <= '9' );
+	static isAlphanumeric = ( c: string ) => ExpressionState.isAlpha( c ) || ExpressionState.isNumeric( c );
+	static isDecinumeric = ( c: string ) => ( c === '.' ) || ExpressionState.isNumeric( c );
+	static isQuotation = ( c: string ) => ( c === '\'' || c === '\"' || c === '\`' );
 
 }

@@ -57,7 +57,7 @@ export class ExpressionType {
 		return new ExpressionType( vtype as ExpressionValueType );
 	}
 
-	static equate( value1: ExpressionValue, value2: ExpressionValue ): boolean {
+	static equal( value1: ExpressionValue, value2: ExpressionValue ): boolean {
 		if ( value1 == null || value2 == null ) {
 			return value1 == value2;
 		}
@@ -67,7 +67,7 @@ export class ExpressionType {
 		if ( Array.isArray( value1 ) && Array.isArray( value2 ) ) {
 			if ( value1.length === value2.length ) {
 				for ( let i = 0; i < value1.length; ++i ) {
-					if ( !ExpressionType.equate( value1[ i ], value2[ i ] ) ) {
+					if ( !ExpressionType.equal( value1[ i ], value2[ i ] ) ) {
 						return false;
 					}
 				}
@@ -77,12 +77,105 @@ export class ExpressionType {
 		}
 		const props = new Set( [ ...Object.getOwnPropertyNames( value1 ), ...Object.getOwnPropertyNames( value2 ) ] );
 		for ( const prop of props ) {
-			if ( !ExpressionType.equate( ( value1 as any )[ prop ], ( value2 as any )[ prop ] ) ) {
+			if ( !ExpressionType.equal( ( value1 as any )[ prop ], ( value2 as any )[ prop ] ) ) {
 				return false;
 			}
 		}
 		return true;
 	}
+	
+	static equalStrings( value1: string, value2: string, ignoreCaseSpaceEtc?: boolean ): boolean {
+		if ( ignoreCaseSpaceEtc ) {
+			const str1 = value1.toLowerCase();
+			const str2 = value2.toLowerCase();
+			for ( let i1 = 0, i2 = 0; i1 < str1.length && i2 < str2.length; ++i1, ++i2 ) {
+				while ( ExpressionType.isCaseSpaceEtc( str1[ i1 ] ) && i1 < str1.length ) {
+					++i1;
+				}
+				while ( ExpressionType.isCaseSpaceEtc( str2[ i2 ] ) && i2 < str2.length ) {
+					++i2;
+				}
+				if ( str1[ i1 ] != str2[ i2 ] ) {
+					return false;
+				}
+			}
+			return true;
+		}
+		else {
+			return value1 === value2;
+		}
+	}
+
+	static containsString( value: string, search: string, beginPos?: number, ignoreCaseSpaceEtc?: boolean ): boolean {
+		if ( ignoreCaseSpaceEtc ) {
+			const valueStr = value.toLowerCase();
+			const searchStr = search.toLowerCase();
+			for ( let i1 = beginPos ?? 0, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2 ) {
+				while ( ExpressionType.isCaseSpaceEtc( valueStr[ i1 ] ) && i1 < valueStr.length ) {
+					++i1;
+				}
+				while ( ExpressionType.isCaseSpaceEtc( searchStr[ i2 ] ) && i2 < searchStr.length ) {
+					++i2;
+				}
+				while( valueStr[ i1 ] != searchStr[ i2 ] && i1 < valueStr.length ) {
+					++i1;
+				}
+				if ( valueStr[ i1 ] != searchStr[ i2 ] && i2 < searchStr.length ) {
+					return false;
+				}
+			}
+			return true;
+		}
+		else {
+			return value.includes( search, beginPos );
+		}
+	}
+
+	static beginsWithString( value: string, search: string, beginPos?: number, ignoreCaseSpaceEtc?: boolean ): boolean {
+		if ( ignoreCaseSpaceEtc ) {
+			const valueStr = value.toLowerCase();
+			const searchStr = search.toLowerCase();
+			for ( let i1 = beginPos ?? 0, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2 ) {
+				while ( ExpressionType.isCaseSpaceEtc( valueStr[ i1 ] ) && i1 < valueStr.length ) {
+					++i1;
+				}
+				while ( ExpressionType.isCaseSpaceEtc( searchStr[ i2 ] ) && i2 < searchStr.length ) {
+					++i2;
+				}
+				if ( valueStr[ i1 ] != searchStr[ i2 ] && i2 < searchStr.length ) {
+					return false;
+				}
+			}
+			return true;
+		}
+		else {
+			return value.startsWith( search, beginPos );
+		}
+	}
+
+	static endsWithString( value: string, search: string, endPos?: number, ignoreCaseSpaceEtc?: boolean ): boolean {
+		if ( ignoreCaseSpaceEtc ) {
+			const valueStr = value.toLowerCase();
+			const searchStr = search.toLowerCase();
+			for ( let i1 = ( endPos ?? searchStr.length ) - 1, i2 = searchStr.length - 1; i1 > -1 && i2 > -1; --i1, --i2 ) {
+				while ( ExpressionType.isCaseSpaceEtc( valueStr[ i1 ] ) && i1 > -1 ) {
+					--i1;
+				}
+				while ( ExpressionType.isCaseSpaceEtc( searchStr[ i2 ] ) && i2 > -1 ) {
+					--i2;
+				}
+				if ( valueStr[ i1 ] != searchStr[ i2 ] && i2 > -1 ) {
+					return false;
+				}
+			}
+			return true;
+		}
+		else {
+			return value.endsWith( search, endPos );
+		}
+	}
+
+	static isCaseSpaceEtc = ( c: string ) => ( c < 'a' || c > 'z' ) && ( c < '0' || c > '9' );
 
 }
 

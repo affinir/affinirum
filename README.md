@@ -28,6 +28,15 @@ Target: ES2020 [browser or NodeJS].
 * Disjunction: |
 * Conjunction: &
 * Negation: !
+* Greater than: >
+* Less than: <
+* Greater than or equal to: >=
+* Less than or equal to: <=
+* Equals to: =
+* Not equals to: !=
+* String similar to: \~
+* String not similar: !\~
+* Null coalescence: ?=
 * Number or string addition: +
 * Subtraction: -
 * Negation: -
@@ -40,78 +49,60 @@ Target: ES2020 [browser or NodeJS].
 * Object property by literal name: .
 * Object property by string value: {}
 * Object join: $
-* Greater than: >
-* Less than: <
-* Greater than or equal to: >=
-* Less than or equal to: <=
-* Equals to: =
-* Not equals to: !=
-* String begins with: \=\*
-* String ends with: \*\=
-* String contains substring: \*\=\*
-* String similar to: \~
-* String not similar: !\~
-* String begins similar to: \~\*
-* String ends similar to: \*\~
-* String contains substring similar to: \*\~\*
-* Null coalescence: ?=
 #### Functions
-* Disjunction: or(boolean ...args)
-* Conjunction: and(boolean ...args)
-* Negation: not(boolean arg)
-* Greater than: gt(number arg1, number arg2)
-* Less than: lt(number arg1, number arg2)
-* Greater than or equals to: ge(number arg1, number arg2)
-* Less than or equals to: le(number arg1, number arg2)
-* Equals to: eq(var arg1, var arg2)
-* Not equals to: ne(var arg1, var arg2)
-* String begins with: beginsWith(string arg1, string arg2, number? arg3)
-* String ends with: endsWith(string arg1, string arg2, number? arg3)
-* String contains substring: contains(string arg1, string arg2, number? arg3)
-* String similar to: like(string arg1, string arg2)
-* String not similar to: unlike(string arg1, string arg2)
-* String begins similar to: beginslike(string arg1, string arg2, number? arg3)
-* String ends similar to: endsLike(string arg1, string arg2, number? arg3)
-* String contains substring similar to: containsLike(string arg1, string arg2, number? arg3)
-* Conditional switch: switch(boolean arg1, var arg2, var arg3)
-* Null coalescence: nullco(var arg1, var arg2)
-* Number or string addition: add(number|string ...args)
-* Subtraction: sub(number arg1, number arg2)
-* Negation: neg(number arg)
-* Multiplication: mul(number ...args)
-* Division: div(number arg1, number arg2)
-* Percentage: pct(number arg1, number arg2)
-* Exponent: exp(number arg)
-* Logarithm: log(number arg)
-* Power: pow(number arg1, number arg2)
-* Root: rt(number arg1, number arg2)
-* Square: sq(number arg)
-* Square root: sqrt(number arg)
-* Absolute value: abs(number arg)
-* Ceil: ceil(number arg)
-* Floor: floor(number arg)
-* Rounded value: round(number arg)
-* Minimum: min(number ...args)
-* Maximum: max(number ...args)
-* Trim: trim(string arg)
-* Substring: substr(string arg1, number arg2)
-* Char at index: char(string arg1, number arg2)
-* Concatination into array: concat(array ...args)
-* Element at index: at(array arg1, number arg2)
-* Reverse order of items in array: reverse(array arg)
-* Flatten array items to specified depth: flatten(array arg1, number arg2)
-* Slice items into new array: slice(array arg1, number ...args)
-* First item iterator: first(array arg1, function arg2)
-* Last item iterator: last(array arg1, function arg2)
-* First index iterator: firstindex(array arg1, function arg2)
-* Last index iterator: lastindex(array arg1, function arg2)
-* Map items iterator: map(array arg1, function arg2)
-* Filter items iterator: filter(array arg1, function arg2)
-* Any item iterator: any(array arg1, function arg2)
-* Every item iterator: every(array arg1, function arg2)
-* Object construction from name-value pairs: constr(array ...args)
-* Object join: join(array ...args)
-* Object property by name: by(object arg1, string arg2)
+* Disjunction: or(boolean ...values)
+* Conjunction: and(boolean ...values)
+* Negation: not(boolean value)
+* Greater than: gt(number value1, number value2)
+* Less than: lt(number value1, number value2)
+* Greater than or equals to: ge(number value1, number value2)
+* Less than or equals to: le(number value1, number value2)
+* Equals to: eq(var value1, var value2)
+* Not equals to: neq(var value1, var value2)
+* String similar to: like(string value1, string value2)
+* String not similar to: nlike(string value1, string value2)
+* String contains substring: contains(string value, string search, number? beginPos, boolean? boolean? ignoreCaseSpaceEtc)
+* String begins with: beginsWith(string value, string search, number? beginPos, boolean? ignoreCaseSpaceEtc)
+* String ends with: endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)
+* Conditional switch: switch(boolean condition, var valueIfTrue, var valueIfFalse)
+* Null coalescence: nullco(var value, var valueIfNull)
+* Number or string addition: add(number|string ...values)
+* Subtraction: sub(number minuend, number subtrahend)
+* Negation: neg(number value)
+* Multiplication: mul(number ...values)
+* Division: div(number dividend, number divisor)
+* Percentage: pct(number dividend, number divisor)
+* Exponent: exp(number value)
+* Logarithm: log(number value)
+* Power: pow(number base, number exponent)
+* Root: rt(number value, number index)
+* Square: sq(number value)
+* Square root: sqrt(number value)
+* Absolute value: abs(number value)
+* Ceil: ceil(number value)
+* Floor: floor(number value)
+* Rounded value: round(number value)
+* Minimum: min(number ...values)
+* Maximum: max(number ...values)
+* Trim: trim(string value)
+* Substring: substr(string value, number beginPos, number? endPos)
+* Char at position: char(string value, number pos)
+* Concatination into array: concat(array ...values)
+* Element at index: at(array value, number index)
+* Reverse order of items in array: reverse(array value)
+* Flatten array items to specified depth: flatten(array value, number depth)
+* Slice items into new array: slice(array value, number? beginIndex, number? endIndex)
+* First item iterator: first(array valu, function iterator)
+* Last item iterator: last(array value, function iterator)
+* First index iterator: firstindex(array value, function iterator)
+* Last index iterator: lastindex(array value, function iterator)
+* Map items iterator: map(array value, function iterator)
+* Filter items iterator: filter(array value, function iterator)
+* Any item iterator: any(array value, function iterator)
+* Every item iterator: every(array value, function iterator)
+* Object construction from name-value pairs: construct(array ...values)
+* Object join: join(object ...values)
+* Object property by name: by(object value, string name)
 #### Constants
 * null
 * true
@@ -138,7 +129,7 @@ The expression parsing is performed using the following grammar:
 	<array> = "["<disjunction>,{","<disjunction>}"]"
 	<object> = "{"<property-name>"="<disjunction>,{",""<property-name>"="<disjunction>}"}"
 	<function> = <function-name>"("<disjunction>{","<disjunction>}")"
-	<closure> = <type-name>"("<type-name> <argument>{,<type-name> <argument>}")"
+	<closure> = <type-name>"("<type-name> <argument>{,<type-name> <argument>}")=><disjunction>"
 	<statement> = {<variable>"="<disjunction>,}<disjunction>
 	<type-name> = "boolean"|"number"|"string"|"array"|"object"|"function"|"var"{"?"}
 
@@ -170,7 +161,7 @@ const objExpr = new ExpressionService( '{prop1:a,prop2:`abc`}.prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new ExpressionService(
-	'arr.map(number(number a) -> a*2).filter(boolean(number a) -> a>3).add()'
+	'arr.map(number(number a) -> a*2).filter(boolean(number a) => a>3).add()'
 );
 const iValue = iteratorExpr.evaluate( { arr: [ 1, 2, 3 ] } ); // 10
 ...

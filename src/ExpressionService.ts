@@ -1,16 +1,15 @@
 import { ExpressionConstant,
 	constNull, constTrue, constFalse, constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
-import { ExpressionFunction, funcOr, funcAnd, funcNot, funcGt, funcLt, funcGe, funcLe, funcEq, funcNe,
-	funcBeginsWith, funcEndsWith, funcContains, funcSwitch, funcNullco, funcLike, funcUnlike, funcBeginsLike, funcEndsLike, funcContainsLike,
+import { ExpressionFunction, funcNot, funcAnd, funcOr, funcGt, funcLt, funcGe, funcLe, funcEqual, funcNotEqual, funcLike, funcNotLike,
+	funcBeginsWith, funcEndsWith, funcContains, funcSwitch, funcNullco,
 	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
 	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin,
 	funcTrim, funcLowerCase, funcUpperCase, funcSubstr, funcChar, funcCharCode, funcLen,
 	funcConcat, funcAt, funcFlatten, funcReverse, funcSlice,
 	funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcMap, funcFilter, funcAny, funcEvery,
-	funcConstr, funcJoin, funcBy } from './ExpressionFunction.js';
-import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEq, operNe,
-	operLike, operUnlike, operBeginsWith, operEndsWith, operContains, operNullco,
-	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operConstr, operJoin, operBy, operBeginsLike, operEndsLike, operContainsLike } from './ExpressionOperator.js';
+	funcConstruct, funcJoin, funcBy } from './ExpressionFunction.js';
+import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike, operNullco,
+	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operJoin, operBy } from './ExpressionOperator.js';
 import { ExpressionScope } from './ExpressionScope.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { ExpressionType, ExpressionValue, typeVar } from './ExpressionType.js';
@@ -33,9 +32,8 @@ export class ExpressionService {
 	protected _functions = new Map<string, ExpressionFunction>( [
 		[ 'or', funcOr ], [ 'and', funcAnd ], [ 'not', funcNot ],
 		[ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
-		[ 'eq', funcEq ], [ 'ne', funcNe ],
+		[ 'equal', funcEqual ], [ 'nequal', funcNotEqual ], [ 'like', funcLike ], [ 'nlike', funcNotLike ],
 		[ 'beginsWith', funcBeginsWith ], [ 'endsWith', funcEndsWith ], [ 'contains', funcContains ], [ 'switch', funcSwitch ], [ 'nullco', funcNullco ],
-		[ 'like', funcLike ], [ 'unlike', funcUnlike ], [ 'beginsLike', funcBeginsLike ], [ 'endsLike', funcEndsLike ], [ 'containsLike', funcContainsLike ],
 		[ 'add', funcAdd ], [ 'sub', funcSub ], [ 'neg', funcNeg ],
 		[ 'mul', funcMul ], [ 'div', funcDiv ], [ 'rem', funcRem ], [ 'mod', funcMod ], [ 'pct', funcPct ],
 		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
@@ -45,7 +43,7 @@ export class ExpressionService {
 		[ 'concat', funcConcat ], [ 'at', funcAt ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ],
 		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
 		[ 'map', funcMap ], [ 'filter', funcFilter ], [ 'any', funcAny ], [ 'every', funcEvery ],
-		[ 'constr', funcConstr ], [ 'join', funcJoin ], [ 'by', funcBy ],
+		[ 'construct', funcConstruct ], [ 'join', funcJoin ], [ 'by', funcBy ],
 	] );
 	protected _scope = new ExpressionScope();
 
@@ -170,10 +168,7 @@ export class ExpressionService {
 		}
 		let node = this.aggregate( state, scope );
 		while ( state.operator === operGt || state.operator === operLt || state.operator === operGe || state.operator === operLe ||
-			state.operator === operEq || state.operator === operNe ||
-			state.operator === operBeginsWith || state.operator === operEndsWith || state.operator === operContains ||
-			state.operator === operLike || state.operator === operUnlike ||
-			state.operator === operBeginsLike || state.operator === operEndsLike || state.operator === operContainsLike ) {
+			state.operator === operEqual || state.operator === operNotEqual || state.operator === operLike || state.operator === operNotLike ) {
 			node = new ExpressionFunctionNode( state.pos, state.operator,
 				[ node, this.aggregate( state.next(), scope ) ] );
 		}
@@ -405,7 +400,7 @@ export class ExpressionService {
 				throw new Error( `missing closing braces` );
 			}
 			state.next();
-			return new ExpressionFunctionNode( pos, operConstr, subnodes );
+			return new ExpressionFunctionNode( pos, funcConstruct, subnodes );
 		}
 		else if ( state.isBracesClose ) {
 			throw new Error( `unexpected closing braces` );

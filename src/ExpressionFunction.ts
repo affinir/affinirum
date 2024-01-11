@@ -1,6 +1,6 @@
 import { ExpressionType, ExpressionValue,
 	typeBoolean, typeNumber, typeString, typeArray, typeObject, typeFunction,
-	typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeOptionalArray, typeOptionalObject, typeOptionalFunction,
+	typeOptionalBoolean, typeOptionalNumber,
 	typeVar } from './ExpressionType.js';
 
 const FUNCTION_ARG_MAX = 16536;
@@ -46,20 +46,20 @@ export class ExpressionFunction {
 
 }
 
-export const funcOr = new ExpressionFunction(
-	( ...args: ( boolean | boolean[] )[] ) =>
-		args.flat().some( v => v ),
-	typeBoolean, [ new ExpressionType( 'boolean', 'array' ) ], 2, FUNCTION_ARG_MAX,
+export const funcNot = new ExpressionFunction(
+	( arg: boolean ) =>
+		!arg,
+	typeBoolean, [ typeBoolean ],
 );
 export const funcAnd = new ExpressionFunction(
 	( ...args: ( boolean | boolean[] )[] ) =>
 		args.flat().every( v => v ),
 	typeBoolean, [ new ExpressionType( 'boolean', 'array' ) ], 2, FUNCTION_ARG_MAX,
 );
-export const funcNot = new ExpressionFunction(
-	( arg: boolean ) =>
-		!arg,
-	typeBoolean, [ typeBoolean ],
+export const funcOr = new ExpressionFunction(
+	( ...args: ( boolean | boolean[] )[] ) =>
+		args.flat().some( v => v ),
+	typeBoolean, [ new ExpressionType( 'boolean', 'array' ) ], 2, FUNCTION_ARG_MAX,
 );
 export const funcGt = new ExpressionFunction(
 	( arg1: number, arg2: number ) =>
@@ -81,55 +81,40 @@ export const funcLe = new ExpressionFunction(
 		arg1 <= arg2,
 	typeBoolean, [ typeNumber, typeNumber ],
 );
-export const funcEq = new ExpressionFunction(
-	( arg1: boolean | number | string, arg2: boolean | number | string ) =>
-		ExpressionType.equate( arg1, arg2 ),
+export const funcEqual = new ExpressionFunction(
+	( arg1: ExpressionValue, arg2: ExpressionValue ) =>
+		ExpressionType.equal( arg1, arg2 ),
 	typeBoolean, [ typeVar, typeVar ],
 );
-export const funcNe = new ExpressionFunction(
-	( arg1: boolean | number | string, arg2: boolean | number | string ) =>
-		!ExpressionType.equate( arg1, arg2 ),
+export const funcNotEqual = new ExpressionFunction(
+	( arg1: ExpressionValue, arg2: ExpressionValue ) =>
+		!ExpressionType.equal( arg1, arg2 ),
 	typeBoolean, [ typeVar, typeVar ],
-);
-export const funcBeginsWith = new ExpressionFunction(
-	( arg1: string, arg2: string, arg3?: number ) =>
-		arg1.startsWith( arg2, arg3 ),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber ], 2, 3,
-);
-export const funcEndsWith = new ExpressionFunction(
-	( arg1: string, arg2: string, arg3?: number ) =>
-		arg1.endsWith( arg2, arg3 ),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber ], 2, 3,
-);
-export const funcContains = new ExpressionFunction(
-	( arg1: string, arg2: string, arg3?: number ) =>
-		arg1.includes( arg2, arg3 ),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber ], 2, 3,
 );
 export const funcLike = new ExpressionFunction(
 	( arg1: string, arg2: string ) =>
-		like( arg1.toLowerCase(), arg2.toLowerCase() ),
+		ExpressionType.equalStrings( arg1, arg2, true ),
 	typeBoolean, [ typeString, typeString ],
 );
-export const funcUnlike = new ExpressionFunction(
+export const funcNotLike = new ExpressionFunction(
 	( arg1: string, arg2: string ) =>
-		!like( arg1.toLowerCase(), arg2.toLowerCase() ),
+		!ExpressionType.equalStrings( arg1, arg2, true ),
 	typeBoolean, [ typeString, typeString ],
 );
-export const funcBeginsLike = new ExpressionFunction(
-	( arg1: string, arg2: string, arg3?: number ) =>
-		beginsLike( arg1.toLowerCase(), arg2.toLowerCase(), arg3 ),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber ], 2, 3,
+export const funcContains = new ExpressionFunction(
+	( arg1: string, arg2: string, arg3?: number, arg4?: boolean ) =>
+		ExpressionType.containsString( arg1, arg2, arg3, arg4 ),
+	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
 );
-export const funcEndsLike = new ExpressionFunction(
-	( arg1: string, arg2: string, arg3?: number ) =>
-		endsLike( arg1.toLowerCase(), arg2.toLowerCase(), arg3 ),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber ], 2, 3,
+export const funcBeginsWith = new ExpressionFunction(
+	( arg1: string, arg2: string, arg3?: number, arg4?: boolean ) =>
+		ExpressionType.beginsWithString( arg1, arg2, arg3, arg4 ),
+	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
 );
-export const funcContainsLike = new ExpressionFunction(
-	( arg1: string, arg2: string, arg3?: number ) =>
-		containsLike( arg1.toLowerCase(), arg2.toLowerCase(), arg3 ),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber ], 2, 3,
+export const funcEndsWith = new ExpressionFunction(
+	( arg1: string, arg2: string, arg3?: number, arg4?: boolean ) =>
+		ExpressionType.endsWithString( arg1, arg2, arg3, arg4 ),
+	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
 );
 export const funcSwitch = new ExpressionFunction(
 	( arg1: boolean, arg2: ExpressionValue, arg3: ExpressionValue ) =>
@@ -348,7 +333,7 @@ export const funcEvery = new ExpressionFunction(
 		arg1.every( ( v, i, a ) => arg2( v, i, a ) ),
 	typeBoolean, [ typeArray, typeFunction ],
 );
-export const funcConstr = new ExpressionFunction(
+export const funcConstruct = new ExpressionFunction(
 	( ...args: ExpressionValue[][] ) => {
 		const obj: Record<string, any> = {};
 		for ( let i = 0; i < args.length; ++i ) {
@@ -368,67 +353,3 @@ export const funcBy = new ExpressionFunction(
 		( arg1 as any )[ arg2 ],
 	typeVar, [ typeObject, typeString ],
 );
-export const isAlpha = ( c: string ) => ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) || ( c === '_' );
-export const isNumeric = ( c: string ) => ( c >= '0' && c <= '9' );
-export const isAlphanumeric = ( c: string ) => isAlpha( c ) || isNumeric( c );
-export const isDecinumeric = ( c: string ) => ( c === '.' ) || isNumeric( c );
-export const isQuotation = ( c: string ) => ( c === '\'' || c === '\"' || c === '\`' );
-const like = ( arg1: string, arg2: string ) => {
-	for ( let i1 = 0, i2 = 0; i1 < arg1.length && i2 < arg2.length; ++i1, ++i2 ) {
-		while ( !isAlphanumeric( arg1[ i1 ] ) && i1 < arg1.length ) {
-			++i1;
-		}
-		while ( !isAlphanumeric( arg2[ i2 ] ) && i2 < arg2.length ) {
-			++i2;
-		}
-		if ( arg1[ i1 ] != arg2[ i2 ] ) {
-			return false;
-		}
-	}
-	return true;
-}
-const beginsLike = ( arg1: string, arg2: string, pos?: number ) => {
-	for ( let i1 = pos ?? 0, i2 = 0; i1 < arg1.length && i2 < arg2.length; ++i1, ++i2 ) {
-		while ( !isAlphanumeric( arg1[ i1 ] ) && i1 < arg1.length ) {
-			++i1;
-		}
-		while ( !isAlphanumeric( arg2[ i2 ] ) && i2 < arg2.length ) {
-			++i2;
-		}
-		if ( arg1[ i1 ] != arg2[ i2 ] && i2 < arg2.length ) {
-			return false;
-		}
-	}
-	return true;
-}
-const endsLike = ( arg1: string, arg2: string, pos?: number ) => {
-	for ( let i1 = ( pos ?? arg2.length ) - 1, i2 = arg2.length - 1; i1 > -1 && i2 > -1; --i1, --i2 ) {
-		while ( !isAlphanumeric( arg1[ i1 ] ) && i1 > -1 ) {
-			--i1;
-		}
-		while ( !isAlphanumeric( arg2[ i2 ] ) && i2 > -1 ) {
-			--i2;
-		}
-		if ( arg1[ i1 ] != arg2[ i2 ] && i2 > -1 ) {
-			return false;
-		}
-	}
-	return true;
-}
-const containsLike = ( arg1: string, arg2: string, pos?: number ) => {
-	for ( let i1 = pos ?? 0, i2 = 0; i1 < arg1.length && i2 < arg2.length; ++i1, ++i2 ) {
-		while ( !isAlphanumeric( arg1[ i1 ] ) && i1 < arg1.length ) {
-			++i1;
-		}
-		while ( !isAlphanumeric( arg2[ i2 ] ) && i2 < arg2.length ) {
-			++i2;
-		}
-		while( arg1[ i1 ] != arg2[ i2 ] && i1 < arg1.length ) {
-			++i1;
-		}
-		if ( arg1[ i1 ] != arg2[ i2 ] && i2 < arg2.length ) {
-			return false;
-		}
-	}
-	return true;
-}
