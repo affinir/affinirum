@@ -15,10 +15,10 @@ export class ExpressionVariableNode extends ExpressionNode {
 		return this._variable.type;
 	}
 
-	compile( type: ExpressionType ): ExpressionNode {
+	refine( type: ExpressionType ): ExpressionNode {
 		const inferredType = this._variable.type.infer( type );
 		if ( !inferredType ) {
-			throw this;
+			this.throwTypeError( type );
 		}
 		this._variable.type = inferredType;
 		return this;

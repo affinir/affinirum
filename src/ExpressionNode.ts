@@ -1,4 +1,5 @@
 import { ExpressionType, ExpressionValue } from './ExpressionType.js';
+import { ExpressionTypeError } from './ExpressionTypeError.js';
 
 export abstract class ExpressionNode {
 
@@ -10,8 +11,12 @@ export abstract class ExpressionNode {
 		return this._pos;
 	}
 
+	throwTypeError( type: ExpressionType ): never {
+		throw new ExpressionTypeError( this._pos, this.type, type );
+	}
+
 	abstract type: ExpressionType;
-	abstract compile( types: ExpressionType ): ExpressionNode;
+	abstract refine( type: ExpressionType ): ExpressionNode;
 	abstract evaluate(): ExpressionValue;
 
 }

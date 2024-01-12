@@ -1,5 +1,5 @@
 # expression-service
-Service to compile and evaluate math expressions.
+Service to parse and evaluate math expressions.
 
 Compact recursive descent expression parser, and evaluation service 
 for closed-form analytic expressions.
@@ -61,8 +61,8 @@ Target: ES2020 [browser or NodeJS].
 * Not equals to: neq(var value1, var value2)
 * String similar to: like(string value1, string value2)
 * String not similar to: nlike(string value1, string value2)
-* String contains substring: contains(string value, string search, number? beginPos, boolean? boolean? ignoreCaseSpaceEtc)
-* String begins with: beginsWith(string value, string search, number? beginPos, boolean? ignoreCaseSpaceEtc)
+* String contains substring: contains(string value, string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)
+* String starts with: startsWith(string value, string search, number? startPos, boolean? ignoreCaseSpaceEtc)
 * String ends with: endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)
 * Conditional switch: switch(boolean condition, var valueIfTrue, var valueIfFalse)
 * Null coalescence: nullco(var value, var valueIfNull)
@@ -118,7 +118,7 @@ The expression parsing is performed using the following grammar:
 
 	<disjunction> = {<disjunction>"|"}<conjunction>
 	<conjunction> = {<conjunction>"&"}<comparison>
-	<comparison> = {"!"}{<comparison>(">"|">="|"<"|"<="|"="|"=="|"!="|"=*"|"*="|"*=*"|"~"|"!~"|"~*"|"*~"|"*~*)}<aggregate>
+	<comparison> = {"!"}{<comparison>(">"|">="|"<"|"<="|"="|"=="|"!="|"~"|"!~")}<aggregate>
 	<aggregate> = {<aggregate>("$"|"#"|"+"|"-")}<product>
 	<product> = {<product>("*"|"/"|"%")}<factor>
 	<factor> = {"-"}{<factor>"^"}<coalescence>
@@ -130,7 +130,7 @@ The expression parsing is performed using the following grammar:
 	<object> = "{"<property-name>"="<disjunction>,{",""<property-name>"="<disjunction>}"}"
 	<function> = <function-name>"("<disjunction>{","<disjunction>}")"
 	<closure> = <type-name>"("<type-name> <argument>{,<type-name> <argument>}")=><disjunction>"
-	<statement> = {<variable>"="<disjunction>,}<disjunction>
+	<statement> = {<variable>":"<disjunction>,}<disjunction>
 	<type-name> = "boolean"|"number"|"string"|"array"|"object"|"function"|"var"{"?"}
 
 Whitespace characters are ignored.

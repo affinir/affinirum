@@ -106,9 +106,9 @@ export const funcContains = new ExpressionFunction(
 		ExpressionType.containsString( arg1, arg2, arg3, arg4 ),
 	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
 );
-export const funcBeginsWith = new ExpressionFunction(
+export const funcStartsWith = new ExpressionFunction(
 	( arg1: string, arg2: string, arg3?: number, arg4?: boolean ) =>
-		ExpressionType.beginsWithString( arg1, arg2, arg3, arg4 ),
+		ExpressionType.startsWithString( arg1, arg2, arg3, arg4 ),
 	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
 );
 export const funcEndsWith = new ExpressionFunction(

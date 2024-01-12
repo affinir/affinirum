@@ -17,9 +17,9 @@ export class ExpressionStatementNode extends ExpressionNode {
 		return this._nextnode.type;
 	}
 
-	compile( type: ExpressionType ): ExpressionNode {
-		this._subnode = this._subnode.compile( this._variable.type );
-		this._nextnode = this._nextnode.compile( type );
+	refine( type: ExpressionType ): ExpressionNode {
+		this._subnode = this._subnode.refine( this._variable.type );
+		this._nextnode = this._nextnode.refine( type );
 		return this;
 	}
 

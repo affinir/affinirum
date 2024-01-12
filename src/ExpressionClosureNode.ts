@@ -17,11 +17,11 @@ export class ExpressionClosureNode extends ExpressionNode {
 		return this._type;
 	}
 
-	compile( type: ExpressionType ): ExpressionNode {
+	refine( type: ExpressionType ): ExpressionNode {
 		if ( !type.isFunction ) {
 			return this;
 		}
-		this._subnode = this._subnode.compile( this._type );
+		this._subnode = this._subnode.refine( this._type );
 		return this;
 	}
 

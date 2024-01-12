@@ -1,6 +1,7 @@
 import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionType, ExpressionValue } from './ExpressionType.js';
+import { ExpressionTypeError } from './ExpressionTypeError.js';
 
 export class ExpressionConstantNode extends ExpressionNode {
 
@@ -15,9 +16,9 @@ export class ExpressionConstantNode extends ExpressionNode {
 		return this._constant.type;
 	}
 
-	compile( type: ExpressionType ): ExpressionNode {
+	refine( type: ExpressionType ): ExpressionNode {
 		if ( !type.infer( this.type ) ) {
-			throw this;
+			this.throwTypeError( type );
 		}
 		return this;
 	}

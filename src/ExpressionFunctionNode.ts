@@ -21,10 +21,10 @@ export class ExpressionFunctionNode extends ExpressionNode {
 		return this._type;
 	}
 
-	compile( type: ExpressionType ): ExpressionNode {
+	refine( type: ExpressionType ): ExpressionNode {
 		const inferredType = this._function.type.infer( type );
 		if ( !inferredType ) {
-			throw this;
+			this.throwTypeError( type );
 		}
 		this._type = inferredType;
 		let constant = true;
@@ -32,9 +32,9 @@ export class ExpressionFunctionNode extends ExpressionNode {
 			const argType = this._function.argTypes[ i ] ?? this._function.argTypes.slice( -1 )[ 0 ];
 			const inferredArgType = argType.infer( inferredType, this._function.typeInference( i ) );
 			if ( !inferredArgType ) {
-				throw this;
+				this.throwTypeError( type );
 			}
-			const subnode = this._argnodes[ i ] = this._argnodes[ i ].compile( inferredArgType );
+			const subnode = this._argnodes[ i ] = this._argnodes[ i ].refine( inferredArgType );
 			constant &&= ( subnode instanceof ExpressionConstantNode && !subnode.type.isFunction );
 		}
 		if ( constant ) {

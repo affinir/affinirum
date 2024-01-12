@@ -106,11 +106,15 @@ export class ExpressionType {
 		}
 	}
 
-	static containsString( value: string, search: string, beginPos?: number, ignoreCaseSpaceEtc?: boolean ): boolean {
+	static containsString( value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean ): boolean {
 		if ( ignoreCaseSpaceEtc ) {
 			const valueStr = value.toLowerCase();
 			const searchStr = search.toLowerCase();
-			for ( let i1 = beginPos ?? 0, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2 ) {
+			if ( valueStr.length < searchStr.length ) {
+				return false;
+			}
+			const pos = startPos == null ? 0 : startPos < 0 ? value.length + startPos : startPos;
+			for ( let i1 = pos, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2 ) {
 				while ( ExpressionType.isCaseSpaceEtc( valueStr[ i1 ] ) && i1 < valueStr.length ) {
 					++i1;
 				}
@@ -127,15 +131,19 @@ export class ExpressionType {
 			return true;
 		}
 		else {
-			return value.includes( search, beginPos );
+			return value.includes( search, startPos );
 		}
 	}
 
-	static beginsWithString( value: string, search: string, beginPos?: number, ignoreCaseSpaceEtc?: boolean ): boolean {
+	static startsWithString( value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean ): boolean {
 		if ( ignoreCaseSpaceEtc ) {
 			const valueStr = value.toLowerCase();
 			const searchStr = search.toLowerCase();
-			for ( let i1 = beginPos ?? 0, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2 ) {
+			if ( valueStr.length < searchStr.length ) {
+				return false;
+			}
+			const pos = startPos == null ? 0 : startPos < 0 ? value.length + startPos : startPos;
+			for ( let i1 = pos, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2 ) {
 				while ( ExpressionType.isCaseSpaceEtc( valueStr[ i1 ] ) && i1 < valueStr.length ) {
 					++i1;
 				}
@@ -149,7 +157,7 @@ export class ExpressionType {
 			return true;
 		}
 		else {
-			return value.startsWith( search, beginPos );
+			return value.startsWith( search, startPos );
 		}
 	}
 
@@ -157,7 +165,11 @@ export class ExpressionType {
 		if ( ignoreCaseSpaceEtc ) {
 			const valueStr = value.toLowerCase();
 			const searchStr = search.toLowerCase();
-			for ( let i1 = ( endPos ?? searchStr.length ) - 1, i2 = searchStr.length - 1; i1 > -1 && i2 > -1; --i1, --i2 ) {
+			if ( valueStr.length < searchStr.length ) {
+				return false;
+			}
+			const pos = endPos == null ? valueStr.length : endPos < 0 ? value.length + endPos : endPos;
+			for ( let i1 = pos - 1, i2 = searchStr.length - 1; i1 > -1 && i2 > -1; --i1, --i2 ) {
 				while ( ExpressionType.isCaseSpaceEtc( valueStr[ i1 ] ) && i1 > -1 ) {
 					--i1;
 				}
