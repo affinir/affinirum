@@ -19,13 +19,12 @@ import { ExpressionConstantNode } from './ExpressionConstantNode.js';
 import { ExpressionFunctionNode } from './ExpressionFunctionNode.js';
 import { ExpressionVariableNode } from './ExpressionVariableNode.js';
 import { ExpressionClosureNode } from './ExpressionClosureNode.js';
-import { ExpressionStatementNode } from './ExpressionStatementNode.js';
 import { ExpressionTypeError } from './ExpressionTypeError.js';
 
 export class ExpressionService {
 
-	protected readonly _expr: string;
-	protected readonly _root: ExpressionNode;
+	protected readonly _expression: string;
+	protected readonly _statements: ExpressionNode[];
 	protected _constants = new Map<string, ExpressionConstant>( [
 		[ 'null', constNull ], [ 'true', constTrue ], [ 'false', constFalse ],
 		[ 'NaN', constNaN ], [ 'PosInf', constPosInf ], [ 'NegInf', constNegInf ], [ 'Epsilon', constEpsilon ], [ 'Pi', constPi ],
@@ -73,32 +72,32 @@ export class ExpressionService {
 			type: ExpressionType
 		}[],
 	} ) {
-		this._expr = expr;
+		this._expression = expr;
 		const type = config?.type ?? typeVar;
 		config?.constants?.forEach( c => this._constants.set( c.name, new ExpressionConstant( c.value ) ) );
 		config?.functions?.forEach( f => this._functions.set( f.name, new ExpressionFunction( f.func, f.type, f.argTypes, f.minArity, f.maxArity, f.typeInference ) ) );
 		config?.variables?.forEach( v => this._scope.set( v.name, new ExpressionVariable( undefined, v.type ) ) );
-		const state = new ExpressionState( this._expr );
+		const state = new ExpressionState( this._expression );
 		try {
-			this._root = this.disjunction( state.parse(), this._scope );
+			this._statements = this.list( state.parse(), this._scope );
 		}
 		catch ( err ) {
 			let pos = state.pos - 32;
 			pos = pos < 0 ? 0 : pos;
 			throw new Error( `parse error on ${ ( err as Error ).message } at position ${ state.pos }:\n` +
-				`${ this._expr.substring( pos, pos + 60 ) }\n` +
-				`${ ' '.repeat( this._expr.substring( pos, state.pos ).length ) }^` );
+				`${ this._expression.substring( pos, pos + 60 ) }\n` +
+				`${ ' '.repeat( this._expression.substring( pos, state.pos ).length ) }^` );
 		}
 		try {
-			this._root = this._root.refine( type );
+			this._statements = this._statements.map( s => s.compile( type ) );
 		}
 		catch ( err ) {
 			const terr = err as ExpressionTypeError;
 			let pos = terr.pos - 32;
 			pos = pos < 0 ? 0 : pos;
 			throw new TypeError( `${ terr.message } on ${ terr.nodeType } not matching ${ terr.mismatchType } at position ${ terr.pos }:\n` +
-				`${ this._expr.substring( pos, pos + 60 ) }\n` +
-				`${ ' '.repeat( this._expr.substring( pos, terr.pos ).length ) }^` );
+				`${ this._expression.substring( pos, pos + 60 ) }\n` +
+				`${ ' '.repeat( this._expression.substring( pos, terr.pos ).length ) }^` );
 		}
 	}
 
@@ -106,11 +105,11 @@ export class ExpressionService {
 		Returns compiled expression return value type.
 	*/
 	get type(): ExpressionType {
-		return this._root.type;
+		return this._statements[ this._statements.length - 1 ].type;
 	}
 
 	/**
-		Returns record with unassigned compiled variable names and expected types.
+		Returns record with undefined compiled variable names and expected types.
 		@returns Record with variable names and types.
 	*/
 	variables(): Record<string, ExpressionType> {
@@ -130,16 +129,25 @@ export class ExpressionService {
 	evaluate( values: Record<string, ExpressionValue> ): ExpressionValue {
 		const variables = this._scope.variables();
 		for ( const name in variables ) {
+			if ( !values.hasOwnProperty( name ) ) {
+				throw new Error( `evaluation error on undefined variable ${ name }` );
+			}
 			const variable = variables[ name ];
-			if ( values[ name ] == null ) {
-				values[ name ] = undefined;
+			const value = values[ name ] ?? undefined;
+			if ( !variable.type.infer( ExpressionType.of( value ) ) ) {
+				throw new TypeError( `evaluation error on unexpected type ${ typeof value } for variable ${ name } of type ${ variable.type }` );
 			}
-			if ( !variable.type.infer( ExpressionType.of( values[ name ] ) ) ) {
-				throw new TypeError( `evaluation error on unexpected type ${ typeof values[ name ] } for variable ${ name } of type ${ variable.type }` );
-			}
-			variable.value = values[ name ];
+			variable.value = value;
 		}
-		return this._root.evaluate();
+		return this._statements.map( s => s.evaluate() )[ this._statements.length - 1 ];
+	}
+
+	protected list( state: ExpressionState, scope: ExpressionScope ): ExpressionNode[] {
+		const nodes: ExpressionNode[] = [ this.disjunction( state, scope ) ];
+		while ( state.isSeparator ) {
+			nodes.push( this.disjunction( state.parse(), scope ) );
+		}
+		return nodes;
 	}
 
 	protected disjunction( state: ExpressionState, scope: ExpressionScope ): ExpressionNode {
@@ -218,15 +226,15 @@ export class ExpressionService {
 	}
 
 	protected coalescence( state: ExpressionState, scope: ExpressionScope ): ExpressionNode {
-		let node = this.index( state, scope );
+		let node = this.accessor( state, scope );
 		while ( state.operator === operNullco ) {
 			node = new ExpressionFunctionNode( state.pos, state.operator,
-				[ node, this.index( state.parse(), scope ) ] );
+				[ node, this.accessor( state.parse(), scope ) ] );
 		}
 		return node;
 	}
 
-	protected index( state: ExpressionState, scope: ExpressionScope ): ExpressionNode {
+	protected accessor( state: ExpressionState, scope: ExpressionScope ): ExpressionNode {
 		let node = this.term( state, scope );
 		while ( state.isBracketsOpen || state.isBracesOpen || state.operator === operAt || state.operator === operBy ) {
 			if ( state.isBracketsOpen ) {
@@ -251,11 +259,11 @@ export class ExpressionService {
 			}
 			else if ( state.operator === operAt ) {
 				const pos = state.pos;
-				if ( !state.parse().isConstant || !state.constant.type.isNumber ) {
+				if ( !state.parse().isLiteral || !state.literal.type.isNumber ) {
 					throw new Error( `missing index specifier` );
 				}
 				node = new ExpressionFunctionNode( pos, operAt,
-					[ node, new ExpressionConstantNode( state.pos, state.constant ) ] );
+					[ node, new ExpressionConstantNode( state.pos, state.literal ) ] );
 				state.parse();
 			}
 			else {
@@ -276,12 +284,25 @@ export class ExpressionService {
 	}
 
 	protected term( state: ExpressionState, scope: ExpressionScope ): ExpressionNode {
-		if ( state.isConstant ) {
+		if ( state.isLiteral ) {
 			const pos = state.pos;
-			const constant = state.constant;
+			const constant = state.literal;
 			state.parse();
 			return new ExpressionConstantNode( pos, constant );
 		}
+		/*else if ( state.isConstant ) {
+			const pos = state.pos;
+			if ( !state.parse().isToken ) {
+				throw new Error( `missing constant name` );
+			}
+			const token = state.token;
+			if ( !state.parse().isAssignment ) {
+				throw new Error( `missing constant value` );
+			}
+			variable = new ExpressionVariable();
+			const subnode = this.disjunction( state.parse(), scope );
+			return new ExpressionVariableNode( pos, variable, subnode );
+		}*/
 		else if ( state.isToken ) {
 			const pos = state.pos;
 			const token = state.token;
@@ -297,21 +318,11 @@ export class ExpressionService {
 				return new ExpressionFunctionNode( pos, func, subnodes );
 			}
 			let variable = scope.get( token );
-			if ( variable != null ) {
-				state.parse();
-				return new ExpressionVariableNode( pos, variable );
-			}
-			variable = new ExpressionVariable();
-			if ( !state.parse().isAssignment ) {
+			if ( variable == null ) {
+				variable = new ExpressionVariable();
 				scope.set( token, variable );
-				return new ExpressionVariableNode( pos, variable );
 			}
-			scope.set( token, variable, true );
-			const subnode = this.disjunction( state.parse(), scope );
-			if ( !state.isSeparator ) {
-				throw new Error( `missing statement separator` );
-			}
-			return new ExpressionStatementNode( pos, variable, subnode, this.disjunction( state.parse(), scope ) );
+			return new ExpressionVariableNode( pos, variable, state.parse().isAssignment ? this.disjunction( state.parse(), scope ) : undefined );
 		}
 		else if ( state.isType ) {
 			const pos = state.pos;
@@ -319,6 +330,15 @@ export class ExpressionService {
 			if ( state.parse().isNullable ) {
 				type = type.nullable();
 				state.parse();
+			}
+			if ( state.isToken ) {
+				const token = state.token;
+				if ( scope.has( token ) ) {
+					throw new Error( `variable ${ token } redefinition` );
+				}
+				const variable = new ExpressionVariable();
+				scope.define( token, variable );
+				return new ExpressionVariableNode( pos, variable, state.parse().isAssignment ? this.disjunction( state.parse(), scope ) : undefined );
 			}
 			if ( !state.isParenthesesOpen ) {
 				throw new Error( `missing openning parentheses` );
@@ -351,7 +371,7 @@ export class ExpressionService {
 			if ( !state.parse().isScope ) {
 				throw new Error( `missing scope operator` );
 			}
-			return new ExpressionClosureNode( pos, Array.from( variables.values() ), type, this.disjunction( state.parse(), scope.subscope( variables ) ) );
+			return new ExpressionClosureNode( pos, Array.from( variables.values() ), type, this.list( state.parse(), scope.subscope( variables ) ) );
 		}
 		else if ( state.isParenthesesOpen ) {
 			const node = this.disjunction( state.parse(), scope );
@@ -367,7 +387,7 @@ export class ExpressionService {
 		else if ( state.isBracketsOpen ) {
 			const pos = state.pos;
 			const subnodes: ExpressionNode[] = [];
-			for ( let i = 0; !state.parse().isBracketsClose; ++i ) {
+			while ( !state.parse().isBracketsClose ) {
 				subnodes.push( this.disjunction( state, scope ) );
 				if ( !state.isSeparator ) {
 					break;
@@ -385,7 +405,7 @@ export class ExpressionService {
 		else if ( state.isBracesOpen ) {
 			const pos = state.pos;
 			const subnodes: ExpressionFunctionNode[] = [];
-			for ( let i = 0; !state.parse().isBracesClose; ++i ) {
+			while ( !state.parse().isBracesClose ) {
 				if ( !state.isToken ) {
 					throw new Error( `missing property name` );
 				}
@@ -414,12 +434,12 @@ export class ExpressionService {
 	}
 
 	protected arguments( minArity: number, maxArity: number, state: ExpressionState, scope: ExpressionScope ): ExpressionNode[] {
-		const nodes: ExpressionNode[] = [];
 		if ( !state.isParenthesesOpen ) {
 			throw new Error( `missing opening parentheses` );
 		}
+		const subnodes: ExpressionNode[] = [];
 		while ( !state.parse().isParenthesesClose ) {
-			nodes.push( this.disjunction( state, scope ) );
+			subnodes.push( this.disjunction( state, scope ) );
 			if ( !state.isSeparator ) {
 				break;
 			}
@@ -427,13 +447,13 @@ export class ExpressionService {
 		if ( !state.isParenthesesClose ) {
 			throw new Error( `missing closing parentheses` );
 		}
-		if ( nodes.length < minArity ) {
-			throw new Error( `insufficient number of arguments ${ nodes.length } is less than ${ minArity } that function requires` );
+		if ( subnodes.length < minArity ) {
+			throw new Error( `insufficient number of arguments ${ subnodes.length } is less than ${ minArity } that function requires` );
 		}
-		if ( nodes.length > maxArity ) {
-			throw new Error( `excessive number of arguments ${ nodes.length } is more than ${ minArity } that function requires` );
+		if ( subnodes.length > maxArity ) {
+			throw new Error( `excessive number of arguments ${ subnodes.length } is more than ${ minArity } that function requires` );
 		}
-		return nodes;
+		return subnodes;
 	}
 
 }

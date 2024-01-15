@@ -334,10 +334,10 @@ export const funcEvery = new ExpressionFunction(
 	typeBoolean, [ typeArray, typeFunction ],
 );
 export const funcConstruct = new ExpressionFunction(
-	( ...args: ExpressionValue[][] ) => {
+	( ...args: [ string, ExpressionValue ][] ) => {
 		const obj: Record<string, any> = {};
 		for ( let i = 0; i < args.length; ++i ) {
-			obj[ args[ i ]![ 0 ]!.toString() ] = args[ i ][ 1 ];
+			obj[ args[ i ][ 0 ] ] = args[ i ][ 1 ];
 		}
 		return obj;
 	},

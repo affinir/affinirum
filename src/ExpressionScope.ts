@@ -5,17 +5,24 @@ export class ExpressionScope {
 	protected _superscope: ExpressionScope | undefined = undefined;
 	protected _subscopes: ExpressionScope[] = [];
 	protected _variables = new Map<string, ExpressionVariable>();
-	protected _statements = new Set<string>();
+	protected _definitions = new Set<string>();
+
+	has( name: string ): boolean {
+		return this._variables.has( name ) || !!this._superscope?.has( name );
+	}
 
 	get( name: string ): ExpressionVariable | undefined {
 		return this._variables.get( name ) ?? this._superscope?.get( name );
 	}
 
-	set( name: string, variable: ExpressionVariable, statement?: boolean ): ExpressionScope {
+	set( name: string, variable: ExpressionVariable ): ExpressionScope {
 		this._variables.set( name, variable );
-		if ( statement ) {
-			this._statements.add( name );
-		}
+		return this;
+	}
+
+	define( name: string, variable: ExpressionVariable ): ExpressionScope {
+		this._variables.set( name, variable );
+		this._definitions.add( name );
 		return this;
 	}
 
@@ -24,7 +31,7 @@ export class ExpressionScope {
 		scope._superscope = this;
 		this._subscopes.push( scope );
 		for ( const [ name, variable ] of variables ) {
-			scope.set( name, variable, true );
+			scope.define( name, variable );
 		}
 		return scope;
 	}
@@ -32,7 +39,7 @@ export class ExpressionScope {
 	variables(): Record<string, ExpressionVariable> {
 		const variables: Record<string, ExpressionVariable> = {};
 		for ( const [ name, variable ] of this._variables ) {
-			if ( !this._statements.has( name ) ) {
+			if ( !this._definitions.has( name ) ) {
 				variables[ name ] = variable;
 			}
 		}

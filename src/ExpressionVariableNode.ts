@@ -7,6 +7,7 @@ export class ExpressionVariableNode extends ExpressionNode {
 	constructor(
 		_pos: number,
 		protected _variable: ExpressionVariable,
+		protected _subnode?: ExpressionNode,
 	) {
 		super( _pos );
 	}
@@ -15,8 +16,9 @@ export class ExpressionVariableNode extends ExpressionNode {
 		return this._variable.type;
 	}
 
-	refine( type: ExpressionType ): ExpressionNode {
-		const inferredType = this._variable.type.infer( type );
+	compile( type: ExpressionType ): ExpressionNode {
+		this._subnode = this._subnode?.compile( type );
+		const inferredType = this._variable.type.infer( this._subnode?.type ?? type );
 		if ( !inferredType ) {
 			this.throwTypeError( type );
 		}
@@ -25,7 +27,7 @@ export class ExpressionVariableNode extends ExpressionNode {
 	}
 
 	evaluate(): ExpressionValue {
-		return this._variable.value!;
+		return this._subnode ? this._variable.value = this._subnode.evaluate() : this._variable.value!;
 	}
 
 }

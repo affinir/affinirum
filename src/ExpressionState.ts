@@ -12,6 +12,7 @@ const symbolBracesOpen = Symbol();
 const symbolBracesClose = Symbol();
 const symbolAssignment = Symbol();
 const symbolSeparator = Symbol();
+const symbolConstant = Symbol();
 const symbolScope = Symbol();
 const symbolNullable = Symbol();
 
@@ -29,7 +30,7 @@ export class ExpressionState {
 		return this._startPos;
 	}
 
-	get constant(): ExpressionConstant {
+	get literal(): ExpressionConstant {
 		return this._obj as ExpressionConstant;
 	}
 
@@ -45,7 +46,7 @@ export class ExpressionState {
 		return this._obj as string;
 	}
 
-	get isConstant(): boolean {
+	get isLiteral(): boolean {
 		return this._obj instanceof ExpressionConstant;
 	}
 
@@ -91,6 +92,10 @@ export class ExpressionState {
 
 	get isSeparator(): boolean {
 		return this._obj === symbolSeparator;
+	}
+
+	get isConstant(): boolean {
+		return this._obj === symbolConstant;
 	}
 
 	get isScope(): boolean {
@@ -172,6 +177,7 @@ export class ExpressionState {
 						}
 						const token = this._expr.substring( this._startPos, this._endPos );
 						switch ( token ) {
+							//case 'const': this._obj = symbolConstant; break;
 							case 'boolean': this._obj = typeBoolean; break;
 							case 'number': this._obj = typeNumber; break;
 							case 'string': this._obj = typeString; break;

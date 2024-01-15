@@ -16,7 +16,7 @@ export abstract class ExpressionNode {
 	}
 
 	abstract type: ExpressionType;
-	abstract refine( type: ExpressionType ): ExpressionNode;
+	abstract compile( type: ExpressionType ): ExpressionNode;
 	abstract evaluate(): ExpressionValue;
 
 }

@@ -6,9 +6,9 @@ export class ExpressionClosureNode extends ExpressionNode {
 
 	constructor(
 		_pos: number,
-		protected _args: ExpressionVariable[],
+		protected _variables: ExpressionVariable[],
 		protected _type: ExpressionType,
-		protected _subnode: ExpressionNode,
+		protected _subnodes: ExpressionNode[],
 	) {
 		super( _pos );
 	}
@@ -17,18 +17,18 @@ export class ExpressionClosureNode extends ExpressionNode {
 		return this._type;
 	}
 
-	refine( type: ExpressionType ): ExpressionNode {
+	compile( type: ExpressionType ): ExpressionNode {
 		if ( !type.isFunction ) {
 			return this;
 		}
-		this._subnode = this._subnode.refine( this._type );
+		this._subnodes = this._subnodes.map( s => s.compile( this._type ) );
 		return this;
 	}
 
 	evaluate(): ExpressionValue {
 		return ( ...values: ExpressionValue[] ) => {
-			this._args.forEach( ( arg, ix ) => arg.value = values[ ix ] );
-			return this._subnode.evaluate();
+			this._variables.forEach( ( arg, ix ) => arg.value = values[ ix ] );
+			return this._subnodes.map( s => s.evaluate() )[ this._subnodes.length - 1 ];
 		};
 	}
 

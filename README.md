@@ -116,22 +116,22 @@ Target: ES2020 [browser or NodeJS].
 ### Grammar
 The expression parsing is performed using the following grammar:
 
-	<disjunction> = {<disjunction>"|"}<conjunction>
-	<conjunction> = {<conjunction>"&"}<comparison>
-	<comparison> = {"!"}{<comparison>(">"|">="|"<"|"<="|"="|"=="|"!="|"~"|"!~")}<aggregate>
-	<aggregate> = {<aggregate>("$"|"#"|"+"|"-")}<product>
-	<product> = {<product>("*"|"/"|"%")}<factor>
-	<factor> = {"-"}{<factor>"^"}<coalescence>
-	<coalescence> = {<coalescence>("?=")}<index>
-	<index> = <term>|{<index>("."<property>|"["<disjunction>"]")}
-	<term> = <constant>|<array>|<object>|<variable>|<function>|<closure>|<statement>|"("<disjunction>")"
-	<constant> = <boolean-value>|<numberic-value>|<string-value>
-	<array> = "["<disjunction>,{","<disjunction>}"]"
-	<object> = "{"<property-name>"="<disjunction>,{",""<property-name>"="<disjunction>}"}"
-	<function> = <function-name>"("<disjunction>{","<disjunction>}")"
-	<closure> = <type-name>"("<type-name> <argument>{,<type-name> <argument>}")=><disjunction>"
-	<statement> = {<variable>":"<disjunction>,}<disjunction>
-	<type-name> = "boolean"|"number"|"string"|"array"|"object"|"function"|"var"{"?"}
+	<list> = <disjunction>{ ","<disjunction> }
+	<disjunction> = <conjunction>{ "|"<conjunction> }
+	<conjunction> = <comparison>{ "&"<comparison> }
+	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "=" | "==" | "!=" | "~" | "!~" )<aggregate> }
+	<aggregate> = <product>{ ( "$" | "#" | "+" | "-" )<product> }
+	<product> = <factor>{ ( "*" | "/" | "%" )<factor> }
+	<factor> = { "-" }<coalescence>{ "^"<coalescence> }
+	<coalescence> = <accessor>{ "?="<accessor> }
+	<accessor> = <term>{ ( "["<disjunction>"]" | "@"<array-index> | "{"<disjunction>"}" | "."( <property-name> | <function> ) ) }
+	<term> = <boolean> | <number> | <string> | <null> | <array> | <object> | <constant-name> | <variable-name> | <definition> | <function> | <closure> | "("<disjunction>")"
+	<array> = "["{ <disjunction> }{ ","<disjunction> }"]"
+	<object> = "{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}"
+	<definition> = <type> <variable-name>{ ":"<disjunction> }
+	<function> = <function-name>"("{ <disjunction> }{ ","<disjunction> }")"
+	<closure> = <type>"("<type> <argument>{ ","<type> <argument> }")=><list>"
+	<type> = ( "null" | "boolean" | "number" | "string" | "array" | "object" | "function" ){ "?" } | "var"
 
 Whitespace characters are ignored.
 
@@ -165,7 +165,7 @@ const iteratorExpr = new ExpressionService(
 );
 const iValue = iteratorExpr.evaluate( { arr: [ 1, 2, 3 ] } ); // 10
 ...
-const complexExpr = new ExpressionService( 'a:myvar1/10, b:myvar2-100, a/b'
+const complexExpr = new ExpressionService( 'var a:myvar1/10, var b:myvar2-100, a/b'
 );
 const value = complexExpr.evaluate( { myvar1: 40, myvar2: 104 } ); // 1
 ...
