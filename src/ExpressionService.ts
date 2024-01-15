@@ -54,6 +54,10 @@ export class ExpressionService {
 	*/
 	constructor( expr: string, config?: {
 		type?: ExpressionType,
+		variables?: {
+			name: string,
+			type: ExpressionType
+		}[],
 		constants?: {
 			name: string,
 			value: ExpressionValue
@@ -67,16 +71,12 @@ export class ExpressionService {
 			maxArity?: number,
 			typeInference?: ( index: number, type: string, mask: string ) => boolean
 		}[],
-		variables?: {
-			name: string,
-			type: ExpressionType
-		}[],
 	} ) {
 		this._expression = expr;
 		const type = config?.type ?? typeVar;
+		config?.variables?.forEach( v => this._scope.set( v.name, new ExpressionVariable( undefined, v.type ) ) );
 		config?.constants?.forEach( c => this._constants.set( c.name, new ExpressionConstant( c.value ) ) );
 		config?.functions?.forEach( f => this._functions.set( f.name, new ExpressionFunction( f.func, f.type, f.argTypes, f.minArity, f.maxArity, f.typeInference ) ) );
-		config?.variables?.forEach( v => this._scope.set( v.name, new ExpressionVariable( undefined, v.type ) ) );
 		const state = new ExpressionState( this._expression );
 		try {
 			this._statements = this.list( state.parse(), this._scope );
@@ -89,7 +89,7 @@ export class ExpressionService {
 				`${ ' '.repeat( this._expression.substring( pos, state.pos ).length ) }^` );
 		}
 		try {
-			this._statements = this._statements.map( s => s.compile( type ) );
+			this._statements = ExpressionNode.compileList( this._statements, type );
 		}
 		catch ( err ) {
 			const terr = err as ExpressionTypeError;
@@ -190,7 +190,7 @@ export class ExpressionService {
 
 	protected aggregate( state: ExpressionState, scope: ExpressionScope ): ExpressionNode {
 		let node = this.product( state, scope );
-		while ( state.operator === operJoin || state.operator === operConcat || state.operator === operAdd || state.operator === operSub ) {
+		while ( state.operator === operAdd || state.operator === operSub || state.operator === operConcat || state.operator === operJoin ) {
 			node = new ExpressionFunctionNode( state.pos, state.operator,
 				[ node, this.product( state.parse(), scope ) ] );
 		}
@@ -290,19 +290,6 @@ export class ExpressionService {
 			state.parse();
 			return new ExpressionConstantNode( pos, constant );
 		}
-		/*else if ( state.isConstant ) {
-			const pos = state.pos;
-			if ( !state.parse().isToken ) {
-				throw new Error( `missing constant name` );
-			}
-			const token = state.token;
-			if ( !state.parse().isAssignment ) {
-				throw new Error( `missing constant value` );
-			}
-			variable = new ExpressionVariable();
-			const subnode = this.disjunction( state.parse(), scope );
-			return new ExpressionVariableNode( pos, variable, subnode );
-		}*/
 		else if ( state.isToken ) {
 			const pos = state.pos;
 			const token = state.token;
@@ -328,7 +315,7 @@ export class ExpressionService {
 			const pos = state.pos;
 			let type = state.type;
 			if ( state.parse().isNullable ) {
-				type = type.nullable();
+				type = type.toNullable();
 				state.parse();
 			}
 			if ( state.isToken ) {
@@ -336,7 +323,7 @@ export class ExpressionService {
 				if ( scope.has( token ) ) {
 					throw new Error( `variable ${ token } redefinition` );
 				}
-				const variable = new ExpressionVariable();
+				const variable = new ExpressionVariable( undefined, type );
 				scope.define( token, variable );
 				return new ExpressionVariableNode( pos, variable, state.parse().isAssignment ? this.disjunction( state.parse(), scope ) : undefined );
 			}
@@ -350,7 +337,7 @@ export class ExpressionService {
 				}
 				let argType = state.type;
 				if ( state.parse().isNullable ) {
-					argType = argType.nullable();
+					argType = argType.toNullable();
 					state.parse();
 				}
 				if ( !state.isToken ) {
@@ -371,7 +358,7 @@ export class ExpressionService {
 			if ( !state.parse().isScope ) {
 				throw new Error( `missing scope operator` );
 			}
-			return new ExpressionClosureNode( pos, Array.from( variables.values() ), type, this.list( state.parse(), scope.subscope( variables ) ) );
+			return new ExpressionClosureNode( pos, type, Array.from( variables.values() ), this.list( state.parse(), scope.subscope( variables ) ) );
 		}
 		else if ( state.isParenthesesOpen ) {
 			const node = this.disjunction( state.parse(), scope );

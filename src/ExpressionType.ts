@@ -1,9 +1,9 @@
-export type ExpressionValue = undefined | boolean | number | string | object | ( ( ...args: ExpressionValue[] ) => ExpressionValue ) | ExpressionValue[];
+export type ExpressionValue = undefined | boolean | number | string | ExpressionValue[] | { [ key: string ]: ExpressionValue } | ( ( ...args: ExpressionValue[] ) => ExpressionValue );
 type ExpressionValueType = 'null' | 'boolean' | 'number' | 'string' | 'array' | 'object' | 'function';
 
 export class ExpressionType {
 
-	protected _vtypes: string[];
+	protected _vtypes: ExpressionValueType[];
 
 	constructor(
 		...args: ExpressionValueType[]
@@ -44,7 +44,7 @@ export class ExpressionType {
 		return vtypes.length ? new ExpressionType( ...vtypes ) : undefined;
 	}
 
-	nullable(): ExpressionType {
+	toNullable(): ExpressionType {
 		return new ExpressionType( 'null', ...this._vtypes as ExpressionValueType[] );
 	}
 

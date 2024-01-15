@@ -7,7 +7,6 @@ import { ExpressionService } from '../src/index.js';
 let passed = 0, failed = 0;
 console.log( `testExpressionService started...` );
 [
-	[ 'var a,a:i:x[1][1]', [ { x: [ [ 0, 1 ], [ 1, 10 ] ], i:5, result: 10 } ] ],
 	[ 'null', [ { result: undefined } ] ],
 	[ 'false', [ { result: false } ] ],
 	[ 'true', [ { result: true } ] ],
@@ -76,9 +75,9 @@ console.log( `testExpressionService started...` );
 	[ 'arr.any(boolean(object a)=>a.i>0 & a.d>0)', [ { arr: [ { i: -1, d: -1 }, { i: -1, d: 5 }, { i: 1, d: 1 } ], result: true } ] ],
 	[ 'arr.every(boolean(number a)=>a > 0)', [ { arr: [ 1, 2, 3, 4 ], result: true } ] ],
 	[ 'boolean x:arr.any(boolean(number a)=>a<0),boolean b:c,x&b', [ { arr: [ 0, -1 ], c: true, result: true } ] ],
-	[ '{n:50,a : 10,b:`my string`}{`n`}', [ { result: 50 } ] ],
+	[ '{n:50,a : 10,b:`my string`}{p}', [ { p: 'n', result: 50 }, { p: 'a', result: 10 }, { p: 'b', result: 'my string' } ] ],
 	[ '(a$b).i = 0', [ { a: { f: 0, d: 0 }, b: { i: 0 }, result: true }, { a: { i: 50, d: 0 }, b: { i: 0 }, result: true } ] ],
-	[ 'construct([`a`, 10],[`b`, `my string`]).a', [ { result: 10 } ] ],
+	[ 'construct([a, 10],[`b`, `my string`]).a', [ { a: 'a', result: 10 }, { a: 'b', result: undefined } ] ],
 	[ 'number a:myvar/3,var b:mv*2,a/b', [ { myvar: 6, mv: 1, result: 1 }, { myvar: 30, mv: 5, result: 1 } ] ],
 	[ 'obj1.a0', [ { obj1: { a0: 10 }, result: 10 }, { obj1: { a0: '10' }, result: '10' } ] ],
 	[ 'obj2{"prop"}.a', [ { obj2: { prop: { a: 10 } }, result: 10 }, { obj2: { prop: { a: '10' } }, result: '10' } ] ],

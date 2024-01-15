@@ -1,4 +1,4 @@
-import { ExpressionType, ExpressionValue } from './ExpressionType.js';
+import { ExpressionType, ExpressionValue, typeVar } from './ExpressionType.js';
 import { ExpressionTypeError } from './ExpressionTypeError.js';
 
 export abstract class ExpressionNode {
@@ -18,5 +18,9 @@ export abstract class ExpressionNode {
 	abstract type: ExpressionType;
 	abstract compile( type: ExpressionType ): ExpressionNode;
 	abstract evaluate(): ExpressionValue;
+
+	static compileList( nodes: ExpressionNode[], type: ExpressionType ): ExpressionNode[] {
+		return [ ...nodes.slice( 0, -1 ).map( n => n.compile( typeVar ) ), nodes[ nodes.length - 1 ].compile( type ) ];
+	}
 
 }

@@ -344,12 +344,12 @@ export const funcConstruct = new ExpressionFunction(
 	typeObject, [ typeArray ], 0, FUNCTION_ARG_MAX,
 );
 export const funcJoin = new ExpressionFunction(
-	( ...args: ( object | object[] )[] ) =>
-		args.flat( Infinity ).reduce( ( acc: object, val: object ) => Object.assign( acc, val ) ),
+	( ...args: ( { [ key: string ]: ExpressionValue } | { [ key: string ]: ExpressionValue }[] )[] ) =>
+		args.flat( Infinity ).reduce( ( acc, val ) => Object.assign( acc, val ) ),
 	typeObject, [ new ExpressionType( 'object', 'array' ) ], 2, FUNCTION_ARG_MAX,
 );
 export const funcBy = new ExpressionFunction(
-	( arg1: object, arg2: string ) =>
+	( arg1: { [ key: string ]: ExpressionValue }, arg2: string ) =>
 		( arg1 as any )[ arg2 ],
 	typeVar, [ typeObject, typeString ],
 );

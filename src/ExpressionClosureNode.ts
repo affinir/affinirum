@@ -6,8 +6,8 @@ export class ExpressionClosureNode extends ExpressionNode {
 
 	constructor(
 		_pos: number,
-		protected _variables: ExpressionVariable[],
 		protected _type: ExpressionType,
+		protected _variables: ExpressionVariable[],
 		protected _subnodes: ExpressionNode[],
 	) {
 		super( _pos );
@@ -19,9 +19,9 @@ export class ExpressionClosureNode extends ExpressionNode {
 
 	compile( type: ExpressionType ): ExpressionNode {
 		if ( !type.isFunction ) {
-			return this;
+			this.throwTypeError( type );
 		}
-		this._subnodes = this._subnodes.map( s => s.compile( this._type ) );
+		this._subnodes = ExpressionNode.compileList( this._subnodes, this._type );
 		return this;
 	}
 

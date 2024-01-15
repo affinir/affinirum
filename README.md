@@ -120,17 +120,18 @@ The expression parsing is performed using the following grammar:
 	<disjunction> = <conjunction>{ "|"<conjunction> }
 	<conjunction> = <comparison>{ "&"<comparison> }
 	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "=" | "==" | "!=" | "~" | "!~" )<aggregate> }
-	<aggregate> = <product>{ ( "$" | "#" | "+" | "-" )<product> }
+	<aggregate> = <product>{ ( "+" | "-" | "#" | "$" )<product> }
 	<product> = <factor>{ ( "*" | "/" | "%" )<factor> }
 	<factor> = { "-" }<coalescence>{ "^"<coalescence> }
 	<coalescence> = <accessor>{ "?="<accessor> }
-	<accessor> = <term>{ ( "["<disjunction>"]" | "@"<array-index> | "{"<disjunction>"}" | "."( <property-name> | <function> ) ) }
-	<term> = <boolean> | <number> | <string> | <null> | <array> | <object> | <constant-name> | <variable-name> | <definition> | <function> | <closure> | "("<disjunction>")"
-	<array> = "["{ <disjunction> }{ ","<disjunction> }"]"
-	<object> = "{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}"
-	<definition> = <type> <variable-name>{ ":"<disjunction> }
-	<function> = <function-name>"("{ <disjunction> }{ ","<disjunction> }")"
-	<closure> = <type>"("<type> <argument>{ ","<type> <argument> }")=><list>"
+	<accessor> = <term>{ ( "["<disjunction>"]" | "@"<array-index> | "{"<disjunction>"}" |
+		"."( <property-name> | <function-name>"("{ <disjunction> }{ ","<disjunction> }")" ) ) }
+	<term> = <null> |<boolean> | <number> | <string> | <constant-name> | <variable-name> | "("<disjunction>")" |
+		"["{ <disjunction> }{ ","<disjunction> }"]" |
+		"{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}" | 
+		<function-name>"("{ <disjunction> }{ ","<disjunction> }")" |
+		<type> <variable-name>{ ":"<disjunction> } |
+		<type>"("<type> <argument>{ ","<type> <argument> }")=>"<list>
 	<type> = ( "null" | "boolean" | "number" | "string" | "array" | "object" | "function" ){ "?" } | "var"
 
 Whitespace characters are ignored.
