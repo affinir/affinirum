@@ -1,4 +1,4 @@
-import { ExpressionVariable } from './ExpressionVariable';
+import { ExpressionVariable } from './ExpressionVariable.js';
 
 export class ExpressionScope {
 
@@ -8,7 +8,7 @@ export class ExpressionScope {
 	protected _definitions = new Set<string>();
 
 	has( name: string ): boolean {
-		return this._variables.has( name ) || !!this._superscope?.has( name );
+		return this._variables.has( name ) || Boolean( this._superscope?.has( name ) );
 	}
 
 	get( name: string ): ExpressionVariable | undefined {

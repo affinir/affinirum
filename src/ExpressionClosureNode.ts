@@ -1,6 +1,6 @@
 import { ExpressionNode } from './ExpressionNode.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
-import { ExpressionType, ExpressionValue } from './ExpressionType.js';
+import { ExpressionType, ExpressionValue, typeFunction } from './ExpressionType.js';
 
 export class ExpressionClosureNode extends ExpressionNode {
 
@@ -14,11 +14,11 @@ export class ExpressionClosureNode extends ExpressionNode {
 	}
 
 	get type(): ExpressionType {
-		return this._type;
+		return typeFunction;
 	}
 
 	compile( type: ExpressionType ): ExpressionNode {
-		if ( !type.isFunction ) {
+		if ( !typeFunction.infer( type ) ) {
 			this.throwTypeError( type );
 		}
 		this._subnodes = ExpressionNode.compileList( this._subnodes, this._type );

@@ -25,9 +25,9 @@ Target: ES2020 [browser or NodeJS].
 ## What
 
 #### Operators
-* Disjunction: |
-* Conjunction: &
-* Negation: !
+* Boolean disjunction: |
+* Boolean conjunction: &
+* Boolean negation: !
 * Greater than: >
 * Less than: <
 * Greater than or equal to: >=
@@ -37,12 +37,12 @@ Target: ES2020 [browser or NodeJS].
 * String similar to: \~
 * String not similar: !\~
 * Null coalescence: ?=
-* Number or string addition: +
-* Subtraction: -
-* Negation: -
-* Multiplication: \*
-* Division: /
-* Percentage: %
+* Arithmetic addition or string concatination: +
+* Arithmetic subtraction: -
+* Arithmetic negation: -
+* Arithmetic multiplication: \*
+* Arithmetic division: /
+* Arithmetic percentage: %
 * Array element at literal index: @
 * Array element at numeric value: []
 * Array concatination: #
@@ -50,9 +50,9 @@ Target: ES2020 [browser or NodeJS].
 * Object property by string value: {}
 * Object join: $
 #### Functions
-* Disjunction: or(boolean ...values)
-* Conjunction: and(boolean ...values)
-* Negation: not(boolean value)
+* Boolean disjunction: or(boolean ...values)
+* Boolean conjunction: and(boolean ...values)
+* Bolean negation: not(boolean value)
 * Greater than: gt(number value1, number value2)
 * Less than: lt(number value1, number value2)
 * Greater than or equals to: ge(number value1, number value2)
@@ -62,16 +62,16 @@ Target: ES2020 [browser or NodeJS].
 * String similar to: like(string value1, string value2)
 * String not similar to: nlike(string value1, string value2)
 * String contains substring: contains(string value, string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)
-* String starts with: startsWith(string value, string search, number? startPos, boolean? ignoreCaseSpaceEtc)
-* String ends with: endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)
+* String starts with substring: startsWith(string value, string search, number? startPos, boolean? ignoreCaseSpaceEtc)
+* String ends with substring: endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)
 * Conditional switch: switch(boolean condition, var valueIfTrue, var valueIfFalse)
 * Null coalescence: nullco(var value, var valueIfNull)
-* Number or string addition: add(number|string ...values)
-* Subtraction: sub(number minuend, number subtrahend)
-* Negation: neg(number value)
-* Multiplication: mul(number ...values)
-* Division: div(number dividend, number divisor)
-* Percentage: pct(number dividend, number divisor)
+* Arithmetic addition or string concatination: add(number|string ...values)
+* Arithmetic subtraction: sub(number minuend, number subtrahend)
+* Arithmetic negation: neg(number value)
+* Arithmetic multiplication: mul(number ...values)
+* Arithmetic division: div(number dividend, number divisor)
+* Arithmetic percentage: pct(number dividend, number divisor)
 * Exponent: exp(number value)
 * Logarithm: log(number value)
 * Power: pow(number base, number exponent)
@@ -85,24 +85,27 @@ Target: ES2020 [browser or NodeJS].
 * Minimum: min(number ...values)
 * Maximum: max(number ...values)
 * Trim: trim(string value)
+* Trim start: trimStart(string value)
+* Trim end: trimEnd(string value)
 * Substring: substr(string value, number beginPos, number? endPos)
 * Char at position: char(string value, number pos)
-* Concatination into array: concat(array ...values)
-* Element at index: at(array value, number index)
-* Reverse order of items in array: reverse(array value)
-* Flatten array items to specified depth: flatten(array value, number depth)
+* Char code at position: charCode(string value, number pos)
+* Array element at index: at(array value, number index)
+* Concatination of values and arrays into an array: concat(array ...values)
+* New array with reverse order of items: reverse(array value)
+* New array flattened to specified depth: flatten(array value, number depth)
 * Slice items into new array: slice(array value, number? beginIndex, number? endIndex)
-* First item iterator: first(array valu, function iterator)
-* Last item iterator: last(array value, function iterator)
-* First index iterator: firstindex(array value, function iterator)
-* Last index iterator: lastindex(array value, function iterator)
+* First item found iterator: first(array value, function iterator)
+* Last item found iterator: last(array value, function iterator)
+* First index found iterator: firstIndex(array value, function iterator)
+* Last index found iterator: lastIndex(array value, function iterator)
 * Map items iterator: map(array value, function iterator)
 * Filter items iterator: filter(array value, function iterator)
-* Any item iterator: any(array value, function iterator)
-* Every item iterator: every(array value, function iterator)
+* Any item satisfies condition iterator: any(array value, function iterator)
+* Every item satisfies condition iterator: every(array value, function iterator)
 * Object construction from name-value pairs: construct(array ...values)
-* Object join: join(object ...values)
 * Object property by name: by(object value, string name)
+* Object join: join(object ...values)
 #### Constants
 * null
 * true
@@ -131,7 +134,7 @@ The expression parsing is performed using the following grammar:
 		"{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}" | 
 		<function-name>"("{ <disjunction> }{ ","<disjunction> }")" |
 		<type> <variable-name>{ ":"<disjunction> } |
-		<type>"("<type> <argument>{ ","<type> <argument> }")=>"<list>
+		<type>"("<type> <argument>{ ","<type> <argument> }")" "=>"<list>
 	<type> = ( "null" | "boolean" | "number" | "string" | "array" | "object" | "function" ){ "?" } | "var"
 
 Whitespace characters are ignored.
@@ -166,8 +169,9 @@ const iteratorExpr = new ExpressionService(
 );
 const iValue = iteratorExpr.evaluate( { arr: [ 1, 2, 3 ] } ); // 10
 ...
-const complexExpr = new ExpressionService( 'var a:myvar1/10, var b:myvar2-100, a/b'
+const complexExpr = new ExpressionService(
+	'var a:myvar1/10, var b:myvar2-100, a/b + b*a + 600'
 );
-const value = complexExpr.evaluate( { myvar1: 40, myvar2: 104 } ); // 1
+const value = complexExpr.evaluate( { myvar1: 40, myvar2: 104 } ); // 4761
 ...
 ```

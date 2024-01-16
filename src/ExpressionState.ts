@@ -105,7 +105,7 @@ export class ExpressionState {
 		return this._endPos >= this._expr.length;
 	}
 
-	parse(): ExpressionState {
+	next(): ExpressionState {
 		this._obj = undefined;
 		while ( this._endPos < this._expr.length && this._obj == null ) {
 			this._startPos = this._endPos;

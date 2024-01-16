@@ -234,6 +234,16 @@ export const funcTrim = new ExpressionFunction(
 		arg.trim(),
 	typeString, [ typeString ],
 );
+export const funcTrimStart = new ExpressionFunction(
+	( arg: string ) =>
+		arg.trimStart(),
+	typeString, [ typeString ],
+);
+export const funcTrimEnd = new ExpressionFunction(
+	( arg: string ) =>
+		arg.trimEnd(),
+	typeString, [ typeString ],
+);
 export const funcLowerCase = new ExpressionFunction(
 	( arg: string ) =>
 		arg.toLowerCase(),
@@ -264,15 +274,15 @@ export const funcLen = new ExpressionFunction(
 		arg.length,
 	typeNumber, [ new ExpressionType( 'string', 'array' ) ],
 );
-export const funcConcat = new ExpressionFunction(
-	( ...args: ExpressionValue[] ) =>
-		args,
-	typeArray, [ typeVar ], 1, FUNCTION_ARG_MAX,
-);
 export const funcAt = new ExpressionFunction(
 	( arg1: ExpressionValue[], arg2: number ) =>
 		arg1[ arg2 < 0 ? arg1.length + arg2 : arg2 ],
 	typeVar, [ typeArray, typeNumber ],
+);
+export const funcConcat = new ExpressionFunction(
+	( ...args: ExpressionValue[] ) =>
+		args,
+	typeArray, [ typeVar ], 1, FUNCTION_ARG_MAX,
 );
 export const funcFlatten = new ExpressionFunction(
 	( args: ExpressionValue[], arg: number ) =>
@@ -343,13 +353,13 @@ export const funcConstruct = new ExpressionFunction(
 	},
 	typeObject, [ typeArray ], 0, FUNCTION_ARG_MAX,
 );
-export const funcJoin = new ExpressionFunction(
-	( ...args: ( { [ key: string ]: ExpressionValue } | { [ key: string ]: ExpressionValue }[] )[] ) =>
-		args.flat( Infinity ).reduce( ( acc, val ) => Object.assign( acc, val ) ),
-	typeObject, [ new ExpressionType( 'object', 'array' ) ], 2, FUNCTION_ARG_MAX,
-);
 export const funcBy = new ExpressionFunction(
 	( arg1: { [ key: string ]: ExpressionValue }, arg2: string ) =>
 		( arg1 as any )[ arg2 ],
 	typeVar, [ typeObject, typeString ],
+);
+export const funcJoin = new ExpressionFunction(
+	( ...args: ( { [ key: string ]: ExpressionValue } | { [ key: string ]: ExpressionValue }[] )[] ) =>
+		args.flat( Infinity ).reduce( ( acc, val ) => Object.assign( acc, val ) ),
+	typeObject, [ new ExpressionType( 'object', 'array' ) ], 2, FUNCTION_ARG_MAX,
 );
