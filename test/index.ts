@@ -50,6 +50,7 @@ console.log( `testExpressionService started...` );
 	[ 'len(trim(a)) = 6', [ { a: '  abcdef  ', result: true } ] ],
 	[ 'len([a, b, c]) + len([ 1, 2, 3, 4 ])', [ { a: 1, b: 2, c: 3, result: 7 } ] ],
 	[ 'a.len() % 50', [ { a: 'abcd', result: 2 }, { a: 'abcdef', result: 3 } ] ],
+	[ 'a.alphanum()', [ { a: '---abcd===', result: 'abcd' }, { a: '+abc-def!', result: 'abcdef' } ] ],
 	[ 'str1.trim() + str2.trimStart() + str3.trimEnd()', [ { str1: ' abcd ', str2: '  a', str3: '0  ', result: 'abcda0' } ] ],
 	[ 'lowerCase(trim(x))', [ { x: '  ABC  ', result: 'abc' }, { x: 'ABCD  ', result: 'abcd' } ] ],
 	[ 'upperCase(substr(a,3,4))', [ { a: 'abcdef', result: 'D' }, { a: 'abcDef---', result: 'D' } ] ],

@@ -1,6 +1,7 @@
 *.tgz
 .eslintrc.*
-tsconfig.*
+tsconfig*.*
+cjs/
 src/
 test/
 .vscode/

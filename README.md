@@ -6,7 +6,7 @@ for closed-form analytic expressions.
 Service supports boolean expressions, regular algebraic expressions, 
 numeric and string functions and comparsions.
 
-Target: ES2020 [browser or NodeJS].
+Target: ES2022 [browser+NodeJS][ESM+CJS].
 
 ## Why
 
@@ -61,9 +61,6 @@ Target: ES2020 [browser or NodeJS].
 * Not equals to: neq(var value1, var value2)
 * String similar to: like(string value1, string value2)
 * String not similar to: nlike(string value1, string value2)
-* String contains substring: contains(string value, string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)
-* String starts with substring: startsWith(string value, string search, number? startPos, boolean? ignoreCaseSpaceEtc)
-* String ends with substring: endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)
 * Conditional switch: switch(boolean condition, var valueIfTrue, var valueIfFalse)
 * Null coalescence: nullco(var value, var valueIfNull)
 * Arithmetic addition or string concatination: add(number|string ...values)
@@ -84,6 +81,10 @@ Target: ES2020 [browser or NodeJS].
 * Rounded value: round(number value)
 * Minimum: min(number ...values)
 * Maximum: max(number ...values)
+* String contains substring: contains(string value, string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)
+* String starts with substring: startsWith(string value, string search, number? startPos, boolean? ignoreCaseSpaceEtc)
+* String ends with substring: endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)
+* Get alphanum of string: alphanum(string value)
 * Trim: trim(string value)
 * Trim start: trimStart(string value)
 * Trim end: trimEnd(string value)

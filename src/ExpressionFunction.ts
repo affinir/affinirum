@@ -101,21 +101,6 @@ export const funcNotLike = new ExpressionFunction(
 		!ExpressionType.equalStrings( arg1, arg2, true ),
 	typeBoolean, [ typeString, typeString ],
 );
-export const funcContains = new ExpressionFunction(
-	( arg1: string, arg2: string, arg3?: number, arg4?: boolean ) =>
-		ExpressionType.containsString( arg1, arg2, arg3, arg4 ),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
-);
-export const funcStartsWith = new ExpressionFunction(
-	( arg1: string, arg2: string, arg3?: number, arg4?: boolean ) =>
-		ExpressionType.startsWithString( arg1, arg2, arg3, arg4 ),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
-);
-export const funcEndsWith = new ExpressionFunction(
-	( arg1: string, arg2: string, arg3?: number, arg4?: boolean ) =>
-		ExpressionType.endsWithString( arg1, arg2, arg3, arg4 ),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
-);
 export const funcSwitch = new ExpressionFunction(
 	( arg1: boolean, arg2: ExpressionValue, arg3: ExpressionValue ) =>
 		arg1 ? arg2 : arg3,
@@ -228,6 +213,34 @@ export const funcMin = new ExpressionFunction(
 	( ...args: ( number | number[] )[] ) =>
 		Math.min( ...args.flat() ),
 	typeNumber, [ new ExpressionType( 'number', 'array' ) ], 1, FUNCTION_ARG_MAX,
+);
+export const funcContains = new ExpressionFunction(
+	( arg1: string, arg2: string, arg3?: number, arg4?: boolean ) =>
+		ExpressionType.containsString( arg1, arg2, arg3, arg4 ),
+	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
+);
+export const funcStartsWith = new ExpressionFunction(
+	( arg1: string, arg2: string, arg3?: number, arg4?: boolean ) =>
+		ExpressionType.startsWithString( arg1, arg2, arg3, arg4 ),
+	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
+);
+export const funcEndsWith = new ExpressionFunction(
+	( arg1: string, arg2: string, arg3?: number, arg4?: boolean ) =>
+		ExpressionType.endsWithString( arg1, arg2, arg3, arg4 ),
+	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
+);
+export const funcAlphanum = new ExpressionFunction(
+	( arg: string ) => {
+		const value = arg.toLowerCase();
+		let result = '';
+		for ( let i = 0; i < value.length; ++i ) {
+			if ( !ExpressionType.isCaseSpaceEtc( arg[ i ] ) ) {
+				result += arg[ i ];
+			}
+		}
+		return result;
+	},
+	typeString, [ typeString ],
 );
 export const funcTrim = new ExpressionFunction(
 	( arg: string ) =>
