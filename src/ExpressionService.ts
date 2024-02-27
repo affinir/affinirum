@@ -321,7 +321,7 @@ export class ExpressionService {
 		else if ( state.isType ) {
 			const pos = state.pos;
 			let type = state.type;
-			if ( state.next().isNullable ) {
+			if ( state.next().isOption ) {
 				type = type.toOptional();
 				state.next();
 			}
@@ -343,7 +343,7 @@ export class ExpressionService {
 					throw new Error( `missing argument type` );
 				}
 				let argType = state.type;
-				if ( state.next().isNullable ) {
+				if ( state.next().isOption ) {
 					argType = argType.toOptional();
 					state.next();
 				}

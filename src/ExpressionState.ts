@@ -13,7 +13,7 @@ const symbolBracesClose = Symbol();
 const symbolAssignment = Symbol();
 const symbolSeparator = Symbol();
 const symbolScope = Symbol();
-const symbolNullable = Symbol();
+const symbolOption = Symbol();
 const symbolIf = Symbol();
 const symbolThen = Symbol();
 const symbolElse = Symbol();
@@ -100,8 +100,8 @@ export class ExpressionState {
 		return this._obj === symbolScope;
 	}
 
-	get isNullable(): boolean {
-		return this._obj === symbolNullable;
+	get isOption(): boolean {
+		return this._obj === symbolOption;
 	}
 
 	get isIf(): boolean {
@@ -139,7 +139,7 @@ export class ExpressionState {
 				case '?':
 					switch ( this._expr.charAt( this._endPos ) ) {
 						case '=': ++this._endPos; this._obj = operNullco; break;
-						default: this._obj = symbolNullable; break;
+						default: this._obj = symbolOption; break;
 					}
 					break;
 				case '|': this._obj = operOr; break;
