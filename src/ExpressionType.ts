@@ -1,6 +1,6 @@
 export type ExpressionValue = undefined | boolean | number | string |
 	ExpressionValue[] | { [ key: string ]: ExpressionValue } | ( ( ...args: ExpressionValue[] ) => ExpressionValue );
-type ExpressionValueType = 'null' | 'boolean' | 'number' | 'string' | 'array' | 'object' | 'function';
+type ExpressionValueType = 'void' | 'boolean' | 'number' | 'string' | 'array' | 'object' | 'function';
 
 export class ExpressionType {
 
@@ -9,7 +9,7 @@ export class ExpressionType {
 	constructor(
 		...args: ExpressionValueType[]
 	) {
-		this._vtypes = args.length ? Array.from( new Set( args ) ) : [ 'null', 'boolean', 'number', 'string', 'array', 'object', 'function' ];
+		this._vtypes = args.length ? Array.from( new Set( args ) ) : [ 'void', 'boolean', 'number', 'string', 'array', 'object', 'function' ];
 	}
 
 	get exact(): boolean {
@@ -40,13 +40,20 @@ export class ExpressionType {
 		return this.exact && this._vtypes[ 0 ] === 'function';
 	}
 
+	get isVoid(): boolean {
+		return this.exact && this._vtypes[ 0 ] === 'void';
+	}
+
 	infer( mask: ExpressionType, func = ( vtype: string, vmask: string ) => vtype === vmask ): ExpressionType | undefined {
+		if ( mask.isVoid ) {
+			return this;
+		}
 		const vtypes = this._vtypes.filter( vtype => mask._vtypes.some( mvtype => func( vtype, mvtype ) ) ) as ExpressionValueType[];
 		return vtypes.length ? new ExpressionType( ...vtypes ) : undefined;
 	}
 
-	toNullable(): ExpressionType {
-		return new ExpressionType( 'null', ...this._vtypes as ExpressionValueType[] );
+	toOptional(): ExpressionType {
+		return new ExpressionType( 'void', ...this._vtypes as ExpressionValueType[] );
 	}
 
 	toString(): string {
@@ -54,7 +61,7 @@ export class ExpressionType {
 	}
 
 	static of( value: ExpressionValue ): ExpressionType {
-		const vtype = value == null ? 'null' : Array.isArray( value ) ? 'array' : typeof value;
+		const vtype = value == null ? 'void' : Array.isArray( value ) ? 'array' : typeof value;
 		return new ExpressionType( vtype as ExpressionValueType );
 	}
 
@@ -190,10 +197,11 @@ export const typeString = new ExpressionType( 'string' );
 export const typeArray = new ExpressionType( 'array' );
 export const typeObject = new ExpressionType( 'object' );
 export const typeFunction = new ExpressionType( 'function' );
-export const typeOptionalBoolean = new ExpressionType( 'null', 'boolean' );
-export const typeOptionalNumber = new ExpressionType( 'null', 'number' );
-export const typeOptionalString = new ExpressionType( 'null', 'string' );
-export const typeOptionalArray = new ExpressionType( 'null', 'array' );
-export const typeOptionalObject = new ExpressionType( 'null', 'object' );
-export const typeOptionalFunction = new ExpressionType( 'null', 'function' );
+export const typeOptionalBoolean = new ExpressionType( 'void', 'boolean' );
+export const typeOptionalNumber = new ExpressionType( 'void', 'number' );
+export const typeOptionalString = new ExpressionType( 'void', 'string' );
+export const typeOptionalArray = new ExpressionType( 'void', 'array' );
+export const typeOptionalObject = new ExpressionType( 'void', 'object' );
+export const typeOptionalFunction = new ExpressionType( 'void', 'function' );
+export const typeVoid = new ExpressionType( 'void' );
 export const typeVar = new ExpressionType();

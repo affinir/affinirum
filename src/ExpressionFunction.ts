@@ -1,7 +1,6 @@
 import { ExpressionType, ExpressionValue,
 	typeBoolean, typeNumber, typeString, typeArray, typeObject, typeFunction,
-	typeOptionalBoolean, typeOptionalNumber,
-	typeVar } from './ExpressionType.js';
+	typeOptionalBoolean, typeOptionalNumber, typeVar, typeVoid } from './ExpressionType.js';
 
 const FUNCTION_ARG_MAX = 16536;
 
@@ -101,7 +100,7 @@ export const funcNotLike = new ExpressionFunction(
 		!ExpressionType.equalStrings( arg1, arg2, true ),
 	typeBoolean, [ typeString, typeString ],
 );
-export const funcSwitch = new ExpressionFunction(
+export const funcIfThenElse = new ExpressionFunction(
 	( arg1: boolean, arg2: ExpressionValue, arg3: ExpressionValue ) =>
 		arg1 ? arg2 : arg3,
 	typeVar, [ typeBoolean, typeVar, typeVar ], undefined, undefined,
@@ -312,6 +311,13 @@ export const funcSlice = new ExpressionFunction(
 		arg1.slice( arg2, arg3 ) as ExpressionValue,
 	typeArray, [ typeArray, typeOptionalNumber, typeOptionalNumber ], 1, 3,
 );
+export const funcRange = new ExpressionFunction(
+	( arg1: number, arg2: number ) => {
+		const [ min, max ] = [ Math.floor( Math.min( arg1, arg2 ) ), Math.ceil( Math.max( arg1, arg2 ) ) ];
+		return [ ...Array( max - min ).keys() ].map( i => i + min );
+	},
+	typeArray, [ typeNumber, typeNumber ],
+);
 export const funcFirst = new ExpressionFunction(
 	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => boolean ) =>
 		arg1.find( ( v, i, a ) => arg2( v, i, a ) ),
@@ -335,6 +341,13 @@ export const funcLastIndex = new ExpressionFunction(
 		return ix < 0 ? Number.NaN : ix;
 	},
 	typeNumber, [ typeArray, typeFunction ],
+);
+export const funcIterate = new ExpressionFunction(
+	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => ExpressionValue ) => {
+		arg1.forEach( ( v, i, a ) => arg2( v, i, a ) );
+		return undefined;
+	},
+	typeVoid, [ typeArray, typeFunction ],
 );
 export const funcMap = new ExpressionFunction(
 	( arg1: ExpressionValue[], arg2: ( v: ExpressionValue, i: number, a: ExpressionValue[] ) => ExpressionValue ) =>

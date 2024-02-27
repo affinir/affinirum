@@ -2,7 +2,7 @@ import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
 	operNullco, operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operAt, operBy, operJoin } from './ExpressionOperator.js';
-import { ExpressionType, typeBoolean, typeNumber, typeString, typeObject, typeFunction, typeVar, typeArray } from './ExpressionType.js';
+import { ExpressionType, typeBoolean, typeNumber, typeString, typeObject, typeFunction, typeVoid, typeVar, typeArray } from './ExpressionType.js';
 
 const symbolParenthesesOpen = Symbol();
 const symbolParenthesesClose = Symbol();
@@ -14,6 +14,9 @@ const symbolAssignment = Symbol();
 const symbolSeparator = Symbol();
 const symbolScope = Symbol();
 const symbolNullable = Symbol();
+const symbolIf = Symbol();
+const symbolThen = Symbol();
+const symbolElse = Symbol();
 
 export class ExpressionState {
 
@@ -101,6 +104,18 @@ export class ExpressionState {
 		return this._obj === symbolNullable;
 	}
 
+	get isIf(): boolean {
+		return this._obj === symbolIf;
+	}
+
+	get isThen(): boolean {
+		return this._obj === symbolThen;
+	}
+
+	get isElse(): boolean {
+		return this._obj === symbolElse;
+	}
+
 	get isFinal(): boolean {
 		return this._endPos >= this._expr.length;
 	}
@@ -178,7 +193,11 @@ export class ExpressionState {
 							case 'array': this._obj = typeArray; break;
 							case 'object': this._obj = typeObject; break;
 							case 'function': this._obj = typeFunction; break;
+							case 'void': this._obj = typeVoid; break;
 							case 'var': this._obj = typeVar; break;
+							case 'if': this._obj = symbolIf; break;
+							case 'then': this._obj = symbolThen; break;
+							case 'else': this._obj = symbolElse; break;
 							default: this._obj = token; break;
 						}
 					}

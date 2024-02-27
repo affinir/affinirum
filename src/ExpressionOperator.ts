@@ -1,6 +1,6 @@
 import { funcNot, funcAnd, funcOr, funcGt, funcLt, funcGe, funcLe, funcEqual, funcNotEqual, funcLike, funcNotLike,
 	funcNullco, funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcPct, funcPow,
-	funcConcat, funcAt, funcJoin, funcBy } from './ExpressionFunction.js';
+	funcConcat, funcAt, funcJoin, funcBy, funcIfThenElse } from './ExpressionFunction.js';
 
 export const operNot = funcNot.clone();
 export const operAnd = funcAnd.clone();
@@ -25,3 +25,4 @@ export const operConcat = funcConcat.clone();
 export const operAt = funcAt.clone();
 export const operBy = funcBy.clone();
 export const operJoin = funcJoin.clone();
+export const operIfThenElse = funcIfThenElse.clone();

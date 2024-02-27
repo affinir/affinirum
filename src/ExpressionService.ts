@@ -1,14 +1,14 @@
 import { ExpressionConstant,
 	constNull, constTrue, constFalse, constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
 import { ExpressionFunction, funcNot, funcAnd, funcOr, funcGt, funcLt, funcGe, funcLe, funcEqual, funcNotEqual, funcLike, funcNotLike,
-	funcSwitch, funcNullco, funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
+	funcIfThenElse, funcNullco, funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
 	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin,
 	funcContains, funcStartsWith, funcEndsWith, funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
-	funcSubstr, funcChar, funcCharCode, funcLen, funcConcat, funcAt, funcFlatten, funcReverse, funcSlice,
-	funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcMap, funcFilter, funcAny, funcEvery,
+	funcSubstr, funcChar, funcCharCode, funcLen, funcConcat, funcAt, funcFlatten, funcReverse, funcSlice, funcRange,
+	funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcIterate, funcMap, funcFilter, funcAny, funcEvery,
 	funcConstruct, funcJoin, funcBy } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike, operNullco,
-	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operJoin, operBy } from './ExpressionOperator.js';
+	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operJoin, operBy, operIfThenElse } from './ExpressionOperator.js';
 import { ExpressionScope } from './ExpressionScope.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { ExpressionType, ExpressionValue, typeVar } from './ExpressionType.js';
@@ -34,7 +34,7 @@ export class ExpressionService {
 		[ 'or', funcOr ], [ 'and', funcAnd ], [ 'not', funcNot ],
 		[ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
 		[ 'equal', funcEqual ], [ 'nequal', funcNotEqual ], [ 'like', funcLike ], [ 'nlike', funcNotLike ],
-		[ 'switch', funcSwitch ], [ 'nullco', funcNullco ],
+		[ 'ifte', funcIfThenElse ], [ 'nullco', funcNullco ],
 		[ 'add', funcAdd ], [ 'sub', funcSub ], [ 'neg', funcNeg ],
 		[ 'mul', funcMul ], [ 'div', funcDiv ], [ 'rem', funcRem ], [ 'mod', funcMod ], [ 'pct', funcPct ],
 		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
@@ -42,9 +42,9 @@ export class ExpressionService {
 		[ 'contains', funcContains ], [ 'startsWith', funcStartsWith ], [ 'endsWith', funcEndsWith ], [ 'alphanum', funcAlphanum ],
 		[ 'trim', funcTrim ], [ 'trimStart', funcTrimStart ], [ 'trimEnd', funcTrimEnd ], [ 'lowerCase', funcLowerCase ], [ 'upperCase', funcUpperCase ],
 		[ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'len', funcLen ],
-		[ 'concat', funcConcat ], [ 'at', funcAt ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ],
+		[ 'concat', funcConcat ], [ 'at', funcAt ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ], [ 'range', funcRange ],
 		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
-		[ 'map', funcMap ], [ 'filter', funcFilter ], [ 'any', funcAny ], [ 'every', funcEvery ],
+		[ 'iterate', funcIterate ], [ 'map', funcMap ], [ 'filter', funcFilter ], [ 'any', funcAny ], [ 'every', funcEvery ],
 		[ 'construct', funcConstruct ], [ 'join', funcJoin ], [ 'by', funcBy ],
 	] );
 	protected _scope = new ExpressionScope();
@@ -322,7 +322,7 @@ export class ExpressionService {
 			const pos = state.pos;
 			let type = state.type;
 			if ( state.next().isNullable ) {
-				type = type.toNullable();
+				type = type.toOptional();
 				state.next();
 			}
 			if ( state.isToken ) {
@@ -344,7 +344,7 @@ export class ExpressionService {
 				}
 				let argType = state.type;
 				if ( state.next().isNullable ) {
-					argType = argType.toNullable();
+					argType = argType.toOptional();
 					state.next();
 				}
 				if ( !state.isToken ) {
@@ -421,6 +421,19 @@ export class ExpressionService {
 		}
 		else if ( state.isBracesClose ) {
 			throw new Error( `unexpected closing braces` );
+		}
+		else if ( state.isIf ) {
+			const pos = state.pos;
+			const cnode = this.disjunction( state.next(), scope );
+			if ( !state.isThen ) {
+				throw new Error( `missing 'then' of conditional statement` );
+			}
+			const tnode = this.disjunction( state.next(), scope );
+			if ( !state.isElse ) {
+				throw new Error( `missing 'else' of conditional statement` );
+			}
+			const enode = this.disjunction( state.next(), scope );
+			return new ExpressionFunctionNode( pos, operIfThenElse, [ cnode, tnode, enode ] );
 		}
 		else if ( state.isFinal ) {
 			throw new Error( `unexpected end of expression` );

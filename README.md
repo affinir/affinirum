@@ -61,7 +61,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Not equals to: neq(var value1, var value2)
 * String similar to: like(string value1, string value2)
 * String not similar to: nlike(string value1, string value2)
-* Conditional switch: switch(boolean condition, var valueIfTrue, var valueIfFalse)
+* If conditional statement: ifc(boolean condition, var valueIfTrue, var valueIfFalse)
 * Null coalescence: nullco(var value, var valueIfNull)
 * Arithmetic addition or string concatination: add(number|string ...values)
 * Arithmetic subtraction: sub(number minuend, number subtrahend)
@@ -95,15 +95,17 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Concatination of values and arrays into an array: concat(array ...values)
 * New array with reverse order of items: reverse(array value)
 * New array flattened to specified depth: flatten(array value, number depth)
-* Slice items into new array: slice(array value, number? beginIndex, number? endIndex)
-* First item found iterator: first(array value, function iterator)
-* Last item found iterator: last(array value, function iterator)
-* First index found iterator: firstIndex(array value, function iterator)
-* Last index found iterator: lastIndex(array value, function iterator)
-* Map items iterator: map(array value, function iterator)
-* Filter items iterator: filter(array value, function iterator)
-* Any item satisfies condition iterator: any(array value, function iterator)
-* Every item satisfies condition iterator: every(array value, function iterator)
+* New array sliced from given array: slice(array value, number? beginIndex, number? endIndex)
+* New array of numbers between given two numbers: range(number inclusiveFrom, number exclusiveTo)
+* Find first item satisfying condition: first(array value, function condition)
+* Find last item satisfying condition: last(array value, function condition)
+* Find first index of item satisfying condition: firstIndex(array value, function condition)
+* Find last index of item satisfying condition: lastIndex(array value, function condition)
+* Iterate items: iterate(array value, function iterator)
+* Map items: map(array value, function transform)
+* Filter items satisfying condition: filter(array value, function condition)
+* Check if any item satisfies condition: any(array value, function condition)
+* Check if every item satisfies condition: every(array value, function condition)
 * Object construction from name-value pairs: construct(array ...values)
 * Object property by name: by(object value, string name)
 * Object join: join(object ...values)
@@ -123,19 +125,22 @@ The expression parsing is performed using the following grammar:
 	<list> = <disjunction>{ ","<disjunction> }
 	<disjunction> = <conjunction>{ "|"<conjunction> }
 	<conjunction> = <comparison>{ "&"<comparison> }
-	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "=" | "==" | "!=" | "~" | "!~" )<aggregate> }
+	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "=" | "!=" | "~" | "!~" )<aggregate> }
 	<aggregate> = <product>{ ( "+" | "-" | "#" | "$" )<product> }
 	<product> = <factor>{ ( "*" | "/" | "%" )<factor> }
 	<factor> = { "-" }<coalescence>{ "^"<coalescence> }
 	<coalescence> = <accessor>{ "?="<accessor> }
 	<accessor> = <term>{ ( "["<disjunction>"]" | "@"<array-index> | "{"<disjunction>"}" |
 		"."( <property-name> | <function-name>"("{ <disjunction> }{ ","<disjunction> }")" ) ) }
-	<term> = <null> |<boolean> | <number> | <string> | <constant-name> | <variable-name> | "("<disjunction>")" |
-		"["{ <disjunction> }{ ","<disjunction> }"]" |
-		"{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}" | 
+	<term> = <null> |<boolean> | <number> | <string> | <constant-name> |
 		<function-name>"("{ <disjunction> }{ ","<disjunction> }")" |
+		<variable-name>{":"<disjunction>} |
 		<type> <variable-name>{ ":"<disjunction> } |
-		<type>"("<type> <argument>{ ","<type> <argument> }")" "=>"<list>
+		<type>"("<type> <argument>{ ","<type> <argument> }")" "=>"<list> |
+		"("<disjunction>")" |
+		"["{ <disjunction> }{ ","<disjunction> }"]" |
+		"{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}" |
+		"if" <condition> "then" <disjunction> "else" <disjunction>
 	<type> = ( "null" | "boolean" | "number" | "string" | "array" | "object" | "function" ){ "?" } | "var"
 
 Whitespace characters are ignored.
