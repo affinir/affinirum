@@ -384,7 +384,7 @@ export const funcBy = new ExpressionFunction(
 		( arg1 as any )[ arg2 ],
 	typeVar, [ typeObject, typeString ],
 );
-export const funcJoin = new ExpressionFunction(
+export const funcMerge = new ExpressionFunction(
 	( ...args: ( { [ key: string ]: ExpressionValue } | { [ key: string ]: ExpressionValue }[] )[] ) =>
 		args.flat( Infinity ).reduce( ( acc, val ) => Object.assign( acc, val ) ),
 	typeObject, [ new ExpressionType( 'object', 'array' ) ], 2, FUNCTION_ARG_MAX,

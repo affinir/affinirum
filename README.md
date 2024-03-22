@@ -4,14 +4,16 @@ Service to parse and evaluate math expressions.
 Compact recursive descent expression parser, and evaluation service 
 for closed-form analytic expressions.
 Service supports boolean expressions, regular algebraic expressions, 
-numeric and string functions and comparsions.
+numeric and string functions, variables, and closures.
 
 Target: ES2022 [browser+NodeJS][ESM+CJS].
 
 ## Why
 
 * Parse once, execute multiple times
-* Efficient expression evaluation and type checking
+* Efficient expression evaluation and basic type checking
+* Support for boolean, number, string, array, object, function, void, variant
+  and nullable types
 * Boolean, arithmetic, string and index operators
 * Numeric and string comparison operators
 * Variadic functions and closures
@@ -48,7 +50,8 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Array concatination: #
 * Object property by literal name: .
 * Object property by string value: {}
-* Object join: $
+* Object merging: $
+* Conditional statement: if ... then ... else ...
 #### Functions
 * Boolean disjunction: or(boolean ...values)
 * Boolean conjunction: and(boolean ...values)
@@ -61,7 +64,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Not equals to: neq(var value1, var value2)
 * String similar to: like(string value1, string value2)
 * String not similar to: nlike(string value1, string value2)
-* If conditional statement: ifc(boolean condition, var valueIfTrue, var valueIfFalse)
+* Conditional statement: ifte(boolean condition, var valueIfTrue, var valueIfFalse)
 * Null coalescence: nullco(var value, var valueIfNull)
 * Arithmetic addition or string concatination: add(number|string ...values)
 * Arithmetic subtraction: sub(number minuend, number subtrahend)
@@ -92,11 +95,11 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Char at position: char(string value, number pos)
 * Char code at position: charCode(string value, number pos)
 * Array element at index: at(array value, number index)
-* Concatination of values and arrays into an array: concat(array ...values)
+* Concatination of arrays and singular values into an array: concat(array ...values)
 * New array with reverse order of items: reverse(array value)
 * New array flattened to specified depth: flatten(array value, number depth)
 * New array sliced from given array: slice(array value, number? beginIndex, number? endIndex)
-* New array of numbers between given two numbers: range(number inclusiveFrom, number exclusiveTo)
+* New array filled with numbers in between given two numbers: range(number inclusiveFrom, number exclusiveTo)
 * Find first item satisfying condition: first(array value, function condition)
 * Find last item satisfying condition: last(array value, function condition)
 * Find first index of item satisfying condition: firstIndex(array value, function condition)
@@ -108,7 +111,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Check if every item satisfies condition: every(array value, function condition)
 * Object construction from name-value pairs: construct(array ...values)
 * Object property by name: by(object value, string name)
-* Object join: join(object ...values)
+* Object merging: merge(object ...values)
 #### Constants
 * null
 * true
@@ -132,16 +135,15 @@ The expression parsing is performed using the following grammar:
 	<coalescence> = <accessor>{ "?="<accessor> }
 	<accessor> = <term>{ ( "["<disjunction>"]" | "@"<array-index> | "{"<disjunction>"}" |
 		"."( <property-name> | <function-name>"("{ <disjunction> }{ ","<disjunction> }")" ) ) }
-	<term> = <null> |<boolean> | <number> | <string> | <constant-name> |
+	<term> = <number> | <string> | <constant-name> |
 		<function-name>"("{ <disjunction> }{ ","<disjunction> }")" |
-		<variable-name>{":"<disjunction>} |
-		<type> <variable-name>{ ":"<disjunction> } |
+		{ <type> } <variable-name>{ ":"<disjunction> } |
 		<type>"("<type> <argument>{ ","<type> <argument> }")" "=>"<list> |
 		"("<disjunction>")" |
 		"["{ <disjunction> }{ ","<disjunction> }"]" |
 		"{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}" |
 		"if" <condition> "then" <disjunction> "else" <disjunction>
-	<type> = ( "null" | "boolean" | "number" | "string" | "array" | "object" | "function" ){ "?" } | "var"
+	<type> = ( "void" | "boolean" | "number" | "string" | "array" | "object" | "function" ){ "?" } | "var"
 
 Whitespace characters are ignored.
 

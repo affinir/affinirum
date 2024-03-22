@@ -6,9 +6,9 @@ import { ExpressionFunction, funcNot, funcAnd, funcOr, funcGt, funcLt, funcGe, f
 	funcContains, funcStartsWith, funcEndsWith, funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
 	funcSubstr, funcChar, funcCharCode, funcLen, funcConcat, funcAt, funcFlatten, funcReverse, funcSlice, funcRange,
 	funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcIterate, funcMap, funcFilter, funcAny, funcEvery,
-	funcConstruct, funcJoin, funcBy } from './ExpressionFunction.js';
+	funcConstruct, funcMerge, funcBy } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike, operNullco,
-	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operJoin, operBy, operIfThenElse } from './ExpressionOperator.js';
+	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operMerge, operBy, operIfThenElse } from './ExpressionOperator.js';
 import { ExpressionScope } from './ExpressionScope.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { ExpressionType, ExpressionValue, typeVar } from './ExpressionType.js';
@@ -45,7 +45,7 @@ export class ExpressionService {
 		[ 'concat', funcConcat ], [ 'at', funcAt ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ], [ 'range', funcRange ],
 		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
 		[ 'iterate', funcIterate ], [ 'map', funcMap ], [ 'filter', funcFilter ], [ 'any', funcAny ], [ 'every', funcEvery ],
-		[ 'construct', funcConstruct ], [ 'join', funcJoin ], [ 'by', funcBy ],
+		[ 'construct', funcConstruct ], [ 'merge', funcMerge ], [ 'by', funcBy ],
 	] );
 	protected _scope = new ExpressionScope();
 
@@ -195,7 +195,7 @@ export class ExpressionService {
 
 	protected aggregate( state: ExpressionState, scope: ExpressionScope ): ExpressionNode {
 		let node = this.product( state, scope );
-		while ( state.operator === operAdd || state.operator === operSub || state.operator === operConcat || state.operator === operJoin ) {
+		while ( state.operator === operAdd || state.operator === operSub || state.operator === operConcat || state.operator === operMerge ) {
 			node = new ExpressionFunctionNode( state.pos, state.operator,
 				[ node, this.product( state.next(), scope ) ] );
 		}

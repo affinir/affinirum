@@ -1,6 +1,6 @@
 {
 	"name": "expression-service",
-	"version": "2.3.5",
+	"version": "2.3.6",
 	"description": "Expression Service",
 	"main": "dst/cjs/index.js",
 	"module": "dst/index.js",

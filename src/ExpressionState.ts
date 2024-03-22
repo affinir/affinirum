@@ -1,7 +1,7 @@
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
-	operNullco, operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operAt, operBy, operJoin } from './ExpressionOperator.js';
+	operNullco, operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operAt, operBy, operMerge } from './ExpressionOperator.js';
 import { ExpressionType, typeBoolean, typeNumber, typeString, typeObject, typeFunction, typeVoid, typeVar, typeArray } from './ExpressionType.js';
 
 const symbolParenthesesOpen = Symbol();
@@ -178,7 +178,7 @@ export class ExpressionState {
 				case '^': this._obj = operPow; break;
 				case '#': this._obj = operConcat; break;
 				case '@': this._obj = operAt; break;
-				case '$': this._obj = operJoin; break;
+				case '$': this._obj = operMerge; break;
 				case '.': this._obj = operBy; break;
 				default:
 					if ( ExpressionState.isAlpha( c ) ) {
