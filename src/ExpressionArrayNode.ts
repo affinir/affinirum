@@ -7,23 +7,23 @@ export class ExpressionArrayNode extends ExpressionNode {
 		_pos: number,
 		protected _subnodes: ExpressionNode[],
 	) {
-		super( _pos );
+		super(_pos);
 	}
 
 	get type(): ExpressionType {
 		return typeArray;
 	}
 
-	compile( type: ExpressionType ): ExpressionNode {
-		if ( !typeArray.infer( type ) ) {
-			this.throwTypeError( type );
+	compile(type: ExpressionType): ExpressionNode {
+		if (!typeArray.infer(type)) {
+			this.throwTypeError(type);
 		}
-		this._subnodes = this._subnodes.map( s => s.compile( typeVar ) );
+		this._subnodes = this._subnodes.map((s)=> s.compile(typeVar));
 		return this;
 	}
 
 	evaluate(): ExpressionValue {
-		return this._subnodes.map( s => s.evaluate() );
+		return this._subnodes.map((s)=> s.evaluate());
 	}
 
 }

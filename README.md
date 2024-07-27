@@ -38,7 +38,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Not equals to: !=
 * String similar to: \~
 * String not similar: !\~
-* Null coalescence: ?=
+* Null coalescence: ?:
 * Arithmetic addition or string concatination: +
 * Arithmetic subtraction: -
 * Arithmetic negation: -
@@ -51,6 +51,9 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Object property by literal name: .
 * Object property by string value: {}
 * Object merging: $
+* Assignment: :
+* Grouping: (...)
+* Next statement: ,
 * Conditional statement: if ... then ... else ...
 #### Functions
 * Boolean disjunction: or(boolean ...values)

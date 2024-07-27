@@ -11,7 +11,7 @@ export class ExpressionVariable {
 		return this._value!;
 	}
 
-	set value( value: ExpressionValue | undefined ) {
+	set value(value: ExpressionValue | undefined) {
 		this._value = value;
 	}
 
@@ -19,7 +19,7 @@ export class ExpressionVariable {
 		return this._type;
 	}
 
-	set type( type: ExpressionType ) {
+	set type(type: ExpressionType) {
 		this._type = type;
 	}
 

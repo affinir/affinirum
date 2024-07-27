@@ -10,25 +10,25 @@ export class ExpressionClosureNode extends ExpressionNode {
 		protected _variables: ExpressionVariable[],
 		protected _subnodes: ExpressionNode[],
 	) {
-		super( _pos );
+		super(_pos);
 	}
 
 	get type(): ExpressionType {
 		return typeFunction;
 	}
 
-	compile( type: ExpressionType ): ExpressionNode {
-		if ( !typeFunction.infer( type ) ) {
-			this.throwTypeError( type );
+	compile(type: ExpressionType): ExpressionNode {
+		if (!typeFunction.infer(type)) {
+			this.throwTypeError(type);
 		}
-		this._subnodes = ExpressionNode.compileList( this._subnodes, this._type );
+		this._subnodes = ExpressionNode.compileList(this._subnodes, this._type);
 		return this;
 	}
 
 	evaluate(): ExpressionValue {
-		return ( ...values: ExpressionValue[] ) => {
-			this._variables.forEach( ( arg, ix ) => arg.value = values[ ix ] );
-			return this._subnodes.map( s => s.evaluate() )[ this._subnodes.length - 1 ];
+		return (...values: ExpressionValue[])=> {
+			this._variables.forEach((arg, ix)=> arg.value = values[ ix ]);
+			return this._subnodes.map((s)=> s.evaluate())[ this._subnodes.length - 1 ];
 		};
 	}
 

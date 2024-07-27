@@ -9,18 +9,18 @@ export class ExpressionVariableNode extends ExpressionNode {
 		protected _variable: ExpressionVariable,
 		protected _subnode?: ExpressionNode,
 	) {
-		super( _pos );
+		super(_pos);
 	}
 
 	get type(): ExpressionType {
 		return this._variable.type;
 	}
 
-	compile( type: ExpressionType ): ExpressionNode {
-		this._subnode = this._subnode?.compile( type );
-		const inferredType = this._variable.type.infer( this._subnode?.type ?? type );
-		if ( !inferredType ) {
-			this.throwTypeError( type );
+	compile(type: ExpressionType): ExpressionNode {
+		this._subnode = this._subnode?.compile(type);
+		const inferredType = this._variable.type.infer(this._subnode?.type ?? type);
+		if (!inferredType) {
+			this.throwTypeError(type);
 		}
 		this._variable.type = inferredType;
 		return this;

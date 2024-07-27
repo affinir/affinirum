@@ -8,16 +8,16 @@ export class ExpressionConstantNode extends ExpressionNode {
 		_pos: number,
 		protected _constant: ExpressionConstant,
 	) {
-		super( _pos );
+		super(_pos);
 	}
 
 	get type(): ExpressionType {
 		return this._constant.type;
 	}
 
-	compile( type: ExpressionType ): ExpressionNode {
-		if ( !type.infer( this.type ) ) {
-			this.throwTypeError( type );
+	compile(type: ExpressionType): ExpressionNode {
+		if (!type.infer(this.type)) {
+			this.throwTypeError(type);
 		}
 		return this;
 	}

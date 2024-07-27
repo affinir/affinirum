@@ -13,7 +13,7 @@ export class ExpressionFunctionNode extends ExpressionNode {
 		protected _function: ExpressionFunction,
 		protected _subnodes: ExpressionNode[],
 	) {
-		super( _pos );
+		super(_pos);
 		this._type = _function.type;
 	}
 
@@ -21,31 +21,31 @@ export class ExpressionFunctionNode extends ExpressionNode {
 		return this._type;
 	}
 
-	compile( type: ExpressionType ): ExpressionNode {
-		const inferredType = this._function.type.infer( type );
-		if ( !inferredType ) {
-			this.throwTypeError( type );
+	compile(type: ExpressionType): ExpressionNode {
+		const inferredType = this._function.type.infer(type);
+		if (!inferredType) {
+			this.throwTypeError(type);
 		}
 		this._type = inferredType;
 		let constant = true;
-		for ( let i = 0; i < this._subnodes.length; ++i ) {
-			const argType = this._function.argTypes[ i ] ?? this._function.argTypes.slice( -1 )[ 0 ];
-			const inferredArgType = argType.infer( inferredType, this._function.typeInference( i ) );
-			if ( !inferredArgType ) {
-				this.throwTypeError( type );
+		for (let i = 0; i < this._subnodes.length; ++i) {
+			const argType = this._function.argTypes[ i ] ?? this._function.argTypes.slice(-1)[ 0 ];
+			const inferredArgType = argType.infer(inferredType, this._function.typeInference(i));
+			if (!inferredArgType) {
+				this.throwTypeError(type);
 			}
-			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile( inferredArgType );
-			constant &&= ( subnode instanceof ExpressionConstantNode && !subnode.type.isFunction );
+			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile(inferredArgType);
+			constant &&=  subnode instanceof ExpressionConstantNode && !subnode.type.isFunction ;
 		}
-		if ( constant ) {
-			return new ExpressionConstantNode( this._pos,
-				new ExpressionConstant( this._function.evaluate( ...this._subnodes.map( node => node.evaluate() ) ) ) );
+		if (constant) {
+			return new ExpressionConstantNode(this._pos,
+				new ExpressionConstant(this._function.evaluate(...this._subnodes.map((node)=> node.evaluate()))));
 		}
 		return this;
 	}
 
 	evaluate(): ExpressionValue {
-		return this._function.evaluate( ...this._subnodes.map( node => node.evaluate() ) );
+		return this._function.evaluate(...this._subnodes.map((node)=> node.evaluate()));
 	}
 
 }

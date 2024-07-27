@@ -1,6 +1,6 @@
 {
 	"name": "expression-service",
-	"version": "2.3.6",
+	"version": "2.4.0",
 	"description": "Expression Service",
 	"main": "dst/cjs/index.js",
 	"module": "dst/index.js",
@@ -24,13 +24,14 @@
 		"compiler"
 	],
 	"scripts": {
-		"lint": "eslint ./src --ext .ts",
-		"lintfix": "eslint ./src --ext .ts --fix",
-		"prebuild": "rimraf --glob dst/* && rimraf --glob *.tgz",
-		"build": "tsc --build tsconfig-esm.json && tsc --build tsconfig-cjs.json",
-		"prepare": "npm run build && copyfiles ./cjs/package.json ./dst",
-		"pretest": "npm run prebuild && tsc --build tsconfig-test.json",
-		"test": "cd dst && node test"
+		"clean": "rimraf --glob dst/* && rimraf --glob *.tgz",
+		"prebuild": "npm run clean",
+		"build": "tsc --build tsconfig.esm.json && tsc --build tsconfig.cjs.json",
+		"pretest": "npm run clean && tsc --build tsconfig.spec.json",
+		"test": "jasmine",
+		"lint": "eslint ./src ./spec",
+		"lint-fix": "eslint ./src ./spec --fix",
+		"prepare": "npm run build && copyfiles ./cjs/package.json ./dst"
 	},
 	"license": "MIT",
 	"repository": {
@@ -45,11 +46,14 @@
 	},
 	"dependencies": {},
 	"devDependencies": {
-		"@typescript-eslint/parser": "~7.0.2",
-		"@typescript-eslint/eslint-plugin": "~7.0.2",
+		"@types/jasmine": "~5.1.4",
+		"@typescript-eslint/eslint-plugin": "~7.17.0",
+		"@typescript-eslint/parser": "~7.17.0",
 		"copyfiles": "~2.4.1",
 		"eslint": "~8.57.0",
-		"rimraf": "~5.0.5",
-		"typescript": "~5.3.3"
+		"jasmine": "~5.2.0",
+		"rimraf": "~6.0.1",
+		"typescript": "~5.5.4",
+		"typescript-eslint": "^7.17.0"
 	}
 }

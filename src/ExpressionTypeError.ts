@@ -7,7 +7,7 @@ export class ExpressionTypeError extends TypeError {
 		protected _nodeType: ExpressionType,
 		protected _mismatchType: ExpressionType,
 	) {
-		super( `type mismatch error` );
+		super(`type mismatch error`);
 	}
 
 	get pos(): number {

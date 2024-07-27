@@ -122,113 +122,113 @@ export class ExpressionState {
 
 	next(): ExpressionState {
 		this._obj = undefined;
-		while ( this._endPos < this._expr.length && this._obj == null ) {
+		while (this._endPos < this._expr.length && this._obj == null) {
 			this._startPos = this._endPos;
-			const c = this._expr.charAt( this._endPos );
+			const c = this._expr.charAt(this._endPos);
 			++this._endPos;
-			switch ( c ) {
-				case ' ': case '\t': case '\n': case '\r': break;
-				case '(': this._obj = symbolParenthesesOpen; break;
-				case ')': this._obj = symbolParenthesesClose; break;
-				case '[': this._obj = symbolBracketsOpen; break;
-				case ']': this._obj = symbolBracketsClose; break;
-				case '{': this._obj = symbolBracesOpen; break;
-				case '}': this._obj = symbolBracesClose; break;
-				case ':': this._obj = symbolAssignment; break;
-				case ',': this._obj = symbolSeparator; break;
-				case '?':
-					switch ( this._expr.charAt( this._endPos ) ) {
-						case '=': ++this._endPos; this._obj = operNullco; break;
-						default: this._obj = symbolOption; break;
+			switch (c) {
+			case ' ': case '\t': case '\n': case '\r': break;
+			case '(': this._obj = symbolParenthesesOpen; break;
+			case ')': this._obj = symbolParenthesesClose; break;
+			case '[': this._obj = symbolBracketsOpen; break;
+			case ']': this._obj = symbolBracketsClose; break;
+			case '{': this._obj = symbolBracesOpen; break;
+			case '}': this._obj = symbolBracesClose; break;
+			case ':': this._obj = symbolAssignment; break;
+			case ',': this._obj = symbolSeparator; break;
+			case '?':
+				switch (this._expr.charAt(this._endPos)) {
+				case ':': ++this._endPos; this._obj = operNullco; break;
+				default: this._obj = symbolOption; break;
+				}
+				break;
+			case '|': this._obj = operOr; break;
+			case '&': this._obj = operAnd; break;
+			case '>':
+				switch (this._expr.charAt(this._endPos)) {
+				case '=': ++this._endPos; this._obj = operGe; break;
+				default: this._obj = operGt; break;
+				}
+				break;
+			case '<':
+				switch (this._expr.charAt(this._endPos)) {
+				case '=': ++this._endPos; this._obj = operLe; break;
+				default: this._obj = operLt; break;
+				}
+				break;
+			case '!':
+				switch (this._expr.charAt(this._endPos)) {
+				case '=': ++this._endPos; this._obj = operNotEqual; break;
+				case '~': ++this._endPos; this._obj = operNotLike; break;
+				default: this._obj = operNot; break;
+				}
+				break;
+			case '=':
+				switch (this._expr.charAt(this._endPos)) {
+				case '>': ++this._endPos; this._obj = symbolScope; break;
+				default: this._obj = operEqual; break;
+				}
+				break;
+			case '~': this._obj = operLike; break;
+			case '+': this._obj = operAdd; break;
+			case '-': this._obj = operSub; break;
+			case '*': this._obj = operMul; break;
+			case '/': this._obj = operDiv; break;
+			case '%': this._obj = operPct; break;
+			case '^': this._obj = operPow; break;
+			case '#': this._obj = operConcat; break;
+			case '@': this._obj = operAt; break;
+			case '$': this._obj = operMerge; break;
+			case '.': this._obj = operBy; break;
+			default:
+				if (ExpressionState.isAlpha(c)) {
+					while (ExpressionState.isAlphanumeric(this._expr.charAt(this._endPos))) {
+						++this._endPos;
 					}
-					break;
-				case '|': this._obj = operOr; break;
-				case '&': this._obj = operAnd; break;
-				case '>':
-					switch ( this._expr.charAt( this._endPos ) ) {
-						case '=': ++this._endPos; this._obj = operGe; break;
-						default: this._obj = operGt; break;
+					const token = this._expr.substring(this._startPos, this._endPos);
+					switch (token) {
+					case 'boolean': this._obj = typeBoolean; break;
+					case 'number': this._obj = typeNumber; break;
+					case 'string': this._obj = typeString; break;
+					case 'array': this._obj = typeArray; break;
+					case 'object': this._obj = typeObject; break;
+					case 'function': this._obj = typeFunction; break;
+					case 'void': this._obj = typeVoid; break;
+					case 'var': this._obj = typeVar; break;
+					case 'if': this._obj = symbolIf; break;
+					case 'then': this._obj = symbolThen; break;
+					case 'else': this._obj = symbolElse; break;
+					default: this._obj = token; break;
 					}
-					break;
-				case '<':
-					switch ( this._expr.charAt( this._endPos ) ) {
-						case '=': ++this._endPos; this._obj = operLe; break;
-						default: this._obj = operLt; break;
+				}
+				else if (ExpressionState.isNumeric(c)) {
+					while (ExpressionState.isDecinumeric(this._expr.charAt(this._endPos))) {
+						++this._endPos;
 					}
-					break;
-				case '!':
-					switch ( this._expr.charAt( this._endPos ) ) {
-						case '=': ++this._endPos; this._obj = operNotEqual; break;
-						case '~': ++this._endPos; this._obj = operNotLike; break;
-						default: this._obj = operNot; break;
+					this._obj = new ExpressionConstant(parseFloat(this._expr.substring(this._startPos, this._endPos)));
+				}
+				else if (ExpressionState.isQuotation(c)) {
+					while (this._expr.charAt(this._endPos) !== '' && this._expr.charAt(this._endPos) !== c) {
+						++this._endPos;
 					}
-					break;
-				case '=':
-					switch ( this._expr.charAt( this._endPos ) ) {
-						case '>': ++this._endPos; this._obj = symbolScope; break;
-						default: this._obj = operEqual; break;
-					}
-					break;
-				case '~': this._obj = operLike; break;
-				case '+': this._obj = operAdd; break;
-				case '-': this._obj = operSub; break;
-				case '*': this._obj = operMul; break;
-				case '/': this._obj = operDiv; break;
-				case '%': this._obj = operPct; break;
-				case '^': this._obj = operPow; break;
-				case '#': this._obj = operConcat; break;
-				case '@': this._obj = operAt; break;
-				case '$': this._obj = operMerge; break;
-				case '.': this._obj = operBy; break;
-				default:
-					if ( ExpressionState.isAlpha( c ) ) {
-						while ( ExpressionState.isAlphanumeric( this._expr.charAt( this._endPos ) ) ) {
-							++this._endPos;
-						}
-						const token = this._expr.substring( this._startPos, this._endPos );
-						switch ( token ) {
-							case 'boolean': this._obj = typeBoolean; break;
-							case 'number': this._obj = typeNumber; break;
-							case 'string': this._obj = typeString; break;
-							case 'array': this._obj = typeArray; break;
-							case 'object': this._obj = typeObject; break;
-							case 'function': this._obj = typeFunction; break;
-							case 'void': this._obj = typeVoid; break;
-							case 'var': this._obj = typeVar; break;
-							case 'if': this._obj = symbolIf; break;
-							case 'then': this._obj = symbolThen; break;
-							case 'else': this._obj = symbolElse; break;
-							default: this._obj = token; break;
-						}
-					}
-					else if ( ExpressionState.isNumeric( c ) ) {
-						while ( ExpressionState.isDecinumeric( this._expr.charAt( this._endPos ) ) ) {
-							++this._endPos;
-						}
-						this._obj = new ExpressionConstant( parseFloat( this._expr.substring( this._startPos, this._endPos ) ) );
-					}
-					else if ( ExpressionState.isQuotation( c ) ) {
-						while ( this._expr.charAt( this._endPos ) !== '' && this._expr.charAt( this._endPos ) !== c ) {
-							++this._endPos;
-						}
-						this._obj = new ExpressionConstant( this._expr.substring( this._startPos + 1, this._endPos++ ) );
-					}
-					else {
-						throw new Error( `unknown symbol ${ c }` );
-					}
-					break;
+					this._obj = new ExpressionConstant(this._expr.substring(this._startPos + 1, this._endPos++));
+				}
+				else {
+					throw new Error(`unknown symbol ${c}`);
+				}
+				break;
 			}
 		}
-		if ( this._endPos > this._expr.length ) {
-			throw new Error( `unexpected end of expression while parsing value` );
+		if (this._endPos > this._expr.length) {
+			throw new Error(`unexpected end of expression while parsing value`);
 		}
 		return this;
 	}
 
-	static isAlpha = ( c: string ) => ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) || ( c === '_' );
-	static isNumeric = ( c: string ) => ( c >= '0' && c <= '9' );
-	static isAlphanumeric = ( c: string ) => ExpressionState.isAlpha( c ) || ExpressionState.isNumeric( c );
-	static isDecinumeric = ( c: string ) => ( c === '.' ) || ExpressionState.isNumeric( c );
-	static isQuotation = ( c: string ) => ( c === '\'' || c === '\"' || c === '\`' );
+	static isAlpha = (c: string)=>  c >= 'a' && c <= 'z'  ||  c >= 'A' && c <= 'Z'  ||  c === '_' ;
+	static isNumeric = (c: string)=>  c >= '0' && c <= '9' ;
+	static isAlphanumeric = (c: string)=> ExpressionState.isAlpha(c) || ExpressionState.isNumeric(c);
+	static isDecinumeric = (c: string)=>  c === '.'  || ExpressionState.isNumeric(c);
+	static isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
 
 }
