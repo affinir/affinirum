@@ -113,14 +113,14 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Object property by name: by(object value, string name)
 * Object merging: merge(object ...values)
 #### Constants
-* null
-* true
-* false
-* NaN
-* PosInf
-* NegInf
-* Epsilon
-* Pi
+* **null**
+* **true**
+* **false**
+* **NaN**
+* **PosInf**
+* **NegInf**
+* **Epsilon**
+* **Pi**
 
 ### Grammar
 The expression parsing is performed using the following grammar:
