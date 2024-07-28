@@ -1,27 +1,27 @@
-import { ExpressionNode } from './ExpressionNode.js';
+import { Node } from './Node.js';
 import { ExpressionConstantNode } from './ExpressionConstantNode.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
-import { ExpressionType, ExpressionValue } from './ExpressionType.js';
+import { Type, Value } from './Type.js';
 
-export class ExpressionFunctionNode extends ExpressionNode {
+export class ExpressionFunctionNode extends Node {
 
-	protected _type: ExpressionType;
+	protected _type: Type;
 
 	constructor(
 		_pos: number,
 		protected _function: ExpressionFunction,
-		protected _subnodes: ExpressionNode[],
+		protected _subnodes: Node[],
 	) {
 		super(_pos);
 		this._type = _function.type;
 	}
 
-	get type(): ExpressionType {
+	get type(): Type {
 		return this._type;
 	}
 
-	compile(type: ExpressionType): ExpressionNode {
+	compile(type: Type): Node {
 		const inferredType = this._function.type.infer(type);
 		if (!inferredType) {
 			this.throwTypeError(type);
@@ -44,7 +44,7 @@ export class ExpressionFunctionNode extends ExpressionNode {
 		return this;
 	}
 
-	evaluate(): ExpressionValue {
+	evaluate(): Value {
 		return this._function.evaluate(...this._subnodes.map((node)=> node.evaluate()));
 	}
 

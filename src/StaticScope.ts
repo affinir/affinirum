@@ -1,9 +1,9 @@
 import { ExpressionVariable } from './ExpressionVariable.js';
 
-export class ExpressionScope {
+export class StaticScope {
 
-	protected _superscope: ExpressionScope | undefined = undefined;
-	protected _subscopes: ExpressionScope[] = [];
+	protected _superscope: StaticScope | undefined = undefined;
+	protected _subscopes: StaticScope[] = [];
 	protected _variables = new Map<string, ExpressionVariable>();
 	protected _definitions = new Set<string>();
 
@@ -15,19 +15,19 @@ export class ExpressionScope {
 		return this._variables.get(name) ?? this._superscope?.get(name);
 	}
 
-	set(name: string, variable: ExpressionVariable): ExpressionScope {
+	set(name: string, variable: ExpressionVariable): StaticScope {
 		this._variables.set(name, variable);
 		return this;
 	}
 
-	define(name: string, variable: ExpressionVariable): ExpressionScope {
+	define(name: string, variable: ExpressionVariable): StaticScope {
 		this._variables.set(name, variable);
 		this._definitions.add(name);
 		return this;
 	}
 
-	subscope(variables: Map<string, ExpressionVariable>): ExpressionScope {
-		const scope = new ExpressionScope();
+	subscope(variables: Map<string, ExpressionVariable>): StaticScope {
+		const scope = new StaticScope();
 		scope._superscope = this;
 		this._subscopes.push(scope);
 		for (const [ name, variable ] of variables) {

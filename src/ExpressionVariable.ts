@@ -1,25 +1,25 @@
-import { ExpressionType, ExpressionValue, typeVar } from './ExpressionType.js';
+import { Type, Value, typeVariant } from './Type.js';
 
 export class ExpressionVariable {
 
 	constructor(
-		protected _value: ExpressionValue | undefined = undefined,
-		protected _type: ExpressionType = typeVar,
+		protected _value: Value | undefined = undefined,
+		protected _type: Type = typeVariant,
 	) {}
 
-	get value(): ExpressionValue | undefined {
+	get value(): Value | undefined {
 		return this._value!;
 	}
 
-	set value(value: ExpressionValue | undefined) {
+	set value(value: Value | undefined) {
 		this._value = value;
 	}
 
-	get type(): ExpressionType {
+	get type(): Type {
 		return this._type;
 	}
 
-	set type(type: ExpressionType) {
+	set type(type: Type) {
 		this._type = type;
 	}
 

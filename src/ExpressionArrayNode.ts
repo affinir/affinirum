@@ -1,28 +1,28 @@
-import { ExpressionNode } from './ExpressionNode.js';
-import { ExpressionType, ExpressionValue, typeArray, typeVar } from './ExpressionType.js';
+import { Node } from './Node.js';
+import { Type, Value, typeArray, typeVariant } from './Type.js';
 
-export class ExpressionArrayNode extends ExpressionNode {
+export class ExpressionArrayNode extends Node {
 
 	constructor(
 		_pos: number,
-		protected _subnodes: ExpressionNode[],
+		protected _subnodes: Node[],
 	) {
 		super(_pos);
 	}
 
-	get type(): ExpressionType {
+	get type(): Type {
 		return typeArray;
 	}
 
-	compile(type: ExpressionType): ExpressionNode {
+	compile(type: Type): Node {
 		if (!typeArray.infer(type)) {
 			this.throwTypeError(type);
 		}
-		this._subnodes = this._subnodes.map((s)=> s.compile(typeVar));
+		this._subnodes = this._subnodes.map((s)=> s.compile(typeVariant));
 		return this;
 	}
 
-	evaluate(): ExpressionValue {
+	evaluate(): Value {
 		return this._subnodes.map((s)=> s.evaluate());
 	}
 

@@ -1,15 +1,15 @@
-import { ExpressionType, ExpressionValue,
+import { Type, Value,
 	typeBoolean, typeNumber, typeString, typeArray, typeObject, typeFunction,
-	typeOptionalBoolean, typeOptionalNumber, typeVar, typeVoid } from './ExpressionType.js';
+	typeOptionalBoolean, typeOptionalNumber, typeVariant, typeVoid } from './Type.js';
 
 const FUNCTION_ARG_MAX = 16536;
 
 export class ExpressionFunction {
 
 	constructor(
-		protected _function: (...values: any[])=> ExpressionValue,
-		protected _type: ExpressionType,
-		protected _argTypes: ExpressionType[],
+		protected _function: (...values: any[])=> Value,
+		protected _type: Type,
+		protected _argTypes: Type[],
 		protected _minArity?: number,
 		protected _maxArity?: number,
 		protected _typeInference?: (index: number, type: string, mask: string)=> boolean
@@ -19,7 +19,7 @@ export class ExpressionFunction {
 		return new ExpressionFunction(this._function, this._type, this._argTypes, this._minArity, this._maxArity, this._typeInference);
 	}
 
-	get evaluate(): (...values: any[])=> ExpressionValue {
+	get evaluate(): (...values: any[])=> Value {
 		return this._function;
 	}
 
@@ -31,11 +31,11 @@ export class ExpressionFunction {
 		return this._maxArity ?? this._argTypes.length;
 	}
 
-	get argTypes(): ExpressionType[] {
+	get argTypes(): Type[] {
 		return this._argTypes;
 	}
 
-	get type(): ExpressionType {
+	get type(): Type {
 		return this._type;
 	}
 
@@ -53,12 +53,12 @@ export const funcNot = new ExpressionFunction(
 export const funcAnd = new ExpressionFunction(
 	(...args: (boolean | boolean[])[])=>
 		args.flat().every((v)=> v),
-	typeBoolean, [ new ExpressionType('boolean', 'array') ], 2, FUNCTION_ARG_MAX,
+	typeBoolean, [ new Type('boolean', 'array') ], 2, FUNCTION_ARG_MAX,
 );
 export const funcOr = new ExpressionFunction(
 	(...args: (boolean | boolean[])[])=>
 		args.flat().some((v)=> v),
-	typeBoolean, [ new ExpressionType('boolean', 'array') ], 2, FUNCTION_ARG_MAX,
+	typeBoolean, [ new Type('boolean', 'array') ], 2, FUNCTION_ARG_MAX,
 );
 export const funcGt = new ExpressionFunction(
 	(arg1: number, arg2: number)=>
@@ -81,41 +81,41 @@ export const funcLe = new ExpressionFunction(
 	typeBoolean, [ typeNumber, typeNumber ],
 );
 export const funcEqual = new ExpressionFunction(
-	(arg1: ExpressionValue, arg2: ExpressionValue)=>
-		ExpressionType.equal(arg1, arg2),
-	typeBoolean, [ typeVar, typeVar ],
+	(arg1: Value, arg2: Value)=>
+		equal(arg1, arg2),
+	typeBoolean, [ typeVariant, typeVariant ],
 );
 export const funcNotEqual = new ExpressionFunction(
-	(arg1: ExpressionValue, arg2: ExpressionValue)=>
-		!ExpressionType.equal(arg1, arg2),
-	typeBoolean, [ typeVar, typeVar ],
+	(arg1: Value, arg2: Value)=>
+		!equal(arg1, arg2),
+	typeBoolean, [ typeVariant, typeVariant ],
 );
 export const funcLike = new ExpressionFunction(
 	(arg1: string, arg2: string)=>
-		ExpressionType.equalStrings(arg1, arg2, true),
+		equalStrings(arg1, arg2, true),
 	typeBoolean, [ typeString, typeString ],
 );
 export const funcNotLike = new ExpressionFunction(
 	(arg1: string, arg2: string)=>
-		!ExpressionType.equalStrings(arg1, arg2, true),
+		!equalStrings(arg1, arg2, true),
 	typeBoolean, [ typeString, typeString ],
 );
 export const funcIfThenElse = new ExpressionFunction(
-	(arg1: boolean, arg2: ExpressionValue, arg3: ExpressionValue)=>
+	(arg1: boolean, arg2: Value, arg3: Value)=>
 		arg1 ? arg2 : arg3,
-	typeVar, [ typeBoolean, typeVar, typeVar ], undefined, undefined,
+	typeVariant, [ typeBoolean, typeVariant, typeVariant ], undefined, undefined,
 	(index, vtype, vmask)=> index === 0 || vtype === vmask
 );
 export const funcNullco = new ExpressionFunction(
-	(arg1: ExpressionValue, arg2: ExpressionValue)=>
+	(arg1: Value, arg2: Value)=>
 		arg1 ?? arg2,
-	typeVar, [ typeVar, typeVar ], undefined, undefined,
+	typeVariant, [ typeVariant, typeVariant ], undefined, undefined,
 	(index, vtype, vmask)=> vtype === vmask
 );
 export const funcAdd = new ExpressionFunction(
 	(...args: (number | number[] | string | string[])[])=>
 		(args.flat(Infinity) as number[] | string[]).reduce((acc: any, val: any)=> acc + val),
-	new ExpressionType('number', 'string'), [ new ExpressionType('number', 'string', 'array') ], 1, FUNCTION_ARG_MAX,
+	new Type('number', 'string'), [ new Type('number', 'string', 'array') ], 1, FUNCTION_ARG_MAX,
 	(index, vtype, vmask)=> vtype === 'array' || vtype === vmask
 );
 export const funcSub = new ExpressionFunction(
@@ -131,7 +131,7 @@ export const funcNeg = new ExpressionFunction(
 export const funcMul = new ExpressionFunction(
 	(...args: (number | number[])[])=>
 		args.flat(Infinity).reduce((acc: any, val: any)=>  acc *= val),
-	typeNumber,	[ new ExpressionType('number', 'array') ], 1, FUNCTION_ARG_MAX,
+	typeNumber,	[ new Type('number', 'array') ], 1, FUNCTION_ARG_MAX,
 );
 export const funcDiv = new ExpressionFunction(
 	(arg1: number, arg2: number)=>
@@ -206,26 +206,26 @@ export const funcRound = new ExpressionFunction(
 export const funcMax = new ExpressionFunction(
 	(...args: (number | number[])[])=>
 		Math.max(...args.flat()),
-	typeNumber, [ new ExpressionType('number', 'array') ], 1, FUNCTION_ARG_MAX,
+	typeNumber, [ new Type('number', 'array') ], 1, FUNCTION_ARG_MAX,
 );
 export const funcMin = new ExpressionFunction(
 	(...args: (number | number[])[])=>
 		Math.min(...args.flat()),
-	typeNumber, [ new ExpressionType('number', 'array') ], 1, FUNCTION_ARG_MAX,
+	typeNumber, [ new Type('number', 'array') ], 1, FUNCTION_ARG_MAX,
 );
 export const funcContains = new ExpressionFunction(
 	(arg1: string, arg2: string, arg3?: number, arg4?: boolean)=>
-		ExpressionType.containsString(arg1, arg2, arg3, arg4),
+		containsString(arg1, arg2, arg3, arg4),
 	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
 );
 export const funcStartsWith = new ExpressionFunction(
 	(arg1: string, arg2: string, arg3?: number, arg4?: boolean)=>
-		ExpressionType.startsWithString(arg1, arg2, arg3, arg4),
+		startsWithString(arg1, arg2, arg3, arg4),
 	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
 );
 export const funcEndsWith = new ExpressionFunction(
 	(arg1: string, arg2: string, arg3?: number, arg4?: boolean)=>
-		ExpressionType.endsWithString(arg1, arg2, arg3, arg4),
+		endsWithString(arg1, arg2, arg3, arg4),
 	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
 );
 export const funcAlphanum = new ExpressionFunction(
@@ -233,7 +233,7 @@ export const funcAlphanum = new ExpressionFunction(
 		const value = arg.toLowerCase();
 		let result = '';
 		for (let i = 0; i < value.length; ++i) {
-			if (!ExpressionType.isCaseSpaceEtc(arg[ i ])) {
+			if (!isCaseSpaceEtc(arg[ i ])) {
 				result += arg[ i ];
 			}
 		}
@@ -282,33 +282,33 @@ export const funcCharCode = new ExpressionFunction(
 	typeNumber, [ typeString, typeNumber ],
 );
 export const funcLen = new ExpressionFunction(
-	(arg: string | ExpressionValue[])=>
+	(arg: string | Value[])=>
 		arg.length,
-	typeNumber, [ new ExpressionType('string', 'array') ],
+	typeNumber, [ new Type('string', 'array') ],
 );
 export const funcAt = new ExpressionFunction(
-	(arg1: ExpressionValue[], arg2: number)=>
+	(arg1: Value[], arg2: number)=>
 		arg1[ arg2 < 0 ? arg1.length + arg2 : arg2 ],
-	typeVar, [ typeArray, typeNumber ],
+	typeVariant, [ typeArray, typeNumber ],
 );
 export const funcConcat = new ExpressionFunction(
-	(...args: ExpressionValue[])=>
+	(...args: Value[])=>
 		args,
-	typeArray, [ typeVar ], 1, FUNCTION_ARG_MAX,
+	typeArray, [ typeVariant ], 1, FUNCTION_ARG_MAX,
 );
 export const funcFlatten = new ExpressionFunction(
-	(args: ExpressionValue[], arg: number)=>
-		(args as []).flat(arg) as ExpressionValue,
+	(args: Value[], arg: number)=>
+		(args as []).flat(arg) as Value,
 	typeArray, [ typeArray, typeNumber ],
 );
 export const funcReverse = new ExpressionFunction(
-	(arg: ExpressionValue[])=>
+	(arg: Value[])=>
 		[ ...arg ].reverse(),
 	typeArray, [ typeArray ],
 );
 export const funcSlice = new ExpressionFunction(
-	(arg1: ExpressionValue[], arg2?: number, arg3?: number)=>
-		arg1.slice(arg2, arg3) as ExpressionValue,
+	(arg1: Value[], arg2?: number, arg3?: number)=>
+		arg1.slice(arg2, arg3) as Value,
 	typeArray, [ typeArray, typeOptionalNumber, typeOptionalNumber ], 1, 3,
 );
 export const funcRange = new ExpressionFunction(
@@ -319,58 +319,58 @@ export const funcRange = new ExpressionFunction(
 	typeArray, [ typeNumber, typeNumber ],
 );
 export const funcFirst = new ExpressionFunction(
-	(arg1: ExpressionValue[], arg2: (v: ExpressionValue, i: number, a: ExpressionValue[])=> boolean)=>
+	(arg1: Value[], arg2: (v: Value, i: number, a: Value[])=> boolean)=>
 		arg1.find((v, i, a)=> arg2(v, i, a)),
-	typeVar, [ typeArray, typeFunction ],
+	typeVariant, [ typeArray, typeFunction ],
 );
 export const funcLast = new ExpressionFunction(
-	(arg1: ExpressionValue[], arg2: (v: ExpressionValue, i: number, a: ExpressionValue[])=> boolean)=>
+	(arg1: Value[], arg2: (v: Value, i: number, a: Value[])=> boolean)=>
 		[ ...arg1 ].reverse().find((v, i, a)=> arg2(v, i, a)),
-	typeVar, [ typeArray, typeFunction ],
+	typeVariant, [ typeArray, typeFunction ],
 );
 export const funcFirstIndex = new ExpressionFunction(
-	(arg1: ExpressionValue[], arg2: (v: ExpressionValue, i: number, a: ExpressionValue[])=> boolean)=> {
+	(arg1: Value[], arg2: (v: Value, i: number, a: Value[])=> boolean)=> {
 		const ix = arg1.findIndex((v, i, a)=> arg2(v, i, a));
 		return ix < 0 ? Number.NaN : ix;
 	},
 	typeNumber, [ typeArray, typeFunction ],
 );
 export const funcLastIndex = new ExpressionFunction(
-	(arg1: ExpressionValue[], arg2: (v: ExpressionValue, i: number, a: ExpressionValue[])=> boolean)=> {
+	(arg1: Value[], arg2: (v: Value, i: number, a: Value[])=> boolean)=> {
 		const ix = [ ...arg1 ].reverse().findIndex((v, i, a)=> arg2(v, i, a));
 		return ix < 0 ? Number.NaN : ix;
 	},
 	typeNumber, [ typeArray, typeFunction ],
 );
 export const funcIterate = new ExpressionFunction(
-	(arg1: ExpressionValue[], arg2: (v: ExpressionValue, i: number, a: ExpressionValue[])=> ExpressionValue)=> {
+	(arg1: Value[], arg2: (v: Value, i: number, a: Value[])=> Value)=> {
 		arg1.forEach((v, i, a)=> arg2(v, i, a));
 		return undefined;
 	},
 	typeVoid, [ typeArray, typeFunction ],
 );
 export const funcMap = new ExpressionFunction(
-	(arg1: ExpressionValue[], arg2: (v: ExpressionValue, i: number, a: ExpressionValue[])=> ExpressionValue)=>
+	(arg1: Value[], arg2: (v: Value, i: number, a: Value[])=> Value)=>
 		arg1.map((v, i, a)=> arg2(v, i, a)),
 	typeArray, [ typeArray, typeFunction ],
 );
 export const funcFilter = new ExpressionFunction(
-	(arg1: ExpressionValue[], arg2: (v: ExpressionValue, i: number, a: ExpressionValue[])=> boolean)=>
+	(arg1: Value[], arg2: (v: Value, i: number, a: Value[])=> boolean)=>
 		arg1.filter((v, i, a)=> arg2(v, i, a)),
 	typeArray, [ typeArray, typeFunction ],
 );
 export const funcAny = new ExpressionFunction(
-	(arg1: ExpressionValue[], arg2: (v: ExpressionValue, i: number, a: ExpressionValue[])=> boolean)=>
+	(arg1: Value[], arg2: (v: Value, i: number, a: Value[])=> boolean)=>
 		arg1.some((v, i, a)=> arg2(v, i, a)),
 	typeBoolean, [ typeArray, typeFunction ],
 );
 export const funcEvery = new ExpressionFunction(
-	(arg1: ExpressionValue[], arg2: (v: ExpressionValue, i: number, a: ExpressionValue[])=> boolean)=>
+	(arg1: Value[], arg2: (v: Value, i: number, a: Value[])=> boolean)=>
 		arg1.every((v, i, a)=> arg2(v, i, a)),
 	typeBoolean, [ typeArray, typeFunction ],
 );
 export const funcConstruct = new ExpressionFunction(
-	(...args: [ string, ExpressionValue ][])=> {
+	(...args: [ string, Value ][])=> {
 		const obj: Record<string, any> = {};
 		for (let i = 0; i < args.length; ++i) {
 			obj[ args[ i ][ 0 ] ] = args[ i ][ 1 ];
@@ -380,16 +380,143 @@ export const funcConstruct = new ExpressionFunction(
 	typeObject, [ typeArray ], 0, FUNCTION_ARG_MAX,
 );
 export const funcBy = new ExpressionFunction(
-	(arg1: { [ key: string ]: ExpressionValue }, arg2: string)=>
-		(arg1 as any)[ arg2 ] as ExpressionValue,
-	typeVar, [ typeObject, typeString ],
+	(arg1: { [ key: string ]: Value }, arg2: string)=>
+		(arg1 as any)[ arg2 ] as Value,
+	typeVariant, [ typeObject, typeString ],
 );
 export const funcMerge = new ExpressionFunction(
-	(...args: ({ [ key: string ]: ExpressionValue } | { [ key: string ]: ExpressionValue }[])[])=>
+	(...args: ({ [ key: string ]: Value } | { [ key: string ]: Value }[])[])=>
 		args.flat(Infinity).reduce((acc, val)=> Object.assign(acc, val)),
-	typeObject, [ new ExpressionType('object', 'array') ], 2, FUNCTION_ARG_MAX,
+	typeObject, [ new Type('object', 'array') ], 2, FUNCTION_ARG_MAX,
 );
 export const funcJson = new ExpressionFunction(
-	(arg: string) => JSON.parse(arg),
-	new ExpressionType('number', 'string', 'array', 'object'), [ typeString ],
+	(arg: string)=> JSON.parse(arg),
+	new Type('number', 'string', 'array', 'object'), [ typeString ],
 );
+
+
+function equal(value1: Value, value2: Value): boolean {
+	if (value1 == null || value2 == null) {
+		return value1 == value2;
+	}
+	if (typeof value1 === 'boolean' || typeof value1 === 'number' || typeof value1 === 'string' || typeof value1 === 'function') {
+		return value1 === value2;
+	}
+	if (Array.isArray(value1) && Array.isArray(value2)) {
+		if (value1.length === value2.length) {
+			for (let i = 0; i < value1.length; ++i) {
+				if (!equal(value1[ i ], value2[ i ])) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	const props = new Set([ ...Object.getOwnPropertyNames(value1), ...Object.getOwnPropertyNames(value2) ]);
+	for (const prop of props) {
+		if (!equal((value1 as any)[ prop ] as Value, (value2 as any)[ prop ] as Value)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function equalStrings(value1: string, value2: string, ignoreCaseSpaceEtc?: boolean): boolean {
+	if (!ignoreCaseSpaceEtc) {
+		return value1 === value2;
+	}
+	const str1 = value1.toLowerCase();
+	const str2 = value2.toLowerCase();
+	for (let i1 = 0, i2 = 0; i1 < str1.length && i2 < str2.length; ++i1, ++i2) {
+		while (isCaseSpaceEtc(str1[ i1 ]) && i1 < str1.length) {
+			++i1;
+		}
+		while (isCaseSpaceEtc(str2[ i2 ]) && i2 < str2.length) {
+			++i2;
+		}
+		if (str1[ i1 ] != str2[ i2 ]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function containsString(value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean): boolean {
+	if (!ignoreCaseSpaceEtc) {
+		return value.includes(search, startPos);
+	}
+	const valueStr = value.toLowerCase();
+	const searchStr = search.toLowerCase();
+	if (valueStr.length < searchStr.length) {
+		return false;
+	}
+	const pos = startPos == null ? 0 : startPos < 0 ? value.length + startPos : startPos;
+	for (let i1 = pos, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2) {
+		while (isCaseSpaceEtc(valueStr[ i1 ]) && i1 < valueStr.length) {
+			++i1;
+		}
+		while (isCaseSpaceEtc(searchStr[ i2 ]) && i2 < searchStr.length) {
+			++i2;
+		}
+		while (valueStr[ i1 ] != searchStr[ i2 ] && i1 < valueStr.length) {
+			++i1;
+		}
+		if (valueStr[ i1 ] != searchStr[ i2 ] && i2 < searchStr.length) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function startsWithString(value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean): boolean {
+	if (!ignoreCaseSpaceEtc) {
+		return value.startsWith(search, startPos);
+	}
+	const valueStr = value.toLowerCase();
+	const searchStr = search.toLowerCase();
+	if (valueStr.length < searchStr.length) {
+		return false;
+	}
+	const pos = startPos == null ? 0 : startPos < 0 ? value.length + startPos : startPos;
+	for (let i1 = pos, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2) {
+		while (isCaseSpaceEtc(valueStr[ i1 ]) && i1 < valueStr.length) {
+			++i1;
+		}
+		while (isCaseSpaceEtc(searchStr[ i2 ]) && i2 < searchStr.length) {
+			++i2;
+		}
+		if (valueStr[ i1 ] != searchStr[ i2 ] && i2 < searchStr.length) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function endsWithString(value: string, search: string, endPos?: number, ignoreCaseSpaceEtc?: boolean): boolean {
+	if (!ignoreCaseSpaceEtc) {
+		return value.endsWith(search, endPos);
+	}
+	const valueStr = value.toLowerCase();
+	const searchStr = search.toLowerCase();
+	if (valueStr.length < searchStr.length) {
+		return false;
+	}
+	const pos = endPos == null ? valueStr.length : endPos < 0 ? value.length + endPos : endPos;
+	for (let i1 = pos - 1, i2 = searchStr.length - 1; i1 > -1 && i2 > -1; --i1, --i2) {
+		while (isCaseSpaceEtc(valueStr[ i1 ]) && i1 > -1) {
+			--i1;
+		}
+		while (isCaseSpaceEtc(searchStr[ i2 ]) && i2 > -1) {
+			--i2;
+		}
+		if (valueStr[ i1 ] != searchStr[ i2 ] && i2 > -1) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function isCaseSpaceEtc(c: string) {
+	return (c < 'a' || c > 'z') && (c < '0' || c > '9');
+}

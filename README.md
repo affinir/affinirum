@@ -1,9 +1,7 @@
-# expression-service
-Service to parse and evaluate math expressions.
+# expression-evaluation
+Recursive descent parsing and evaluation of closed-form analytic expressions.
 
-Compact recursive descent expression parser, and evaluation service 
-for closed-form analytic expressions.
-Service supports boolean expressions, regular algebraic expressions, 
+Parser supports boolean expressions, regular algebraic expressions, 
 numeric and string functions, variables, and closures.
 
 Target: ES2022 [browser+NodeJS][ESM+CJS].
@@ -27,34 +25,33 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 ## What
 
 #### Operators
-* Boolean disjunction: |
-* Boolean conjunction: &
-* Boolean negation: !
-* Greater than: >
-* Less than: <
-* Greater than or equal to: >=
-* Less than or equal to: <=
-* Equals to: =
-* Not equals to: !=
-* String similar to: \~
-* String not similar: !\~
-* Null coalescence: ?:
-* Arithmetic addition or string concatination: +
-* Arithmetic subtraction: -
-* Arithmetic negation: -
-* Arithmetic multiplication: \*
-* Arithmetic division: /
-* Arithmetic percentage: %
-* Array element at literal index: @
-* Array element at numeric value: []
-* Array concatination: #
-* Object property by literal name: .
-* Object property by string value: {}
-* Object merging: $
-* Assignment: :
-* Grouping: (...)
-* Next statement: ,
-* Conditional statement: if ... then ... else ...
+* Boolean disjunction: **|**
+* Boolean conjunction: **&**
+* Boolean negation: **!**
+* Greater than: **>**
+* Less than: **<**
+* Greater than or equal to: **>=**
+* Less than or equal to: **<=**
+* Equals to: **=**
+* Not equals to: **!=**
+* String similar to: **\~**
+* String not similar: **!\~**
+* Null coalescence: **?:**
+* Arithmetic addition or string concatination: **+**
+* Arithmetic subtraction or negation: **-**
+* Arithmetic multiplication: **\***
+* Arithmetic division: **/**
+* Arithmetic percentage: **%**
+* Array element at literal index: **@**
+* Array element at numeric value: **[]**
+* Array concatination: **#**
+* Object property by literal name: **.**
+* Object property by string value: **{}**
+* Object merging: **$**
+* Assignment: **:**
+* Grouping: **(...)**
+* Next statement: **,**
+* Conditional statement: **if...then...else...**
 #### Functions
 * Boolean disjunction: or(boolean ...values)
 * Boolean conjunction: and(boolean ...values)
@@ -146,7 +143,8 @@ The expression parsing is performed using the following grammar:
 		"["{ <disjunction> }{ ","<disjunction> }"]" |
 		"{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}" |
 		"if" <condition> "then" <disjunction> "else" <disjunction>
-	<type> = ( "void" | "boolean" | "number" | "string" | "array" | "object" | "function" ){ "?" } | "var"
+	<type> = ( "void" | "boolean" | "bool" | "number" | "num" | "string" | "str" |
+		"array" | "arr" | "object" | "obj" | "function" | "func" ){ "?" } | "var"
 
 Whitespace characters are ignored.
 
@@ -156,7 +154,7 @@ of alphanumeric characters, and "\_". For example: *x*, *\_a1*, *abc25*
 
 ## How
 
-Create instance of ExpressionService for math expression.
+Create instance of Expression class with a string containing expression.
 During the parsing any alphanumeric sequence not identified as
 number value, string value, operator, or a function name is assumed to be variable.
 Evaluate the expression by providing variable values.
@@ -165,22 +163,22 @@ Sample code:
 
 ```ts
 ...
-const expr = new ExpressionService( 'x * (y + abc / 5) > 10' );
+const expr = new Expression( 'x * (y + abc / 5) > 10' );
 const value1 = expr.evaluate( { x: 10, y: 20, abc: 10 } ); // true
 const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
 ...
-const arrExpr = new ExpressionService( '[ 1, 2, 3, a, b, c ].add()' );
+const arrExpr = new Expression( '[ 1, 2, 3, a, b, c ].add()' );
 const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
 ...
-const objExpr = new ExpressionService( '{prop1:a,prop2:`abc`}.prop1+10' );
+const objExpr = new Expression( '{prop1:a,prop2:`abc`}.prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
-const iteratorExpr = new ExpressionService(
-	'arr.map(number(number a) -> a*2).filter(boolean(number a) => a>3).add()'
+const iteratorExpr = new Expression(
+	'arr1.map(number(number a) -> a*2).filter(boolean(number a) => a>3).add()'
 );
-const iValue = iteratorExpr.evaluate( { arr: [ 1, 2, 3 ] } ); // 10
+const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
 ...
-const complexExpr = new ExpressionService(
+const complexExpr = new Expression(
 	'var a:myvar1/10, var b:myvar2-100, a/b + b*a + 600'
 );
 const value = complexExpr.evaluate( { myvar1: 40, myvar2: 104 } ); // 4761

@@ -1,8 +1,8 @@
-import { ExpressionNode } from './ExpressionNode.js';
+import { Node } from './Node.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
-import { ExpressionType, ExpressionValue } from './ExpressionType.js';
+import { Type, Value } from './Type.js';
 
-export class ExpressionConstantNode extends ExpressionNode {
+export class ExpressionConstantNode extends Node {
 
 	constructor(
 		_pos: number,
@@ -11,18 +11,18 @@ export class ExpressionConstantNode extends ExpressionNode {
 		super(_pos);
 	}
 
-	get type(): ExpressionType {
+	get type(): Type {
 		return this._constant.type;
 	}
 
-	compile(type: ExpressionType): ExpressionNode {
+	compile(type: Type): Node {
 		if (!type.infer(this.type)) {
 			this.throwTypeError(type);
 		}
 		return this;
 	}
 
-	evaluate(): ExpressionValue {
+	evaluate(): Value {
 		return this._constant.value;
 	}
 

@@ -1,13 +1,13 @@
 {
-	"name": "expression-service",
-	"version": "2.4.0",
-	"description": "Expression Service",
+	"name": "expression-evaluation",
+	"version": "1.0.0",
+	"description": "Expression Evaluation",
 	"main": "dst/cjs/index.js",
 	"module": "dst/index.js",
 	"types": "dst/index.d.ts",
 	"type": "module",
-	"hopmepage": "https://github.com/rbaghbanli/expression-service",
-	"bugs": "https://github.com/rbaghbanli/expression-service/issues",
+	"hopmepage": "https://github.com/rbaghbanli/expression-evaluation",
+	"bugs": "https://github.com/rbaghbanli/expression-evaluation/issues",
 	"author": "Riad Baghbanli <riad@baghbanli.com>",
 	"contributors": [
 		{
@@ -17,11 +17,10 @@
 	],
 	"keywords": [
 		"Expression",
-		"Service",
-		"math",
-		"evaluation",
+		"Evaluation",
 		"parser",
-		"compiler"
+		"compiler",
+		"evaluator"
 	],
 	"scripts": {
 		"clean": "rimraf --glob dst/* && rimraf --glob *.tgz",
@@ -36,7 +35,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/rbaghbanli/expression-service.git"
+		"url": "https://github.com/rbaghbanli/expression-evaluation.git"
 	},
 	"exports": {
 		".": {

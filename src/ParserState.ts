@@ -2,7 +2,7 @@ import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
 	operNullco, operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operAt, operBy, operMerge } from './ExpressionOperator.js';
-import { ExpressionType, typeBoolean, typeNumber, typeString, typeObject, typeFunction, typeVoid, typeVar, typeArray } from './ExpressionType.js';
+import { Type, typeBoolean, typeNumber, typeString, typeObject, typeFunction, typeVoid, typeVariant, typeArray } from './Type.js';
 
 const symbolParenthesesOpen = Symbol();
 const symbolParenthesesClose = Symbol();
@@ -18,9 +18,9 @@ const symbolIf = Symbol();
 const symbolThen = Symbol();
 const symbolElse = Symbol();
 
-export class ExpressionState {
+export class ParserState {
 
-	protected _obj: ExpressionConstant | ExpressionFunction | ExpressionType | string | symbol | undefined;
+	protected _obj: ExpressionConstant | ExpressionFunction | Type | string | symbol | undefined;
 	protected _startPos = 0;
 	protected _endPos = 0;
 
@@ -40,8 +40,8 @@ export class ExpressionState {
 		return this._obj as ExpressionFunction;
 	}
 
-	get type(): ExpressionType {
-		return this._obj as ExpressionType;
+	get type(): Type {
+		return this._obj as Type;
 	}
 
 	get token(): string {
@@ -57,7 +57,7 @@ export class ExpressionState {
 	}
 
 	get isType(): boolean {
-		return this._obj instanceof ExpressionType;
+		return this._obj instanceof Type;
 	}
 
 	get isToken(): boolean {
@@ -120,7 +120,7 @@ export class ExpressionState {
 		return this._endPos >= this._expr.length;
 	}
 
-	next(): ExpressionState {
+	next(): ParserState {
 		this._obj = undefined;
 		while (this._endPos < this._expr.length && this._obj == null) {
 			this._startPos = this._endPos;
@@ -181,33 +181,33 @@ export class ExpressionState {
 			case '$': this._obj = operMerge; break;
 			case '.': this._obj = operBy; break;
 			default:
-				if (ExpressionState.isAlpha(c)) {
-					while (ExpressionState.isAlphanumeric(this._expr.charAt(this._endPos))) {
+				if (ParserState.isAlpha(c)) {
+					while (ParserState.isAlphanumeric(this._expr.charAt(this._endPos))) {
 						++this._endPos;
 					}
 					const token = this._expr.substring(this._startPos, this._endPos);
 					switch (token) {
-					case 'boolean': this._obj = typeBoolean; break;
-					case 'number': this._obj = typeNumber; break;
-					case 'string': this._obj = typeString; break;
-					case 'array': this._obj = typeArray; break;
-					case 'object': this._obj = typeObject; break;
-					case 'function': this._obj = typeFunction; break;
+					case 'boolean': case 'bool': this._obj = typeBoolean; break;
+					case 'number': case 'num': this._obj = typeNumber; break;
+					case 'string': case 'str': this._obj = typeString; break;
+					case 'array': case 'arr': this._obj = typeArray; break;
+					case 'object': case 'obj': this._obj = typeObject; break;
+					case 'function': case 'func': this._obj = typeFunction; break;
 					case 'void': this._obj = typeVoid; break;
-					case 'var': this._obj = typeVar; break;
+					case 'variant': case 'var': this._obj = typeVariant; break;
 					case 'if': this._obj = symbolIf; break;
 					case 'then': this._obj = symbolThen; break;
 					case 'else': this._obj = symbolElse; break;
 					default: this._obj = token; break;
 					}
 				}
-				else if (ExpressionState.isNumeric(c)) {
-					while (ExpressionState.isDecinumeric(this._expr.charAt(this._endPos))) {
+				else if (ParserState.isNumeric(c)) {
+					while (ParserState.isDecinumeric(this._expr.charAt(this._endPos))) {
 						++this._endPos;
 					}
 					this._obj = new ExpressionConstant(parseFloat(this._expr.substring(this._startPos, this._endPos)));
 				}
-				else if (ExpressionState.isQuotation(c)) {
+				else if (ParserState.isQuotation(c)) {
 					while (this._expr.charAt(this._endPos) !== '' && this._expr.charAt(this._endPos) !== c) {
 						++this._endPos;
 					}
@@ -227,8 +227,8 @@ export class ExpressionState {
 
 	static isAlpha = (c: string)=>  c >= 'a' && c <= 'z'  ||  c >= 'A' && c <= 'Z'  ||  c === '_' ;
 	static isNumeric = (c: string)=>  c >= '0' && c <= '9' ;
-	static isAlphanumeric = (c: string)=> ExpressionState.isAlpha(c) || ExpressionState.isNumeric(c);
-	static isDecinumeric = (c: string)=>  c === '.'  || ExpressionState.isNumeric(c);
+	static isAlphanumeric = (c: string)=> ParserState.isAlpha(c) || ParserState.isNumeric(c);
+	static isDecinumeric = (c: string)=>  c === '.'  || ParserState.isNumeric(c);
 	static isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
 
 }
