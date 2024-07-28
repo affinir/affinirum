@@ -53,74 +53,76 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Next statement: **,**
 * Conditional statement: **if...then...else...**
 #### Functions
-* Boolean disjunction: or(boolean ...values)
-* Boolean conjunction: and(boolean ...values)
-* Bolean negation: not(boolean value)
-* Greater than: gt(number value1, number value2)
-* Less than: lt(number value1, number value2)
-* Greater than or equals to: ge(number value1, number value2)
-* Less than or equals to: le(number value1, number value2)
-* Equals to: eq(var value1, var value2)
-* Not equals to: neq(var value1, var value2)
-* String similar to: like(string value1, string value2)
-* String not similar to: nlike(string value1, string value2)
-* Conditional statement: ifte(boolean condition, var valueIfTrue, var valueIfFalse)
-* Null coalescence: nullco(var value, var valueIfNull)
-* Arithmetic addition or string concatination: add(number|string ...values)
-* Arithmetic subtraction: sub(number minuend, number subtrahend)
-* Arithmetic negation: neg(number value)
-* Arithmetic multiplication: mul(number ...values)
-* Arithmetic division: div(number dividend, number divisor)
-* Arithmetic percentage: pct(number dividend, number divisor)
-* Exponent: exp(number value)
-* Logarithm: log(number value)
-* Power: pow(number base, number exponent)
-* Root: rt(number value, number index)
-* Square: sq(number value)
-* Square root: sqrt(number value)
-* Absolute value: abs(number value)
-* Ceil: ceil(number value)
-* Floor: floor(number value)
-* Rounded value: round(number value)
-* Minimum: min(number ...values)
-* Maximum: max(number ...values)
-* String contains substring: contains(string value, string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)
-* String starts with substring: startsWith(string value, string search, number? startPos, boolean? ignoreCaseSpaceEtc)
-* String ends with substring: endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)
-* Get alphanum of string: alphanum(string value)
-* Trim: trim(string value)
-* Trim start: trimStart(string value)
-* Trim end: trimEnd(string value)
-* Substring: substr(string value, number beginPos, number? endPos)
-* Char at position: char(string value, number pos)
-* Char code at position: charCode(string value, number pos)
-* Array element at index: at(array value, number index)
-* Concatination of arrays and singular values into an array: concat(array ...values)
-* New array with reverse order of items: reverse(array value)
-* New array flattened to specified depth: flatten(array value, number depth)
-* New array sliced from given array: slice(array value, number? beginIndex, number? endIndex)
-* New array filled with numbers in between given two numbers: range(number inclusiveFrom, number exclusiveTo)
-* Find first item satisfying condition: first(array value, function condition)
-* Find last item satisfying condition: last(array value, function condition)
-* Find first index of item satisfying condition: firstIndex(array value, function condition)
-* Find last index of item satisfying condition: lastIndex(array value, function condition)
-* Iterate items: iterate(array value, function iterator)
-* Map items: map(array value, function transform)
-* Filter items satisfying condition: filter(array value, function condition)
-* Check if any item satisfies condition: any(array value, function condition)
-* Check if every item satisfies condition: every(array value, function condition)
-* Object construction from name-value pairs: construct(array ...values)
-* Object property by name: by(object value, string name)
-* Object merging: merge(object ...values)
+* Boolean disjunction: **boolean or(boolean ...values)**
+* Boolean conjunction: **boolean and(boolean ...values)**
+* Bolean negation: **boolean not(boolean value)**
+* Greater than: **boolean gt(number value1, number value2)**
+* Less than: **boolean lt(number value1, number value2)**
+* Greater than or equals to: **boolean ge(number value1, number value2)**
+* Less than or equals to: **boolean le(number value1, number value2)**
+* Equals to: **boolean eq(var value1, var value2)**
+* Not equals to: **boolean neq(var value1, var value2)**
+* String alphanumerically similar to: **boolean like(string value1, string value2)**
+* String alphanumerically not similar to: **boolean nlike(string value1, string value2)**
+* Conditional statement: **variant ifte(boolean condition, variant valueIfTrue, variant valueIfFalse)**
+* Null coalescence: **variant nullco(variant value, variant valueIfNull)**
+* Arithmetic addition or string concatination: **number|string add(number|string ...values)**
+* Arithmetic subtraction: **number sub(number minuend, number subtrahend)**
+* Arithmetic negation: **number neg(number value)**
+* Arithmetic multiplication: **number mul(number ...values)**
+* Arithmetic division: **number div(number dividend, number divisor)**
+* Arithmetic percentage: **number pct(number dividend, number divisor)**
+* Exponent: **number exp(number value)**
+* Logarithm: **number log(number value)**
+* Power: **number pow(number base, number exponent)**
+* Root: **number rt(number value, number index)**
+* Square: **number sq(number value)**
+* Square root: **number sqrt(number value)**
+* Absolute value: **number abs(number value)**
+* Ceil: **number ceil(number value)**
+* Floor: **number floor(number value)**
+* Rounded value: **number round(number value)**
+* Minimum: **number min(number ...values)**
+* Maximum: **number max(number ...values)**
+* String contains substring: **boolean contains(string value, string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)**
+* String starts with substring: **boolean startsWith(string value, string search, number? startPos, boolean? ignoreCaseSpaceEtc)**
+* String ends with substring: **boolean endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)**
+* Get alphanumeric digest of string: **string alphanum(string value)**
+* Trim whitespace: **string trim(string value)**
+* Trim whitespace at start: **string trimStart(string value)**
+* Trim whitespace at end: **string trimEnd(string value)**
+* Substring: **string substr(string value, number beginPos, number? endPos)**
+* Character at position: **string char(string value, number pos)**
+* Character code at position: **number charCode(string value, number pos)**
+* Array element at index: **variant at(array value, number index)**
+* Concatination of arrays and singular values into an array: **array concat(array ...values)**
+* New array with reverse order of items: **array reverse(array value)**
+* New array flattened to specified depth: **array flatten(array value, number depth)**
+* New array sliced from given array: **array slice(array value, number? beginIndex, number? endIndex)**
+* New array filled with numbers in between given two numbers: **array range(number inclusiveFrom, number exclusiveTo)**
+* Find first item satisfying condition: **variant first(array value, function condition)**
+* Find last item satisfying condition: **variant last(array value, function condition)**
+* Find first index of item satisfying condition: **number firstIndex(array value, function condition)**
+* Find last index of item satisfying condition: **number lastIndex(array value, function condition)**
+* Iterate items: **void iterate(array value, function iteration)**
+* Map items: **array map(array value, function transformation)**
+* Filter items satisfying condition: **array filter(array value, function condition)**
+* Check if any item satisfies condition: **boolean any(array value, function condition)**
+* Check if every item satisfies condition: **boolean every(array value, function condition)**
+* Object construction from name-value pairs: **object construct(array ...values)**
+* Object property by name: **variant by(object value, string name)**
+* Object merging: **object merge(object ...values)**
+* Parsing object from JSON-formatted string: **void|boolean|number|string|array|object fromJson(string|void value)**
+* Create JSON-formatted string from object: **string|void toJson(void|boolean|number|string|array|object value)**
 #### Constants
-* **null**
-* **true**
-* **false**
-* **NaN**
-* **PosInf**
-* **NegInf**
-* **Epsilon**
-* **Pi**
+* **void null**
+* **boolean true**
+* **boolean false**
+* **number NaN**
+* **number PosInf**
+* **number NegInf**
+* **number Epsilon**
+* **number Pi**
 
 ### Grammar
 The expression parsing is performed using the following grammar:
@@ -148,8 +150,8 @@ The expression parsing is performed using the following grammar:
 
 Whitespace characters are ignored.
 
-Valid variable or function names consist of a letter, or "\_" characters followed by any combination
-of alphanumeric characters, and "\_". For example: *x*, *\_a1*, *abc25*
+Valid variable or function names consist of a letter, or **\_** characters followed by any combination
+of alphanumeric characters, and **\_**. For example: *x*, *\_a1*, *abc25*
 
 
 ## How

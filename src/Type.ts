@@ -13,36 +13,36 @@ export class Type {
 		this._vtypes = args.length ? PRIMITIVE_TYPES.filter((n)=> args.includes(n)) : PRIMITIVE_TYPES;
 	}
 
-	get exact(): boolean {
+	get isPrimitive(): boolean {
 		return this._vtypes.length === 1;
 	}
 
 	get isBoolean(): boolean {
-		return this.exact && this._vtypes[ 0 ] === 'boolean';
+		return this.isPrimitive && this._vtypes[ 0 ] === 'boolean';
 	}
 
 	get isNumber(): boolean {
-		return this.exact && this._vtypes[ 0 ] === 'number';
+		return this.isPrimitive && this._vtypes[ 0 ] === 'number';
 	}
 
 	get isString(): boolean {
-		return this.exact && this._vtypes[ 0 ] === 'string';
+		return this.isPrimitive && this._vtypes[ 0 ] === 'string';
 	}
 
 	get isArray(): boolean {
-		return this.exact && this._vtypes[ 0 ] === 'array';
+		return this.isPrimitive && this._vtypes[ 0 ] === 'array';
 	}
 
 	get isObject(): boolean {
-		return this.exact && this._vtypes[ 0 ] === 'object';
+		return this.isPrimitive && this._vtypes[ 0 ] === 'object';
 	}
 
 	get isFunction(): boolean {
-		return this.exact && this._vtypes[ 0 ] === 'function';
+		return this.isPrimitive && this._vtypes[ 0 ] === 'function';
 	}
 
 	get isVoid(): boolean {
-		return this.exact && this._vtypes[ 0 ] === 'void';
+		return this.isPrimitive && this._vtypes[ 0 ] === 'void';
 	}
 
 	infer(mask: Type, func = (vtype: string, vmask: string)=> vtype === vmask): Type | undefined {
@@ -68,6 +68,8 @@ export class Type {
 
 }
 
+export const typeVariant = new Type();
+export const typeVoid = new Type('void');
 export const typeBoolean = new Type('boolean');
 export const typeNumber = new Type('number');
 export const typeString = new Type('string');
@@ -80,5 +82,3 @@ export const typeOptionalString = new Type('void', 'string');
 export const typeOptionalArray = new Type('void', 'array');
 export const typeOptionalObject = new Type('void', 'object');
 export const typeOptionalFunction = new Type('void', 'function');
-export const typeVoid = new Type('void');
-export const typeVariant = new Type();

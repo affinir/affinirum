@@ -10,7 +10,7 @@ describe('Expression Evaluation test', ()=> {
 		[ '"0 "', [ { result: '0 ' } ] ],
 		[ '_var', [ { _var: undefined, result: undefined }, { _var: 0, result: 0 }, { _var: 'str0', result: 'str0' }, { _var: true, result: true } ] ],
 		[ '!b', [ { b: true, result: false }, { b: false, result: true } ] ],
-		[ 'i=0 & and(b, c, true)', [ { i: 1, b: true, c: true, result: false }, { i: 0, b: true, c: false, result: false } ] ],
+		[ 'i=0 & and(b, c, [true,true])', [ { i: 1, b: true, c: true, result: false }, { i: 0, b: true, c: false, result: false } ] ],
 		[ 'i=0 | or(b, c, false)', [ { i: 1, b: true, c: false, result: true }, { i: 0, b: false, c: false, result: true } ] ],
 		[ 'a > b', [ { a: 1, b: -1, result: true }, { a: 11, b: 55, result: false } ] ],
 		[ 'a < b', [ { a: 1, b: -1, result: false }, { a: 11, b: 55, result: true } ] ],
@@ -90,8 +90,10 @@ describe('Expression Evaluation test', ()=> {
 		[ 'val*myobj{a{"prop"}}+1', [ { val: 1, myobj: { test: 10 }, a: { prop: 'test' }, result: 11 } ] ],
 		[ 'obj3{prop1}+obj3{prop2}', [ { obj3: { prop1: 1, prop2: 2 }, prop1: "prop1", prop2: "prop2", result: 3 } ] ],
 		[ 'test[0].prop1=test[1]{"prop2"}', [ { test: [ { prop1: 1, prop2: 2 }, { prop1: 2, prop2: 1 } ], result: true } ] ],
-		[ 'json(str1).prop1+json(str2).prop2', [ { str1: '{"prop1":1}', str2: '{"prop2":20}', result: 21 } ] ],
-		[ 'json(str1)+json(str2)', [ { str1: '"p1"', str2: '"p2"', result: 'p1p2' } ] ],
+		[ 'fromJson(str1).prop1+fromJson(str2).prop2', [ { str1: '{"prop1":1}', str2: '{"prop2":20}', result: 21 } ] ],
+		[ 'fromJson(str1)+fromJson(str2)', [ { str1: '"p1"', str2: '"p2"', result: 'p1p2' } ] ],
+		[ 'toJson(obj1)+toJson(obj2)', [ { obj1: { p1:'a' }, obj2: { p2: 'b' }, result: '{"p1":"a"}{"p2":"b"}' } ] ],
+		[ 'toJson(obj1)', [ { obj1: { p1:'a' }, result: '{"p1":"a"}' } ] ],
 	].forEach(([ expr, args ])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
 			it(`parses ${expr} and evaluates for arguments ${JSON.stringify(v)}`, ()=> {
@@ -99,10 +101,12 @@ describe('Expression Evaluation test', ()=> {
 					const expression = new Expression(expr as string);
 					expect(expression).toBeDefined();
 					const value = expression.evaluate(v);
-					expect(value === v.result).toBeTrue();
+					if (value !== v.result) {
+						fail(`value ${value} not matching expectation ${v.result}`)
+					}
 				}
 				catch (err) {
-					fail(`parsing failed`);
+					fail(`parsing error\n${(err as Error).message}`);
 				}
 			});
 		});

@@ -1,14 +1,16 @@
-import { ExpressionConstant,
-	constNull, constTrue, constFalse, constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
+import { ExpressionConstant, constNull, constTrue, constFalse,
+	constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
 import { ExpressionFunction, funcNot, funcAnd, funcOr, funcGt, funcLt, funcGe, funcLe, funcEqual, funcNotEqual, funcLike, funcNotLike,
-	funcIfThenElse, funcNullco, funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
+	funcContains, funcStartsWith, funcEndsWith, funcEvery, funcAny,
+	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
 	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin,
-	funcContains, funcStartsWith, funcEndsWith, funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
+	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
 	funcSubstr, funcChar, funcCharCode, funcLen, funcConcat, funcAt, funcFlatten, funcReverse, funcSlice, funcRange,
-	funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcIterate, funcMap, funcFilter, funcAny, funcEvery,
-	funcConstruct, funcMerge, funcBy, funcJson } from './ExpressionFunction.js';
-import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike, operNullco,
-	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operConcat, operAt, operMerge, operBy, operIfThenElse } from './ExpressionOperator.js';
+	funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcIterate, funcMap, funcFilter,
+	funcConstruct, funcMerge, funcBy, funcNullco, funcIfThenElse, funcFromJson, funcToJson } from './ExpressionFunction.js';
+import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
+	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operAt, operConcat, operBy, operMerge,
+	operNullco, operIfThenElse } from './ExpressionOperator.js';
 import { StaticScope } from './StaticScope.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { Type, Value, typeVariant } from './Type.js';
@@ -30,10 +32,8 @@ export class Expression {
 		[ 'NaN', constNaN ], [ 'PosInf', constPosInf ], [ 'NegInf', constNegInf ], [ 'Epsilon', constEpsilon ], [ 'Pi', constPi ],
 	]);
 	protected _functions = new Map<string, ExpressionFunction>([
-		[ 'or', funcOr ], [ 'and', funcAnd ], [ 'not', funcNot ],
-		[ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
-		[ 'equal', funcEqual ], [ 'nequal', funcNotEqual ], [ 'like', funcLike ], [ 'nlike', funcNotLike ],
-		[ 'ifte', funcIfThenElse ], [ 'nullco', funcNullco ],
+		[ 'or', funcOr ], [ 'and', funcAnd ], [ 'not', funcNot ], [ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
+		[ 'equal', funcEqual ], [ 'nequal', funcNotEqual ], [ 'like', funcLike ], [ 'nlike', funcNotLike ], [ 'any', funcAny ], [ 'every', funcEvery ],
 		[ 'add', funcAdd ], [ 'sub', funcSub ], [ 'neg', funcNeg ],
 		[ 'mul', funcMul ], [ 'div', funcDiv ], [ 'rem', funcRem ], [ 'mod', funcMod ], [ 'pct', funcPct ],
 		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
@@ -43,8 +43,8 @@ export class Expression {
 		[ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'len', funcLen ],
 		[ 'concat', funcConcat ], [ 'at', funcAt ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ], [ 'range', funcRange ],
 		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
-		[ 'iterate', funcIterate ], [ 'map', funcMap ], [ 'filter', funcFilter ], [ 'any', funcAny ], [ 'every', funcEvery ],
-		[ 'construct', funcConstruct ], [ 'merge', funcMerge ], [ 'by', funcBy ], [ 'json', funcJson ],
+		[ 'iterate', funcIterate ], [ 'map', funcMap ], [ 'filter', funcFilter ], [ 'construct', funcConstruct ], [ 'merge', funcMerge ], [ 'by', funcBy ],
+		[ 'nullco', funcNullco ], [ 'ifte', funcIfThenElse ], [ 'fromJson', funcFromJson ], [ 'toJson', funcToJson ],
 	]);
 	protected _scope = new StaticScope();
 
@@ -458,7 +458,7 @@ export class Expression {
 			throw new Error(`insufficient number of arguments ${subnodes.length} is less than ${minArity} that function requires`);
 		}
 		if (subnodes.length > maxArity) {
-			throw new Error(`excessive number of arguments ${subnodes.length} is more than ${minArity} that function requires`);
+			throw new Error(`excessive number of arguments ${subnodes.length} is more than ${maxArity} that function requires`);
 		}
 		return subnodes;
 	}
