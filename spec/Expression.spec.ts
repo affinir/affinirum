@@ -103,7 +103,7 @@ describe('Expression Evaluation test', ()=> {
 		[ 'toJson(obj1)', [ { obj1: { p1: 'a' }, result: '{"p1":"a"}' } ] ],
 	].forEach(([ expr, args ])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
-			it(`parses ${expr} and evaluates for arguments ${JSON.stringify(v)}`, ()=> {
+			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v)}`, ()=> {
 				try {
 					const expression = new Expression(expr as string);
 					expect(expression).toBeDefined();

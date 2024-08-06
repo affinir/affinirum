@@ -4,6 +4,7 @@
 		"declaration": false,
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
+		"sourceMap": true,
 		"outDir": "./dst",
 	},
 	"include": [
