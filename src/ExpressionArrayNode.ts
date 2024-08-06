@@ -1,4 +1,6 @@
 import { Node } from './Node.js';
+import { ExpressionConstantNode } from './ExpressionConstantNode.js';
+import { ExpressionConstant } from './ExpressionConstant.js';
 import { Type, Value, typeArray, typeVariant } from './Type.js';
 
 export class ExpressionArrayNode extends Node {
@@ -18,7 +20,15 @@ export class ExpressionArrayNode extends Node {
 		if (!typeArray.infer(type)) {
 			this.throwTypeError(type);
 		}
-		this._subnodes = this._subnodes.map((s)=> s.compile(typeVariant));
+		let constant = true;
+		for (let i = 0; i < this._subnodes.length; ++i) {
+			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile(typeVariant);
+			constant &&= subnode instanceof ExpressionConstantNode && !subnode.type.isFunction;
+		}
+		if (constant) {
+			return new ExpressionConstantNode(this._pos,
+				new ExpressionConstant(this.evaluate()));
+		}
 		return this;
 	}
 

@@ -1,8 +1,8 @@
 import { ExpressionConstant } from './ExpressionConstant.js';
-import { ExpressionFunction } from './ExpressionFunction.js';
+import { ExpressionFunction, fromHex } from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
 	operNullco, operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operAt, operBy, operMerge } from './ExpressionOperator.js';
-import { Type, typeBoolean, typeNumber, typeString, typeObject, typeFunction, typeVoid, typeVariant, typeArray } from './Type.js';
+import { Type, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeVariant, typeArray } from './Type.js';
 
 const symbolParenthesesOpen = Symbol();
 const symbolParenthesesClose = Symbol();
@@ -189,6 +189,7 @@ export class ParserState {
 					switch (token) {
 					case 'boolean': case 'bool': this._obj = typeBoolean; break;
 					case 'number': case 'num': this._obj = typeNumber; break;
+					case 'buffer': case 'buf': this._obj = typeBuffer; break;
 					case 'string': case 'str': this._obj = typeString; break;
 					case 'array': case 'arr': this._obj = typeArray; break;
 					case 'object': case 'obj': this._obj = typeObject; break;
@@ -206,6 +207,25 @@ export class ParserState {
 						++this._endPos;
 					}
 					this._obj = new ExpressionConstant(parseFloat(this._expr.substring(this._startPos, this._endPos)));
+				}
+				else if (ParserState.isEscape(c)) {
+					if (this._expr.charAt(this._endPos) === 'x') {
+						++this._endPos;
+						while (ParserState.isHexadecimal(this._expr.charAt(this._endPos))) {
+							++this._endPos;
+						}
+						this._obj = new ExpressionConstant(fromHex(this._expr.substring(this._startPos + 2, this._endPos)));
+					}
+					else if (this._expr.charAt(this._endPos) === 'v') {
+						++this._endPos;
+						while (ParserState.isHexadecimal(this._expr.charAt(this._endPos))) {
+							++this._endPos;
+						}
+						this._obj = new ExpressionConstant(parseInt(this._expr.substring(this._startPos + 2, this._endPos), 16));
+					}
+					else {
+						throw new Error(`unknown escape symbol \\${c}`);
+					}
 				}
 				else if (ParserState.isQuotation(c)) {
 					while (this._expr.charAt(this._endPos) !== '' && this._expr.charAt(this._endPos) !== c) {
@@ -225,10 +245,12 @@ export class ParserState {
 		return this;
 	}
 
-	static isAlpha = (c: string)=>  c >= 'a' && c <= 'z'  ||  c >= 'A' && c <= 'Z'  ||  c === '_' ;
+	static isAlpha = (c: string)=>  c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c === '_' ;
 	static isNumeric = (c: string)=>  c >= '0' && c <= '9' ;
 	static isAlphanumeric = (c: string)=> ParserState.isAlpha(c) || ParserState.isNumeric(c);
-	static isDecinumeric = (c: string)=>  c === '.'  || ParserState.isNumeric(c);
+	static isDecinumeric = (c: string)=>  ParserState.isNumeric(c) || c === '.';
+	static isHexadecimal = (c: string)=> ParserState.isNumeric(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
+	static isEscape = (c: string)=> c === '\\';
 	static isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
 
 }

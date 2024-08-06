@@ -29,6 +29,7 @@ const rules = {
 	"generator-star-spacing": [ "error", { "before": true, "after": false } ],
 	"indent": [ "error", "tab" ],
 	"no-mixed-spaces-and-tabs": "error",
+	"no-trailing-spaces": "error",
 	"space-in-parens": [ "error", "never" ],
 	"template-curly-spacing": [ "error", "never" ],
 };

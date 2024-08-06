@@ -10,10 +10,10 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 
 * Parse once, execute multiple times
 * Efficient expression evaluation and basic type checking
-* Support for boolean, number, string, array, object, function, void, variant
+* Support for boolean, number, buffer, string, array, object, function, void, variant
   and nullable types
-* Boolean, arithmetic, string and index operators
-* Numeric and string comparison operators
+* Boolean, arithmetic, buffer, string and index operators
+* Numeric, buffer and string comparison operators
 * Variadic functions and closures
 * Input and statement variables
 * Standard math functions
@@ -37,7 +37,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * String similar to: **\~**
 * String not similar: **!\~**
 * Null coalescence: **?:**
-* Arithmetic addition or string concatination: **+**
+* Arithmetic addition, buffer or string concatination: **+**
 * Arithmetic subtraction or negation: **-**
 * Arithmetic multiplication: **\***
 * Arithmetic division: **/**
@@ -84,6 +84,10 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Rounded value: **number round(number value)**
 * Minimum: **number min(number ...values)**
 * Maximum: **number max(number ...values)**
+* Parse buffer from hexadecimal string: **buffer fromHex(string value)**
+* Create hexadecimal string from buffer: **string toHex(buffer value)**
+* Subbuffer: **buffer subbuf(buffer value, number beginPos, number? endPos)**
+* Byte at position: **buffer byte(buffer value, number pos)**
 * String contains substring: **boolean contains(string value, string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)**
 * String starts with substring: **boolean startsWith(string value, string search, number? startPos, boolean? ignoreCaseSpaceEtc)**
 * String ends with substring: **boolean endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)**
@@ -95,7 +99,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Character at position: **string char(string value, number pos)**
 * Character code at position: **number charCode(string value, number pos)**
 * Array element at index: **variant at(array value, number index)**
-* Concatination of arrays and singular values into an array: **array concat(array ...values)**
+* Concatination of arrays or singular values into a flat array: **array concat(array ...values)**
 * New array with reverse order of items: **array reverse(array value)**
 * New array flattened to specified depth: **array flatten(array value, number depth)**
 * New array sliced from given array: **array slice(array value, number? beginIndex, number? endIndex)**
@@ -112,7 +116,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Object construction from name-value pairs: **object construct(array ...values)**
 * Object property by name: **variant by(object value, string name)**
 * Object merging: **object merge(object ...values)**
-* Parsing object from JSON-formatted string: **void|boolean|number|string|array|object fromJson(string|void value)**
+* Parse object from JSON-formatted string: **void|boolean|number|string|array|object fromJson(string|void value)**
 * Create JSON-formatted string from object: **string|void toJson(void|boolean|number|string|array|object value)**
 #### Constants
 * **void null**
@@ -145,10 +149,19 @@ The expression parsing is performed using the following grammar:
 		"["{ <disjunction> }{ ","<disjunction> }"]" |
 		"{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}" |
 		"if" <condition> "then" <disjunction> "else" <disjunction>
-	<type> = ( "void" | "boolean" | "bool" | "number" | "num" | "string" | "str" |
+	<type> = ( "void" | "boolean" | "bool" | "number" | "num" | "buffer" | "buf" | "string" | "str" |
 		"array" | "arr" | "object" | "obj" | "function" | "func" ){ "?" } | "var"
 
 Whitespace characters are ignored.
+
+Number literals in scientific notation are not supported.
+Hexadecimal integers require prefix **\\v**.
+Buffer literals in hexadecimal format require prefix **\\x**.
+
+Arrays may contain values of any type.
+Type of any array is **array**.
+Type of any object is **object**.
+Type of any function is **function**, and type of **null** is **void**.
 
 Valid variable or function names consist of a letter, or **\_** characters followed by any combination
 of alphanumeric characters, and **\_**. For example: *x*, *\_a1*, *abc25*

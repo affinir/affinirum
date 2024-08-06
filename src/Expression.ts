@@ -4,10 +4,12 @@ import { ExpressionFunction, funcNot, funcAnd, funcOr, funcGt, funcLt, funcGe, f
 	funcContains, funcStartsWith, funcEndsWith, funcEvery, funcAny,
 	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
 	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin,
+	funcSubbuf, funcByte, funcToHex, funcFromHex,
 	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
 	funcSubstr, funcChar, funcCharCode, funcLen, funcConcat, funcAt, funcFlatten, funcReverse, funcSlice, funcRange,
 	funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcIterate, funcMap, funcFilter,
-	funcConstruct, funcMerge, funcBy, funcNullco, funcIfThenElse, funcFromJson, funcToJson } from './ExpressionFunction.js';
+	funcConstruct, funcMerge, funcBy, funcNullco, funcIfThenElse, funcFromJson, funcToJson,
+} from './ExpressionFunction.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
 	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operAt, operConcat, operBy, operMerge,
 	operNullco, operIfThenElse } from './ExpressionOperator.js';
@@ -38,6 +40,7 @@ export class Expression {
 		[ 'mul', funcMul ], [ 'div', funcDiv ], [ 'rem', funcRem ], [ 'mod', funcMod ], [ 'pct', funcPct ],
 		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
 		[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ], [ 'max', funcMax ], [ 'min', funcMin ],
+		[ 'subbuf', funcSubbuf ], [ 'byte', funcByte ], [ 'toHex', funcToHex ], [ 'fromHex', funcFromHex ],
 		[ 'contains', funcContains ], [ 'startsWith', funcStartsWith ], [ 'endsWith', funcEndsWith ], [ 'alphanum', funcAlphanum ],
 		[ 'trim', funcTrim ], [ 'trimStart', funcTrimStart ], [ 'trimEnd', funcTrimEnd ], [ 'lowerCase', funcLowerCase ], [ 'upperCase', funcUpperCase ],
 		[ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'len', funcLen ],
@@ -133,7 +136,7 @@ export class Expression {
 	evaluate(values: Record<string, Value>): Value {
 		const variables = this._scope.variables();
 		for (const name in variables) {
-			if (!values.hasOwnProperty(name)) {
+			if (!Object.prototype.hasOwnProperty.call(values, name)) {
 				throw new Error(`evaluation error on undefined variable ${name}`);
 			}
 			const variable = variables[ name ];

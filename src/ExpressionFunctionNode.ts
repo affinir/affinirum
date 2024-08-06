@@ -35,7 +35,7 @@ export class ExpressionFunctionNode extends Node {
 				this.throwTypeError(type);
 			}
 			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile(inferredArgType);
-			constant &&=  subnode instanceof ExpressionConstantNode && !subnode.type.isFunction ;
+			constant &&= subnode instanceof ExpressionConstantNode && !subnode.type.isFunction;
 		}
 		if (constant) {
 			return new ExpressionConstantNode(this._pos,

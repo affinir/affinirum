@@ -1,6 +1,6 @@
 import { Type, Value,
-	typeBoolean, typeNumber, typeString, typeArray, typeObject, typeFunction,
-	typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeVariant, typeVoid } from './Type.js';
+	typeBoolean, typeNumber, typeBuffer, typeString, typeArray, typeObject, typeFunction,
+	typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeVariant, typeVoid, typeJson } from './Type.js';
 
 const FUNCTION_ARG_MAX = 16536;
 
@@ -141,9 +141,10 @@ export const funcAny = new ExpressionFunction(
 );
 
 export const funcAdd = new ExpressionFunction(
-	(...args: (number | number[] | string | string[])[])=>
-		(args.flat(FUNCTION_ARG_MAX)).reduce((acc: any, val: any)=> acc + val),
-	new Type('number', 'string'), [ new Type('number', 'string', 'array') ], 1, FUNCTION_ARG_MAX,
+	(...args: (number | number[] | ArrayBufferLike | ArrayBufferLike[] | string | string[])[])=>
+		args.flat(FUNCTION_ARG_MAX).reduce((acc: any, val: any)=>
+			val instanceof ArrayBuffer || val instanceof SharedArrayBuffer ? concatBuffers(acc as ArrayBufferLike, val) : (acc + val) as number | string),
+	new Type('number', 'buffer', 'string'), [ new Type('number', 'buffer', 'string', 'array') ], 1, FUNCTION_ARG_MAX,
 	(index, vtype, vmask)=> vtype === 'array' || vtype === vmask
 );
 
@@ -261,6 +262,30 @@ export const funcMin = new ExpressionFunction(
 	typeNumber, [ new Type('number', 'array') ], 1, FUNCTION_ARG_MAX,
 );
 
+export const funcSubbuf = new ExpressionFunction(
+	(arg1: ArrayBufferLike, arg2: number, arg3?: number)=>
+		arg1.slice(arg2, arg3),
+	typeBuffer, [ typeBuffer, typeNumber, typeOptionalNumber ], 2, 3,
+);
+
+export const funcByte = new ExpressionFunction(
+	(arg1: ArrayBufferLike, arg2: number)=>
+		arg1.slice(arg2, arg2 + 1),
+	typeBuffer, [ typeBuffer, typeNumber ],
+);
+
+export const funcToHex = new ExpressionFunction(
+	(arg: ArrayBufferLike)=>
+		toHex(arg),
+	typeString, [ typeBuffer ],
+);
+
+export const funcFromHex = new ExpressionFunction(
+	(arg: string)=>
+		fromHex(arg),
+	typeBuffer, [ typeString ],
+);
+
 export const funcAlphanum = new ExpressionFunction(
 	(arg: string)=> {
 		const value = arg.toLowerCase();
@@ -336,8 +361,8 @@ export const funcAt = new ExpressionFunction(
 );
 
 export const funcConcat = new ExpressionFunction(
-	(...args: Value[])=>
-		args,
+	(...args: (Value | Value[])[])=>
+		(args as []).flat(FUNCTION_ARG_MAX),
 	typeArray, [ typeVariant ], 1, FUNCTION_ARG_MAX,
 );
 
@@ -435,7 +460,7 @@ export const funcBy = new ExpressionFunction(
 export const funcMerge = new ExpressionFunction(
 	(...args: ({ [ key: string ]: Value } | { [ key: string ]: Value }[])[])=>
 		args.flat(FUNCTION_ARG_MAX).reduce((acc, val)=> Object.assign(acc, val)),
-	typeObject, [ new Type('object', 'array') ], 2, FUNCTION_ARG_MAX,
+	typeObject, [ new Type('object', 'array') ], 1, FUNCTION_ARG_MAX,
 );
 
 export const funcNullco = new ExpressionFunction(
@@ -454,14 +479,14 @@ export const funcIfThenElse = new ExpressionFunction(
 
 export const funcFromJson = new ExpressionFunction(
 	(arg: undefined | string)=>
-		arg ? JSON.parse(arg) : undefined,
-	new Type('void', 'boolean', 'number', 'string', 'array', 'object'), [ typeOptionalString ],
+		arg ? JSON.parse(arg) as Value : undefined,
+	typeJson, [ typeOptionalString ],
 );
 
 export const funcToJson = new ExpressionFunction(
 	(arg: undefined | boolean | number | string | [] | { [ key: string ]: Value })=>
 		arg ? JSON.stringify(arg) : undefined,
-	typeOptionalString, [ new Type('void', 'boolean', 'number', 'string', 'array', 'object') ],
+	typeOptionalString, [ typeJson ],
 );
 
 const equal = (value1: Value, value2: Value)=> {
@@ -470,6 +495,9 @@ const equal = (value1: Value, value2: Value)=> {
 	}
 	if (typeof value1 === 'boolean' || typeof value1 === 'number' || typeof value1 === 'string' || typeof value1 === 'function') {
 		return value1 === value2;
+	}
+	if ((value1 instanceof ArrayBuffer || value1 instanceof SharedArrayBuffer) && (value2 instanceof ArrayBuffer || value2 instanceof SharedArrayBuffer)) {
+		return equalBuffers(value1, value2);
 	}
 	if (Array.isArray(value1) && Array.isArray(value2)) {
 		if (value1.length === value2.length) {
@@ -491,6 +519,54 @@ const equal = (value1: Value, value2: Value)=> {
 	return true;
 }
 
+const equalBuffers = (value1: ArrayBufferLike, value2: ArrayBufferLike)=> {
+	if (value1.byteLength !== value2.byteLength) {
+		return false;
+	}
+	const dv1 = new DataView(value1);
+	const dv2 = new DataView(value2);
+	const length = dv1.byteLength;
+	for (let lfi = length - 3, i = 0; i < length;) {
+		if (i < lfi) {
+			if (dv1.getUint32(i) !== dv2.getUint32(i)) {
+				return false;
+			}
+			i += 4;
+		}
+		else {
+			if (dv1.getUint8(i) !== dv2.getUint8(i)) {
+				return false;
+			}
+			++i;
+		}
+	}
+	return true;
+};
+
+const concatBuffers = (value1: ArrayBufferLike, value2: ArrayBufferLike)=> {
+	const bytes = new Uint8Array(value1.byteLength + value2.byteLength);
+	bytes.set(new Uint8Array(value1), 0);
+	bytes.set(new Uint8Array(value2), value1.byteLength);
+	return bytes.buffer;
+};
+
+export const toHex = (value: ArrayBufferLike)=> {
+	const bytes = new Uint8Array(value);
+	let str = '';
+	for (let i = 0; i < bytes.byteLength; ++i) {
+		str += bytes[ i ].toString(16).padStart(2, '0');
+	}
+	return str;
+};
+
+export const fromHex = (value: string)=> {
+	const bytes = new Uint8Array(Math.ceil(value.length / 2));
+	for (let i = 0, c = 0; c < value.length; ++i) {
+		bytes[ i ] = Number.parseInt(value.slice(c, c += 2), 16);
+	}
+	return bytes.buffer;
+};
+
 const equalStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
 		return value1 === value2;
@@ -509,7 +585,7 @@ const equalStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boole
 		}
 	}
 	return true;
-}
+};
 
 const containsString = (value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
@@ -536,7 +612,7 @@ const containsString = (value: string, search: string, startPos?: number, ignore
 		}
 	}
 	return true;
-}
+};
 
 const startsWithString = (value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
@@ -560,7 +636,7 @@ const startsWithString = (value: string, search: string, startPos?: number, igno
 		}
 	}
 	return true;
-}
+};
 
 const endsWithString = (value: string, search: string, endPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
@@ -584,6 +660,6 @@ const endsWithString = (value: string, search: string, endPos?: number, ignoreCa
 		}
 	}
 	return true;
-}
+};
 
 const isCaseSpaceEtc = (c: string)=> (c < 'a' || c > 'z') && (c < '0' || c > '9');
