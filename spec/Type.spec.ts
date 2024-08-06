@@ -8,6 +8,8 @@ describe('Expression Type test', ()=> {
 		[ '0', 'number' ],
 		[ '142.4', 'number' ],
 		[ '-0.4', 'number' ],
+		[ '\\v', 'number' ],
+		[ '\\v0', 'number' ],
 		[ '\\x', 'buffer' ],
 		[ '\\x0', 'buffer' ],
 		[ '\\x00', 'buffer' ],
