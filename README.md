@@ -25,9 +25,16 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 ## What
 
 #### Operators
+* Assignment: **:**
+* Grouping: **(...)**
+* Next statement: **,**
+* Array element at literal index: **@**
+* Array element at numeric value: **[]**
+* Object property by literal name: **.**
+* Object property by string value: **{}**
+* Boolean negation: **!**
 * Boolean disjunction: **|**
 * Boolean conjunction: **&**
-* Boolean negation: **!**
 * Greater than: **>**
 * Less than: **<**
 * Greater than or equal to: **>=**
@@ -37,36 +44,29 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * String similar to: **\~**
 * String not similar: **!\~**
 * Null coalescence: **?:**
+* Conditional statement: **if...then...else...**
 * Arithmetic addition, buffer or string concatination: **+**
 * Arithmetic subtraction or negation: **-**
 * Arithmetic multiplication: **\***
 * Arithmetic division: **/**
 * Arithmetic percentage: **%**
-* Array element at literal index: **@**
-* Array element at numeric value: **[]**
 * Array concatination: **#**
-* Object property by literal name: **.**
-* Object property by string value: **{}**
 * Object merging: **$**
-* Assignment: **:**
-* Grouping: **(...)**
-* Next statement: **,**
-* Conditional statement: **if...then...else...**
-#### Functions
-* Boolean disjunction: **boolean or(boolean ...values)**
-* Boolean conjunction: **boolean and(boolean ...values)**
-* Bolean negation: **boolean not(boolean value)**
-* Greater than: **boolean gt(number value1, number value2)**
-* Less than: **boolean lt(number value1, number value2)**
-* Greater than or equals to: **boolean ge(number value1, number value2)**
-* Less than or equals to: **boolean le(number value1, number value2)**
-* Equals to: **boolean eq(var value1, var value2)**
-* Not equals to: **boolean neq(var value1, var value2)**
-* String alphanumerically similar to: **boolean like(string value1, string value2)**
-* String alphanumerically not similar to: **boolean nlike(string value1, string value2)**
-* Conditional statement: **variant ifte(boolean condition, variant valueIfTrue, variant valueIfFalse)**
-* Null coalescence: **variant nullco(variant value, variant valueIfNull)**
-* Arithmetic addition or string concatination: **number|string add(number|string ...values)**
+#### Accessor Functions
+* Subbuffer: **buffer subbuf(buffer value, number beginPos, number? endPos)**
+* Byte at position: **buffer byte(buffer value, number pos)**
+* Substring: **string substr(string value, number beginPos, number? endPos)**
+* Character at position: **string char(string value, number pos)**
+* Character code at position: **number charCode(string value, number pos)**
+* New array sliced from given array: **array slice(array value, number? beginIndex, number? endIndex)**
+* Find first item satisfying condition: **variant first(array value, function condition)**
+* Find last item satisfying condition: **variant last(array value, function condition)**
+* Find first index of item satisfying condition: **number firstIndex(array value, function condition)**
+* Find last index of item satisfying condition: **number lastIndex(array value, function condition)**
+* Array element at index: **variant at(array value, number index)**
+* Object property by name: **variant by(object value, string name)**
+#### Calculator Functions
+* Arithmetic addition, buffer or string concatination: **number|buffer|string add(number|buffer|string ...values)**
 * Arithmetic subtraction: **number sub(number minuend, number subtrahend)**
 * Arithmetic negation: **number neg(number value)**
 * Arithmetic multiplication: **number mul(number ...values)**
@@ -84,40 +84,51 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Rounded value: **number round(number value)**
 * Minimum: **number min(number ...values)**
 * Maximum: **number max(number ...values)**
-* Parse buffer from hexadecimal string: **buffer fromHex(string value)**
-* Create hexadecimal string from buffer: **string toHex(buffer value)**
-* Subbuffer: **buffer subbuf(buffer value, number beginPos, number? endPos)**
-* Byte at position: **buffer byte(buffer value, number pos)**
+#### Comparator Functions
+* Bolean negation: **boolean not(boolean value)**
+* Boolean disjunction: **boolean or(boolean ...values)**
+* Boolean conjunction: **boolean and(boolean ...values)**
+* Greater than: **boolean gt(number value1, number value2)**
+* Less than: **boolean lt(number value1, number value2)**
+* Greater than or equals to: **boolean ge(number value1, number value2)**
+* Less than or equals to: **boolean le(number value1, number value2)**
+* Equals to: **boolean eq(var value1, var value2)**
+* Not equals to: **boolean neq(var value1, var value2)**
+* String alphanumerically similar to: **boolean like(string value1, string value2)**
+* String alphanumerically not similar to: **boolean nlike(string value1, string value2)**
+* Null coalescence: **variant nullco(variant value, variant valueIfNull)**
+* Conditional statement: **variant ifte(boolean condition, variant valueIfTrue, variant valueIfFalse)**
 * String contains substring: **boolean contains(string value, string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)**
 * String starts with substring: **boolean startsWith(string value, string search, number? startPos, boolean? ignoreCaseSpaceEtc)**
 * String ends with substring: **boolean endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)**
+* Check if every item satisfies condition: **boolean every(array value, function condition)**
+* Check if any item satisfies condition: **boolean any(array value, function condition)**
+#### Converter Functions
+* Encode a number: **buffer encodeNum(number value, string encoding)**
+* Decode a number: **number decodeNum(buffer value, string encoding, number? offset)**
+* Encode a string: **buffer encodeStr(string value, string encoding)**
+* Decode a string: **string decodeStr(buffer value, string? encoding, number? offset, number? length)**
+* Create hexadecimal string from buffer: **string toHex(buffer value)**
+* Parse buffer from hexadecimal string: **buffer fromHex(string value)**
+* Parse object from JSON-formatted string: **void|boolean|number|string|array|object fromJson(string|void value)**
+* Create JSON-formatted string from object: **string|void toJson(void|boolean|number|string|array|object value)**
+#### Generator Functions
+* Get length of buffer, string or array: **number len(buffer|string|array value)**
 * Get alphanumeric digest of string: **string alphanum(string value)**
 * Trim whitespace: **string trim(string value)**
 * Trim whitespace at start: **string trimStart(string value)**
 * Trim whitespace at end: **string trimEnd(string value)**
-* Substring: **string substr(string value, number beginPos, number? endPos)**
-* Character at position: **string char(string value, number pos)**
-* Character code at position: **number charCode(string value, number pos)**
-* Array element at index: **variant at(array value, number index)**
-* Concatination of arrays or singular values into a flat array: **array concat(array ...values)**
+* Lower case: **string lowerCase(string value)**
+* Upper case: **string upperCase(string value)**
+* Concatination of arrays or singular values into a array: **array concat(array ...values)**
 * New array with reverse order of items: **array reverse(array value)**
 * New array flattened to specified depth: **array flatten(array value, number depth)**
-* New array sliced from given array: **array slice(array value, number? beginIndex, number? endIndex)**
 * New array filled with numbers in between given two numbers: **array range(number inclusiveFrom, number exclusiveTo)**
-* Find first item satisfying condition: **variant first(array value, function condition)**
-* Find last item satisfying condition: **variant last(array value, function condition)**
-* Find first index of item satisfying condition: **number firstIndex(array value, function condition)**
-* Find last index of item satisfying condition: **number lastIndex(array value, function condition)**
-* Iterate items: **void iterate(array value, function iteration)**
+* Iterate items: **array iterate(array value, function iteration)**
 * Map items: **array map(array value, function transformation)**
-* Filter items satisfying condition: **array filter(array value, function condition)**
-* Check if any item satisfies condition: **boolean any(array value, function condition)**
-* Check if every item satisfies condition: **boolean every(array value, function condition)**
+* Filter items: **array filter(array value, function condition)**
 * Object construction from name-value pairs: **object construct(array ...values)**
-* Object property by name: **variant by(object value, string name)**
 * Object merging: **object merge(object ...values)**
-* Parse object from JSON-formatted string: **void|boolean|number|string|array|object fromJson(string|void value)**
-* Create JSON-formatted string from object: **string|void toJson(void|boolean|number|string|array|object value)**
 #### Constants
 * **void null**
 * **boolean true**

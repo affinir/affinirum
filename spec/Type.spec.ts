@@ -29,7 +29,7 @@ describe('Expression Type test', ()=> {
 	].forEach(([ expr, expected ])=> {
 		it(`parses expression ${expr} and determines value type`, ()=> {
 			try {
-				const expression = new Expression(expr as string);
+				const expression = new Expression(expr);
 				expect(expression).toBeDefined();
 				const value = expression.evaluate({});
 				if (Type.of(value).toString() !== expected) {

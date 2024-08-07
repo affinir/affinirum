@@ -1,5 +1,6 @@
 import { ExpressionConstant } from './ExpressionConstant.js';
-import { ExpressionFunction, fromHex } from './ExpressionFunction.js';
+import { ExpressionFunction } from './ExpressionFunction.js';
+import { fromHex } from './ExpressionFunctionConverter.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
 	operNullco, operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operAt, operBy, operMerge } from './ExpressionOperator.js';
 import { Type, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeVariant, typeArray } from './Type.js';

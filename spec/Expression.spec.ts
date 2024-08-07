@@ -50,6 +50,8 @@ describe('Expression Evaluation test', ()=> {
 		[ 'sqrt(longvariablename)-10', [ { longvariablename: 100, result: 0 } ] ],
 		[ 'min(x,2) + max(y,3)', [ { x: 10, y: 20, result: 22 } ] ],
 		[ 'round(x)', [ { x: 10.1, result: 10 }, { x: 10.9, result: 11 } ] ],
+		[ 'encodeNum(v, enc).decodeNum(enc)', [ { v: 0, enc: 'uint8', result: 0 }, { v: 1055, enc: 'uint16', result: 1055 }, { v: 1055, enc: 'uint16le', result: 1055 } ] ],
+		[ 'encodeStr(v, enc).decodeStr(enc)', [ { v: '', enc: 'utf8', result: '' }, { v: '1055', enc: 'utf8', result: '1055' }, { v: '1055', enc: 'ucs2le', result: '1055' } ] ],
 		[ 'toHex(\\xffff0001.subbuf(1))', [ { result: 'ff0001' } ] ],
 		[ 'toHex(a.byte(b))', [ { a: new Uint8Array([ 0xff, 0xff, 0x00, 0x01 ]).buffer, b: 3, result: '01' }, { a: new Uint8Array([ 0x10, 0x00 ]).buffer, b: 0, result: '10' } ] ],
 		[ 'len(s)', [ { s: "my long string", result: 14 }, { s: "my", result: 2 }, { s: "", result: 0 } ] ],

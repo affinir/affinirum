@@ -1,4 +1,4 @@
-export type Value = undefined | boolean | number | ArrayBufferLike | string |
+export type Value = void | undefined | boolean | number | ArrayBufferLike | string |
 	Value[] | { [ key: string ]: Value } | ((...args: Value[])=> Value);
 type PrimitiveType = 'void' | 'boolean' | 'number' | 'buffer' | 'string' | 'array' | 'object' | 'function';
 const PRIMITIVE_TYPES: PrimitiveType[] = [ 'void', 'boolean', 'number', 'buffer', 'string', 'array', 'object', 'function' ];

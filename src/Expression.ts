@@ -1,15 +1,17 @@
 import { ExpressionConstant, constNull, constTrue, constFalse,
 	constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
-import { ExpressionFunction, funcNot, funcAnd, funcOr, funcGt, funcLt, funcGe, funcLe, funcEqual, funcNotEqual, funcLike, funcNotLike,
-	funcContains, funcStartsWith, funcEndsWith, funcEvery, funcAny,
-	funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
-	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin,
-	funcSubbuf, funcByte, funcToHex, funcFromHex,
-	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
-	funcSubstr, funcChar, funcCharCode, funcLen, funcConcat, funcAt, funcFlatten, funcReverse, funcSlice, funcRange,
-	funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcIterate, funcMap, funcFilter,
-	funcConstruct, funcMerge, funcBy, funcNullco, funcIfThenElse, funcFromJson, funcToJson,
-} from './ExpressionFunction.js';
+import { ExpressionFunction } from './ExpressionFunction.js';
+import { funcSubbuf, funcByte, funcSubstr, funcChar, funcCharCode, funcSlice, funcFirst, funcLast, funcFirstIndex, funcLastIndex,
+	funcAt, funcBy } from './ExpressionFunctionAccessor.js';
+import { funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
+	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin } from './ExpressionFunctionCalculator.js';
+import { funcNot, funcAnd, funcOr, funcGt, funcLt, funcGe, funcLe, funcEqual, funcNotEqual, funcLike, funcNotLike,
+	funcNullco, funcIfThenElse, funcContains, funcStartsWith, funcEndsWith, funcEvery, funcAny } from './ExpressionFunctionComparator.js';
+import { funcEncodeNum, funcDecodeNum, funcEncodeStr, funcDecodeStr,
+	funcToHex, funcFromHex, funcFromJson, funcToJson } from './ExpressionFunctionConverter.js';
+import { funcLen, funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
+	funcConcat, funcFlatten, funcReverse, funcRange, funcIterate, funcMap, funcFilter,
+	funcConstruct, funcMerge } from './ExpressionFunctionGenerator.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
 	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operAt, operConcat, operBy, operMerge,
 	operNullco, operIfThenElse } from './ExpressionOperator.js';
@@ -34,20 +36,20 @@ export class Expression {
 		[ 'NaN', constNaN ], [ 'PosInf', constPosInf ], [ 'NegInf', constNegInf ], [ 'Epsilon', constEpsilon ], [ 'Pi', constPi ],
 	]);
 	protected _functions = new Map<string, ExpressionFunction>([
-		[ 'or', funcOr ], [ 'and', funcAnd ], [ 'not', funcNot ], [ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
-		[ 'equal', funcEqual ], [ 'nequal', funcNotEqual ], [ 'like', funcLike ], [ 'nlike', funcNotLike ], [ 'any', funcAny ], [ 'every', funcEvery ],
+		[ 'subbuf', funcSubbuf ], [ 'byte', funcByte ], [ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'slice', funcSlice ],
+		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ], [ 'at', funcAt ], [ 'by', funcBy ],
 		[ 'add', funcAdd ], [ 'sub', funcSub ], [ 'neg', funcNeg ],
 		[ 'mul', funcMul ], [ 'div', funcDiv ], [ 'rem', funcRem ], [ 'mod', funcMod ], [ 'pct', funcPct ],
 		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
 		[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ], [ 'max', funcMax ], [ 'min', funcMin ],
-		[ 'subbuf', funcSubbuf ], [ 'byte', funcByte ], [ 'toHex', funcToHex ], [ 'fromHex', funcFromHex ],
-		[ 'contains', funcContains ], [ 'startsWith', funcStartsWith ], [ 'endsWith', funcEndsWith ], [ 'alphanum', funcAlphanum ],
-		[ 'trim', funcTrim ], [ 'trimStart', funcTrimStart ], [ 'trimEnd', funcTrimEnd ], [ 'lowerCase', funcLowerCase ], [ 'upperCase', funcUpperCase ],
-		[ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'len', funcLen ],
-		[ 'concat', funcConcat ], [ 'at', funcAt ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'slice', funcSlice ], [ 'range', funcRange ],
-		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
-		[ 'iterate', funcIterate ], [ 'map', funcMap ], [ 'filter', funcFilter ], [ 'construct', funcConstruct ], [ 'merge', funcMerge ], [ 'by', funcBy ],
-		[ 'nullco', funcNullco ], [ 'ifte', funcIfThenElse ], [ 'fromJson', funcFromJson ], [ 'toJson', funcToJson ],
+		[ 'not', funcNot ], [ 'or', funcOr ], [ 'and', funcAnd ], [ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
+		[ 'equal', funcEqual ], [ 'nequal', funcNotEqual ], [ 'like', funcLike ], [ 'nlike', funcNotLike ], [ 'nullco', funcNullco ], [ 'ifte', funcIfThenElse ],
+		[ 'contains', funcContains ], [ 'startsWith', funcStartsWith ], [ 'endsWith', funcEndsWith ], [ 'any', funcAny ], [ 'every', funcEvery ],
+		[ 'encodeNum', funcEncodeNum ], [ 'decodeNum', funcDecodeNum ], [ 'encodeStr', funcEncodeStr ], [ 'decodeStr', funcDecodeStr ],
+		[ 'toHex', funcToHex ], [ 'fromHex', funcFromHex ], [ 'fromJson', funcFromJson ], [ 'toJson', funcToJson ],
+		[ 'len', funcLen ], [ 'alphanum', funcAlphanum ], [ 'trim', funcTrim ], [ 'trimStart', funcTrimStart ], [ 'trimEnd', funcTrimEnd ],
+		[ 'lowerCase', funcLowerCase ], [ 'upperCase', funcUpperCase ], [ 'concat', funcConcat ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ],
+		[ 'range', funcRange ], [ 'iterate', funcIterate ], [ 'map', funcMap ], [ 'filter', funcFilter ], [ 'construct', funcConstruct ], [ 'merge', funcMerge ],
 	]);
 	protected _scope = new StaticScope();
 
