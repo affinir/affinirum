@@ -30,12 +30,13 @@ import { ExpressionObjectNode } from './ExpressionObjectNode.js';
 export class Expression {
 
 	protected readonly _expression: string;
+	protected readonly _strict: boolean;
 	protected readonly _statements: Node[];
-	protected _constants = new Map<string, ExpressionConstant>([
+	protected readonly _constants = new Map<string, ExpressionConstant>([
 		[ 'null', constNull ], [ 'true', constTrue ], [ 'false', constFalse ],
 		[ 'NaN', constNaN ], [ 'PosInf', constPosInf ], [ 'NegInf', constNegInf ], [ 'Epsilon', constEpsilon ], [ 'Pi', constPi ],
 	]);
-	protected _functions = new Map<string, ExpressionFunction>([
+	protected readonly _functions = new Map<string, ExpressionFunction>([
 		[ 'subbuf', funcSubbuf ], [ 'byte', funcByte ], [ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'slice', funcSlice ],
 		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ], [ 'at', funcAt ], [ 'by', funcBy ],
 		[ 'add', funcAdd ], [ 'sub', funcSub ], [ 'neg', funcNeg ],
@@ -51,41 +52,54 @@ export class Expression {
 		[ 'lowerCase', funcLowerCase ], [ 'upperCase', funcUpperCase ], [ 'concat', funcConcat ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ],
 		[ 'range', funcRange ], [ 'iterate', funcIterate ], [ 'map', funcMap ], [ 'filter', funcFilter ], [ 'construct', funcConstruct ], [ 'merge', funcMerge ],
 	]);
-	protected _scope = new StaticScope();
+	protected readonly _scope = new StaticScope();
 
 	/**
 		Creates compiled expression. Any parsed token not recognized as a constant or a function will be compiled as a variable.
 		@param expr Math expression to compile.
-		@param config Optional constants and functions to add for the compilation.
+		@param config Optional expected type, strict mode, variable types, constant values and functions to add for the compilation.
+			If expected type is provided then expression return type is matched against it.
+			If strict mode is set to true then only predefined variables provided in the config object will be allowed in the expression.
 	*/
 	constructor(expr: string, config?: {
 		type?: Type,
-		variables?: {
-			name: string,
-			type: Type
-		}[],
-		constants?: {
-			name: string,
-			value: Value
-		}[],
-		functions?: {
-			name: string,
+		strict?: boolean,
+		variables?: Record<string, Type>,
+		constants?: Record<string, Value>,
+		functions?: Record<string, {
 			func: (...values: any[])=> Value,
 			type: Type,
 			argTypes: Type[],
 			minArity?: number,
 			maxArity?: number,
 			typeInference?: (index: number, type: string, mask: string)=> boolean
-		}[],
+		}>,
 	}) {
 		this._expression = expr;
 		const type = config?.type ?? typeVariant;
-		config?.variables?.forEach((v)=>
-			this._scope.set(v.name, new ExpressionVariable(undefined, v.type)));
-		config?.constants?.forEach((c)=>
-			this._constants.set(c.name, new ExpressionConstant(c.value)));
-		config?.functions?.forEach((f)=>
-			this._functions.set(f.name, new ExpressionFunction(f.func, f.type, f.argTypes, f.minArity, f.maxArity, f.typeInference)));
+		this._strict = config?.strict ?? false;
+		if (config?.variables) {
+			for (const v in config.variables) {
+				this._scope.set(v, new ExpressionVariable(undefined, config.variables[ v ]));
+			}
+		}
+		if (config?.constants) {
+			for (const c in config.constants) {
+				this._constants.set(c, new ExpressionConstant(config.constants[ c ]));
+			}
+		}
+		if (config?.functions) {
+			for (const f in config.constants) {
+				this._functions.set(f, new ExpressionFunction(
+					config.functions[ f ].func,
+					config.functions[ f ].type,
+					config.functions[ f ].argTypes,
+					config.functions[ f ].minArity,
+					config.functions[ f ].maxArity,
+					config.functions[ f ].typeInference)
+				);
+			}
+		}
 		const state = new ParserState(this._expression);
 		try {
 			this._statements = this.list(state.next(), this._scope);
@@ -118,7 +132,7 @@ export class Expression {
 	}
 
 	/**
-		Returns record with undefined compiled variable names and expected types.
+		Returns record with compiled variable names and expected types.
 		@returns Record with variable names and types.
 	*/
 	variables(): Record<string, Type> {
@@ -317,6 +331,9 @@ export class Expression {
 			}
 			let variable = scope.get(token);
 			if (variable == null) {
+				if (this._strict) {
+					throw new Error(`undefined variable ${token} in strict mode`);
+				}
 				variable = new ExpressionVariable();
 				scope.set(token, variable);
 			}

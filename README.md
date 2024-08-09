@@ -169,7 +169,7 @@ Number literals in scientific notation are not supported.
 Hexadecimal integers require prefix **\\v**.
 Buffer literals in hexadecimal format require prefix **\\x**.
 
-Arrays may contain values of any type.
+Arrays may contain values of any type, basically tuples.
 Type of any array is **array**.
 Type of any object is **object**.
 Type of any function is **function**, and type of **null** is **void**.
@@ -180,7 +180,7 @@ of alphanumeric characters, and **\_**. For example: *x*, *\_a1*, *abc25*
 
 ## How
 
-Create instance of Expression class with a string containing expression.
+Create instance of Expression class with a string containing expression and optional compilation configuration.
 During the parsing any alphanumeric sequence not identified as
 number value, string value, operator, or a function name is assumed to be variable.
 Evaluate the expression by providing variable values.
