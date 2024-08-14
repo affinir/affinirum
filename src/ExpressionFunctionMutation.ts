@@ -96,6 +96,18 @@ export const funcDecodeStr = new ExpressionFunction(
 	typeString, [ typeBuffer, typeOptionalString, typeOptionalNumber, typeOptionalNumber ], 1, 4,
 );
 
+export const funcToDec = new ExpressionFunction(
+	(value: number)=>
+		value.toString(),
+	typeString, [ typeNumber ],
+);
+
+export const funcFromDec = new ExpressionFunction(
+	(value: string)=>
+		Number.parseFloat(value),
+	typeNumber, [ typeString ],
+);
+
 export const funcToHex = new ExpressionFunction(
 	(value: ArrayBufferLike)=>
 		toHex(value),

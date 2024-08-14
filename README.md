@@ -52,7 +52,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Arithmetic percentage: **%**
 * Array concatination: **#**
 * Object merging: **$**
-#### Accessor Functions
+#### Access Functions
 * Subbuffer: **buffer subbuf(buffer value, number beginPos, number? endPos)**
 * Byte at position: **buffer byte(buffer value, number pos)**
 * Substring: **string substr(string value, number beginPos, number? endPos)**
@@ -65,26 +65,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Find last index of item satisfying condition: **number lastIndex(array value, function condition)**
 * Array element at index: **variant at(array value, number index)**
 * Object property by name: **variant by(object value, string name)**
-#### Calculator Functions
-* Arithmetic addition, buffer or string concatination: **number|buffer|string add(number|buffer|string ...values)**
-* Arithmetic subtraction: **number sub(number minuend, number subtrahend)**
-* Arithmetic negation: **number neg(number value)**
-* Arithmetic multiplication: **number mul(number ...values)**
-* Arithmetic division: **number div(number dividend, number divisor)**
-* Arithmetic percentage: **number pct(number dividend, number divisor)**
-* Exponent: **number exp(number value)**
-* Logarithm: **number log(number value)**
-* Power: **number pow(number base, number exponent)**
-* Root: **number rt(number value, number index)**
-* Square: **number sq(number value)**
-* Square root: **number sqrt(number value)**
-* Absolute value: **number abs(number value)**
-* Ceil: **number ceil(number value)**
-* Floor: **number floor(number value)**
-* Rounded value: **number round(number value)**
-* Minimum: **number min(number ...values)**
-* Maximum: **number max(number ...values)**
-#### Comparator Functions
+#### Base Functions
 * Bolean negation: **boolean not(boolean value)**
 * Boolean disjunction: **boolean or(boolean ...values)**
 * Boolean conjunction: **boolean and(boolean ...values)**
@@ -103,32 +84,59 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * String ends with substring: **boolean endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)**
 * Check if every item satisfies condition: **boolean every(array value, function condition)**
 * Check if any item satisfies condition: **boolean any(array value, function condition)**
-#### Converter Functions
-* Encode a number: **buffer encodeNum(number value, string encoding)**
-* Decode a number: **number decodeNum(buffer value, string encoding, number? offset)**
-* Encode a string: **buffer encodeStr(string value, string encoding)**
-* Decode a string: **string decodeStr(buffer value, string? encoding, number? offset, number? length)**
-* Create hexadecimal string from buffer: **string toHex(buffer value)**
-* Parse buffer from hexadecimal string: **buffer fromHex(string value)**
-* Parse object from JSON-formatted string: **void|boolean|number|string|array|object fromJson(string|void value)**
-* Create JSON-formatted string from object: **string|void toJson(void|boolean|number|string|array|object value)**
-#### Generator Functions
-* Get length of buffer, string or array: **number len(buffer|string|array value)**
+* Get length of buffer, string, array or object: **number len(buffer|string|array|object value)**
 * Get alphanumeric digest of string: **string alphanum(string value)**
 * Trim whitespace: **string trim(string value)**
 * Trim whitespace at start: **string trimStart(string value)**
 * Trim whitespace at end: **string trimEnd(string value)**
 * Lower case: **string lowerCase(string value)**
 * Upper case: **string upperCase(string value)**
-* Concatination of arrays or singular values into a array: **array concat(array ...values)**
+* Concatination of array elements into a string with separator: **string join(array value, string separator)**
+* Concatination of arrays or singular values into a array: **array union(array|variant ...values)**
+* Array of unique values: **array unique(array|variant ...values)**
+* Intersection of values of two arrays: **array intersection(array value1, array value2)**
+* Symmetrical difference between two arrays: **array difference(array value1, array value2)**
 * New array with reverse order of items: **array reverse(array value)**
 * New array flattened to specified depth: **array flatten(array value, number depth)**
 * New array filled with numbers in between given two numbers: **array range(number inclusiveFrom, number exclusiveTo)**
 * Iterate items: **array iterate(array value, function iteration)**
 * Map items: **array map(array value, function transformation)**
 * Filter items: **array filter(array value, function condition)**
-* Object construction from name-value pairs: **object construct(array ...values)**
-* Object merging: **object merge(object ...values)**
+* Object merging: **object merge(array|object ...values)**
+* Object composition from name-value pairs: **object comp(array ...values)**
+* Object decomposition into name-value pairs: **array decomp(object value)**
+* Object property keys: **array decompKeys(object value)**
+* Object property values: **array decompValues(object value)**
+#### Math Functions
+* Arithmetic addition, buffer or string concatination: **number|buffer|string add(number|buffer|string ...values)**
+* Arithmetic subtraction: **number sub(number minuend, number subtrahend)**
+* Arithmetic negation: **number neg(number value)**
+* Arithmetic multiplication: **number mul(number ...values)**
+* Arithmetic division: **number div(number dividend, number divisor)**
+* Arithmetic percentage: **number pct(number dividend, number divisor)**
+* Exponent: **number exp(number value)**
+* Logarithm: **number log(number value)**
+* Power: **number pow(number base, number exponent)**
+* Root: **number rt(number value, number index)**
+* Square: **number sq(number value)**
+* Square root: **number sqrt(number value)**
+* Absolute value: **number abs(number value)**
+* Ceil: **number ceil(number value)**
+* Floor: **number floor(number value)**
+* Rounded value: **number round(number value)**
+* Minimum: **number min(number ...values)**
+* Maximum: **number max(number ...values)**
+#### Mutation Functions
+* Encode a number: **buffer encodeNum(number value, string encoding)**
+* Decode a number: **number decodeNum(buffer value, string encoding, number? offset)**
+* Encode a string: **buffer encodeStr(string value, string encoding)**
+* Decode a string: **string decodeStr(buffer value, string? encoding, number? offset, number? length)**
+* Create decimal string from number: **string toDec(number value)**
+* Parse number from decimal string: **buffer fromDec(string value)**
+* Create hexadecimal string from buffer: **string toHex(buffer value)**
+* Parse buffer from hexadecimal string: **buffer fromHex(string value)**
+* Parse object from JSON-formatted string: **void|boolean|number|string|array|object fromJson(string|void value)**
+* Create JSON-formatted string from object: **string|void toJson(void|boolean|number|string|array|object value)**
 #### Constants
 * **void null**
 * **boolean true**
@@ -155,7 +163,7 @@ The expression parsing is performed using the following grammar:
 	<term> = <number> | <string> | <constant-name> |
 		<function-name>"("{ <disjunction> }{ ","<disjunction> }")" |
 		{ <type> } <variable-name>{ ":"<disjunction> } |
-		<type>"("<type> <argument>{ ","<type> <argument> }")" "=>"<list> |
+		<type>"("<type> <argument>{ ","<type> <argument> }") ("<list>")" |
 		"("<disjunction>")" |
 		"["{ <disjunction> }{ ","<disjunction> }"]" |
 		"{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}" |
@@ -165,14 +173,29 @@ The expression parsing is performed using the following grammar:
 
 Whitespace characters are ignored.
 
-Number literals in scientific notation are not supported.
+Expression may contain multiple comma separated sub-expressions.
+The value of an expression is the value of the last sub-expression in the list.
+
+Number scientific notation is supported.
 Hexadecimal integers require prefix **\\v**.
 Buffer literals in hexadecimal format require prefix **\\x**.
 
-Arrays may contain values of any type, basically tuples.
+Array is an ordered sequence of values of any type.
+It can be defined using brackets with comma separated elements inside.
+Array element can be accessed using operator **@** with numeric literal or using accessor **[]** with numeric value.
+
+Object is a container of named values of any type.
+It can be defined using braces with comma separated properties with assigned values.
+Object property can be accessed using operator **.** with string literal or using accessor **{}** with string value.
+
+Function is a callable unit producing a value.
+It is defined with a return type followed by a comma separated typed function argument list encased in parentheses,
+ and a function expression encased in parentheses.
+
 Type of any array is **array**.
 Type of any object is **object**.
-Type of any function is **function**, and type of **null** is **void**.
+Type of any function is **function**.
+Type of **null** is **void**.
 
 Valid variable or function names consist of a letter, or **\_** characters followed by any combination
 of alphanumeric characters, and **\_**. For example: *x*, *\_a1*, *abc25*
@@ -200,7 +223,7 @@ const objExpr = new Expression( '{prop1:a,prop2:`abc`}.prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new Expression(
-	'arr1.map(number(number a) -> a*2).filter(boolean(number a) => a>3).add()'
+	'arr1.map(number(number a)(a*2)).filter(boolean(number a)(a>3)).add()'
 );
 const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
 ...

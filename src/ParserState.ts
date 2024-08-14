@@ -1,6 +1,6 @@
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
-import { fromHex } from './ExpressionFunctionConverter.js';
+import { fromHex } from './ExpressionFunctionMutation.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
 	operNullco, operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operAt, operBy, operMerge } from './ExpressionOperator.js';
 import { Type, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeVariant, typeArray } from './Type.js';
@@ -13,11 +13,19 @@ const symbolBracesOpen = Symbol();
 const symbolBracesClose = Symbol();
 const symbolAssignment = Symbol();
 const symbolSeparator = Symbol();
-const symbolScope = Symbol();
 const symbolOption = Symbol();
 const symbolIf = Symbol();
 const symbolThen = Symbol();
 const symbolElse = Symbol();
+
+const isSign = (c: string)=> c === '+' || c === '-';
+const isAlpha = (c: string)=>  c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c === '_' ;
+const isNumeric = (c: string)=>  c >= '0' && c <= '9' ;
+const isAlphanumeric = (c: string)=> isAlpha(c) || isNumeric(c);
+const isDecinumeric = (c: string)=>  isNumeric(c) || c === '.';
+const isHexadecimal = (c: string)=> isNumeric(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
+const isEscape = (c: string)=> c === '\\';
+const isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
 
 export class ParserState {
 
@@ -97,10 +105,6 @@ export class ParserState {
 		return this._obj === symbolSeparator;
 	}
 
-	get isScope(): boolean {
-		return this._obj === symbolScope;
-	}
-
 	get isOption(): boolean {
 		return this._obj === symbolOption;
 	}
@@ -164,12 +168,7 @@ export class ParserState {
 				default: this._obj = operNot; break;
 				}
 				break;
-			case '=':
-				switch (this._expr.charAt(this._endPos)) {
-				case '>': ++this._endPos; this._obj = symbolScope; break;
-				default: this._obj = operEqual; break;
-				}
-				break;
+			case '=': this._obj = operEqual; break;
 			case '~': this._obj = operLike; break;
 			case '+': this._obj = operAdd; break;
 			case '-': this._obj = operSub; break;
@@ -182,8 +181,8 @@ export class ParserState {
 			case '$': this._obj = operMerge; break;
 			case '.': this._obj = operBy; break;
 			default:
-				if (ParserState.isAlpha(c)) {
-					while (ParserState.isAlphanumeric(this._expr.charAt(this._endPos))) {
+				if (isAlpha(c)) {
+					while (isAlphanumeric(this._expr.charAt(this._endPos))) {
 						++this._endPos;
 					}
 					const token = this._expr.substring(this._startPos, this._endPos);
@@ -203,23 +202,32 @@ export class ParserState {
 					default: this._obj = token; break;
 					}
 				}
-				else if (ParserState.isNumeric(c)) {
-					while (ParserState.isDecinumeric(this._expr.charAt(this._endPos))) {
+				else if (isNumeric(c)) {
+					while (isDecinumeric(this._expr.charAt(this._endPos))) {
 						++this._endPos;
+					}
+					if (this._expr.charAt(this._endPos) === 'e') {
+						++this._endPos;
+						if (isSign(this._expr.charAt(this._endPos)) || isNumeric(this._expr.charAt(this._endPos))) {
+							++this._endPos;
+							while (isNumeric(this._expr.charAt(this._endPos))) {
+								++this._endPos;
+							}
+						}
 					}
 					this._obj = new ExpressionConstant(parseFloat(this._expr.substring(this._startPos, this._endPos)));
 				}
-				else if (ParserState.isEscape(c)) {
+				else if (isEscape(c)) {
 					if (this._expr.charAt(this._endPos) === 'x') {
 						++this._endPos;
-						while (ParserState.isHexadecimal(this._expr.charAt(this._endPos))) {
+						while (isHexadecimal(this._expr.charAt(this._endPos))) {
 							++this._endPos;
 						}
 						this._obj = new ExpressionConstant(fromHex(this._expr.substring(this._startPos + 2, this._endPos)));
 					}
 					else if (this._expr.charAt(this._endPos) === 'v') {
 						++this._endPos;
-						while (ParserState.isHexadecimal(this._expr.charAt(this._endPos))) {
+						while (isHexadecimal(this._expr.charAt(this._endPos))) {
 							++this._endPos;
 						}
 						this._obj = new ExpressionConstant(parseInt(this._expr.substring(this._startPos + 2, this._endPos), 16));
@@ -228,7 +236,7 @@ export class ParserState {
 						throw new Error(`unknown escape symbol \\${c}`);
 					}
 				}
-				else if (ParserState.isQuotation(c)) {
+				else if (isQuotation(c)) {
 					while (this._expr.charAt(this._endPos) !== '' && this._expr.charAt(this._endPos) !== c) {
 						++this._endPos;
 					}
@@ -245,13 +253,5 @@ export class ParserState {
 		}
 		return this;
 	}
-
-	static isAlpha = (c: string)=>  c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c === '_' ;
-	static isNumeric = (c: string)=>  c >= '0' && c <= '9' ;
-	static isAlphanumeric = (c: string)=> ParserState.isAlpha(c) || ParserState.isNumeric(c);
-	static isDecinumeric = (c: string)=>  ParserState.isNumeric(c) || c === '.';
-	static isHexadecimal = (c: string)=> ParserState.isNumeric(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
-	static isEscape = (c: string)=> c === '\\';
-	static isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
 
 }
