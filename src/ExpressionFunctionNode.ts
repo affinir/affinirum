@@ -29,7 +29,7 @@ export class ExpressionFunctionNode extends Node {
 		this._type = inferredType;
 		let constant = true;
 		for (let i = 0; i < this._subnodes.length; ++i) {
-			const argType = this._function.argTypes[ i ] ?? this._function.argTypes.slice(-1)[ 0 ];
+			const argType = this._function.argTypes[ i ] ?? this._function.argTypes[ this._function.argTypes.length - 1 ];
 			const inferredArgType = argType.infer(inferredType, this._function.typeInference(i));
 			if (!inferredArgType) {
 				this.throwTypeError(type);

@@ -20,7 +20,15 @@
 		"Evaluation",
 		"parser",
 		"compiler",
-		"evaluator"
+		"evaluator",
+		"boolean",
+		"number",
+		"buffer",
+		"string",
+		"array",
+		"object",
+		"function",
+		"void"
 	],
 	"scripts": {
 		"clean": "rimraf --glob dst/* && rimraf --glob *.tgz",

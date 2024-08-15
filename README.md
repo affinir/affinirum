@@ -24,6 +24,15 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 
 ## What
 
+#### Types
+* boolean
+* number
+* buffer
+* string
+* array
+* object
+* function
+* void
 #### Operators
 * Assignment: **:**
 * Grouping: **(...)**
@@ -45,13 +54,12 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * String not similar: **!\~**
 * Null coalescence: **?:**
 * Conditional statement: **if...then...else...**
-* Arithmetic addition, buffer or string concatination: **+**
+* Arithmetic addition, buffer or string concatination, or object merging: **+**
 * Arithmetic subtraction or negation: **-**
 * Arithmetic multiplication: **\***
 * Arithmetic division: **/**
 * Arithmetic percentage: **%**
-* Array concatination: **#**
-* Object merging: **$**
+* Length of buffer, string, array or object: **$**
 #### Access Functions
 * Subbuffer: **buffer subbuf(buffer value, number beginPos, number? endPos)**
 * Byte at position: **buffer byte(buffer value, number pos)**
@@ -65,6 +73,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Find last index of item satisfying condition: **number lastIndex(array value, function condition)**
 * Array element at index: **variant at(array value, number index)**
 * Object property by name: **variant by(object value, string name)**
+* Length of buffer, string, array or object: **number len(buffer|string|array|object value)**
 #### Base Functions
 * Bolean negation: **boolean not(boolean value)**
 * Boolean disjunction: **boolean or(boolean ...values)**
@@ -84,7 +93,6 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * String ends with substring: **boolean endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)**
 * Check if every item satisfies condition: **boolean every(array value, function condition)**
 * Check if any item satisfies condition: **boolean any(array value, function condition)**
-* Get length of buffer, string, array or object: **number len(buffer|string|array|object value)**
 * Get alphanumeric digest of string: **string alphanum(string value)**
 * Trim whitespace: **string trim(string value)**
 * Trim whitespace at start: **string trimStart(string value)**
@@ -92,17 +100,15 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Lower case: **string lowerCase(string value)**
 * Upper case: **string upperCase(string value)**
 * Concatination of array elements into a string with separator: **string join(array value, string separator)**
-* Concatination of arrays or singular values into a array: **array union(array|variant ...values)**
 * Array of unique values: **array unique(array|variant ...values)**
-* Intersection of values of two arrays: **array intersection(array value1, array value2)**
-* Symmetrical difference between two arrays: **array difference(array value1, array value2)**
+* Intersection of values of two arrays: **array intersect(array value1, array value2)**
+* Symmetrical difference between two arrays: **array differ(array value1, array value2)**
 * New array with reverse order of items: **array reverse(array value)**
 * New array flattened to specified depth: **array flatten(array value, number depth)**
-* New array filled with numbers in between given two numbers: **array range(number inclusiveFrom, number exclusiveTo)**
+* New array filled with integers in between given two numbers: **array range(number inclusiveFrom, number exclusiveTo)**
 * Iterate items: **array iterate(array value, function iteration)**
 * Map items: **array map(array value, function transformation)**
 * Filter items: **array filter(array value, function condition)**
-* Object merging: **object merge(array|object ...values)**
 * Object composition from name-value pairs: **object comp(array ...values)**
 * Object decomposition into name-value pairs: **array decomp(object value)**
 * Object property keys: **array decompKeys(object value)**
@@ -124,8 +130,9 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Ceil: **number ceil(number value)**
 * Floor: **number floor(number value)**
 * Rounded value: **number round(number value)**
-* Minimum: **number min(number ...values)**
-* Maximum: **number max(number ...values)**
+* Sum: **number sum(number|array ...value)**
+* Minimum: **number min(number|array ...value)**
+* Maximum: **number max(number|array ...value)**
 #### Mutation Functions
 * Encode a number: **buffer encodeNum(number value, string encoding)**
 * Decode a number: **number decodeNum(buffer value, string encoding, number? offset)**
@@ -169,7 +176,7 @@ The expression parsing is performed using the following grammar:
 		"{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}" |
 		"if" <condition> "then" <disjunction> "else" <disjunction>
 	<type> = ( "void" | "boolean" | "bool" | "number" | "num" | "buffer" | "buf" | "string" | "str" |
-		"array" | "arr" | "object" | "obj" | "function" | "func" ){ "?" } | "var"
+		"array" | "arr" | "object" | "obj" | "function" | "func" ){ "?" } | "variant" | "var"
 
 Whitespace characters are ignored.
 
@@ -177,8 +184,8 @@ Expression may contain multiple comma separated sub-expressions.
 The value of an expression is the value of the last sub-expression in the list.
 
 Number scientific notation is supported.
-Hexadecimal integers require prefix **\\v**.
-Buffer literals in hexadecimal format require prefix **\\x**.
+Hexadecimal integer literals start with prefix **#**.
+Hexadecimal buffer literals start with prefix **##**.
 
 Array is an ordered sequence of values of any type.
 It can be defined using brackets with comma separated elements inside.
@@ -216,14 +223,14 @@ const expr = new Expression( 'x * (y + abc / 5) > 10' );
 const value1 = expr.evaluate( { x: 10, y: 20, abc: 10 } ); // true
 const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
 ...
-const arrExpr = new Expression( '[ 1, 2, 3, a, b, c ].add()' );
+const arrExpr = new Expression( '[ 1, 2, 3, a, b, c ].sum()' );
 const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
 ...
 const objExpr = new Expression( '{prop1:a,prop2:`abc`}.prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new Expression(
-	'arr1.map(number(number a)(a*2)).filter(boolean(number a)(a>3)).add()'
+	'arr1.map(number(number a)(a*2)).filter(boolean(number a)(a>3)).sum()'
 );
 const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
 ...

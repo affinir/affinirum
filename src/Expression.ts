@@ -2,19 +2,18 @@ import { ExpressionConstant, constNull, constTrue, constFalse,
 	constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { funcSubbuf, funcByte, funcSubstr, funcChar, funcCharCode, funcSlice, funcFirst, funcLast, funcFirstIndex, funcLastIndex,
-	funcAt, funcBy } from './ExpressionFunctionAccess.js';
+	funcAt, funcBy, funcLen } from './ExpressionFunctionAccess.js';
 import { funcNot, funcAnd, funcOr, funcGt, funcLt, funcGe, funcLe, funcEqual, funcNotEqual, funcLike, funcNotLike,
 	funcNullco, funcIfThenElse, funcContains, funcStartsWith, funcEndsWith, funcEvery, funcAny,
-	funcLen, funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin,
-	funcUnion, funcUnique, funcIntersection, funcDifference, funcFlatten, funcReverse, funcRange, funcIterate, funcMap, funcFilter,
-	funcMerge, funcComp, funcDecomp, funcDecompKeys, funcDecompValues } from './ExpressionFunctionBase.js';
+	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin,
+	funcUnique, funcIntersect, funcDiffer, funcFlatten, funcReverse, funcRange, funcMap, funcFilter,
+	funcIterate, funcReduce, funcComp, funcDecomp, funcDecompKeys, funcDecompValues } from './ExpressionFunctionBase.js';
 import { funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct, funcExp, funcLog, funcPow, funcRt, funcSq, funcSqrt,
-	funcAbs, funcCeil, funcFloor, funcRound, funcMax, funcMin } from './ExpressionFunctionMath.js';
+	funcAbs, funcCeil, funcFloor, funcRound, funcSum, funcMax, funcMin } from './ExpressionFunctionMath.js';
 import { funcEncodeNum, funcDecodeNum, funcEncodeStr, funcDecodeStr,
 	funcToDec, funcFromDec, funcToHex, funcFromHex, funcFromJson, funcToJson } from './ExpressionFunctionMutation.js';
-import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
-	operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow, operAt, operConcat, operBy, operMerge,
-	operNullco, operIfThenElse } from './ExpressionOperator.js';
+import { operAt, operBy, operLen, operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
+	operNullco, operIfThenElse, operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow } from './ExpressionOperator.js';
 import { StaticScope } from './StaticScope.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { Type, Value, typeVariant } from './Type.js';
@@ -27,34 +26,40 @@ import { ExpressionClosureNode } from './ExpressionClosureNode.js';
 import { ExpressionArrayNode } from './ExpressionArrayNode.js';
 import { ExpressionObjectNode } from './ExpressionObjectNode.js';
 
+const constants: [ string, ExpressionConstant ][] = [
+	[ 'null', constNull ], [ 'true', constTrue ], [ 'false', constFalse ],
+	[ 'NaN', constNaN ], [ 'PosInf', constPosInf ], [ 'NegInf', constNegInf ], [ 'Epsilon', constEpsilon ], [ 'Pi', constPi ],
+];
+const functions: [ string, ExpressionFunction][] = [
+	[ 'subbuf', funcSubbuf ], [ 'byte', funcByte ], [ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'slice', funcSlice ],
+	[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
+	[ 'at', funcAt ], [ 'by', funcBy ], [ 'len', funcLen ],
+	[ 'not', funcNot ], [ 'or', funcOr ], [ 'and', funcAnd ], [ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
+	[ 'equal', funcEqual ], [ 'nequal', funcNotEqual ], [ 'like', funcLike ], [ 'nlike', funcNotLike ], [ 'nullco', funcNullco ], [ 'ifte', funcIfThenElse ],
+	[ 'contains', funcContains ], [ 'startsWith', funcStartsWith ], [ 'endsWith', funcEndsWith ], [ 'any', funcAny ], [ 'every', funcEvery ],
+	[ 'alphanum', funcAlphanum ], [ 'trim', funcTrim ], [ 'trimStart', funcTrimStart ], [ 'trimEnd', funcTrimEnd ],
+	[ 'lowerCase', funcLowerCase ], [ 'upperCase', funcUpperCase ], [ 'join', funcJoin ],
+	[ 'unique', funcUnique ], [ 'intersect', funcIntersect ], [ 'differ', funcDiffer ],
+	[ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'range', funcRange ],
+	[ 'map', funcMap ], [ 'filter', funcFilter ], [ 'iterate', funcIterate ], [ 'reduce', funcReduce ],
+	[ 'comp', funcComp ], [ 'decomp', funcDecomp ], [ 'decompKeys', funcDecompKeys ], [ 'decompValues', funcDecompValues ],
+	[ 'add', funcAdd ], [ 'sub', funcSub ], [ 'neg', funcNeg ],
+	[ 'mul', funcMul ], [ 'div', funcDiv ], [ 'rem', funcRem ], [ 'mod', funcMod ], [ 'pct', funcPct ],
+	[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
+	[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ], [ 'sum', funcSum ], [ 'max', funcMax ], [ 'min', funcMin ],
+	[ 'encodeNum', funcEncodeNum ], [ 'decodeNum', funcDecodeNum ], [ 'encodeStr', funcEncodeStr ], [ 'decodeStr', funcDecodeStr ],
+	[ 'toDec', funcToDec ], [ 'fromDec', funcFromDec ], [ 'toHex', funcToHex ], [ 'fromHex', funcFromHex ],
+	[ 'fromJson', funcFromJson ], [ 'toJson', funcToJson ],
+];
+
 export class Expression {
 
+	static readonly keywords = [ ...constants.map((c)=> c[ 0 ]), ...functions.map((f)=> f[ 0 ]) ];
 	protected readonly _expression: string;
 	protected readonly _strict: boolean;
 	protected readonly _statements: Node[];
-	protected readonly _constants = new Map<string, ExpressionConstant>([
-		[ 'null', constNull ], [ 'true', constTrue ], [ 'false', constFalse ],
-		[ 'NaN', constNaN ], [ 'PosInf', constPosInf ], [ 'NegInf', constNegInf ], [ 'Epsilon', constEpsilon ], [ 'Pi', constPi ],
-	]);
-	protected readonly _functions = new Map<string, ExpressionFunction>([
-		[ 'subbuf', funcSubbuf ], [ 'byte', funcByte ], [ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'slice', funcSlice ],
-		[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ], [ 'at', funcAt ], [ 'by', funcBy ],
-		[ 'not', funcNot ], [ 'or', funcOr ], [ 'and', funcAnd ], [ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
-		[ 'equal', funcEqual ], [ 'nequal', funcNotEqual ], [ 'like', funcLike ], [ 'nlike', funcNotLike ], [ 'nullco', funcNullco ], [ 'ifte', funcIfThenElse ],
-		[ 'contains', funcContains ], [ 'startsWith', funcStartsWith ], [ 'endsWith', funcEndsWith ], [ 'any', funcAny ], [ 'every', funcEvery ],
-		[ 'len', funcLen ], [ 'alphanum', funcAlphanum ], [ 'trim', funcTrim ], [ 'trimStart', funcTrimStart ], [ 'trimEnd', funcTrimEnd ],
-		[ 'lowerCase', funcLowerCase ], [ 'upperCase', funcUpperCase ], [ 'join', funcJoin ],
-		[ 'union', funcUnion ], [ 'unique', funcUnique ], [ 'intersection', funcIntersection ], [ 'difference', funcDifference ],
-		[ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'range', funcRange ], [ 'iterate', funcIterate ], [ 'map', funcMap ], [ 'filter', funcFilter ],
-		[ 'merge', funcMerge ], [ 'comp', funcComp ], [ 'decomp', funcDecomp ], [ 'decompKeys', funcDecompKeys ], [ 'decompValues', funcDecompValues ],
-		[ 'add', funcAdd ], [ 'sub', funcSub ], [ 'neg', funcNeg ],
-		[ 'mul', funcMul ], [ 'div', funcDiv ], [ 'rem', funcRem ], [ 'mod', funcMod ], [ 'pct', funcPct ],
-		[ 'exp', funcExp ], [ 'log', funcLog ], [ 'pow', funcPow ], [ 'rt', funcRt ], [ 'sq', funcSq ], [ 'sqrt', funcSqrt ],
-		[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ], [ 'max', funcMax ], [ 'min', funcMin ],
-		[ 'encodeNum', funcEncodeNum ], [ 'decodeNum', funcDecodeNum ], [ 'encodeStr', funcEncodeStr ], [ 'decodeStr', funcDecodeStr ],
-		[ 'toDec', funcToDec ], [ 'fromDec', funcFromDec ], [ 'toHex', funcToHex ], [ 'fromHex', funcFromHex ],
-		[ 'fromJson', funcFromJson ], [ 'toJson', funcToJson ],
-	]);
+	protected readonly _constants = new Map<string, ExpressionConstant>(constants);
+	protected readonly _functions = new Map<string, ExpressionFunction>(functions);
 	protected readonly _scope = new StaticScope();
 
 	/**
@@ -106,24 +111,21 @@ export class Expression {
 		const state = new ParserState(this._expression);
 		try {
 			this._statements = this.list(state.next(), this._scope);
+			if (!state.isVoid) {
+				throw new Error(`unexpected expression token`);
+			}
 		}
 		catch (err) {
-			let pos = state.pos - 32;
-			pos = pos < 0 ? 0 : pos;
 			throw new Error(`parse error on ${(err as Error).message} at position ${state.pos}:\n` +
-				`${this._expression.substring(pos, pos + 60)}\n` +
-				`${' '.repeat(this._expression.substring(pos, state.pos).length)}^`);
+				this.point(state.pos, state.length));
 		}
 		try {
 			this._statements = Node.compileList(this._statements, type);
 		}
 		catch (err) {
 			const te = err as NodeTypeError;
-			let pos = te.pos - 32;
-			pos = pos < 0 ? 0 : pos;
 			throw new TypeError(`${te.message} on ${te.nodeType} not matching ${te.mismatchType} at position ${te.pos}:\n` +
-				`${this._expression.substring(pos, pos + 60)}\n` +
-				`${' '.repeat(this._expression.substring(pos, te.pos).length)}^`);
+				this.point(state.pos, state.length));
 		}
 	}
 
@@ -156,16 +158,25 @@ export class Expression {
 		const variables = this._scope.variables();
 		for (const name in variables) {
 			if (!Object.prototype.hasOwnProperty.call(values, name)) {
-				throw new Error(`evaluation error on undefined variable ${name}`);
+				throw new Error(`evaluation error on undefined variable ${name}:\n` +
+					this.point(this._expression.indexOf(name), name.length));
 			}
 			const variable = variables[ name ];
 			const value = values[ name ] ?? undefined;
 			if (!variable.type.infer(Type.of(value))) {
-				throw new TypeError(`evaluation error on unexpected type ${typeof value} for variable ${name} of type ${variable.type}`);
+				throw new TypeError(`evaluation error on unexpected type ${typeof value} for variable ${name} of type ${variable.type}:\n` +
+					this.point(this._expression.indexOf(name), name.length));
 			}
 			variable.value = value;
 		}
 		return this._statements.map((s)=> s.evaluate())[ this._statements.length - 1 ];
+	}
+
+	protected point(stateOffset: number, stateLength: number): string {
+		const offset = stateOffset < 32 ? 0 : stateOffset - 32;
+		const length = stateLength < 1 ? 0 : stateLength - 1;
+		return `${this._expression.substring(offset, offset + 60)}\n` +
+		`${' '.repeat(this._expression.substring(offset, stateOffset).length)}^${'\''.repeat(length)}`;
 	}
 
 	protected list(state: ParserState, scope: StaticScope): Node[] {
@@ -216,7 +227,7 @@ export class Expression {
 
 	protected aggregate(state: ParserState, scope: StaticScope): Node {
 		let node = this.product(state, scope);
-		while (state.operator === operAdd || state.operator === operSub || state.operator === operConcat || state.operator === operMerge) {
+		while (state.operator === operAdd || state.operator === operSub) {
 			node = new ExpressionFunctionNode(state.pos, state.operator,
 				[ node, this.product(state.next(), scope) ]);
 		}
@@ -262,14 +273,13 @@ export class Expression {
 
 	protected accessor(state: ParserState, scope: StaticScope): Node {
 		let node = this.term(state, scope);
-		while (state.isBracketsOpen || state.isBracesOpen || state.operator === operAt || state.operator === operBy) {
+		while (state.isBracketsOpen || state.isBracesOpen || state.operator === operAt || state.operator === operBy || state.operator === operLen) {
 			if (state.isBracketsOpen) {
 				node = new ExpressionFunctionNode(state.pos, operAt,
 					[ node, this.disjunction(state.next(), scope) ]);
 				if (!state.isBracketsClose) {
 					throw new Error(`missing closing brackets accessing array element`);
 				}
-				state.next();
 			}
 			else if (state.isBracesOpen) {
 				node = new ExpressionFunctionNode(state.pos, operBy,
@@ -277,36 +287,36 @@ export class Expression {
 				if (!state.isBracesClose) {
 					throw new Error(`missing closing braces accessing object property`);
 				}
-				state.next();
 			}
 			else if (state.operator === operAt) {
 				const pos = state.pos;
 				if (!state.next().isLiteral || !state.literal.type.isNumber) {
 					throw new Error(`missing index number`);
 				}
-				node = new ExpressionFunctionNode(pos, operAt,
-					[ node, new ExpressionConstantNode(state.pos, state.literal) ]);
-				state.next();
+				node = new ExpressionFunctionNode(pos, operAt, [ node, new ExpressionConstantNode(state.pos, state.literal) ]);
 			}
-			else {
+			else if (state.operator === operBy) {
 				const pos = state.pos;
 				if (state.next().isToken) {
 					const func = this._functions.get(state.token);
-					node = func != null ?
-						new ExpressionFunctionNode(pos, func, [ node,
-							...this.arguments(func.minArity - 1, func.maxArity - 1, state.next(), scope) ]) :
-						new ExpressionFunctionNode(pos, operBy, [ node,
-							new ExpressionConstantNode(state.pos, new ExpressionConstant(state.token)) ]);
+					if (func != null) {
+						node = new ExpressionFunctionNode(pos, func, [ node, ...this.arguments(func.minArity - 1, func.maxArity - 1, state.next(), scope) ]);
+					}
+					else {
+						node = new ExpressionFunctionNode(pos, operBy, [ node, new ExpressionConstantNode(state.pos, new ExpressionConstant(state.token)) ]);
+					}
 				}
 				else if (state.isLiteral && state.literal.type.isString) {
-					node = new ExpressionFunctionNode(pos, operBy, [ node,
-						new ExpressionConstantNode(state.pos, state.literal) ]);
+					node = new ExpressionFunctionNode(pos, operBy, [ node, new ExpressionConstantNode(state.pos, state.literal) ]);
 				}
 				else {
 					throw new Error(`missing method or property name`);
 				}
-				state.next();
 			}
+			else {
+				node = new ExpressionFunctionNode(state.pos, operLen, [ node ]);
+			}
+			state.next();
 		}
 		return node;
 	}
@@ -328,9 +338,14 @@ export class Expression {
 			}
 			const func = this._functions.get(token);
 			if (func != null) {
-				const subnodes = this.arguments(func.minArity, func.maxArity, state.next(), scope);
-				state.next();
-				return new ExpressionFunctionNode(pos, func, subnodes);
+				if (state.next().isParenthesesOpen) {
+					const subnodes = this.arguments(func.minArity, func.maxArity, state, scope);
+					state.next();
+					return new ExpressionFunctionNode(pos, func, subnodes);
+				}
+				else {
+					return new ExpressionConstantNode(pos, new ExpressionConstant(func.evaluate));
+				}
 			}
 			let variable = scope.get(token);
 			if (variable == null) {
@@ -467,7 +482,7 @@ export class Expression {
 			const enode = this.disjunction(state.next(), scope);
 			return new ExpressionFunctionNode(pos, operIfThenElse, [ cnode, tnode, enode ]);
 		}
-		else if (state.isFinal) {
+		else if (state.isVoid) {
 			throw new Error(`unexpected end of expression`);
 		}
 		throw new Error(`unexpected expression token`);

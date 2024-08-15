@@ -1,8 +1,8 @@
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { fromHex } from './ExpressionFunctionMutation.js';
-import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
-	operNullco, operAdd, operSub, operMul, operDiv, operPct, operPow, operConcat, operAt, operBy, operMerge } from './ExpressionOperator.js';
+import { operAt, operBy, operLen, operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
+	operNullco, operAdd, operSub, operMul, operDiv, operPct, operPow } from './ExpressionOperator.js';
 import { Type, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeVariant, typeArray } from './Type.js';
 
 const symbolParenthesesOpen = Symbol();
@@ -24,7 +24,6 @@ const isNumeric = (c: string)=>  c >= '0' && c <= '9' ;
 const isAlphanumeric = (c: string)=> isAlpha(c) || isNumeric(c);
 const isDecinumeric = (c: string)=>  isNumeric(c) || c === '.';
 const isHexadecimal = (c: string)=> isNumeric(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
-const isEscape = (c: string)=> c === '\\';
 const isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
 
 export class ParserState {
@@ -36,10 +35,6 @@ export class ParserState {
 	constructor(
 		protected readonly _expr: string,
 	) {}
-
-	get pos(): number {
-		return this._startPos;
-	}
 
 	get literal(): ExpressionConstant {
 		return this._obj as ExpressionConstant;
@@ -121,8 +116,16 @@ export class ParserState {
 		return this._obj === symbolElse;
 	}
 
-	get isFinal(): boolean {
-		return this._endPos >= this._expr.length;
+	get isVoid(): boolean {
+		return this._obj == null;
+	}
+
+	get pos(): number {
+		return this._startPos;
+	}
+
+	get length(): number {
+		return this._endPos - this._startPos;
 	}
 
 	next(): ParserState {
@@ -176,10 +179,25 @@ export class ParserState {
 			case '/': this._obj = operDiv; break;
 			case '%': this._obj = operPct; break;
 			case '^': this._obj = operPow; break;
-			case '#': this._obj = operConcat; break;
 			case '@': this._obj = operAt; break;
-			case '$': this._obj = operMerge; break;
 			case '.': this._obj = operBy; break;
+			case '$': this._obj = operLen; break;
+			case '#':
+				if (this._expr.charAt(this._endPos) === '#') {
+					++this._endPos;
+					while (isHexadecimal(this._expr.charAt(this._endPos))) {
+						++this._endPos;
+					}
+					this._obj = new ExpressionConstant(fromHex(this._expr.substring(this._startPos + 2, this._endPos)));
+				}
+				else {
+					++this._endPos;
+					while (isHexadecimal(this._expr.charAt(this._endPos))) {
+						++this._endPos;
+					}
+					this._obj = new ExpressionConstant(parseInt(this._expr.substring(this._startPos + 1, this._endPos), 16));
+				}
+				break;
 			default:
 				if (isAlpha(c)) {
 					while (isAlphanumeric(this._expr.charAt(this._endPos))) {
@@ -217,28 +235,13 @@ export class ParserState {
 					}
 					this._obj = new ExpressionConstant(parseFloat(this._expr.substring(this._startPos, this._endPos)));
 				}
-				else if (isEscape(c)) {
-					if (this._expr.charAt(this._endPos) === 'x') {
-						++this._endPos;
-						while (isHexadecimal(this._expr.charAt(this._endPos))) {
-							++this._endPos;
-						}
-						this._obj = new ExpressionConstant(fromHex(this._expr.substring(this._startPos + 2, this._endPos)));
-					}
-					else if (this._expr.charAt(this._endPos) === 'v') {
-						++this._endPos;
-						while (isHexadecimal(this._expr.charAt(this._endPos))) {
-							++this._endPos;
-						}
-						this._obj = new ExpressionConstant(parseInt(this._expr.substring(this._startPos + 2, this._endPos), 16));
-					}
-					else {
-						throw new Error(`unknown escape symbol \\${c}`);
-					}
-				}
 				else if (isQuotation(c)) {
 					while (this._expr.charAt(this._endPos) !== '' && this._expr.charAt(this._endPos) !== c) {
 						++this._endPos;
+					}
+					if (this._endPos >= this._expr.length) {
+						this._startPos = this._expr.length;
+						throw new Error(`missing closing quotation mark ${c}`);
 					}
 					this._obj = new ExpressionConstant(this._expr.substring(this._startPos + 1, this._endPos++));
 				}
@@ -248,8 +251,8 @@ export class ParserState {
 				break;
 			}
 		}
-		if (this._endPos > this._expr.length) {
-			throw new Error(`unexpected end of expression while parsing value`);
+		if (this._endPos >= this._expr.length) {
+			this._startPos = this._expr.length;
 		}
 		return this;
 	}

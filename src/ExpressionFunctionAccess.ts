@@ -1,5 +1,5 @@
 import { ExpressionFunction } from './ExpressionFunction.js';
-import { Value, typeNumber, typeBuffer, typeString, typeArray, typeObject, typeFunction, typeOptionalNumber, typeVariant } from './Type.js';
+import { Value, typeNumber, typeBuffer, typeString, typeArray, typeObject, typeFunction, typeOptionalNumber, typeIterable, typeVariant } from './Type.js';
 
 export const funcSubbuf = new ExpressionFunction(
 	(value: ArrayBufferLike, start: number = 0, end?: number)=>
@@ -75,4 +75,14 @@ export const funcBy = new ExpressionFunction(
 	(value: { [ key: string ]: Value }, property: string)=>
 		(value as any)[ property ] as Value,
 	typeVariant, [ typeObject, typeString ],
+);
+
+export const funcLen = new ExpressionFunction(
+	(value: ArrayBufferLike | string | Value[] | { [ key: string ]: Value })=>
+		value instanceof ArrayBuffer || value instanceof SharedArrayBuffer
+			? value.byteLength
+			: typeof value === 'string' || Array.isArray(value)
+				? value.length
+				: Object.keys(value).length,
+	typeNumber, [ typeIterable ],
 );

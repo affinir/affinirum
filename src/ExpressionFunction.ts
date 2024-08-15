@@ -42,5 +42,3 @@ export class ExpressionFunction {
 	}
 
 }
-
-export const isCaseSpaceEtc = (c: string)=> (c < 'a' || c > 'z') && (c < '0' || c > '9');

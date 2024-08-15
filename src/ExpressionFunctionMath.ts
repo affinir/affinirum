@@ -1,12 +1,19 @@
 import { ExpressionFunction, FUNCTION_ARG_MAX } from './ExpressionFunction.js';
-import { Type, typeNumber } from './Type.js';
+import { Value, typeNumber, typeNumerical, typeAdditive } from './Type.js';
 
 export const funcAdd = new ExpressionFunction(
-	(...values: (number | number[] | ArrayBufferLike | ArrayBufferLike[] | string | string[])[])=>
-		values.flat(FUNCTION_ARG_MAX).reduce((acc: any, val: any)=>
-			val instanceof ArrayBuffer || val instanceof SharedArrayBuffer ? concatBuffers(acc as ArrayBufferLike, val) : (acc + val) as number | string),
-	new Type('number', 'buffer', 'string'), [ new Type('number', 'buffer', 'string', 'array') ], 1, FUNCTION_ARG_MAX,
-	(index, vtype, vmask)=> vtype === 'array' || vtype === vmask
+	(...values: (number | ArrayBufferLike | string | Value[] | { [ key: string ]: Value })[])=>
+		typeof values[ 0 ] == 'number'
+			? (values as number[]).reduce((a, v)=> a + v)
+			: values[ 0 ] instanceof ArrayBuffer || values[ 0 ] instanceof SharedArrayBuffer
+				? (values as ArrayBufferLike[]).reduce((a, v)=> concatBuffers(a, v))
+				: typeof values[ 0 ] === 'string'
+					? (values as string[]).reduce((a, v)=> a + v)
+					: Array.isArray(values[ 0 ])
+						? (values as Value[][]).reduce((a, v)=> [ ...a, ...v ])
+						: (values as { [ key: string ]: Value }[]).reduce((a, v)=> Object.assign(a, v)),
+	typeAdditive, [ typeAdditive ], 2, FUNCTION_ARG_MAX,
+	(index, vtype, vmask)=> vtype === vmask,
 );
 
 export const funcSub = new ExpressionFunction(
@@ -22,9 +29,9 @@ export const funcNeg = new ExpressionFunction(
 );
 
 export const funcMul = new ExpressionFunction(
-	(...values: (number | number[])[])=>
-		values.flat(FUNCTION_ARG_MAX).reduce((acc: any, val: any)=> acc *= val),
-	typeNumber,	[ new Type('number', 'array') ], 1, FUNCTION_ARG_MAX,
+	(...values: number[])=>
+		values.reduce((acc: any, val: any)=> acc *= val),
+	typeNumber,	[ typeNumber ], 2, FUNCTION_ARG_MAX,
 );
 
 export const funcDiv = new ExpressionFunction(
@@ -111,16 +118,22 @@ export const funcRound = new ExpressionFunction(
 	typeNumber, [ typeNumber ],
 );
 
+export const funcSum = new ExpressionFunction(
+	(...values: (number | number[])[])=>
+		values.flat(FUNCTION_ARG_MAX).reduce((acc, val)=> acc + val, 0),
+	typeNumber, [ typeNumerical ], 1, FUNCTION_ARG_MAX,
+);
+
 export const funcMax = new ExpressionFunction(
 	(...values: (number | number[])[])=>
-		Math.max(...values.flat(FUNCTION_ARG_MAX)),
-	typeNumber, [ new Type('number', 'array') ], 1, FUNCTION_ARG_MAX,
+		Math.max(Number.NEGATIVE_INFINITY, ...values.flat(FUNCTION_ARG_MAX)),
+	typeNumber, [ typeNumerical ], 1, FUNCTION_ARG_MAX,
 );
 
 export const funcMin = new ExpressionFunction(
 	(...values: (number | number[])[])=>
-		Math.min(...values.flat(FUNCTION_ARG_MAX)),
-	typeNumber, [ new Type('number', 'array') ], 1, FUNCTION_ARG_MAX,
+		Math.min(Number.POSITIVE_INFINITY, ...values.flat(FUNCTION_ARG_MAX)),
+	typeNumber, [ typeNumerical ], 1, FUNCTION_ARG_MAX,
 );
 
 export const concatBuffers = (value1: ArrayBufferLike, value2: ArrayBufferLike)=> {

@@ -1,6 +1,6 @@
-import { ExpressionFunction, FUNCTION_ARG_MAX, isCaseSpaceEtc } from './ExpressionFunction.js';
-import { Type, Value, typeBoolean, typeNumber, typeString, typeArray, typeObject, typeFunction,
-	typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeVariant } from './Type.js';
+import { ExpressionFunction, FUNCTION_ARG_MAX } from './ExpressionFunction.js';
+import { Value, typeBoolean, typeNumber, typeString, typeArray, typeObject, typeFunction,
+	typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeVariant, typeLogical } from './Type.js';
 
 export const funcNot = new ExpressionFunction(
 	(value: boolean)=>
@@ -11,13 +11,13 @@ export const funcNot = new ExpressionFunction(
 export const funcAnd = new ExpressionFunction(
 	(...values: (boolean | boolean[])[])=>
 		values.flat(FUNCTION_ARG_MAX).every((v)=> v),
-	typeBoolean, [ new Type('boolean', 'array') ], 2, FUNCTION_ARG_MAX,
+	typeBoolean, [ typeLogical ], 2, FUNCTION_ARG_MAX,
 );
 
 export const funcOr = new ExpressionFunction(
 	(...values: (boolean | boolean[])[])=>
 		values.flat(FUNCTION_ARG_MAX).some((v)=> v),
-	typeBoolean, [ new Type('boolean', 'array') ], 2, FUNCTION_ARG_MAX,
+	typeBoolean, [ typeLogical ], 2, FUNCTION_ARG_MAX,
 );
 
 export const funcGt = new ExpressionFunction(
@@ -111,16 +111,6 @@ export const funcAny = new ExpressionFunction(
 	typeBoolean, [ typeArray, typeFunction ],
 );
 
-export const funcLen = new ExpressionFunction(
-	(value: ArrayBufferLike | string | Value[] | { [ key: string ]: Value })=>
-		value instanceof ArrayBuffer || value instanceof SharedArrayBuffer
-			? value.byteLength
-			: typeof value === 'string' || Array.isArray(value)
-				? value.length
-				: Object.keys(value).length,
-	typeNumber, [ new Type('buffer', 'string', 'array', 'object') ],
-);
-
 export const funcAlphanum = new ExpressionFunction(
 	(value: string)=> {
 		const lowerCase = value.toLowerCase();
@@ -166,40 +156,38 @@ export const funcUpperCase = new ExpressionFunction(
 );
 
 export const funcJoin = new ExpressionFunction(
-	(value: Value[], separator: string = ' ')=>
-		value.join(separator),
+	(value: (string | string[])[], separator: string = ' ')=>
+		value.flat(FUNCTION_ARG_MAX).join(separator),
 	typeString, [ typeArray, typeOptionalString ], 1, 2,
 );
 
-export const funcUnion = new ExpressionFunction(
-	(...values: (Value | Value[])[])=>
-		(values as []).flat(FUNCTION_ARG_MAX),
-	typeArray, [ typeVariant ], 1, FUNCTION_ARG_MAX,
-);
-
 export const funcUnique = new ExpressionFunction(
-	(...values: (Value | Value[])[])=> {
+	(value: Value[])=> {
 		const result: Value[] = [];
-		(values as []).flat(FUNCTION_ARG_MAX).filter((i)=> result.some((v)=> equal(v, i)));
+		value.forEach((i)=> {
+			if (result.every((v)=> !equal(v, i))) {
+				result.push(i);
+			}
+		});
 		return result;
 	},
-	typeArray, [ typeVariant ], 1, FUNCTION_ARG_MAX,
+	typeArray, [ typeArray ],
 );
 
-export const funcIntersection = new ExpressionFunction(
+export const funcIntersect = new ExpressionFunction(
 	(value1: Value[], value2: Value[])=>
 		value1.filter((i)=> value2.some((v)=> equal(v, i))),
 	typeArray, [ typeArray, typeArray ],
 );
 
-export const funcDifference = new ExpressionFunction(
+export const funcDiffer = new ExpressionFunction(
 	(value1: Value[], value2: Value[])=>
 		[ ...value1.filter((i)=> value2.every((v)=> !equal(v, i))), ...value2.filter((i)=> value1.every((v)=> !equal(v, i))) ],
 	typeArray, [ typeArray, typeArray ],
 );
 
 export const funcFlatten = new ExpressionFunction(
-	(values: Value[], depth: number = FUNCTION_ARG_MAX)=>
+	(values: Value[], depth?: number)=>
 		(values as []).flat(depth) as Value,
 	typeArray, [ typeArray, typeOptionalNumber ], 1, 2,
 );
@@ -218,30 +206,30 @@ export const funcRange = new ExpressionFunction(
 	typeArray, [ typeNumber, typeNumber ],
 );
 
-export const funcIterate = new ExpressionFunction(
-	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=> {
-		value.forEach((v, i, a)=> callback(v, i, a));
-		return value;
-	},
-	typeArray, [ typeArray, typeFunction ],
-);
-
 export const funcMap = new ExpressionFunction(
 	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=>
-		value.map((v, i, a)=> callback(v, i, a)),
+		value.map(callback),
 	typeArray, [ typeArray, typeFunction ],
 );
 
 export const funcFilter = new ExpressionFunction(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
-		value.filter((v, i, a)=> predicate(v, i, a)),
+		value.filter(predicate),
 	typeArray, [ typeArray, typeFunction ],
 );
 
-export const funcMerge = new ExpressionFunction(
-	(...values: ({ [ key: string ]: Value } | { [ key: string ]: Value }[])[])=>
-		values.flat(FUNCTION_ARG_MAX).reduce((acc, val)=> Object.assign(acc, val)),
-	typeObject, [ new Type('object', 'array') ], 1, FUNCTION_ARG_MAX,
+export const funcIterate = new ExpressionFunction(
+	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=> {
+		value.forEach(callback);
+		return value;
+	},
+	typeArray, [ typeArray, typeFunction ],
+);
+
+export const funcReduce = new ExpressionFunction(
+	(value: Value[], callback: (acc: Value, v: Value, i: number, arr: Value[])=> Value, initial?: Value)=>
+		initial != null ? value.reduce(callback, initial) : value.reduce(callback),
+	typeVariant, [ typeArray, typeFunction, typeVariant ], 2, 3,
 );
 
 export const funcComp = new ExpressionFunction(
@@ -326,6 +314,8 @@ export const equalBuffers = (value1: ArrayBufferLike, value2: ArrayBufferLike)=>
 	}
 	return true;
 };
+
+export const isCaseSpaceEtc = (c: string)=> (c < 'a' || c > 'z') && (c < '0' || c > '9');
 
 export const equalStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
