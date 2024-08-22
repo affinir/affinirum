@@ -58,6 +58,7 @@ export class Expression {
 	protected readonly _expression: string;
 	protected readonly _strict: boolean;
 	protected readonly _statements: Node[];
+	protected readonly _variables = new Map<string, ExpressionVariable>();
 	protected readonly _constants = new Map<string, ExpressionConstant>(constants);
 	protected readonly _functions = new Map<string, ExpressionFunction>(functions);
 	protected readonly _scope = new StaticScope();
@@ -88,7 +89,7 @@ export class Expression {
 		this._strict = config?.strict ?? false;
 		if (config?.variables) {
 			for (const v in config.variables) {
-				this._scope.set(v, new ExpressionVariable(undefined, config.variables[ v ]));
+				this._variables.set(v, new ExpressionVariable(undefined, config.variables[ v ]));
 			}
 		}
 		if (config?.constants) {
@@ -349,10 +350,15 @@ export class Expression {
 			}
 			let variable = scope.get(token);
 			if (variable == null) {
-				if (this._strict) {
-					throw new Error(`undefined variable ${token} in strict mode`);
+				variable = this._variables.get(token);
+				if (variable == null) {
+					if (this._strict) {
+						throw new Error(`undefined variable ${token} in strict mode`);
+					}
+					else {
+						variable = new ExpressionVariable();
+					}
 				}
-				variable = new ExpressionVariable();
 				scope.set(token, variable);
 			}
 			return new ExpressionVariableNode(pos, variable, state.next().isAssignment ? this.disjunction(state.next(), scope) : undefined);

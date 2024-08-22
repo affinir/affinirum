@@ -1,4 +1,4 @@
-import { Expression, typeNumber } from '../src/index.js';
+import { Expression, typeNumber, typeString } from '../src/index.js';
 
 describe('Expression Evaluation test', ()=> {
 	[
@@ -149,7 +149,7 @@ describe('Expression Evaluation test', ()=> {
 		expect(variables.d.isString).toBeTrue();
 	});
 	it('defines variables in strict mode and evaluates', ()=> {
-		const expression = new Expression('predefined1*2 + predefined2', { strict: true, variables: { predefined1: typeNumber, predefined2: typeNumber } });
+		const expression = new Expression('predefined1*2 + predefined2', { strict: true, variables: { predefined1: typeNumber, predefined2: typeNumber, myvar: typeString } });
 		expect(expression.evaluate({ predefined1: 10, predefined2: 20 }) as number).toBe(40);
 	});
 	it('errors on undefines variables in strict mode', ()=> {
