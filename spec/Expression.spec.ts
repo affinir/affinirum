@@ -118,15 +118,24 @@ describe('Expression Evaluation test', ()=> {
 		[ 'func f:bool (num a) (a>0),a.filter(f).sum(0,0)', [ { a: [ -10, -20, 1, 2 ], result: 3 } ] ],
 		[ 'intersect(a, b).sum()', [ { a: [ -1, 2, 1, -2 ], b: [ 1, 2 ], result: 3 } ] ],
 		[ 'differ(a, b).sum()', [ { a: [ -1, -2, 1, 2 ], b: [ 1, 2 ], result: -3 } ] ],
+		[ 'a.b.c.d ?: 10', [ { a: { b: { c: undefined } }, result: 10 }, { a: { b: {} }, result: 10 } ] ],
+		[ 'a[4][0][0] ?: 10', [ { a: [ 0 ], result: 10 }, { a: [ [ 0 ] ], result: 10 } ] ],
+		[ 'a{x}', [ { a: { b: 1 }, x: 'a', result: undefined }, { a: { b: 1 }, x: '1', result: undefined } ] ],
+		[ 'a[x]', [ { a: [ 0,  1 ], x: 5, result: undefined }, { a: [ 0 ], x:-5, result: undefined } ] ],
 	].forEach(([ expr, args ])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
 			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v)}`, ()=> {
 				try {
 					const expression = new Expression(expr as string);
 					expect(expression).toBeDefined();
+					try {
 					const value = expression.evaluate(v);
 					if (value !== v.result) {
 						fail(`value ${value} not matching expectation ${v.result}`)
+					}
+					}
+					catch (err) {
+						fail(`evaluation error\n${(err as Error).message}`);
 					}
 				}
 				catch (err) {

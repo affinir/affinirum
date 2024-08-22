@@ -67,13 +67,13 @@ export const funcLastIndex = new ExpressionFunction(
 
 export const funcAt = new ExpressionFunction(
 	(value: Value[], index: number)=>
-		value[ index < 0 ? value.length + index : index ],
+		value ? value[ index < 0 ? value.length + index : index ] : undefined,
 	typeVariant, [ typeArray, typeNumber ],
 );
 
 export const funcBy = new ExpressionFunction(
 	(value: { [ key: string ]: Value }, property: string)=>
-		(value as any)[ property ] as Value,
+		value ? (value as any)[ property ] as Value : undefined,
 	typeVariant, [ typeObject, typeString ],
 );
 
