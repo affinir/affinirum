@@ -1,4 +1,4 @@
-import { Type, Value, typeVariant } from './Type.js';
+import { Type, Value } from './Type.js';
 
 export abstract class Node {
 
@@ -17,10 +17,6 @@ export abstract class Node {
 	abstract type: Type;
 	abstract compile(type: Type): Node;
 	abstract evaluate(): Value;
-
-	static compileList(nodes: Node[], type: Type): Node[] {
-		return [ ...nodes.slice(0, -1).map((n)=> n.compile(typeVariant)), nodes[ nodes.length - 1 ].compile(type) ];
-	}
 
 }
 

@@ -1,5 +1,5 @@
 import { ExpressionFunction, FUNCTION_ARG_MAX } from './ExpressionFunction.js';
-import { Value, typeNumber, typeNumerical, typeAdditive } from './Type.js';
+import { Value, typeNumber, typeNumberOrArray, typeAdditive } from './Type.js';
 
 export const funcAdd = new ExpressionFunction(
 	(...values: (number | ArrayBufferLike | string | Value[] | { [ key: string ]: Value })[])=>
@@ -121,19 +121,19 @@ export const funcRound = new ExpressionFunction(
 export const funcSum = new ExpressionFunction(
 	(...values: (number | number[])[])=>
 		values.flat(FUNCTION_ARG_MAX).reduce((acc, val)=> acc + val, 0),
-	typeNumber, [ typeNumerical ], 1, FUNCTION_ARG_MAX,
+	typeNumber, [ typeNumberOrArray ], 1, FUNCTION_ARG_MAX,
 );
 
 export const funcMax = new ExpressionFunction(
 	(...values: (number | number[])[])=>
 		Math.max(Number.NEGATIVE_INFINITY, ...values.flat(FUNCTION_ARG_MAX)),
-	typeNumber, [ typeNumerical ], 1, FUNCTION_ARG_MAX,
+	typeNumber, [ typeNumberOrArray ], 1, FUNCTION_ARG_MAX,
 );
 
 export const funcMin = new ExpressionFunction(
 	(...values: (number | number[])[])=>
 		Math.min(Number.POSITIVE_INFINITY, ...values.flat(FUNCTION_ARG_MAX)),
-	typeNumber, [ typeNumerical ], 1, FUNCTION_ARG_MAX,
+	typeNumber, [ typeNumberOrArray ], 1, FUNCTION_ARG_MAX,
 );
 
 export const concatBuffers = (value1: ArrayBufferLike, value2: ArrayBufferLike)=> {

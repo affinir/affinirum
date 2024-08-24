@@ -39,10 +39,10 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Next statement: **,**
 * Array element at numeric value: **[]**
 * Array element at literal index: **@**
-* Any non-null array element: **@!**
+* Any valid array element: **@!**
 * Object property by string value: **{}**
 * Object property by literal name: **.**
-* Any non-null object property: **.!**
+* Any valid object property: **.!**
 * Boolean negation: **!**
 * Boolean disjunction: **|**
 * Boolean conjunction: **&**
@@ -74,9 +74,9 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Find first index of item satisfying condition: **number firstIndex(array value, function condition)**
 * Find last index of item satisfying condition: **number lastIndex(array value, function condition)**
 * Array element at index: **variant at(array value, number index)**
-* Any non-null array element: **variant atReal(array value)**
+* Any valid array element: **variant atValid(array value)**
 * Object property by name: **variant by(object value, string name)**
-* Any non-null object property: **variant byReal(object value)**
+* Any valid object property: **variant byValid(object value)**
 * Length of buffer, string, array or object: **number len(buffer|string|array|object value)**
 #### Base Functions
 * Bolean negation: **boolean not(boolean value)**
@@ -161,7 +161,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 ### Grammar
 The expression parsing is performed using the following grammar:
 
-	<list> = <disjunction>{ ","<disjunction> }
+	<program> = <disjunction>{ ","<disjunction> }
 	<disjunction> = <conjunction>{ "|"<conjunction> }
 	<conjunction> = <comparison>{ "&"<comparison> }
 	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "=" | "!=" | "~" | "!~" )<aggregate> }
@@ -175,20 +175,20 @@ The expression parsing is performed using the following grammar:
 	<term> = <literal> | <group> | <array> | <object> | <constant> | <variable> | <function> | <closure> |
 		"if" <condition> "then" <disjunction> "else" <disjunction>
 	<literal> = <decimal-number> | #<hexadecimal-number> | ##<hexadecimal-binary> | "<text-string>"
-	<group> = "("<disjunction>")"
+	<group> = "("<program>")"
 	<array> = "["{ <disjunction> }{ ","<disjunction> }"]"
 	<object> = "{"{ <property-name-string>:<disjunction> }{ ","<property-name-string>:<disjunction> }"}"
 	<constant> = <constant-name-string>
 	<variable> = { <type> } <variable-name-string>{ ":"<disjunction> }
 	<function> = <function-name-string>"("{ <disjunction> }{ ","<disjunction> }")"
-	<closure> = <type>"("<type> <argument-name-string>{ ","<type> <argument-name-string> }") ("<list>")"
+	<closure> = <type>"("{ <type> <argument-name-string> }{ ","<type> <argument-name-string> }")" <disjunction>
 	<type> = ( "void" | "boolean" | "bool" | "number" | "num" | "buffer" | "buf" | "string" | "str" |
 		"array" | "arr" | "object" | "obj" | "function" | "func" ){ "?" } | "variant" | "var"
 
 Whitespace characters are ignored.
 
 Expression may contain multiple comma separated sub-expressions.
-The value of an expression is the value of the last sub-expression in the list.
+The value of an expression is the value of the last sub-expression in the program.
 
 Number scientific notation is supported.
 Hexadecimal integer literals start with prefix **#**.

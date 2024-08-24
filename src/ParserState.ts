@@ -1,7 +1,7 @@
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { fromHex } from './ExpressionFunctionMutation.js';
-import { operAt, operAtReal, operBy, operByReal, operLen, operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
+import { operAt, operAtValid, operBy, operByValid, operLen, operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
 	operNullco, operAdd, operSub, operMul, operDiv, operPct, operPow } from './ExpressionOperator.js';
 import { Type, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeVariant, typeArray } from './Type.js';
 
@@ -181,13 +181,13 @@ export class ParserState {
 				case '^': this._obj = operPow; break;
 				case '@':
 					switch (this._expr.charAt(this._endPos)) {
-						case '!':  ++this._endPos; this._obj = operAtReal; break;
+						case '!':  ++this._endPos; this._obj = operAtValid; break;
 						default: this._obj = operAt; break;
 					}
 					break;
 				case '.':
 					switch (this._expr.charAt(this._endPos)) {
-						case '!':  ++this._endPos; this._obj = operByReal; break;
+						case '!':  ++this._endPos; this._obj = operByValid; break;
 						default: this._obj = operBy; break;
 					}
 					break;

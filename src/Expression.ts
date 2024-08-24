@@ -2,7 +2,7 @@ import { ExpressionConstant, constNull, constTrue, constFalse,
 	constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { funcSubbuf, funcByte, funcSubstr, funcChar, funcCharCode, funcSlice, funcFirst, funcLast, funcFirstIndex, funcLastIndex,
-	funcAt, funcAtReal, funcBy, funcByReal, funcLen } from './ExpressionFunctionAccess.js';
+	funcAt, funcAtValid, funcBy, funcByValid, funcLen } from './ExpressionFunctionAccess.js';
 import { funcNot, funcAnd, funcOr, funcGt, funcLt, funcGe, funcLe, funcEqual, funcNotEqual, funcLike, funcNotLike,
 	funcNullco, funcIfThenElse, funcContains, funcStartsWith, funcEndsWith, funcEvery, funcAny,
 	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin,
@@ -12,7 +12,7 @@ import { funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct,
 	funcAbs, funcCeil, funcFloor, funcRound, funcSum, funcMax, funcMin } from './ExpressionFunctionMath.js';
 import { funcEncodeNum, funcDecodeNum, funcEncodeStr, funcDecodeStr,
 	funcToDec, funcFromDec, funcToHex, funcFromHex, funcFromJson, funcToJson } from './ExpressionFunctionMutation.js';
-import { operAt, operAtReal, operBy, operByReal, operLen,
+import { operAt, operAtValid, operBy, operByValid, operLen,
 	operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
 	operNullco, operIfThenElse, operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow } from './ExpressionOperator.js';
 import { StaticScope } from './StaticScope.js';
@@ -26,6 +26,7 @@ import { ExpressionVariableNode } from './ExpressionVariableNode.js';
 import { ExpressionClosureNode } from './ExpressionClosureNode.js';
 import { ExpressionArrayNode } from './ExpressionArrayNode.js';
 import { ExpressionObjectNode } from './ExpressionObjectNode.js';
+import { ExpressionProgramNode } from './ExpressionProgramNode.js';
 
 const constants: [ string, ExpressionConstant ][] = [
 	[ 'null', constNull ], [ 'true', constTrue ], [ 'false', constFalse ],
@@ -34,7 +35,7 @@ const constants: [ string, ExpressionConstant ][] = [
 const functions: [ string, ExpressionFunction][] = [
 	[ 'subbuf', funcSubbuf ], [ 'byte', funcByte ], [ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'slice', funcSlice ],
 	[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
-	[ 'at', funcAt ], [ 'atReal', funcAtReal ], [ 'by', funcBy ], [ 'byReal', funcByReal ], [ 'len', funcLen ],
+	[ 'at', funcAt ], [ 'atValid', funcAtValid ], [ 'by', funcBy ], [ 'byValid', funcByValid ], [ 'len', funcLen ],
 	[ 'not', funcNot ], [ 'or', funcOr ], [ 'and', funcAnd ], [ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
 	[ 'equal', funcEqual ], [ 'nequal', funcNotEqual ], [ 'like', funcLike ], [ 'nlike', funcNotLike ], [ 'nullco', funcNullco ], [ 'ifte', funcIfThenElse ],
 	[ 'contains', funcContains ], [ 'startsWith', funcStartsWith ], [ 'endsWith', funcEndsWith ], [ 'any', funcAny ], [ 'every', funcEvery ],
@@ -58,7 +59,7 @@ export class Expression {
 	static readonly keywords = [ ...constants.map((c)=> c[ 0 ]), ...functions.map((f)=> f[ 0 ]) ];
 	protected readonly _expression: string;
 	protected readonly _strict: boolean;
-	protected readonly _statements: Node[];
+	protected readonly _root: Node;
 	protected readonly _variables = new Map<string, ExpressionVariable>();
 	protected readonly _constants = new Map<string, ExpressionConstant>(constants);
 	protected readonly _functions = new Map<string, ExpressionFunction>(functions);
@@ -69,7 +70,7 @@ export class Expression {
 		@param expr Math expression to compile.
 		@param config Optional expected type, strict mode, variable types, constant values and functions to add for the compilation.
 			If expected type is provided then expression return type is matched against it.
-			If strict mode is set to true then only predefined variables provided in the config object will be allowed in the expression.
+			If strict mode is set then undeclared variables will not be allowed in expression.
 	*/
 	constructor(expr: string, config?: {
 		type?: Type,
@@ -112,7 +113,7 @@ export class Expression {
 		}
 		const state = new ParserState(this._expression);
 		try {
-			this._statements = this.list(state.next(), this._scope);
+			this._root = this.program(state.next(), this._scope);
 			if (!state.isVoid) {
 				throw new Error(`unexpected expression token`);
 			}
@@ -122,7 +123,7 @@ export class Expression {
 				this.point(state.pos, state.length));
 		}
 		try {
-			this._statements = Node.compileList(this._statements, type);
+			this._root = this._root.compile(type);
 		}
 		catch (err) {
 			const te = err as NodeTypeError;
@@ -135,7 +136,7 @@ export class Expression {
 		Returns compiled expression return value type.
 	*/
 	get type(): Type {
-		return this._statements[ this._statements.length - 1 ].type;
+		return this._root.type;
 	}
 
 	/**
@@ -171,7 +172,7 @@ export class Expression {
 			}
 			variable.value = value;
 		}
-		return this._statements.map((s)=> s.evaluate())[ this._statements.length - 1 ];
+		return this._root.evaluate();
 	}
 
 	protected point(stateOffset: number, stateLength: number): string {
@@ -181,12 +182,12 @@ export class Expression {
 		`${' '.repeat(this._expression.substring(offset, stateOffset).length)}^${'\''.repeat(length)}`;
 	}
 
-	protected list(state: ParserState, scope: StaticScope): Node[] {
+	protected program(state: ParserState, scope: StaticScope): Node {
 		const nodes: Node[] = [ this.disjunction(state, scope) ];
 		while (state.isSeparator) {
 			nodes.push(this.disjunction(state.next(), scope));
 		}
-		return nodes;
+		return new ExpressionProgramNode(state.pos, nodes);
 	}
 
 	protected disjunction(state: ParserState, scope: StaticScope): Node {
@@ -276,7 +277,7 @@ export class Expression {
 	protected accessor(state: ParserState, scope: StaticScope): Node {
 		let node = this.term(state, scope);
 		while (state.isBracketsOpen || state.isBracesOpen
-			|| state.operator === operAt || state.operator === operBy || state.operator === operAtReal || state.operator === operByReal
+			|| state.operator === operAt || state.operator === operBy || state.operator === operAtValid || state.operator === operByValid
 			|| state.operator === operLen) {
 			if (state.isBracketsOpen) {
 				node = new ExpressionFunctionNode(state.pos, operAt,
@@ -284,6 +285,7 @@ export class Expression {
 				if (!state.isBracketsClose) {
 					throw new Error(`missing closing brackets accessing array element`);
 				}
+				state.next();
 			}
 			else if (state.isBracesOpen) {
 				node = new ExpressionFunctionNode(state.pos, operBy,
@@ -291,6 +293,7 @@ export class Expression {
 				if (!state.isBracesClose) {
 					throw new Error(`missing closing braces accessing object property`);
 				}
+				state.next();
 			}
 			else if (state.operator === operAt) {
 				const pos = state.pos;
@@ -298,20 +301,23 @@ export class Expression {
 					throw new Error(`missing index number`);
 				}
 				node = new ExpressionFunctionNode(pos, operAt, [ node, new ExpressionConstantNode(state.pos, state.literal) ]);
+				state.next();
 			}
 			else if (state.operator === operBy) {
 				const pos = state.pos;
 				if (state.next().isToken) {
-					const func = this._functions.get(state.token);
-					if (func != null) {
-						node = new ExpressionFunctionNode(pos, func, [ node, ...this.arguments(func.minArity - 1, func.maxArity - 1, state.next(), scope) ]);
+					const fnode = this.function(state, scope, node);
+					if (fnode) {
+						node = fnode;
 					}
 					else {
 						node = new ExpressionFunctionNode(pos, operBy, [ node, new ExpressionConstantNode(state.pos, new ExpressionConstant(state.token)) ]);
+						state.next();
 					}
 				}
 				else if (state.isLiteral && state.literal.type.isString) {
 					node = new ExpressionFunctionNode(pos, operBy, [ node, new ExpressionConstantNode(state.pos, state.literal) ]);
+					state.next();
 				}
 				else {
 					throw new Error(`missing method or property name`);
@@ -319,8 +325,8 @@ export class Expression {
 			}
 			else {
 				node = new ExpressionFunctionNode(state.pos, state.operator, [ node ]);
+				state.next();
 			}
-			state.next();
 		}
 		return node;
 	}
@@ -333,95 +339,27 @@ export class Expression {
 			return new ExpressionConstantNode(pos, constant);
 		}
 		else if (state.isToken) {
-			const pos = state.pos;
-			const token = state.token;
-			const constant = this._constants.get(token);
+			const constant = this._constants.get(state.token);
 			if (constant != null) {
+				const pos = state.pos;
 				state.next();
 				return new ExpressionConstantNode(pos, constant);
 			}
-			const func = this._functions.get(token);
-			if (func != null) {
-				if (state.next().isParenthesesOpen) {
-					const subnodes = this.arguments(func.minArity, func.maxArity, state, scope);
-					state.next();
-					return new ExpressionFunctionNode(pos, func, subnodes);
-				}
-				else {
-					return new ExpressionConstantNode(pos, new ExpressionConstant(func.evaluate));
-				}
-			}
-			let variable = scope.get(token);
-			if (variable == null) {
-				variable = this._variables.get(token);
-				if (variable == null) {
-					if (this._strict) {
-						throw new Error(`undefined variable ${token} in strict mode`);
-					}
-					else {
-						variable = new ExpressionVariable();
-					}
-				}
-				scope.set(token, variable);
-			}
-			return new ExpressionVariableNode(pos, variable, state.next().isAssignment ? this.disjunction(state.next(), scope) : undefined);
+			return this.function(state, scope) ?? this.variable(state, scope);
 		}
 		else if (state.isType) {
-			const pos = state.pos;
 			let type = state.type;
 			if (state.next().isOption) {
 				type = type.toOptional();
 				state.next();
 			}
 			if (state.isToken) {
-				const token = state.token;
-				if (scope.has(token)) {
-					throw new Error(`variable ${token} redefinition`);
-				}
-				const variable = new ExpressionVariable(undefined, type);
-				scope.define(token, variable);
-				return new ExpressionVariableNode(pos, variable, state.next().isAssignment ? this.disjunction(state.next(), scope) : undefined);
+				return this.variable(state, scope, type);
 			}
-			if (!state.isParenthesesOpen) {
-				throw new Error(`missing opening parentheses for function type`);
-			}
-			const variables = new Map<string, ExpressionVariable>();
-			while (!state.next().isParenthesesClose) {
-				if (!state.isType) {
-					throw new Error(`missing function argument type`);
-				}
-				let argType = state.type;
-				if (state.next().isOption) {
-					argType = argType.toOptional();
-					state.next();
-				}
-				if (!state.isToken) {
-					throw new Error(`missing function argument name`);
-				}
-				const token = state.token;
-				if (scope.get(token)) {
-					throw new Error(`variable redefinition`);
-				}
-				variables.set(token, new ExpressionVariable(undefined, argType));
-				if (!state.next().isSeparator) {
-					break;
-				}
-			}
-			if (!state.isParenthesesClose) {
-				throw new Error(`missing closing parentheses for function type`);
-			}
-			if (!state.next().isParenthesesOpen) {
-				throw new Error(`missing opening parentheses for function body`);
-			}
-			const list = this.list(state.next(), scope.subscope(variables));
-			if (!state.isParenthesesClose) {
-				throw new Error(`missing closing parentheses for function body`);
-			}
-			state.next();
-			return new ExpressionClosureNode(pos, type, Array.from(variables.values()), list);
+			return this.closure(state, scope, type);
 		}
 		else if (state.isParenthesesOpen) {
-			const node = this.disjunction(state.next(), scope);
+			const node = this.program(state.next(), scope);
 			if (!state.isParenthesesClose) {
 				throw new Error(`missing closing parentheses`);
 			}
@@ -497,27 +435,96 @@ export class Expression {
 		throw new Error(`unexpected expression token`);
 	}
 
-	protected arguments(minArity: number, maxArity: number, state: ParserState, scope: StaticScope): Node[] {
-		if (!state.isParenthesesOpen) {
-			throw new Error(`missing opening parentheses`);
+	protected function(state: ParserState, scope: StaticScope, node?: Node): Node | undefined {
+		const func = this._functions.get(state.token);
+		if (func == null) {
+			return;
 		}
-		const subnodes: Node[] = [];
+		const pos = state.pos;
+		if (state.next().isParenthesesOpen) {
+			const subnodes: Node[] = node ? [ node ] : [];
+			while (!state.next().isParenthesesClose) {
+				subnodes.push(this.disjunction(state, scope));
+				if (!state.isSeparator) {
+					break;
+				}
+			}
+			if (!state.isParenthesesClose) {
+				throw new Error(`missing closing parentheses`);
+			}
+			if (subnodes.length < func.minArity) {
+				throw new Error(`insufficient number of arguments ${subnodes.length} is less than ${func.minArity} that function requires`);
+			}
+			if (subnodes.length > func.maxArity) {
+				throw new Error(`excessive number of arguments ${subnodes.length} is more than ${func.maxArity} that function requires`);
+			}
+			state.next();
+			return new ExpressionFunctionNode(pos, func, subnodes);
+		}
+		else {
+			return new ExpressionConstantNode(pos, new ExpressionConstant(func.evaluate));
+		}
+	}
+
+	protected variable(state: ParserState, scope: StaticScope, type?: Type): Node {
+		let variable: ExpressionVariable | undefined = undefined;
+		if (type) {
+			if (scope.has(state.token)) {
+				throw new Error(`variable ${state.token} redefinition`);
+			}
+			variable = new ExpressionVariable(undefined, type);
+			scope.define(state.token, variable);
+		}
+		else {
+			variable = scope.get(state.token);
+			if (variable == null) {
+				variable = this._variables.get(state.token);
+				if (variable == null) {
+					if (this._strict) {
+						throw new Error(`undefined variable ${state.token} in strict mode`);
+					}
+					else {
+						variable = new ExpressionVariable();
+					}
+				}
+				scope.set(state.token, variable);
+			}
+		}
+		const pos = state.pos;
+		return new ExpressionVariableNode(pos, variable, state.next().isAssignment ? this.disjunction(state.next(), scope) : undefined);
+	}
+
+	protected closure(state: ParserState, scope: StaticScope, type: Type): Node {
+		const pos = state.pos;
+		if (!state.isParenthesesOpen) {
+			throw new Error(`missing opening parentheses for function type`);
+		}
+		const variables = new Map<string, ExpressionVariable>();
 		while (!state.next().isParenthesesClose) {
-			subnodes.push(this.disjunction(state, scope));
-			if (!state.isSeparator) {
+			if (!state.isType) {
+				throw new Error(`missing function argument type`);
+			}
+			let argType = state.type;
+			if (state.next().isOption) {
+				argType = argType.toOptional();
+				state.next();
+			}
+			if (!state.isToken) {
+				throw new Error(`missing function argument name`);
+			}
+			const token = state.token;
+			if (scope.get(token)) {
+				throw new Error(`variable redefinition`);
+			}
+			variables.set(token, new ExpressionVariable(undefined, argType));
+			if (!state.next().isSeparator) {
 				break;
 			}
 		}
 		if (!state.isParenthesesClose) {
-			throw new Error(`missing closing parentheses`);
+			throw new Error(`missing closing parentheses for function type`);
 		}
-		if (subnodes.length < minArity) {
-			throw new Error(`insufficient number of arguments ${subnodes.length} is less than ${minArity} that function requires`);
-		}
-		if (subnodes.length > maxArity) {
-			throw new Error(`excessive number of arguments ${subnodes.length} is more than ${maxArity} that function requires`);
-		}
-		return subnodes;
+		return new ExpressionClosureNode(pos, type, Array.from(variables.values()), this.disjunction(state.next(), scope.subscope(variables)));
 	}
 
 }

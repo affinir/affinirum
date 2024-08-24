@@ -8,7 +8,7 @@ export class ExpressionClosureNode extends Node {
 		_pos: number,
 		protected _type: Type,
 		protected _variables: ExpressionVariable[],
-		protected _subnodes: Node[],
+		protected _subnode: Node,
 	) {
 		super(_pos);
 	}
@@ -21,14 +21,14 @@ export class ExpressionClosureNode extends Node {
 		if (!typeFunction.infer(type)) {
 			this.throwTypeError(type);
 		}
-		this._subnodes = Node.compileList(this._subnodes, this._type);
+		this._subnode = this._subnode.compile(this._type);
 		return this;
 	}
 
 	evaluate(): Value {
 		return (...values: Value[])=> {
 			this._variables.forEach((arg, ix)=> arg.value = values[ ix ]);
-			return this._subnodes.map((s)=> s.evaluate())[ this._subnodes.length - 1 ];
+			return this._subnode.evaluate();
 		};
 	}
 

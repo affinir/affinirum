@@ -1,6 +1,6 @@
 import { ExpressionFunction, FUNCTION_ARG_MAX } from './ExpressionFunction.js';
 import { Value, typeBoolean, typeNumber, typeString, typeArray, typeObject, typeFunction,
-	typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeVariant, typeLogical } from './Type.js';
+	typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeVariant, typeBooleanOrArray } from './Type.js';
 
 export const funcNot = new ExpressionFunction(
 	(value: boolean)=>
@@ -11,13 +11,13 @@ export const funcNot = new ExpressionFunction(
 export const funcAnd = new ExpressionFunction(
 	(...values: (boolean | boolean[])[])=>
 		values.flat(FUNCTION_ARG_MAX).every((v)=> v),
-	typeBoolean, [ typeLogical ], 2, FUNCTION_ARG_MAX,
+	typeBoolean, [ typeBooleanOrArray ], 2, FUNCTION_ARG_MAX,
 );
 
 export const funcOr = new ExpressionFunction(
 	(...values: (boolean | boolean[])[])=>
 		values.flat(FUNCTION_ARG_MAX).some((v)=> v),
-	typeBoolean, [ typeLogical ], 2, FUNCTION_ARG_MAX,
+	typeBoolean, [ typeBooleanOrArray ], 2, FUNCTION_ARG_MAX,
 );
 
 export const funcGt = new ExpressionFunction(
