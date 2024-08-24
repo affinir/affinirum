@@ -2,7 +2,7 @@ import { ExpressionConstant, constNull, constTrue, constFalse,
 	constNaN, constPosInf, constNegInf, constEpsilon, constPi } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { funcSubbuf, funcByte, funcSubstr, funcChar, funcCharCode, funcSlice, funcFirst, funcLast, funcFirstIndex, funcLastIndex,
-	funcAt, funcBy, funcLen } from './ExpressionFunctionAccess.js';
+	funcAt, funcAtReal, funcBy, funcByReal, funcLen } from './ExpressionFunctionAccess.js';
 import { funcNot, funcAnd, funcOr, funcGt, funcLt, funcGe, funcLe, funcEqual, funcNotEqual, funcLike, funcNotLike,
 	funcNullco, funcIfThenElse, funcContains, funcStartsWith, funcEndsWith, funcEvery, funcAny,
 	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin,
@@ -12,7 +12,8 @@ import { funcAdd, funcSub, funcNeg, funcMul, funcDiv, funcRem, funcMod, funcPct,
 	funcAbs, funcCeil, funcFloor, funcRound, funcSum, funcMax, funcMin } from './ExpressionFunctionMath.js';
 import { funcEncodeNum, funcDecodeNum, funcEncodeStr, funcDecodeStr,
 	funcToDec, funcFromDec, funcToHex, funcFromHex, funcFromJson, funcToJson } from './ExpressionFunctionMutation.js';
-import { operAt, operBy, operLen, operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
+import { operAt, operAtReal, operBy, operByReal, operLen,
+	operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
 	operNullco, operIfThenElse, operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow } from './ExpressionOperator.js';
 import { StaticScope } from './StaticScope.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
@@ -33,7 +34,7 @@ const constants: [ string, ExpressionConstant ][] = [
 const functions: [ string, ExpressionFunction][] = [
 	[ 'subbuf', funcSubbuf ], [ 'byte', funcByte ], [ 'substr', funcSubstr ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'slice', funcSlice ],
 	[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
-	[ 'at', funcAt ], [ 'by', funcBy ], [ 'len', funcLen ],
+	[ 'at', funcAt ], [ 'atReal', funcAtReal ], [ 'by', funcBy ], [ 'byReal', funcByReal ], [ 'len', funcLen ],
 	[ 'not', funcNot ], [ 'or', funcOr ], [ 'and', funcAnd ], [ 'gt', funcGt ], [ 'lt', funcLt ], [ 'ge', funcGe ], [ 'le', funcLe ],
 	[ 'equal', funcEqual ], [ 'nequal', funcNotEqual ], [ 'like', funcLike ], [ 'nlike', funcNotLike ], [ 'nullco', funcNullco ], [ 'ifte', funcIfThenElse ],
 	[ 'contains', funcContains ], [ 'startsWith', funcStartsWith ], [ 'endsWith', funcEndsWith ], [ 'any', funcAny ], [ 'every', funcEvery ],
@@ -274,7 +275,9 @@ export class Expression {
 
 	protected accessor(state: ParserState, scope: StaticScope): Node {
 		let node = this.term(state, scope);
-		while (state.isBracketsOpen || state.isBracesOpen || state.operator === operAt || state.operator === operBy || state.operator === operLen) {
+		while (state.isBracketsOpen || state.isBracesOpen
+			|| state.operator === operAt || state.operator === operBy || state.operator === operAtReal || state.operator === operByReal
+			|| state.operator === operLen) {
 			if (state.isBracketsOpen) {
 				node = new ExpressionFunctionNode(state.pos, operAt,
 					[ node, this.disjunction(state.next(), scope) ]);
@@ -315,7 +318,7 @@ export class Expression {
 				}
 			}
 			else {
-				node = new ExpressionFunctionNode(state.pos, operLen, [ node ]);
+				node = new ExpressionFunctionNode(state.pos, state.operator, [ node ]);
 			}
 			state.next();
 		}

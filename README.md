@@ -37,10 +37,12 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Assignment: **:**
 * Grouping: **(...)**
 * Next statement: **,**
-* Array element at literal index: **@**
 * Array element at numeric value: **[]**
-* Object property by literal name: **.**
+* Array element at literal index: **@**
+* Any non-null array element: **@!**
 * Object property by string value: **{}**
+* Object property by literal name: **.**
+* Any non-null object property: **.!**
 * Boolean negation: **!**
 * Boolean disjunction: **|**
 * Boolean conjunction: **&**
@@ -72,7 +74,9 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Find first index of item satisfying condition: **number firstIndex(array value, function condition)**
 * Find last index of item satisfying condition: **number lastIndex(array value, function condition)**
 * Array element at index: **variant at(array value, number index)**
+* Any non-null array element: **variant atReal(array value)**
 * Object property by name: **variant by(object value, string name)**
+* Any non-null object property: **variant byReal(object value)**
 * Length of buffer, string, array or object: **number len(buffer|string|array|object value)**
 #### Base Functions
 * Bolean negation: **boolean not(boolean value)**
@@ -161,20 +165,23 @@ The expression parsing is performed using the following grammar:
 	<disjunction> = <conjunction>{ "|"<conjunction> }
 	<conjunction> = <comparison>{ "&"<comparison> }
 	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "=" | "!=" | "~" | "!~" )<aggregate> }
-	<aggregate> = <product>{ ( "+" | "-" | "#" | "$" )<product> }
+	<aggregate> = <product>{ ( "+" | "-" )<product> }
 	<product> = <factor>{ ( "*" | "/" | "%" )<factor> }
 	<factor> = { "-" }<coalescence>{ "^"<coalescence> }
-	<coalescence> = <accessor>{ "?="<accessor> }
-	<accessor> = <term>{ ( "["<disjunction>"]" | "@"<array-index> | "{"<disjunction>"}" |
-		"."( <property-name> | <function-name>"("{ <disjunction> }{ ","<disjunction> }")" ) ) }
-	<term> = <number> | <string> | <constant-name> |
-		<function-name>"("{ <disjunction> }{ ","<disjunction> }")" |
-		{ <type> } <variable-name>{ ":"<disjunction> } |
-		<type>"("<type> <argument>{ ","<type> <argument> }") ("<list>")" |
-		"("<disjunction>")" |
-		"["{ <disjunction> }{ ","<disjunction> }"]" |
-		"{"{ <property-name>:<disjunction> }{ ","<property-name>:<disjunction> }"}" |
+	<coalescence> = <accessor>{ "?:"<accessor> }
+	<accessor> = <term>{ ( "@!" | ".!" | "$" |
+		"["<disjunction>"]" | "@"( <index-decimal-number> | #<index-hexadecimal-number> ) | "{"<disjunction>"}" |
+		"."( <property-name-string> | <function> ) ) }
+	<term> = <literal> | <group> | <array> | <object> | <constant> | <variable> | <function> | <closure> |
 		"if" <condition> "then" <disjunction> "else" <disjunction>
+	<literal> = <decimal-number> | #<hexadecimal-number> | ##<hexadecimal-binary> | "<text-string>"
+	<group> = "("<disjunction>")"
+	<array> = "["{ <disjunction> }{ ","<disjunction> }"]"
+	<object> = "{"{ <property-name-string>:<disjunction> }{ ","<property-name-string>:<disjunction> }"}"
+	<constant> = <constant-name-string>
+	<variable> = { <type> } <variable-name-string>{ ":"<disjunction> }
+	<function> = <function-name-string>"("{ <disjunction> }{ ","<disjunction> }")"
+	<closure> = <type>"("<type> <argument-name-string>{ ","<type> <argument-name-string> }") ("<list>")"
 	<type> = ( "void" | "boolean" | "bool" | "number" | "num" | "buffer" | "buf" | "string" | "str" |
 		"array" | "arr" | "object" | "obj" | "function" | "func" ){ "?" } | "variant" | "var"
 

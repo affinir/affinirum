@@ -14,21 +14,21 @@ export const funcEncodeNum = new ExpressionFunction(
 		}
 		const dv = new DataView(new Uint8Array(Number.parseInt(bits) / 8).buffer);
 		switch (encoding) {
-		case 'int8': dv.setInt8(0, value); break;
-		case 'int16': dv.setInt16(0, value); break;
-		case 'int16le': dv.setInt16(0, value, true); break;
-		case 'int32': dv.setInt32(0, value); break;
-		case 'int32le': dv.setInt32(0, value, true); break;
-		case 'uint8': dv.setUint8(0, value); break;
-		case 'uint16': dv.setUint16(0, value); break;
-		case 'uint16le': dv.setUint16(0, value, true); break;
-		case 'uint32': dv.setUint32(0, value); break;
-		case 'uint32le': dv.setUint32(0, value, true); break;
-		case 'float32': dv.setFloat32(0, value); break;
-		case 'float32le': dv.setFloat32(0, value, true); break;
-		case 'float64': dv.setFloat64(0, value); break;
-		case 'float64le': dv.setFloat64(0, value, true); break;
-		default: throw new Error(`${encoding} encoding not supported`);
+			case 'int8': dv.setInt8(0, value); break;
+			case 'int16': dv.setInt16(0, value); break;
+			case 'int16le': dv.setInt16(0, value, true); break;
+			case 'int32': dv.setInt32(0, value); break;
+			case 'int32le': dv.setInt32(0, value, true); break;
+			case 'uint8': dv.setUint8(0, value); break;
+			case 'uint16': dv.setUint16(0, value); break;
+			case 'uint16le': dv.setUint16(0, value, true); break;
+			case 'uint32': dv.setUint32(0, value); break;
+			case 'uint32le': dv.setUint32(0, value, true); break;
+			case 'float32': dv.setFloat32(0, value); break;
+			case 'float32le': dv.setFloat32(0, value, true); break;
+			case 'float64': dv.setFloat64(0, value); break;
+			case 'float64le': dv.setFloat64(0, value, true); break;
+			default: throw new Error(`${encoding} encoding not supported`);
 		}
 		return dv.buffer;
 	},
@@ -41,21 +41,21 @@ export const funcDecodeNum = new ExpressionFunction(
 			| 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: number)=> {
 		const dv = new DataView(buffer, byteOffset);
 		switch (encoding) {
-		case 'int8': return dv.getInt8(0);
-		case 'int16': return dv.getInt16(0);
-		case 'int16le': return dv.getInt16(0, true);
-		case 'int32': return dv.getInt32(0);
-		case 'int32le': return dv.getInt32(0, true);
-		case 'uint8': return dv.getUint8(0);
-		case 'uint16': return dv.getUint16(0);
-		case 'uint16le': return dv.getUint16(0, true);
-		case 'uint32': return dv.getUint32(0);
-		case 'uint32le': return dv.getUint32(0, true);
-		case 'float32': return dv.getFloat32(0);
-		case 'float32le': return dv.getFloat32(0, true);
-		case 'float64': return dv.getFloat64(0);
-		case 'float64le': return dv.getFloat64(0, true);
-		default: throw new Error(`${encoding} encoding not supported`);
+			case 'int8': return dv.getInt8(0);
+			case 'int16': return dv.getInt16(0);
+			case 'int16le': return dv.getInt16(0, true);
+			case 'int32': return dv.getInt32(0);
+			case 'int32le': return dv.getInt32(0, true);
+			case 'uint8': return dv.getUint8(0);
+			case 'uint16': return dv.getUint16(0);
+			case 'uint16le': return dv.getUint16(0, true);
+			case 'uint32': return dv.getUint32(0);
+			case 'uint32le': return dv.getUint32(0, true);
+			case 'float32': return dv.getFloat32(0);
+			case 'float32le': return dv.getFloat32(0, true);
+			case 'float64': return dv.getFloat64(0);
+			case 'float64le': return dv.getFloat64(0, true);
+			default: throw new Error(`${encoding} encoding not supported`);
 		}
 	},
 	typeNumber, [ typeBuffer, typeString, typeOptionalNumber ], 2, 3,

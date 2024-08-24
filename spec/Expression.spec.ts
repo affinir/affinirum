@@ -82,6 +82,7 @@ describe('Expression Evaluation test', ()=> {
 		[ 'sum([0,1,2,3]+[10,20,30,40],100)', [ { result: 206 } ] ],
 		[ 'arr0@3 = 50', [ { arr0: [ 10, 20, 30, 50 ], result: true }, { arr0: [], result: false } ] ],
 		[ 'arr0[i]', [ { arr0: [ 10, 20, 30, 50 ], i: 0, result: 10 }, { arr0: [], i: 5, result: undefined } ] ],
+		[ 'arr0@! + obj0.!', [ { arr0: [ undefined, 10, 20 ], obj0: { a: undefined, b: 100 }, result: 110 }, { arr0: [ 1, 2 ], obj0: { a: 1, b: 1 }, result: 2 } ] ],
 		[ 'range(start, end)[0] + range(start, end)[1]', [ { start: 5, end: 10, result: 11 }, { start: -5, end: -10, result: -19 } ] ],
 		[ 'number s:0,range(start, end).iterate(void(number x)(s:s+x)),s', [ { start: 1, end: 11, result: 55 }, { start: -1, end: -11, result: -65 } ] ],
 		[ '[p,11].map(number?(number a)(number t:10,ifte(a>10,t,null)))[i]', [ { i: 1, p: 10, result: 10 }, { i: 0, p: 1, result: undefined } ] ],
@@ -115,13 +116,13 @@ describe('Expression Evaluation test', ()=> {
 		[ 'fromJson(str1)+fromJson(str2)', [ { str1: '"p1"', str2: '"p2"', result: 'p1p2' } ] ],
 		[ 'toJson(obj1)+toJson(obj2)', [ { obj1: { p1: 'a' }, obj2: { p2: 'b' }, result: '{"p1":"a"}{"p2":"b"}' } ] ],
 		[ 'toJson(obj1)', [ { obj1: { p1: 'a' }, result: '{"p1":"a"}' } ] ],
-		[ 'func f:bool (num a) (a>0),a.filter(f).sum(0,0)', [ { a: [ -10, -20, 1, 2 ], result: 3 } ] ],
+		[ 'func f:bool(num a) (a>0),a.filter(f).sum(0,0)', [ { a: [ -10, -20, 1, 2 ], result: 3 } ] ],
 		[ 'intersect(a, b).sum()', [ { a: [ -1, 2, 1, -2 ], b: [ 1, 2 ], result: 3 } ] ],
 		[ 'differ(a, b).sum()', [ { a: [ -1, -2, 1, 2 ], b: [ 1, 2 ], result: -3 } ] ],
 		[ 'a.b.c.d ?: 10', [ { a: { b: { c: undefined } }, result: 10 }, { a: { b: {} }, result: 10 } ] ],
 		[ 'a[4][0][0] ?: 10', [ { a: [ 0 ], result: 10 }, { a: [ [ 0 ] ], result: 10 } ] ],
 		[ 'a{x}', [ { a: { b: 1 }, x: 'a', result: undefined }, { a: { b: 1 }, x: '1', result: undefined } ] ],
-		[ 'a[x]', [ { a: [ 0,  1 ], x: 5, result: undefined }, { a: [ 0 ], x:-5, result: undefined } ] ],
+		[ 'a[x]', [ { a: [ 0,  1 ], x: 5, result: undefined }, { a: [ 0 ], x: -5, result: undefined } ] ],
 	].forEach(([ expr, args ])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
 			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v)}`, ()=> {
@@ -129,10 +130,10 @@ describe('Expression Evaluation test', ()=> {
 					const expression = new Expression(expr as string);
 					expect(expression).toBeDefined();
 					try {
-					const value = expression.evaluate(v);
-					if (value !== v.result) {
-						fail(`value ${value} not matching expectation ${v.result}`)
-					}
+						const value = expression.evaluate(v);
+						if (value !== v.result) {
+							fail(`value ${value} not matching expectation ${v.result}`)
+						}
 					}
 					catch (err) {
 						fail(`evaluation error\n${(err as Error).message}`);

@@ -71,10 +71,22 @@ export const funcAt = new ExpressionFunction(
 	typeVariant, [ typeArray, typeNumber ],
 );
 
+export const funcAtReal = new ExpressionFunction(
+	(value: Value[])=>
+		value ? value.find((v)=> v != null) : undefined,
+	typeVariant, [ typeArray ],
+);
+
 export const funcBy = new ExpressionFunction(
-	(value: { [ key: string ]: Value }, property: string)=>
-		value ? (value as any)[ property ] as Value : undefined,
+	(value: { [ key: string ]: Value }, key: string)=>
+		value ? (value as any)[ key ] as Value : undefined,
 	typeVariant, [ typeObject, typeString ],
+);
+
+export const funcByReal = new ExpressionFunction(
+	(value: { [ key: string ]: Value })=>
+		value ? Object.values(value).find((v)=> v != null) : undefined,
+	typeVariant, [ typeObject ],
 );
 
 export const funcLen = new ExpressionFunction(
