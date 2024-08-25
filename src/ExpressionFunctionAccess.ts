@@ -91,7 +91,7 @@ export const funcByValid = new ExpressionFunction(
 
 export const funcLen = new ExpressionFunction(
 	(value: ArrayBufferLike | string | Value[] | { [ key: string ]: Value })=>
-		value instanceof ArrayBuffer || value instanceof SharedArrayBuffer
+		value instanceof ArrayBuffer
 			? value.byteLength
 			: typeof value === 'string' || Array.isArray(value)
 				? value.length

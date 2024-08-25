@@ -268,7 +268,7 @@ export const equal = (value1: Value, value2: Value)=> {
 	if (typeof value1 === 'boolean' || typeof value1 === 'number' || typeof value1 === 'string' || typeof value1 === 'function') {
 		return value1 === value2;
 	}
-	if ((value1 instanceof ArrayBuffer || value1 instanceof SharedArrayBuffer) && (value2 instanceof ArrayBuffer || value2 instanceof SharedArrayBuffer)) {
+	if (value1 instanceof ArrayBuffer && value2 instanceof ArrayBuffer) {
 		return equalBuffers(value1, value2);
 	}
 	if (Array.isArray(value1) && Array.isArray(value2)) {

@@ -5,7 +5,7 @@ export const funcAdd = new ExpressionFunction(
 	(...values: (number | ArrayBufferLike | string | Value[] | { [ key: string ]: Value })[])=>
 		typeof values[ 0 ] == 'number'
 			? (values as number[]).reduce((a, v)=> a + v)
-			: values[ 0 ] instanceof ArrayBuffer || values[ 0 ] instanceof SharedArrayBuffer
+			: values[ 0 ] instanceof ArrayBuffer
 				? (values as ArrayBufferLike[]).reduce((a, v)=> concatBuffers(a, v))
 				: typeof values[ 0 ] === 'string'
 					? (values as string[]).reduce((a, v)=> a + v)

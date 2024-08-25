@@ -1,4 +1,4 @@
-export type Value = void | undefined | boolean | number | ArrayBufferLike | string |
+export type Value = void | undefined | boolean | number | ArrayBuffer | string |
 	Value[] | { [ key: string ]: Value } | ((...args: Value[])=> Value);
 type PrimitiveType = 'void' | 'boolean' | 'number' | 'buffer' | 'string' | 'array' | 'object' | 'function';
 const PRIMITIVE_TYPES: PrimitiveType[] = [ 'void', 'boolean', 'number', 'buffer', 'string', 'array', 'object', 'function' ];
@@ -70,7 +70,7 @@ export class Type {
 			? 'void'
 			: Array.isArray(value)
 				? 'array'
-				: value instanceof ArrayBuffer || value instanceof SharedArrayBuffer
+				: value instanceof ArrayBuffer
 					? 'buffer'
 					: typeof value;
 		return new Type(vtype as PrimitiveType);
