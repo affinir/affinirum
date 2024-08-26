@@ -19,8 +19,6 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Standard math functions
 * Easy to add custom functions or constants
 * All operators support literal equivalent
-* Method-style invocation is supported for all functions,
-  i.e. pow(a,2) is the same as a.pow(2)
 
 ## What
 
@@ -38,125 +36,121 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Grouping: **(...)**
 * Next statement: **,**
 * Array element at numeric value: **[]**
-* Array element at literal index: **@**
-* Any valid array element: **@!**
 * Object property by string value: **{}**
-* Object property by literal name: **.**
-* Any valid object property: **.!**
+* Array element or object property value at index: **@**
+* First valid array element: **[\*]**
+* First valid object property: **{\*}**
 * Boolean negation: **!**
 * Boolean disjunction: **|**
 * Boolean conjunction: **&**
 * Greater than: **>**
 * Less than: **<**
-* Greater than or equal to: **>=**
-* Less than or equal to: **<=**
+* Greater than or equals to: **>=**
+* Less than or equals to: **<=**
 * Equals to: **=**
 * Not equals to: **!=**
 * String similar to: **\~**
-* String not similar: **!\~**
+* String not similar to: **!\~**
 * Null coalescence: **?:**
 * Conditional statement: **if...then...else...**
-* Arithmetic addition, buffer or string concatination, or object merging: **+**
+* Arithmetic addition, buffer, string, array or object concatination: **+**
 * Arithmetic subtraction or negation: **-**
 * Arithmetic multiplication: **\***
 * Arithmetic division: **/**
 * Arithmetic percentage: **%**
-* Length of buffer, string, array or object: **$**
-#### Access Functions
-* Subbuffer: **buffer subbuf(buffer value, number beginPos, number? endPos)**
-* Byte at position: **buffer byte(buffer value, number pos)**
-* Substring: **string substr(string value, number beginPos, number? endPos)**
-* Character at position: **string char(string value, number pos)**
-* Character code at position: **number charCode(string value, number pos)**
-* New array sliced from given array: **array slice(array value, number? beginIndex, number? endIndex)**
-* Find first item satisfying condition: **variant first(array value, function condition)**
-* Find last item satisfying condition: **variant last(array value, function condition)**
-* Find first index of item satisfying condition: **number firstIndex(array value, function condition)**
-* Find last index of item satisfying condition: **number lastIndex(array value, function condition)**
-* Array element at index: **variant at(array value, number index)**
-* Any valid array element: **variant atValid(array value)**
-* Object property by name: **variant by(object value, string name)**
-* Any valid object property: **variant byValid(object value)**
-* Length of buffer, string, array or object: **number len(buffer|string|array|object value)**
-#### Base Functions
-* Bolean negation: **boolean not(boolean value)**
-* Boolean disjunction: **boolean or(boolean ...values)**
+#### Global Functions
 * Boolean conjunction: **boolean and(boolean ...values)**
-* Greater than: **boolean gt(number value1, number value2)**
-* Less than: **boolean lt(number value1, number value2)**
-* Greater than or equals to: **boolean ge(number value1, number value2)**
-* Less than or equals to: **boolean le(number value1, number value2)**
-* Equals to: **boolean eq(var value1, var value2)**
-* Not equals to: **boolean neq(var value1, var value2)**
-* String alphanumerically similar to: **boolean like(string value1, string value2)**
-* String alphanumerically not similar to: **boolean nlike(string value1, string value2)**
-* Null coalescence: **variant nullco(variant value, variant valueIfNull)**
-* Conditional statement: **variant ifte(boolean condition, variant valueIfTrue, variant valueIfFalse)**
-* String contains substring: **boolean contains(string value, string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)**
-* String starts with substring: **boolean startsWith(string value, string search, number? startPos, boolean? ignoreCaseSpaceEtc)**
-* String ends with substring: **boolean endsWith(string value, string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)**
-* Check if every item satisfies condition: **boolean every(array value, function condition)**
-* Check if any item satisfies condition: **boolean any(array value, function condition)**
-* Get alphanumeric digest of string: **string alphanum(string value)**
-* Trim whitespace: **string trim(string value)**
-* Trim whitespace at start: **string trimStart(string value)**
-* Trim whitespace at end: **string trimEnd(string value)**
-* Lower case: **string lowerCase(string value)**
-* Upper case: **string upperCase(string value)**
-* Concatination of array elements into a string with separator: **string join(array value, string separator)**
-* Array of unique values: **array unique(array|variant ...values)**
-* Intersection of values of two arrays: **array intersect(array value1, array value2)**
-* Symmetrical difference between two arrays: **array differ(array value1, array value2)**
-* New array with reverse order of items: **array reverse(array value)**
-* New array flattened to specified depth: **array flatten(array value, number depth)**
+* Boolean disjunction: **boolean or(boolean ...values)**
+* Bolean negation: **boolean not(boolean value)**
+* Numeric sum: **number sum(number|array ...value)**
+* Numeric minimum: **number min(number|array ...value)**
+* Numeric maximum: **number max(number|array ...value)**
 * New array filled with integers in between given two numbers: **array range(number inclusiveFrom, number exclusiveTo)**
-* Iterate items: **array iterate(array value, function iteration)**
-* Map items: **array map(array value, function transformation)**
-* Filter items: **array filter(array value, function condition)**
-* Object composition from name-value pairs: **object comp(array ...values)**
-* Object decomposition into name-value pairs: **array decomp(object value)**
-* Object property keys: **array decompKeys(object value)**
-* Object property values: **array decompValues(object value)**
-#### Math Functions
-* Arithmetic addition, buffer or string concatination: **number|buffer|string add(number|buffer|string ...values)**
-* Arithmetic subtraction: **number sub(number minuend, number subtrahend)**
-* Arithmetic negation: **number neg(number value)**
-* Arithmetic multiplication: **number mul(number ...values)**
-* Arithmetic division: **number div(number dividend, number divisor)**
-* Arithmetic percentage: **number pct(number dividend, number divisor)**
-* Exponent: **number exp(number value)**
-* Logarithm: **number log(number value)**
-* Power: **number pow(number base, number exponent)**
-* Root: **number rt(number value, number index)**
-* Square: **number sq(number value)**
-* Square root: **number sqrt(number value)**
-* Absolute value: **number abs(number value)**
-* Ceil: **number ceil(number value)**
-* Floor: **number floor(number value)**
-* Rounded value: **number round(number value)**
-* Sum: **number sum(number|array ...value)**
-* Minimum: **number min(number|array ...value)**
-* Maximum: **number max(number|array ...value)**
-#### Mutation Functions
-* Encode a number: **buffer encodeNum(number value, string encoding)**
-* Decode a number: **number decodeNum(buffer value, string encoding, number? offset)**
-* Encode a string: **buffer encodeStr(string value, string encoding)**
-* Decode a string: **string decodeStr(buffer value, string? encoding, number? offset, number? length)**
-* Create decimal string from number: **string toDec(number value)**
-* Parse number from decimal string: **buffer fromDec(string value)**
-* Create hexadecimal string from buffer: **string toHex(buffer value)**
-* Parse buffer from hexadecimal string: **buffer fromHex(string value)**
-* Parse object from JSON-formatted string: **void|boolean|number|string|array|object fromJson(string|void value)**
-* Create JSON-formatted string from object: **string|void toJson(void|boolean|number|string|array|object value)**
+* Object composition from key-value tuples: **object compose(array ...values)**
+#### Base Method Functions
+* Greater than: **boolean number->greaterThan(number value)**
+* Less than: **boolean number->lessThan(number value)**
+* Greater than or equals to: **boolean number->greaterOrEqual(number value)**
+* Less than or equals to: **boolean number->lessOrEqual(number value)**
+* Equals to: **boolean variant->equal(variant value)**
+* Not equals to: **boolean variant->unequal(variant value)**
+* String alphanumerically equals to: **boolean string->like(string value)**
+* String alphanumerically not equals to: **boolean string->unlike(string value)**
+* Null coalescence: **variant variant->coalesce(variant valueIfNull)**
+* Conditional statement: **variant boolean->switch(variant valueIfTrue, variant valueIfFalse)**
+* String contains substring: **boolean string->contains(string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)**
+* String starts with substring: **boolean string->startsWith(string search, number? startPos, boolean? ignoreCaseSpaceEtc)**
+* String ends with substring: **boolean string->endsWith(string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)**
+* Check if every item satisfies condition: **boolean array->every(function condition)**
+* Check if any item satisfies condition: **boolean array->any(function condition)**
+* Get alphanumeric digest of string: **string string->alphanum()**
+* Trim whitespace: **string string->trim()**
+* Trim whitespace at start: **string string->trimStart()**
+* Trim whitespace at end: **string string->trimEnd()**
+* Lower case: **string string->lowerCase()**
+* Upper case: **string string->upperCase()**
+* Array of unique values: **array array->unique()**
+* Intersection of values of two arrays: **array array->intersection(array value)**
+* Symmetrical difference between two arrays: **array array->difference(array value)**
+#### Composite Method Functions
+* Length of buffer, string, array or object: **number buffer|string|array|object->length()**
+* New buffer, string or array slice: **buffer|string|array buffer|string|array->slice(number? beginIndex, number? endIndex)**
+* Byte at position: **buffer buffer->byte(number pos)**
+* Character at position: **string string->char(number pos)**
+* Character code at position: **number string->charCode(number pos)**
+* Find first item satisfying condition: **variant array->first(function condition)**
+* Find last item satisfying condition: **variant array->last(function condition)**
+* Find first index of item satisfying condition: **number array->firstIndex(function condition)**
+* Find last index of item satisfying condition: **number array->lastIndex(function condition)**
+* Array or object key-value pairs: **array array|object->entries()**
+* Array or object keys: **array array|object->keys()**
+* Array or object values: **array array|object->values()**
+* Array or object value at index: **variant array|object->at(number|string index)**
+* First valid value of array or object: **variant array|object->firstValid()**
+* Concatination of array elements into a string with separator: **string array->join(string separator = ' ')**
+* Concatination of array elements into a string with separator: **buffer buffer->chain()**
+* New array with reverse order of items: **array array->reverse()**
+* New array flattened to specified depth: **array array->flatten(number depth)**
+* Iterate items: **array array->iterate(function iteration)**
+* Map items: **array array->map(function transformation)**
+* Filter items: **array array->filter(function condition)**
+#### Math Method Functions
+* Arithmetic addition, buffer or string concatination: **number|buffer|string|array|object number|buffer|string|array|object->add(number|buffer|string|array|object ...values)**
+* Arithmetic subtraction: **number number->subtract(number subtrahend)**
+* Arithmetic negation: **number number->negate()**
+* Arithmetic multiplication: **number number->multiply(number ...values)**
+* Arithmetic division: **number number->divide(number divisor)**
+* Arithmetic percentage: **number number->percentage(number divisor)**
+* Exponent: **number number->exponent()**
+* Logarithm: **number number->logarithm()**
+* Power: **number number->power(number exponent)**
+* Root: **number number->root(number index)**
+* Square: **number number->square()**
+* Square root: **number number->sqrt()**
+* Absolute value: **number number->abs()**
+* Ceil: **number number->ceil()**
+* Floor: **number number->floor()**
+* Rounded value: **number number->round()**
+#### Mutation Method Functions
+* Encode number: **buffer number->toNumberBuffer(string encoding)**
+* Decode number: **number buffer->fromNumberBuffer(string encoding, number? offset)**
+* Encode string: **buffer string->toStringBuffer(string encoding)**
+* Decode string: **string buffer->fromStringBuffer(string? encoding, number? offset, number? length)**
+* Create decimal string from number: **string number->toNumberString()**
+* Parse number from decimal string: **buffer string->fromNumberString()**
+* Create hexadecimal string from buffer: **string buffer->toBufferString()**
+* Parse buffer from hexadecimal string: **buffer string->fromBufferString()**
+* Parse object from JSON-formatted string: **void|boolean|number|string|array|object string|void->fromJson()**
+* Create JSON-formatted string from object: **string|void void|boolean|number|string|array|object->toJson()**
 #### Constants
 * **void null**
 * **boolean true**
 * **boolean false**
-* **number NaN**
-* **number PosInf**
-* **number NegInf**
-* **number Epsilon**
-* **number Pi**
+* **number NAN**
+* **number POSINF**
+* **number NEGINF**
+* **number EPSILON**
+* **number PI**
 
 ### Grammar
 The expression parsing is performed using the following grammar:
@@ -169,9 +163,8 @@ The expression parsing is performed using the following grammar:
 	<product> = <factor>{ ( "*" | "/" | "%" )<factor> }
 	<factor> = { "-" }<coalescence>{ "^"<coalescence> }
 	<coalescence> = <accessor>{ "?:"<accessor> }
-	<accessor> = <term>{ ( "@!" | ".!" | "$" |
-		"["<disjunction>"]" | "@"( <index-decimal-number> | #<index-hexadecimal-number> ) | "{"<disjunction>"}" |
-		"."( <property-name-string> | <function> ) ) }
+	<accessor> = <term>{ ( "->"<function> | "."<property-name-string> |
+		"["<disjunction>"]" | "{"<disjunction>"}" ) }
 	<term> = <literal> | <group> | <array> | <object> | <constant> | <variable> | <function> | <closure> |
 		"if" <condition> "then" <disjunction> "else" <disjunction>
 	<literal> = <decimal-number> | #<hexadecimal-number> | ##<hexadecimal-binary> | "<text-string>"
@@ -230,14 +223,14 @@ const expr = new Expression( 'x * (y + abc / 5) > 10' );
 const value1 = expr.evaluate( { x: 10, y: 20, abc: 10 } ); // true
 const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
 ...
-const arrExpr = new Expression( '[ 1, 2, 3, a, b, c ].sum()' );
+const arrExpr = new Expression( 'sum([ 1, 2, 3, a, b, c ])' );
 const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
 ...
 const objExpr = new Expression( '{prop1:a,prop2:`abc`}.prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new Expression(
-	'arr1.map(number(number a)(a*2)).filter(boolean(number a)(a>3)).sum()'
+	'arr1->map(number(number a)(a*2))->filter(boolean(number a)(a>3))->sum()'
 );
 const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
 ...

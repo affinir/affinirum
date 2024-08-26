@@ -1,44 +1,25 @@
-import { ExpressionFunction, FUNCTION_ARG_MAX } from './ExpressionFunction.js';
-import { Value, typeBoolean, typeNumber, typeString, typeArray, typeObject, typeFunction,
-	typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeVariant, typeBooleanOrArray } from './Type.js';
+import { ExpressionFunction } from './ExpressionFunction.js';
+import { Value, typeBoolean, typeNumber, typeString, typeArray, typeOptionalBoolean, typeOptionalNumber, typeVariant } from './Type.js';
 
-export const funcNot = new ExpressionFunction(
-	(value: boolean)=>
-		!value,
-	typeBoolean, [ typeBoolean ],
-);
-
-export const funcAnd = new ExpressionFunction(
-	(...values: (boolean | boolean[])[])=>
-		values.flat(FUNCTION_ARG_MAX).every((v)=> v),
-	typeBoolean, [ typeBooleanOrArray ], 2, FUNCTION_ARG_MAX,
-);
-
-export const funcOr = new ExpressionFunction(
-	(...values: (boolean | boolean[])[])=>
-		values.flat(FUNCTION_ARG_MAX).some((v)=> v),
-	typeBoolean, [ typeBooleanOrArray ], 2, FUNCTION_ARG_MAX,
-);
-
-export const funcGt = new ExpressionFunction(
+export const funcGreaterThan = new ExpressionFunction(
 	(value1: number, value2: number)=>
 		value1 > value2,
 	typeBoolean, [ typeNumber, typeNumber ],
 );
 
-export const funcLt = new ExpressionFunction(
+export const funcLessThan = new ExpressionFunction(
 	(value1: number, value2: number)=>
 		value1 < value2,
 	typeBoolean, [ typeNumber, typeNumber ],
 );
 
-export const funcGe = new ExpressionFunction(
+export const funcGreaterOrEqual = new ExpressionFunction(
 	(value1: number, value2: number)=>
 		value1 >= value2,
 	typeBoolean, [ typeNumber, typeNumber ],
 );
 
-export const funcLe = new ExpressionFunction(
+export const funcLessOrEqual = new ExpressionFunction(
 	(value1: number, value2: number)=>
 		value1 <= value2,
 	typeBoolean, [ typeNumber, typeNumber ],
@@ -67,14 +48,14 @@ export const funcNotLike = new ExpressionFunction(
 	typeBoolean, [ typeString, typeString ],
 );
 
-export const funcNullco = new ExpressionFunction(
+export const funcCoalesce = new ExpressionFunction(
 	(value: Value, valueOtherwise: Value)=>
 		value ?? valueOtherwise,
 	typeVariant, [ typeVariant, typeVariant ], undefined, undefined,
 	(index, vtype, vmask)=> vtype === vmask
 );
 
-export const funcIfThenElse = new ExpressionFunction(
+export const funcSwitch = new ExpressionFunction(
 	(condition: boolean, value1: Value, value2: Value)=>
 		condition ? value1 : value2,
 	typeVariant, [ typeBoolean, typeVariant, typeVariant ], undefined, undefined,
@@ -97,18 +78,6 @@ export const funcEndsWith = new ExpressionFunction(
 	(value: string, search: string, end?: number, ignoreCaseSpaceEtc?: boolean)=>
 		endsWithString(value, search, end, ignoreCaseSpaceEtc),
 	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
-);
-
-export const funcEvery = new ExpressionFunction(
-	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
-		value.every((v, i, a)=> predicate(v, i, a)),
-	typeBoolean, [ typeArray, typeFunction ],
-);
-
-export const funcAny = new ExpressionFunction(
-	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
-		value.some((v, i, a)=> predicate(v, i, a)),
-	typeBoolean, [ typeArray, typeFunction ],
 );
 
 export const funcAlphanum = new ExpressionFunction(
@@ -155,12 +124,6 @@ export const funcUpperCase = new ExpressionFunction(
 	typeString, [ typeString ],
 );
 
-export const funcJoin = new ExpressionFunction(
-	(value: (string | string[])[], separator: string = ' ')=>
-		value.flat(FUNCTION_ARG_MAX).join(separator),
-	typeString, [ typeArray, typeOptionalString ], 1, 2,
-);
-
 export const funcUnique = new ExpressionFunction(
 	(value: Value[])=> {
 		const result: Value[] = [];
@@ -174,94 +137,19 @@ export const funcUnique = new ExpressionFunction(
 	typeArray, [ typeArray ],
 );
 
-export const funcIntersect = new ExpressionFunction(
+export const funcIntersection = new ExpressionFunction(
 	(value1: Value[], value2: Value[])=>
 		value1.filter((i)=> value2.some((v)=> equal(v, i))),
 	typeArray, [ typeArray, typeArray ],
 );
 
-export const funcDiffer = new ExpressionFunction(
+export const funcDifference = new ExpressionFunction(
 	(value1: Value[], value2: Value[])=>
 		[ ...value1.filter((i)=> value2.every((v)=> !equal(v, i))), ...value2.filter((i)=> value1.every((v)=> !equal(v, i))) ],
 	typeArray, [ typeArray, typeArray ],
 );
 
-export const funcFlatten = new ExpressionFunction(
-	(values: Value[], depth?: number)=>
-		(values as []).flat(depth) as Value,
-	typeArray, [ typeArray, typeOptionalNumber ], 1, 2,
-);
-
-export const funcReverse = new ExpressionFunction(
-	(value: Value[])=>
-		[ ...value ].reverse(),
-	typeArray, [ typeArray ],
-);
-
-export const funcRange = new ExpressionFunction(
-	(value1: number, value2: number)=> {
-		const [ min, max ] = [ Math.floor(Math.min(value1, value2)), Math.ceil(Math.max(value1, value2)) ];
-		return [ ...Array(max - min).keys() ].map((i)=> i + min);
-	},
-	typeArray, [ typeNumber, typeNumber ],
-);
-
-export const funcMap = new ExpressionFunction(
-	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=>
-		value.map(callback),
-	typeArray, [ typeArray, typeFunction ],
-);
-
-export const funcFilter = new ExpressionFunction(
-	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
-		value.filter(predicate),
-	typeArray, [ typeArray, typeFunction ],
-);
-
-export const funcIterate = new ExpressionFunction(
-	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=> {
-		value.forEach(callback);
-		return value;
-	},
-	typeArray, [ typeArray, typeFunction ],
-);
-
-export const funcReduce = new ExpressionFunction(
-	(value: Value[], callback: (acc: Value, v: Value, i: number, arr: Value[])=> Value, initial?: Value)=>
-		initial != null ? value.reduce(callback, initial) : value.reduce(callback),
-	typeVariant, [ typeArray, typeFunction, typeVariant ], 2, 3,
-);
-
-export const funcComp = new ExpressionFunction(
-	(...values: [ string, Value ][])=> {
-		const obj: Record<string, any> = {};
-		for (let i = 0; i < values.length; ++i) {
-			obj[ values[ i ][ 0 ] ] = values[ i ][ 1 ];
-		}
-		return obj;
-	},
-	typeObject, [ typeArray ], 0, FUNCTION_ARG_MAX,
-);
-
-export const funcDecomp = new ExpressionFunction(
-	(value: { [ key: string ]: Value })=>
-		Object.entries(value),
-	typeArray, [ typeObject ],
-);
-
-export const funcDecompKeys = new ExpressionFunction(
-	(value: { [ key: string ]: Value })=>
-		Object.keys(value),
-	typeArray, [ typeObject ],
-);
-
-export const funcDecompValues = new ExpressionFunction(
-	(value: { [ key: string ]: Value })=>
-		Object.values(value),
-	typeArray, [ typeObject ],
-);
-
-export const equal = (value1: Value, value2: Value)=> {
+const equal = (value1: Value, value2: Value)=> {
 	if (value1 == null || value2 == null) {
 		return value1 == value2;
 	}
@@ -291,7 +179,7 @@ export const equal = (value1: Value, value2: Value)=> {
 	return true;
 }
 
-export const equalBuffers = (value1: ArrayBufferLike, value2: ArrayBufferLike)=> {
+const equalBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	if (value1.byteLength !== value2.byteLength) {
 		return false;
 	}
@@ -315,9 +203,9 @@ export const equalBuffers = (value1: ArrayBufferLike, value2: ArrayBufferLike)=>
 	return true;
 };
 
-export const isCaseSpaceEtc = (c: string)=> (c < 'a' || c > 'z') && (c < '0' || c > '9');
+const isCaseSpaceEtc = (c: string)=> (c < 'a' || c > 'z') && (c < '0' || c > '9');
 
-export const equalStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boolean)=> {
+const equalStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
 		return value1 === value2;
 	}
@@ -337,7 +225,7 @@ export const equalStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?
 	return true;
 };
 
-export const containsString = (value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+const containsString = (value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
 		return value.includes(search, startPos);
 	}
@@ -364,7 +252,7 @@ export const containsString = (value: string, search: string, startPos?: number,
 	return true;
 };
 
-export const startsWithString = (value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+const startsWithString = (value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
 		return value.startsWith(search, startPos);
 	}
@@ -388,7 +276,7 @@ export const startsWithString = (value: string, search: string, startPos?: numbe
 	return true;
 };
 
-export const endsWithString = (value: string, search: string, endPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+const endsWithString = (value: string, search: string, endPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
 		return value.endsWith(search, endPos);
 	}

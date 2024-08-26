@@ -1,7 +1,7 @@
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { Value, typeNumber, typeBuffer, typeString, typeOptionalNumber, typeOptionalString, typeJson } from './Type.js';
 
-export const funcEncodeNum = new ExpressionFunction(
+export const funcToNumberBuffer = new ExpressionFunction(
 	(value: number, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
 			| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
 			| 'float32' | 'float32le' | 'float64' | 'float64le')=> {
@@ -35,8 +35,8 @@ export const funcEncodeNum = new ExpressionFunction(
 	typeBuffer, [ typeNumber, typeString ],
 );
 
-export const funcDecodeNum = new ExpressionFunction(
-	(buffer: ArrayBufferLike, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
+export const funcFromNumberBuffer = new ExpressionFunction(
+	(buffer: ArrayBuffer, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
 			| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
 			| 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: number)=> {
 		const dv = new DataView(buffer, byteOffset);
@@ -61,16 +61,16 @@ export const funcDecodeNum = new ExpressionFunction(
 	typeNumber, [ typeBuffer, typeString, typeOptionalNumber ], 2, 3,
 );
 
-export const funcEncodeStr = new ExpressionFunction(
+export const funcToStringBuffer = new ExpressionFunction(
 	(value: string, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8')=> {
 		if (encoding === 'utf8') {
 			return new TextEncoder().encode(value).buffer;
 		}
 		else {
 			const dv = new DataView(new Uint16Array(value.length).buffer);
-			const le = encoding.endsWith('le');
+			const lessOrEqual = encoding.endsWith('lessOrEqual');
 			for (let i = 0; i < value.length; ++i) {
-				dv.setUint16(i << 1, value.charCodeAt(i), le);
+				dv.setUint16(i << 1, value.charCodeAt(i), lessOrEqual);
 			}
 			return dv.buffer;
 		}
@@ -78,17 +78,17 @@ export const funcEncodeStr = new ExpressionFunction(
 	typeBuffer, [ typeString, typeOptionalString ], 1, 2,
 );
 
-export const funcDecodeStr = new ExpressionFunction(
-	(value: ArrayBufferLike, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: number, byteLength?: number)=> {
+export const funcFromStringBuffer = new ExpressionFunction(
+	(value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: number, byteLength?: number)=> {
 		if (encoding === 'utf8') {
 			return new TextDecoder().decode(new DataView(value, byteOffset, byteLength));
 		}
 		else {
 			const dv = new DataView(value, byteOffset, byteLength);
-			const le = encoding.endsWith('le');
+			const lessOrEqual = encoding.endsWith('lessOrEqual');
 			let str = '';
 			for (let i = 0; i < dv.byteLength; i += 2) {
-				str += String.fromCharCode(dv.getUint16(i, le));
+				str += String.fromCharCode(dv.getUint16(i, lessOrEqual));
 			}
 			return str;
 		}
@@ -96,34 +96,28 @@ export const funcDecodeStr = new ExpressionFunction(
 	typeString, [ typeBuffer, typeOptionalString, typeOptionalNumber, typeOptionalNumber ], 1, 4,
 );
 
-export const funcToDec = new ExpressionFunction(
-	(value: number)=>
-		value.toString(),
-	typeString, [ typeNumber ],
+export const funcToNumberString = new ExpressionFunction(
+	(value: number, radix?: number)=>
+		value.toString(radix),
+	typeString, [ typeNumber ], 1, 2,
 );
 
-export const funcFromDec = new ExpressionFunction(
+export const funcFromNumberString = new ExpressionFunction(
 	(value: string)=>
 		Number.parseFloat(value),
 	typeNumber, [ typeString ],
 );
 
-export const funcToHex = new ExpressionFunction(
-	(value: ArrayBufferLike)=>
-		toHex(value),
+export const funcToBufferString = new ExpressionFunction(
+	(value: ArrayBuffer)=>
+		fromStringBuffer(value),
 	typeString, [ typeBuffer ],
 );
 
-export const funcFromHex = new ExpressionFunction(
+export const funcFromBufferString = new ExpressionFunction(
 	(value: string)=>
-		fromHex(value),
+		toStringBuffer(value),
 	typeBuffer, [ typeString ],
-);
-
-export const funcFromJson = new ExpressionFunction(
-	(value: undefined | string)=>
-		value ? JSON.parse(value) as Value : undefined,
-	typeJson, [ typeOptionalString ],
 );
 
 export const funcToJson = new ExpressionFunction(
@@ -132,7 +126,13 @@ export const funcToJson = new ExpressionFunction(
 	typeOptionalString, [ typeJson ],
 );
 
-export const toHex = (value: ArrayBufferLike)=> {
+export const funcFromJson = new ExpressionFunction(
+	(value: undefined | string)=>
+		value ? JSON.parse(value) as Value : undefined,
+	typeJson, [ typeOptionalString ],
+);
+
+export const fromStringBuffer = (value: ArrayBuffer)=> {
 	const bytes = new Uint8Array(value);
 	let str = '';
 	for (let i = 0; i < bytes.byteLength; ++i) {
@@ -141,7 +141,7 @@ export const toHex = (value: ArrayBufferLike)=> {
 	return str;
 };
 
-export const fromHex = (value: string)=> {
+export const toStringBuffer = (value: string)=> {
 	const bytes = new Uint8Array(Math.ceil(value.length / 2));
 	for (let i = 0, c = 0; c < value.length; ++i) {
 		bytes[ i ] = Number.parseInt(value.slice(c, c += 2), 16);
