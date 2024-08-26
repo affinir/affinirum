@@ -1,8 +1,8 @@
 # expression-evaluation
-Recursive descent parsing and evaluation of closed-form analytic expressions.
+Evaluation of closed-form analytic expressions using recursive descent parser.
 
-Parser supports boolean expressions, regular algebraic expressions, 
-numeric and string functions, variables, and closures.
+Parser supports boolean expressions, regular algebraic expressions,
+ numeric, buffer, string array and object functions, variables, and closures.
 
 Target: ES2022 [browser+NodeJS][ESM+CJS].
 
@@ -30,7 +30,9 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * array
 * object
 * function
-* void
+* void type for **null** value
+* optional type modifier **?** for boolean?, number?, buffer?, string?, array?, object?, function?
+* variant type for values of unknown type
 #### Operators
 * Assignment: **:**
 * Grouping: **(...)**
@@ -59,8 +61,8 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Arithmetic division: **/**
 * Arithmetic percentage: **%**
 #### Global Functions
-* Boolean conjunction: **boolean and(boolean ...values)**
-* Boolean disjunction: **boolean or(boolean ...values)**
+* Boolean conjunction: **boolean and(boolean|array ...values)**
+* Boolean disjunction: **boolean or(boolean|array ...values)**
 * Bolean negation: **boolean not(boolean value)**
 * Numeric sum: **number sum(number|array ...value)**
 * Numeric minimum: **number min(number|array ...value)**

@@ -66,7 +66,7 @@ describe('Expression Evaluation test', ()=> {
 		[ 'a->length() % 50', [ { a: 'abcd', result: 2 }, { a: 'abcdef', result: 3 } ] ],
 		[ 'a->alphanum()', [ { a: '---abcd===', result: 'abcd' }, { a: '+abc-def!', result: 'abcdef' } ] ],
 		[ 'str1->trim() + str2->trimStart() + str3->trimEnd()', [ { str1: ' abcd ', str2: '  a', str3: '0  ', result: 'abcda0' } ] ],
-		[ 'x->trim()->lowerCase()', [ { x: '  ABC  ', result: 'abc' }, { x: 'ABCD  ', result: 'abcd' } ] ],
+		[ 'x->trim->lowerCase()', [ { x: '  ABC  ', result: 'abc' }, { x: 'ABCD  ', result: 'abcd' } ] ],
 		[ 'a->slice(3,4)->upperCase()', [ { a: 'abcdef', result: 'D' }, { a: 'abcDef---', result: 'D' } ] ],
 		[ 's->char(p)', [ { s: "my long string", p: 1, result: 'y' }, { s: "my+", p: 0, result: 'm' }, { s: "1", p: 1, result: "" } ] ],
 		[ 'str0->char(2) = `a`', [ { str0: 'bca', result: true }, { str0: 'bce', result: false } ] ],
