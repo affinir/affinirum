@@ -104,7 +104,7 @@ export const funcFirst = new ExpressionFunction(
 
 export const funcLast = new ExpressionFunction(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
-		[ ...value ].reverse().find((v, i, a)=> predicate(v, i, a)),
+		value.reverse().find((v, i, a)=> predicate(v, i, a)),
 	typeVariant, [ typeArray, typeFunction ],
 );
 
