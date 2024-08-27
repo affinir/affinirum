@@ -1,6 +1,18 @@
 import { ExpressionFunction, FUNCTION_ARG_MAX } from './ExpressionFunction.js';
-import { Value, typeBoolean, typeNumber, typeBuffer, typeString, typeArray, typeFunction,
-	typeOptionalNumber, typeOptionalString, typeNumberOrString, typeArrayOrObject, typeEnumerable, typeIterable, typeVariant } from './Type.js';
+import { Value, typeBoolean, typeNumber, typeBuffer, typeString, typeArray, typeObject, typeFunction,
+	typeOptionalNumber, typeNumberOrString, typeArrayOrObject,
+	typeEnumerable, typeIterable, typeVariant } from './Type.js';
+
+export const funcAppend = new ExpressionFunction(
+	(...values: (ArrayBuffer | string | Value[])[])=>
+		values[ 0 ] instanceof ArrayBuffer
+			? (values as ArrayBuffer[]).reduce((acc, val)=> concatBuffers(acc, val), new ArrayBuffer(0))
+			: typeof values[ 0 ] === 'string'
+				? (values as string[]).reduce((acc, val)=> acc + val, '')
+				: (values as Value[][]).reduce((acc, val)=> [ ...acc, ...val ], []),
+	typeEnumerable, [ typeEnumerable ], 2, FUNCTION_ARG_MAX,
+	(index, vtype, vmask)=> vtype === vmask,
+);
 
 export const funcLength = new ExpressionFunction(
 	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value })=>
@@ -136,18 +148,6 @@ export const funcAny = new ExpressionFunction(
 	typeBoolean, [ typeArray, typeFunction ],
 );
 
-export const funcChain = new ExpressionFunction(
-	(value: (ArrayBuffer | ArrayBuffer[])[])=>
-		value.flat(FUNCTION_ARG_MAX).map((b)=> new Uint8Array(b)),
-	typeBuffer, [ typeArray ],
-);
-
-export const funcJoin = new ExpressionFunction(
-	(value: (string | string[])[], separator: string = ' ')=>
-		value.flat(FUNCTION_ARG_MAX).join(separator),
-	typeString, [ typeArray, typeOptionalString ], 1, 2,
-);
-
 export const funcFlatten = new ExpressionFunction(
 	(values: Value[], depth?: number)=>
 		(values as []).flat(depth) as Value,
@@ -185,3 +185,22 @@ export const funcReduce = new ExpressionFunction(
 		initial != null ? value.reduce(callback, initial) : value.reduce(callback),
 	typeVariant, [ typeArray, typeFunction, typeVariant ], 2, 3,
 );
+
+export const funcCompose = new ExpressionFunction(
+	(value: string[], callback: (acc: { [ key: string ]: Value }, v: string, i: number)=> { [ key: string ]: Value })=> {
+		const obj: Record<string, any> = {};
+		for (let i = 0; i < value.length; ++i) {
+			const key =  value[ i ];
+			obj[ key ] = callback(obj, key, i);
+		}
+		return obj;
+	},
+	typeObject, [ typeArray, typeFunction ],
+);
+
+export const concatBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
+	const bytes = new Uint8Array(value1.byteLength + value2.byteLength);
+	bytes.set(new Uint8Array(value1), 0);
+	bytes.set(new Uint8Array(value2), value1.byteLength);
+	return bytes.buffer;
+};

@@ -1,43 +1,49 @@
 import { Node } from './Node.js';
 import { ExpressionConstantNode } from './ExpressionConstantNode.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
-import { Type, Value, typeObject, typeVariant } from './Type.js';
+import { Type, Value, typeString, typeObject, typeVariant } from './Type.js';
 
 export class ExpressionObjectNode extends Node {
 
 	constructor(
-		_pos: number,
-		protected _subnodes: { [ key: string ]: Node },
+		_startPos: number,
+		_endPos: number,
+		protected _subnodes: [ Node, Node ][],
 	) {
-		super(_pos);
+		super(_startPos, _endPos);
 	}
 
-	get type(): Type {
+	override get type(): Type {
 		return typeObject;
 	}
 
-	compile(type: Type): Node {
+	override toString(ident: number): string {
+		return `${super.toString(ident)} object node, subnodes:\n${this._subnodes.map(([ k, v ])=> `key: ${k.toString(ident + 1)} value: ${v.toString(ident + 1)}`).join('\n')}`;
+	}
+
+	override compile(type: Type): Node {
 		if (!typeObject.infer(type)) {
 			this.throwTypeError(type);
 		}
 		let constant = true;
-		for (const key in this._subnodes) {
-			const subnode = this._subnodes[ key ] = this._subnodes[ key ].compile(typeVariant);
-			constant &&= subnode instanceof ExpressionConstantNode && !subnode.type.isFunction;
+		for (const [ key, value ] of this._subnodes) {
+			const knode = key.compile(typeString);
+			const vnode = value.compile(typeVariant);
+			constant &&= knode instanceof ExpressionConstantNode && !knode.type.isFunction
+				&& vnode instanceof ExpressionConstantNode && !vnode.type.isFunction;
 		}
 		if (constant) {
-			return new ExpressionConstantNode(this._pos,
-				new ExpressionConstant(this.evaluate()));
+			return new ExpressionConstantNode(this._startPos, this._endPos, new ExpressionConstant(this.evaluate()));
 		}
 		return this;
 	}
 
-	evaluate(): Value {
-		const value: { [ key: string ]: Value } = {};
-		for (const key in this._subnodes) {
-			value[ key ] = this._subnodes[ key ].evaluate();
+	override evaluate(): Value {
+		const obj: { [ key: string ]: Value } = {};
+		for (const [ key, value ] of this._subnodes) {
+			obj[ String(key.evaluate()) ] = value.evaluate();
 		}
-		return value;
+		return obj;
 	}
 
 }

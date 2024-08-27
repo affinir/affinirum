@@ -1,20 +1,20 @@
 import { ExpressionConstant, constNull, constTrue, constFalse,
 	constNAN, constPOSINF, constNEGINF, constEPSILON, constPI } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
-import { funcOr, funcAnd, funcNot, funcSum, funcMax, funcMin, funcRange, funcCompose } from './ExpressionFunctionGlobal.js';
+import { funcOr, funcAnd, funcNot, funcSum, funcMax, funcMin, funcRange, funcMerge, funcChain } from './ExpressionFunctionGlobal.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual, funcLike, funcNotLike,
 	funcCoalesce, funcSwitch, funcContains, funcStartsWith, funcEndsWith,
-	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
+	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin,
 	funcUnique, funcIntersection, funcDifference } from './ExpressionFunctionBase.js';
-import { funcLength, funcSlice, funcByte, funcChar, funcCharCode, funcAt, funcFirstValid, funcFirst, funcLast, funcFirstIndex, funcLastIndex,
-	funcEvery, funcAny, funcChain, funcJoin, funcFlatten, funcReverse, funcMap, funcFilter,
-	funcIterate, funcReduce, funcEntries, funcKeys, funcValues } from './ExpressionFunctionComposite.js';
+import { funcAppend, funcLength, funcSlice, funcByte, funcChar, funcCharCode, funcEntries, funcKeys, funcValues,
+	funcAt, funcFirstValid, funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny, funcFlatten, funcReverse,
+	funcMap, funcFilter, funcIterate, funcReduce, funcCompose } from './ExpressionFunctionComposite.js';
 import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcRemainder, funcModulo, funcPercentage, funcExponent, funcLogarithm,
 	funcPower, funcRoot, funcSquare, funcSqrt, funcAbs, funcCeil, funcFloor, funcRound } from './ExpressionFunctionMath.js';
 import { funcToNumberBuffer, funcFromNumberBuffer, funcToStringBuffer, funcFromStringBuffer,
 	funcToNumberString, funcFromNumberString, funcToBufferString, funcFromBufferString, funcFromJson, funcToJson } from './ExpressionFunctionMutation.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike, operCoalesce, operSwitch,
-	operAt, operFv, operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow } from './ExpressionOperator.js';
+	operAppend, operAt, operFv, operAdd, operSub, operNeg, operMul, operDiv, operPct, operPow } from './ExpressionOperator.js';
 import { StaticScope } from './StaticScope.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { Type, Value, typeVariant } from './Type.js';
@@ -37,20 +37,21 @@ const constants: [ string, ExpressionConstant ][] = [
 ];
 const gfunctions: [ string, ExpressionFunction][] = [
 	[ 'or', funcOr ], [ 'and', funcAnd ], [ 'not', funcNot ], [ 'sum', funcSum ], [ 'max', funcMax ], [ 'min', funcMin ],
-	[ 'range', funcRange ], [ 'compose', funcCompose ],
+	[ 'range', funcRange ], [ 'chain', funcChain ], [ 'merge', funcMerge ],
 ];
 const mfunctions: [ string, ExpressionFunction][] = [
 	[ 'greaterThan', funcGreaterThan ], [ 'lessThan', funcLessThan ], [ 'greaterOrEqual', funcGreaterOrEqual ], [ 'lessOrEqual', funcLessOrEqual ],
-	[ 'equal', funcEqual ], [ 'unequal', funcNotEqual ], [ 'like', funcLike ], [ 'unlike', funcNotLike ], [ 'coalesce', funcCoalesce ], [ 'switch', funcSwitch ],
-	[ 'contains', funcContains ], [ 'startsWith', funcStartsWith ], [ 'endsWith', funcEndsWith ], [ 'alphanum', funcAlphanum ],
-	[ 'trim', funcTrim ], [ 'trimStart', funcTrimStart ], [ 'trimEnd', funcTrimEnd ], [ 'lowerCase', funcLowerCase ], [ 'upperCase', funcUpperCase ],
+	[ 'equal', funcEqual ], [ 'unequal', funcNotEqual ], [ 'like', funcLike ], [ 'unlike', funcNotLike ], [ 'coalesce', funcCoalesce ],
+	[ 'switch', funcSwitch ], [ 'contains', funcContains ], [ 'startsWith', funcStartsWith ], [ 'endsWith', funcEndsWith ], [ 'alphanum', funcAlphanum ],
+	[ 'trim', funcTrim ], [ 'trimStart', funcTrimStart ], [ 'trimEnd', funcTrimEnd ],
+	[ 'lowerCase', funcLowerCase ], [ 'upperCase', funcUpperCase ], [ 'join', funcJoin ],
 	[ 'unique', funcUnique ], [ 'intersection', funcIntersection ], [ 'difference', funcDifference ],
 
-	[ 'length', funcLength ], [ 'slice', funcSlice ], [ 'byte', funcByte ], [ 'char', funcChar ], [ 'charCode', funcCharCode ], [ 'at', funcAt ],
+	[ 'append', funcAppend ], [ 'length', funcLength ], [ 'slice', funcSlice ], [ 'byte', funcByte ], [ 'char', funcChar ], [ 'charCode', funcCharCode ],
+	[ 'entries', funcEntries ], [ 'keys', funcKeys ], [ 'values', funcValues ], [ 'at', funcAt ],
 	[ 'firstValid', funcFirstValid ], [ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
-	[ 'any', funcAny ], [ 'every', funcEvery ], [ 'join', funcJoin ], [ 'chain', funcChain ],
-	[ 'flatten', funcFlatten ], [ 'reverse', funcReverse ], [ 'map', funcMap ], [ 'filter', funcFilter ], [ 'iterate', funcIterate ], [ 'reduce', funcReduce ],
-	[ 'entries', funcEntries ], [ 'keys', funcKeys ], [ 'values', funcValues ],
+	[ 'any', funcAny ], [ 'every', funcEvery ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ],
+	[ 'map', funcMap ], [ 'filter', funcFilter ], [ 'iterate', funcIterate ], [ 'reduce', funcReduce ], [ 'compose', funcCompose ],
 
 	[ 'add', funcAdd ], [ 'subtract', funcSubtract ], [ 'negate', funcNegate ],
 	[ 'multiply', funcMultiply ], [ 'divide', funcDivide ], [ 'remainder', funcRemainder ], [ 'modulo', funcModulo ], [ 'percentage', funcPercentage ],
@@ -124,20 +125,21 @@ export class Expression {
 		try {
 			this._root = this.program(state.next(), this._scope);
 			if (!state.isVoid) {
-				throw new Error(`unexpected expression token`);
+				throw new Error(`unexpected expression token or expression end`);
 			}
 		}
 		catch (err) {
-			throw new Error(`parse error on ${(err as Error).message} at position ${state.pos}:\n` +
-				this.point(state.pos, state.length));
+			throw new Error(`parse error on ${(err as Error).message} at position ${state.startPos}:\n` +
+				this.point(state.startPos, state.endPos));
 		}
 		try {
 			this._root = this._root.compile(type);
 		}
 		catch (err) {
+			console.log(this.toString());
 			const te = err as NodeTypeError;
-			throw new TypeError(`${te.message} on ${te.nodeType} not matching ${te.mismatchType} at position ${te.pos}:\n` +
-				this.point(state.pos, state.length));
+			throw new TypeError(`${te.message} on ${te.nodeType} not matching ${te.mismatchType} at position ${te.startPos}:\n` +
+				this.point(te.startPos, te.endPos));
 		}
 	}
 
@@ -146,6 +148,14 @@ export class Expression {
 	*/
 	get type(): Type {
 		return this._root.type;
+	}
+
+	/**
+		Returns string representing parsed node tree structure.
+		@returns Parsed expression string.
+	*/
+	toString() {
+		return this._root.toString();
 	}
 
 	/**
@@ -171,38 +181,39 @@ export class Expression {
 		for (const name in variables) {
 			if (!Object.prototype.hasOwnProperty.call(values, name)) {
 				throw new Error(`evaluation error on undefined variable ${name}:\n` +
-					this.point(this._expression.indexOf(name), name.length));
+					this.point(this._expression.indexOf(name), this._expression.indexOf(name) + name.length));
 			}
 			const variable = variables[ name ];
 			const value = values[ name ] ?? undefined;
 			if (!variable.type.infer(Type.of(value))) {
 				throw new TypeError(`evaluation error on unexpected type ${typeof value} for variable ${name} of type ${variable.type}:\n` +
-					this.point(this._expression.indexOf(name), name.length));
+					this.point(this._expression.indexOf(name), this._expression.indexOf(name) + name.length));
 			}
 			variable.value = value;
 		}
 		return this._root.evaluate();
 	}
 
-	protected point(stateOffset: number, stateLength: number): string {
-		const offset = stateOffset < 32 ? 0 : stateOffset - 32;
-		const length = stateLength < 1 ? 0 : stateLength - 1;
+	protected point(start: number, end: number): string {
+		const offset = start < 32 ? 0 : start - 32;
+		const length = end < start ? 0 : end - start - 1;
 		return `${this._expression.substring(offset, offset + 60)}\n` +
-		`${' '.repeat(this._expression.substring(offset, stateOffset).length)}^${'\''.repeat(length)}`;
+		`${' '.repeat(this._expression.substring(offset, start).length)}^${'\''.repeat(length)}`;
 	}
 
 	protected program(state: ParserState, scope: StaticScope): Node {
+		const start = state.startPos;
 		const nodes: Node[] = [ this.disjunction(state, scope) ];
 		while (state.isSeparator) {
 			nodes.push(this.disjunction(state.next(), scope));
 		}
-		return new ExpressionProgramNode(state.pos, nodes);
+		return new ExpressionProgramNode(start, state.endPos, nodes);
 	}
 
 	protected disjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this.conjunction(state, scope);
 		while (state.operator === operOr) {
-			node = new ExpressionFunctionNode(state.pos, state.operator,
+			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
 				[ node, this.conjunction(state.next(), scope) ]);
 		}
 		return node;
@@ -211,7 +222,7 @@ export class Expression {
 	protected conjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this.comparison(state, scope);
 		while (state.operator === operAnd) {
-			node = new ExpressionFunctionNode(state.pos, state.operator,
+			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
 				[ node, this.comparison(state.next(), scope) ]);
 		}
 		return node;
@@ -219,28 +230,28 @@ export class Expression {
 
 	protected comparison(state: ParserState, scope: StaticScope): Node {
 		let not = false;
-		let pos = -1;
+		let start = -1;
 		while (state.operator === operNot) {
 			not = !not;
-			pos = state.pos;
+			start = state.startPos;
 			state.next();
 		}
 		let node = this.aggregate(state, scope);
 		while (state.operator === operGt || state.operator === operLt || state.operator === operGe || state.operator === operLe ||
 			state.operator === operEqual || state.operator === operNotEqual || state.operator === operLike || state.operator === operNotLike) {
-			node = new ExpressionFunctionNode(state.pos, state.operator,
+			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
 				[ node, this.aggregate(state.next(), scope) ]);
 		}
 		if (not) {
-			node = new ExpressionFunctionNode(pos, operNot, [ node ]);
+			node = new ExpressionFunctionNode(start, state.endPos, operNot, [ node ]);
 		}
 		return node;
 	}
 
 	protected aggregate(state: ParserState, scope: StaticScope): Node {
 		let node = this.product(state, scope);
-		while (state.operator === operAdd || state.operator === operSub) {
-			node = new ExpressionFunctionNode(state.pos, state.operator,
+		while (state.operator === operAppend || state.operator === operAdd || state.operator === operSub) {
+			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
 				[ node, this.product(state.next(), scope) ]);
 		}
 		return node;
@@ -249,7 +260,7 @@ export class Expression {
 	protected product(state: ParserState, scope: StaticScope): Node {
 		let node = this.factor(state, scope);
 		while (state.operator === operMul || state.operator === operDiv || state.operator === operPct) {
-			node = new ExpressionFunctionNode(state.pos, state.operator,
+			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
 				[ node, this.factor(state.next(), scope) ]);
 		}
 		return node;
@@ -257,19 +268,19 @@ export class Expression {
 
 	protected factor(state: ParserState, scope: StaticScope): Node {
 		let neg = false;
-		let pos = -1;
+		let start = -1;
 		while (state.operator === operSub) {
 			neg = !neg;
-			pos = state.pos;
+			start = state.startPos;
 			state.next();
 		}
 		let node = this.coalescence(state, scope);
 		while (state.operator === operPow) {
-			node = new ExpressionFunctionNode(state.pos, state.operator,
+			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
 				[ node, this.coalescence(state.next(), scope) ]);
 		}
 		if (neg) {
-			node = new ExpressionFunctionNode(pos, operNeg, [ node ]);
+			node = new ExpressionFunctionNode(start, state.endPos, operNeg, [ node ]);
 		}
 		return node;
 	}
@@ -277,7 +288,7 @@ export class Expression {
 	protected coalescence(state: ParserState, scope: StaticScope): Node {
 		let node = this.accessor(state, scope);
 		while (state.operator === operCoalesce) {
-			node = new ExpressionFunctionNode(state.pos, state.operator,
+			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
 				[ node, this.accessor(state.next(), scope) ]);
 		}
 		return node;
@@ -298,11 +309,13 @@ export class Expression {
 			}
 			else if (state.isBracketsOpen) {
 				if (state.next().operator === operMul) {
-					node = new ExpressionFunctionNode(state.pos, operFv, [ node ]);
+					node = new ExpressionFunctionNode(state.startPos, state.endPos, operFv,
+						[ node ]);
 					state.next();
 				}
 				else {
-					node = new ExpressionFunctionNode(state.pos, operAt, [ node, this.disjunction(state, scope) ]);
+					node = new ExpressionFunctionNode(state.startPos, state.endPos, operAt,
+						[ node, this.disjunction(state, scope) ]);
 				}
 				if (!state.isBracketsClose) {
 					throw new Error(`missing closing brackets accessing array element`);
@@ -311,11 +324,13 @@ export class Expression {
 			}
 			else if (state.isBracesOpen) {
 				if (state.next().operator === operMul) {
-					node = new ExpressionFunctionNode(state.pos, operFv, [ node ]);
+					node = new ExpressionFunctionNode(state.startPos, state.endPos, operFv,
+						[ node ]);
 					state.next();
 				}
 				else {
-					node = new ExpressionFunctionNode(state.pos, operAt, [ node, this.disjunction(state, scope) ]);
+					node = new ExpressionFunctionNode(state.startPos, state.endPos, operAt,
+						[ node, this.disjunction(state, scope) ]);
 				}
 				if (!state.isBracesClose) {
 					throw new Error(`missing closing braces accessing object property`);
@@ -323,14 +338,16 @@ export class Expression {
 				state.next();
 			}
 			else if (state.operator === operAt) {
-				const pos = state.pos;
+				const start = state.startPos;
 				state.next();
 				if (state.isLiteral && state.literal.type.isString) {
-					node = new ExpressionFunctionNode(pos, operAt, [ node, new ExpressionConstantNode(state.pos, state.literal) ]);
+					node = new ExpressionFunctionNode(start, state.endPos, operAt,
+						[ node, new ExpressionConstantNode(state.startPos, state.endPos, state.literal) ]);
 					state.next();
 				}
 				else if (state.isToken) {
-					node = new ExpressionFunctionNode(pos, operAt, [ node, new ExpressionConstantNode(state.pos, new ExpressionConstant(state.token)) ]);
+					node = new ExpressionFunctionNode(start, state.endPos, operAt,
+						[ node, new ExpressionConstantNode(state.startPos, state.endPos, new ExpressionConstant(state.token)) ]);
 					state.next();
 				}
 				else {
@@ -343,17 +360,19 @@ export class Expression {
 
 	protected term(state: ParserState, scope: StaticScope): Node {
 		if (state.isLiteral) {
-			const pos = state.pos;
+			const start = state.startPos;
+			const end = state.endPos;
 			const constant = state.literal;
 			state.next();
-			return new ExpressionConstantNode(pos, constant);
+			return new ExpressionConstantNode(start, end, constant);
 		}
 		else if (state.isToken) {
 			const constant = this._constants.get(state.token);
 			if (constant != null) {
-				const pos = state.pos;
+				const start = state.startPos;
+				const end = state.endPos;
 				state.next();
-				return new ExpressionConstantNode(pos, constant);
+				return new ExpressionConstantNode(start, end, constant);
 			}
 			const gfunction = this._gfunctions.get(state.token);
 			if (gfunction != null) {
@@ -384,7 +403,7 @@ export class Expression {
 			throw new Error(`unexpected closing parentheses`);
 		}
 		else if (state.isBracketsOpen) {
-			const pos = state.pos;
+			const start = state.startPos;
 			const subnodes: Node[] = [];
 			while (!state.next().isBracketsClose) {
 				subnodes.push(this.disjunction(state, scope));
@@ -395,28 +414,29 @@ export class Expression {
 			if (!state.isBracketsClose) {
 				throw new Error(`missing closing brackets`);
 			}
+			const end = state.endPos;
 			state.next();
-			return new ExpressionArrayNode(pos, subnodes);
+			return new ExpressionArrayNode(start, end, subnodes);
 		}
 		else if (state.isBracketsClose) {
 			throw new Error(`unexpected closing brackets`);
 		}
 		else if (state.isBracesOpen) {
-			const pos = state.pos;
-			const subnodes: { [ key: string ]: Node } = {};
+			const start = state.startPos;
+			const subnodes: [ Node, Node ][] = [];
 			while (!state.next().isBracesClose) {
-				const key = state.isToken
-					? state.token
-					: state.isLiteral && state.literal.type.isString
-						? state.literal.value as string
-						: undefined;
-				if (!key) {
-					throw new Error(`missing object property name`);
+				const token = state.isToken ? state.token : undefined;
+				if (token) {
+					state.next();
 				}
-				if (!state.next().isAssignment) {
+				const key = token
+					? new ExpressionConstantNode(state.startPos, state.endPos, new ExpressionConstant(token))
+					: this.disjunction(state, scope);
+				if (!state.isColon) {
 					throw new Error(`missing object property assignment`);
 				}
-				subnodes[ key ] = this.disjunction(state.next(), scope);
+				const value = this.disjunction(state.next(), scope);
+				subnodes.push([ key, value ]);
 				if (!state.isSeparator) {
 					break;
 				}
@@ -424,14 +444,15 @@ export class Expression {
 			if (!state.isBracesClose) {
 				throw new Error(`missing closing braces`);
 			}
+			const end = state.endPos;
 			state.next();
-			return new ExpressionObjectNode(pos, subnodes);
+			return new ExpressionObjectNode(start, end, subnodes);
 		}
 		else if (state.isBracesClose) {
 			throw new Error(`unexpected closing braces`);
 		}
 		else if (state.isIf) {
-			const pos = state.pos;
+			const start = state.startPos;
 			const cnode = this.disjunction(state.next(), scope);
 			if (!state.isThen) {
 				throw new Error(`missing 'then' of conditional statement`);
@@ -441,7 +462,7 @@ export class Expression {
 				throw new Error(`missing 'else' of conditional statement`);
 			}
 			const enode = this.disjunction(state.next(), scope);
-			return new ExpressionFunctionNode(pos, operSwitch, [ cnode, tnode, enode ]);
+			return new ExpressionFunctionNode(start, state.endPos, operSwitch, [ cnode, tnode, enode ]);
 		}
 		else if (state.isVoid) {
 			throw new Error(`unexpected end of expression`);
@@ -450,7 +471,7 @@ export class Expression {
 	}
 
 	protected function(state: ParserState, scope: StaticScope, func: ExpressionFunction, node?: Node): Node {
-		const pos = state.pos;
+		const start = state.startPos;
 		if (state.next().isParenthesesOpen) {
 			const subnodes: Node[] = node ? [ node ] : [];
 			while (!state.next().isParenthesesClose) {
@@ -468,19 +489,20 @@ export class Expression {
 			if (subnodes.length > func.maxArity) {
 				throw new Error(`excessive number of arguments ${subnodes.length} is more than ${func.maxArity} that function requires`);
 			}
+			const end = state.endPos;
 			state.next();
-			return new ExpressionFunctionNode(pos, func, subnodes);
+			return new ExpressionFunctionNode(start, end, func, subnodes);
 		}
 		else {
 			if (node != null) {
 				if (func.minArity === 1) {
-					return new ExpressionFunctionNode(pos, func, [ node ]);
+					return new ExpressionFunctionNode(start, state.endPos, func, [ node ]);
 				}
 				else {
 					throw new Error(`missing opening parentheses`);
 				}
 			}
-			return new ExpressionConstantNode(pos, new ExpressionConstant(func.evaluate));
+			return new ExpressionConstantNode(start, state.endPos, new ExpressionConstant(func.evaluate));
 		}
 	}
 
@@ -508,12 +530,13 @@ export class Expression {
 				scope.set(state.token, variable);
 			}
 		}
-		const pos = state.pos;
-		return new ExpressionVariableNode(pos, variable, state.next().isAssignment ? this.disjunction(state.next(), scope) : undefined);
+		const start = state.startPos;
+		const end = state.endPos;
+		return new ExpressionVariableNode(start, end, variable, state.next().isAssignment ? this.disjunction(state.next(), scope) : undefined);
 	}
 
 	protected closure(state: ParserState, scope: StaticScope, type: Type): Node {
-		const pos = state.pos;
+		const start = state.startPos;
 		if (!state.isParenthesesOpen) {
 			throw new Error(`missing opening parentheses for function type`);
 		}
@@ -542,7 +565,8 @@ export class Expression {
 		if (!state.isParenthesesClose) {
 			throw new Error(`missing closing parentheses for function type`);
 		}
-		return new ExpressionClosureNode(pos, type, Array.from(variables.values()), this.disjunction(state.next(), scope.subscope(variables)));
+		const subnode = this.disjunction(state.next(), scope.subscope(variables));
+		return new ExpressionClosureNode(start, state.endPos, type, Array.from(variables.values()), subnode);
 	}
 
 }

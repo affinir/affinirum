@@ -34,12 +34,11 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * optional type modifier **?** for boolean?, number?, buffer?, string?, array?, object?, function?
 * variant type for values of unknown type
 #### Operators
-* Assignment: **:**
+* Assignment: **=**
 * Grouping: **(...)**
 * Next statement: **,**
 * Array element at numeric value: **[]**
 * Object property by string value: **{}**
-* Array element or object property value at index: **@**
 * First valid array element: **[\*]**
 * First valid object property: **{\*}**
 * Boolean negation: **!**
@@ -49,26 +48,29 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Less than: **<**
 * Greater than or equals to: **>=**
 * Less than or equals to: **<=**
-* Equals to: **=**
+* Equals to: **==**
 * Not equals to: **!=**
 * String similar to: **\~**
 * String not similar to: **!\~**
 * Null coalescence: **?:**
 * Conditional statement: **if...then...else...**
-* Arithmetic addition, buffer, string, array or object concatination: **+**
+* Arithmetic addition: **+**
 * Arithmetic subtraction or negation: **-**
 * Arithmetic multiplication: **\***
 * Arithmetic division: **/**
 * Arithmetic percentage: **%**
+* Buffer, string, or array concatination: **+>**
+* Method function call: **->**
 #### Global Functions
-* Boolean conjunction: **boolean and(boolean|array ...values)**
 * Boolean disjunction: **boolean or(boolean|array ...values)**
+* Boolean conjunction: **boolean and(boolean|array ...values)**
 * Bolean negation: **boolean not(boolean value)**
-* Numeric sum: **number sum(number|array ...value)**
-* Numeric minimum: **number min(number|array ...value)**
-* Numeric maximum: **number max(number|array ...value)**
+* Numeric sum: **number sum(number|array ...values)**
+* Numeric minimum: **number min(number|array ...values)**
+* Numeric maximum: **number max(number|array ...values)**
 * New array filled with integers in between given two numbers: **array range(number inclusiveFrom, number exclusiveTo)**
-* Object composition from key-value tuples: **object compose(array ...values)**
+* Chain array of any depths into single array: **array chain(array ...values)**
+* Merge objects into single object: **object merge(array|object ...values)**
 #### Base Method Functions
 * Greater than: **boolean number->greaterThan(number value)**
 * Less than: **boolean number->lessThan(number value)**
@@ -91,10 +93,12 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Trim whitespace at end: **string string->trimEnd()**
 * Lower case: **string string->lowerCase()**
 * Upper case: **string string->upperCase()**
+* Concatination of array of strings with separator: **string array->join(separator = ' ')**
 * Array of unique values: **array array->unique()**
 * Intersection of values of two arrays: **array array->intersection(array value)**
 * Symmetrical difference between two arrays: **array array->difference(array value)**
 #### Composite Method Functions
+* Append buffer, string or array: **buffer|string|array buffer|string|array->append(buffer|string|array ...values)**
 * Length of buffer, string, array or object: **number buffer|string|array|object->length()**
 * New buffer, string or array slice: **buffer|string|array buffer|string|array->slice(number? beginIndex, number? endIndex)**
 * Byte at position: **buffer buffer->byte(number pos)**
@@ -109,15 +113,15 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Array or object values: **array array|object->values()**
 * Array or object value at index: **variant array|object->at(number|string index)**
 * First valid value of array or object: **variant array|object->firstValid()**
-* Concatination of array elements into a string with separator: **string array->join(string separator = ' ')**
-* Concatination of array elements into a string with separator: **buffer buffer->chain()**
 * New array with reverse order of items: **array array->reverse()**
 * New array flattened to specified depth: **array array->flatten(number depth)**
-* Iterate items: **array array->iterate(function iteration)**
 * Map items: **array array->map(function transformation)**
 * Filter items: **array array->filter(function condition)**
+* Iterate items: **array array->iterate(function iteration)**
+* Reduce array to a single value: **variant array->reduce(function reducer)**
+* Object composition from array of keys with generator function: **object array->compose(function generator)**
 #### Math Method Functions
-* Arithmetic addition, buffer or string concatination: **number|buffer|string|array|object number|buffer|string|array|object->add(number|buffer|string|array|object ...values)**
+* Arithmetic addition: **number number->add(number ...values)**
 * Arithmetic subtraction: **number number->subtract(number subtrahend)**
 * Arithmetic negation: **number number->negate()**
 * Arithmetic multiplication: **number number->multiply(number ...values)**
@@ -161,7 +165,7 @@ The expression parsing is performed using the following grammar:
 	<disjunction> = <conjunction>{ "|"<conjunction> }
 	<conjunction> = <comparison>{ "&"<comparison> }
 	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "=" | "!=" | "~" | "!~" )<aggregate> }
-	<aggregate> = <product>{ ( "+" | "-" )<product> }
+	<aggregate> = <product>{ ( "+>" | "+" | "-" )<product> }
 	<product> = <factor>{ ( "*" | "/" | "%" )<factor> }
 	<factor> = { "-" }<coalescence>{ "^"<coalescence> }
 	<coalescence> = <accessor>{ "?:"<accessor> }
@@ -237,7 +241,7 @@ const iteratorExpr = new Expression(
 const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
 ...
 const complexExpr = new Expression(
-	'var a:myvar1/10, var b:myvar2-100, a/b + b*a + 600'
+	'var a=myvar1/10, var b=myvar2-100, a/b + b*a + 600'
 );
 const value = complexExpr.evaluate( { myvar1: 40, myvar2: 104 } ); // 4761
 ...

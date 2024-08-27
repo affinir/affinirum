@@ -1,8 +1,8 @@
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
 import { toStringBuffer } from './ExpressionFunctionMutation.js';
-import { operAt, operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
-	operCoalesce, operAdd, operSub, operMul, operDiv, operPct, operPow } from './ExpressionOperator.js';
+import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
+	operCoalesce, operAppend, operAt, operAdd, operSub, operMul, operDiv, operPct, operPow } from './ExpressionOperator.js';
 import { Type, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeVariant, typeArray } from './Type.js';
 
 const symbolParenthesesOpen = Symbol();
@@ -11,8 +11,9 @@ const symbolBracketsOpen = Symbol();
 const symbolBracketsClose = Symbol();
 const symbolBracesOpen = Symbol();
 const symbolBracesClose = Symbol();
-const symbolAssignment = Symbol();
+const symbolColon = Symbol();
 const symbolSeparator = Symbol();
+const symbolAssignment = Symbol();
 const symbolOption = Symbol();
 const symbolMethod = Symbol();
 const symbolIf = Symbol();
@@ -92,12 +93,16 @@ export class ParserState {
 		return this._obj === symbolBracesClose;
 	}
 
-	get isAssignment(): boolean {
-		return this._obj === symbolAssignment;
+	get isColon(): boolean {
+		return this._obj === symbolColon;
 	}
 
 	get isSeparator(): boolean {
 		return this._obj === symbolSeparator;
+	}
+
+	get isAssignment(): boolean {
+		return this._obj === symbolAssignment;
 	}
 
 	get isOption(): boolean {
@@ -124,12 +129,12 @@ export class ParserState {
 		return this._obj == null;
 	}
 
-	get pos(): number {
+	get startPos(): number {
 		return this._startPos;
 	}
 
-	get length(): number {
-		return this._endPos - this._startPos;
+	get endPos(): number {
+		return this._endPos;
 	}
 
 	next(): ParserState {
@@ -146,7 +151,7 @@ export class ParserState {
 				case ']': this._obj = symbolBracketsClose; break;
 				case '{': this._obj = symbolBracesOpen; break;
 				case '}': this._obj = symbolBracesClose; break;
-				case ':': this._obj = symbolAssignment; break;
+				case ':': this._obj = symbolColon; break;
 				case ',': this._obj = symbolSeparator; break;
 				case '?':
 					switch (this._expr.charAt(this._endPos)) {
@@ -175,9 +180,19 @@ export class ParserState {
 						default: this._obj = operNot; break;
 					}
 					break;
-				case '=': this._obj = operEqual; break;
+				case '=':
+					switch (this._expr.charAt(this._endPos)) {
+						case '=': ++this._endPos; this._obj = operEqual; break;
+						default: this._obj = symbolAssignment; break;
+					}
+					break;
 				case '~': this._obj = operLike; break;
-				case '+': this._obj = operAdd; break;
+				case '+':
+					switch (this._expr.charAt(this._endPos)) {
+						case '>': ++this._endPos; this._obj = operAppend; break;
+						default: this._obj = operAdd; break;
+					}
+					break;
 				case '-':
 					switch (this._expr.charAt(this._endPos)) {
 						case '>': ++this._endPos; this._obj = symbolMethod; break;
@@ -270,8 +285,8 @@ export class ParserState {
 					break;
 			}
 		}
-		if (this._endPos >= this._expr.length) {
-			this._startPos = this._expr.length;
+		if (this._endPos > this._expr.length) {
+			this._startPos = this._endPos = this._expr.length;
 		}
 		return this;
 	}

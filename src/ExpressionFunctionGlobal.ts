@@ -1,5 +1,5 @@
 import { ExpressionFunction, FUNCTION_ARG_MAX } from './ExpressionFunction.js';
-import { Value, typeBoolean, typeNumber, typeArray, typeObject, typeBooleanOrArray, typeNumberOrArray } from './Type.js';
+import { Value, typeBoolean, typeNumber, typeArray, typeObject, typeBooleanOrArray, typeNumberOrArray, typeArrayOrObject } from './Type.js';
 
 export const funcOr = new ExpressionFunction(
 	(...values: (boolean | boolean[])[])=>
@@ -45,13 +45,14 @@ export const funcRange = new ExpressionFunction(
 	typeArray, [ typeNumber, typeNumber ],
 );
 
-export const funcCompose = new ExpressionFunction(
-	(...values: [ string, Value ][])=> {
-		const obj: Record<string, any> = {};
-		for (let i = 0; i < values.length; ++i) {
-			obj[ values[ i ][ 0 ] ] = values[ i ][ 1 ];
-		}
-		return obj;
-	},
-	typeObject, [ typeArray ], 0, FUNCTION_ARG_MAX,
+export const funcChain = new ExpressionFunction(
+	(...values: (Value[] | Value[][])[])=>
+		(values as []).flat(FUNCTION_ARG_MAX).reduce((acc, val)=> [ ...acc, val ], []),
+	typeArray, [ typeArray ], 1, FUNCTION_ARG_MAX,
+);
+
+export const funcMerge = new ExpressionFunction(
+	(...values: ({ [ key: string ]: Value } | { [ key: string ]: Value }[])[])=>
+		values.flat(FUNCTION_ARG_MAX).reduce((acc, val)=> Object.assign(acc, val), {}),
+	typeObject, [ typeArrayOrObject ], 1, FUNCTION_ARG_MAX,
 );

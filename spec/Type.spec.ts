@@ -25,7 +25,7 @@ describe('Expression Type test', ()=> {
 		[ '{}', 'object' ],
 		[ '{a:100,b:"100"}', 'object' ],
 		[ 'void ()(null)', 'function' ],
-		[ 'bool (num i)(i=0)', 'function' ],
+		[ 'bool (num i)(i==0)', 'function' ],
 	].forEach(([ expr, expected ])=> {
 		it(`parses expression ${expr} and determines value type`, ()=> {
 			try {

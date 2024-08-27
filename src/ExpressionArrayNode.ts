@@ -6,17 +6,22 @@ import { Type, Value, typeArray, typeVariant } from './Type.js';
 export class ExpressionArrayNode extends Node {
 
 	constructor(
-		_pos: number,
+		_startPos: number,
+		_endPos: number,
 		protected _subnodes: Node[],
 	) {
-		super(_pos);
+		super(_startPos, _endPos);
 	}
 
-	get type(): Type {
+	override get type(): Type {
 		return typeArray;
 	}
 
-	compile(type: Type): Node {
+	override toString(ident: number): string {
+		return `${super.toString(ident)} array node, subnodes:\n${this._subnodes.map((s)=> s.toString(ident + 1)).join('\n')}`;
+	}
+
+	override compile(type: Type): Node {
 		if (!typeArray.infer(type)) {
 			this.throwTypeError(type);
 		}
@@ -26,13 +31,12 @@ export class ExpressionArrayNode extends Node {
 			constant &&= subnode instanceof ExpressionConstantNode && !subnode.type.isFunction;
 		}
 		if (constant) {
-			return new ExpressionConstantNode(this._pos,
-				new ExpressionConstant(this.evaluate()));
+			return new ExpressionConstantNode(this._startPos, this._endPos, new ExpressionConstant(this.evaluate()));
 		}
 		return this;
 	}
 
-	evaluate(): Value {
+	override evaluate(): Value {
 		return this._subnodes.map((s)=> s.evaluate());
 	}
 

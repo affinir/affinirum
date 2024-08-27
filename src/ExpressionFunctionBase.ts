@@ -1,5 +1,5 @@
 import { ExpressionFunction } from './ExpressionFunction.js';
-import { Value, typeBoolean, typeNumber, typeString, typeArray, typeOptionalBoolean, typeOptionalNumber, typeVariant } from './Type.js';
+import { Value, typeBoolean, typeNumber, typeString, typeArray, typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeVariant } from './Type.js';
 
 export const funcGreaterThan = new ExpressionFunction(
 	(value1: number, value2: number)=>
@@ -122,6 +122,12 @@ export const funcUpperCase = new ExpressionFunction(
 	(value: string)=>
 		value.toUpperCase(),
 	typeString, [ typeString ],
+);
+
+export const funcJoin = new ExpressionFunction(
+	(value: string[], separator: string = ' ')=>
+		value.join(separator),
+	typeString, [ typeArray, typeOptionalString ], 1, 2,
 );
 
 export const funcUnique = new ExpressionFunction(

@@ -1,7 +1,7 @@
 import { funcOr, funcAnd, funcNot } from './ExpressionFunctionGlobal.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual, funcLike, funcNotLike,
 	funcCoalesce, funcSwitch } from './ExpressionFunctionBase.js';
-import { funcAt, funcFirstValid } from './ExpressionFunctionComposite.js';
+import { funcAppend, funcAt, funcFirstValid } from './ExpressionFunctionComposite.js';
 import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcPercentage, funcPower } from './ExpressionFunctionMath.js';
 
 export const operOr = funcOr.clone();
@@ -17,6 +17,7 @@ export const operLike = funcLike.clone();
 export const operNotLike = funcNotLike.clone();
 export const operCoalesce = funcCoalesce.clone();
 export const operSwitch = funcSwitch.clone();
+export const operAppend = funcAppend.clone();
 export const operAt = funcAt.clone();
 export const operFv = funcFirstValid.clone();
 export const operAdd = funcAdd.clone();

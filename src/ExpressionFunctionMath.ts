@@ -1,18 +1,10 @@
 import { ExpressionFunction, FUNCTION_ARG_MAX } from './ExpressionFunction.js';
-import { Value, typeNumber, typeAdditive } from './Type.js';
+import { typeNumber } from './Type.js';
 
 export const funcAdd = new ExpressionFunction(
-	(...values: (number | ArrayBuffer | string | Value[] | { [ key: string ]: Value })[])=>
-		typeof values[ 0 ] == 'number'
-			? (values as number[]).reduce((a, v)=> a + v)
-			: values[ 0 ] instanceof ArrayBuffer
-				? (values as ArrayBuffer[]).reduce((a, v)=> concatBuffers(a, v))
-				: typeof values[ 0 ] === 'string'
-					? (values as string[]).reduce((a, v)=> a + v)
-					: Array.isArray(values[ 0 ])
-						? (values as Value[][]).reduce((a, v)=> [ ...a, ...v ])
-						: (values as { [ key: string ]: Value }[]).reduce((a, v)=> Object.assign(a, v)),
-	typeAdditive, [ typeAdditive ], 2, FUNCTION_ARG_MAX,
+	(...values: number[])=>
+		values.reduce((acc, val)=> acc + val),
+	typeNumber, [ typeNumber ], 2, FUNCTION_ARG_MAX,
 	(index, vtype, vmask)=> vtype === vmask,
 );
 
@@ -117,10 +109,3 @@ export const funcRound = new ExpressionFunction(
 		Math.round(value),
 	typeNumber, [ typeNumber ],
 );
-
-export const concatBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
-	const bytes = new Uint8Array(value1.byteLength + value2.byteLength);
-	bytes.set(new Uint8Array(value1), 0);
-	bytes.set(new Uint8Array(value2), value1.byteLength);
-	return bytes.buffer;
-};

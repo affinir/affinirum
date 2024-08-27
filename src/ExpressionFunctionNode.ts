@@ -9,19 +9,24 @@ export class ExpressionFunctionNode extends Node {
 	protected _type: Type;
 
 	constructor(
-		_pos: number,
+		_startPos: number,
+		_endPos: number,
 		protected _function: ExpressionFunction,
 		protected _subnodes: Node[],
 	) {
-		super(_pos);
+		super(_startPos, _endPos);
 		this._type = _function.type;
 	}
 
-	get type(): Type {
+	override get type(): Type {
 		return this._type;
 	}
 
-	compile(type: Type): Node {
+	override toString(ident: number): string {
+		return `${super.toString(ident)} function node, type: ${this._function.type.toString()}, subnodes:\n${this._subnodes.map((s)=> s.toString(ident + 1)).join('\n')}`;
+	}
+
+	override compile(type: Type): Node {
 		const inferredType = this._function.type.infer(type);
 		if (!inferredType) {
 			this.throwTypeError(type);
@@ -38,13 +43,13 @@ export class ExpressionFunctionNode extends Node {
 			constant &&= subnode instanceof ExpressionConstantNode && !subnode.type.isFunction;
 		}
 		if (constant) {
-			return new ExpressionConstantNode(this._pos,
+			return new ExpressionConstantNode(this._startPos, this._endPos,
 				new ExpressionConstant(this._function.evaluate(...this._subnodes.map((node)=> node.evaluate()))));
 		}
 		return this;
 	}
 
-	evaluate(): Value {
+	override evaluate(): Value {
 		return this._function.evaluate(...this._subnodes.map((node)=> node.evaluate()));
 	}
 

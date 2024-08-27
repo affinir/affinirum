@@ -102,6 +102,5 @@ export const typeNumberOrString = new Type('number', 'string');
 export const typeArrayOrObject = new Type('array', 'object');
 export const typeEnumerable = new Type('buffer', 'string', 'array');
 export const typeIterable = new Type('buffer', 'string', 'array', 'object');
-export const typeAdditive = new Type('number', 'buffer', 'string', 'array', 'object');
 export const typeJson = new Type('void', 'boolean', 'number', 'string', 'array', 'object');
 export const typeValid = new Type('boolean', 'number', 'buffer', 'string', 'array', 'object', 'function');
