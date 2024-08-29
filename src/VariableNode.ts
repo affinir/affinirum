@@ -1,13 +1,13 @@
 import { Node } from './Node.js';
 import { ParserFrame } from './ParserFrame.js';
-import { ExpressionVariable } from './ExpressionVariable.js';
+import { Variable } from './Variable.js';
 import { Type, Value } from './Type.js';
 
-export class ExpressionVariableNode extends Node {
+export class VariableNode extends Node {
 
 	constructor(
 		frame: ParserFrame,
-		protected _variable: ExpressionVariable,
+		protected _variable: Variable,
 		protected _subnode?: Node,
 	) {
 		super(frame);
@@ -17,17 +17,13 @@ export class ExpressionVariableNode extends Node {
 		return this._variable.type;
 	}
 
-	override toString(ident: number): string {
-		return `${super.toString(ident)} variable node, type ${this._variable.type.toString()}, subnode:\n${this._subnode?.toString(ident + 1) ?? ''}`;
+	override toString(ident: number = 0): string {
+		return `${super.toString(ident)} variable node` + (this._subnode ? `, subnode:\n${this._subnode?.toString(ident + 1) ?? ''}` : '');
 	}
 
 	override compile(type: Type): Node {
 		this._subnode = this._subnode?.compile(type);
-		const inferredType = this._variable.type.infer(this._subnode?.type ?? type);
-		if (!inferredType) {
-			this.throwTypeError(type);
-		}
-		this._variable.type = inferredType;
+		this._variable.type = this.reduceType(this._subnode?.type ?? type);
 		return this;
 	}
 

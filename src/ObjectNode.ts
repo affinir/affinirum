@@ -1,10 +1,9 @@
 import { Node } from './Node.js';
 import { ParserFrame } from './ParserFrame.js';
-import { ExpressionConstantNode } from './ExpressionConstantNode.js';
-import { ExpressionConstant } from './ExpressionConstant.js';
-import { Type, Value, typeString, typeObject, typeVariant } from './Type.js';
+import { ConstantNode } from './ConstantNode.js';
+import { Type, Value, typeString, typeObject, typeUnknown } from './Type.js';
 
-export class ExpressionObjectNode extends Node {
+export class ObjectNode extends Node {
 
 	constructor(
 		frame: ParserFrame,
@@ -17,23 +16,21 @@ export class ExpressionObjectNode extends Node {
 		return typeObject;
 	}
 
-	override toString(ident: number): string {
+	override toString(ident: number = 0): string {
 		return `${super.toString(ident)} object node, subnodes:\n${this._subnodes.map(([ k, v ])=> `key: ${k.toString(ident + 1)} value: ${v.toString(ident + 1)}`).join('\n')}`;
 	}
 
 	override compile(type: Type): Node {
-		if (!typeObject.infer(type)) {
-			this.throwTypeError(type);
-		}
+		this.reduceType(type);
 		let constant = true;
 		for (const [ key, value ] of this._subnodes) {
 			const knode = key.compile(typeString);
-			const vnode = value.compile(typeVariant);
-			constant &&= knode instanceof ExpressionConstantNode && !knode.type.isFunction
-				&& vnode instanceof ExpressionConstantNode && !vnode.type.isFunction;
+			const vnode = value.compile(typeUnknown);
+			constant &&= knode instanceof ConstantNode// && !knode.type.isFunction
+				&& vnode instanceof ConstantNode;// && !vnode.retType.isFunction;
 		}
 		if (constant) {
-			return new ExpressionConstantNode(this, new ExpressionConstant(this.evaluate()));
+			return new ConstantNode(this, this.evaluate());
 		}
 		return this;
 	}

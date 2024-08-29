@@ -1,11 +1,19 @@
 import { ParserFrame } from './ParserFrame.js';
-import { ExpressionConstant } from './ExpressionConstant.js';
-import { ExpressionFunction } from './ExpressionFunction.js';
-import { toStringBuffer } from './ExpressionFunctionMutation.js';
+import { FunctionDefinition } from './FunctionDefinition.js';
+import { toStringBuffer } from './MutationFunctions.js';
 import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
-	operCoalesce, operAppend, operAt, operAdd, operSub, operMul, operDiv, operPct, operPow } from './ExpressionOperator.js';
-import { Type, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeVariant, typeArray } from './Type.js';
+	operCoalesce, operAppend, operAt, operAdd, operSub, operMul, operDiv, operPct, operPow } from './Operators.js';
+import { Type, Value, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeUnknown, typeArray } from './Type.js';
 
+class Literal {
+
+	constructor(public value: Value) {}
+
+}
+
+const valueTrue = new Literal(true);
+const valueFalse = new Literal(false);
+const valueNull = new Literal(undefined);
 const symbolParenthesesOpen = Symbol();
 const symbolParenthesesClose = Symbol();
 const symbolBracketsOpen = Symbol();
@@ -30,7 +38,7 @@ const isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
 
 export class ParserState extends ParserFrame {
 
-	protected _obj: ExpressionConstant | ExpressionFunction | Type | string | symbol | undefined;
+	protected _obj: FunctionDefinition | Literal | Type | symbol | string | undefined;
 
 	constructor(
 		expr: string,
@@ -38,12 +46,12 @@ export class ParserState extends ParserFrame {
 		super(expr);
 	}
 
-	get literal(): ExpressionConstant {
-		return this._obj as ExpressionConstant;
+	get literal(): Value {
+		return (this._obj as Literal).value;
 	}
 
-	get operator(): ExpressionFunction {
-		return this._obj as ExpressionFunction;
+	get operator(): FunctionDefinition {
+		return this._obj as FunctionDefinition;
 	}
 
 	get type(): Type {
@@ -54,12 +62,12 @@ export class ParserState extends ParserFrame {
 		return this._obj as string;
 	}
 
-	get isLiteral(): boolean {
-		return this._obj instanceof ExpressionConstant;
+	get isOperator(): boolean {
+		return this._obj instanceof FunctionDefinition;
 	}
 
-	get isOperator(): boolean {
-		return this._obj instanceof ExpressionFunction;
+	get isLiteral(): boolean {
+		return this._obj instanceof Literal;
 	}
 
 	get isType(): boolean {
@@ -148,7 +156,7 @@ export class ParserState extends ParserFrame {
 				case ',': this._obj = symbolSeparator; break;
 				case '?':
 					switch (this._expr.charAt(this._end)) {
-						case '?': ++this._end; this._obj = typeVariant; break;
+						case '?': ++this._end; this._obj = typeUnknown; break;
 						case ':': ++this._end; this._obj = operCoalesce; break;
 						default: this._obj = symbolOption; break;
 					}
@@ -204,14 +212,14 @@ export class ParserState extends ParserFrame {
 						while (isHexadecimal(this._expr.charAt(this._end))) {
 							++this._end;
 						}
-						this._obj = new ExpressionConstant(toStringBuffer(this._expr.substring(this._start + 2, this._end)));
+						this._obj = new Literal(toStringBuffer(this._expr.substring(this._start + 2, this._end)));
 					}
 					else {
 						++this._end;
 						while (isHexadecimal(this._expr.charAt(this._end))) {
 							++this._end;
 						}
-						this._obj = new ExpressionConstant(parseInt(this._expr.substring(this._start + 1, this._end), 16));
+						this._obj = new Literal(parseInt(this._expr.substring(this._start + 1, this._end), 16));
 					}
 					break;
 				default:
@@ -221,6 +229,9 @@ export class ParserState extends ParserFrame {
 						}
 						const token = this._expr.substring(this._start, this._end);
 						switch (token) {
+							case 'true': this._obj = valueTrue; break;
+							case 'false': this._obj = valueFalse; break;
+							case 'null': this._obj = valueNull; break;
 							case 'void': this._obj = typeVoid; break;
 							case 'boolean': case 'bool': this._obj = typeBoolean; break;
 							case 'number': case 'num': this._obj = typeNumber; break;
@@ -229,7 +240,6 @@ export class ParserState extends ParserFrame {
 							case 'array': case 'arr': this._obj = typeArray; break;
 							case 'object': case 'obj': this._obj = typeObject; break;
 							case 'function': case 'func': this._obj = typeFunction; break;
-							case 'variant': case 'var': this._obj = typeVariant; break;
 							case 'if': this._obj = symbolIf; break;
 							case 'then': this._obj = symbolThen; break;
 							case 'else': this._obj = symbolElse; break;
@@ -261,7 +271,7 @@ export class ParserState extends ParserFrame {
 								}
 							}
 						}
-						this._obj = new ExpressionConstant(parseFloat(this._expr.substring(this._start, this._end)));
+						this._obj = new Literal(parseFloat(this._expr.substring(this._start, this._end)));
 					}
 					else if (isQuotation(c)) {
 						while (this._expr.charAt(this._end) !== '' && this._expr.charAt(this._end) !== c) {
@@ -271,7 +281,7 @@ export class ParserState extends ParserFrame {
 							this._start = this._expr.length;
 							throw new Error(`missing closing quotation mark ${c}`);
 						}
-						this._obj = new ExpressionConstant(this._expr.substring(this._start + 1, this._end++));
+						this._obj = new Literal(this._expr.substring(this._start + 1, this._end++));
 					}
 					else {
 						throw new Error(`unknown symbol ${c}`);

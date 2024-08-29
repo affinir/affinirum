@@ -35,7 +35,7 @@ describe('Expression Evaluation test', ()=> {
 		[ 'v->contains(str0)', [ { v: " abc def abc", str0: 'def', result: true }, { v: " abc ", str0: 'aba', result: false } ] ],
 		[ 'v->contains(str0, pos, true)', [ { v: "", str0: "", pos: null, result: true }, { v: "", str0: "123", pos: 0, result: false }, { v: "  ab CD  0123   ", str0: " A Bcd ", pos: null, result: true }, { v: "  ab C-D  0123   ", str0: " A+Bcd ", pos: null, result: true } ] ],
 		[ 'v->startsWith(str0, pos, true)', [ { v: "", str0: "", pos: undefined, result: true }, { v: "", str0: "123", pos: 0, result: false }, { v: "  ab CD  0123   ", str0: " A++Bcd ", pos: undefined, result: true }, { v: "ab CD  0123   ", str0: "abcd", pos: 2, result: false } ] ],
-		[ 'v->endsWith(str0, pos, true)', [ { v: "", str0: "", pos: undefined, result: true }, { v: "", str0: "123", pos: 0, result: false }, { v: " ab CD  01+2+ 3 ", str0: " 0123 ", pos: undefined, result: true }, { v: " abcdeeeeeef 123", str0: "123", pos: 7, result: false } ] ],
+		[ 'v->endsWith(str0, pos, true,) & true', [ { v: "", str0: "", pos: undefined, result: true }, { v: "", str0: "123", pos: 0, result: false }, { v: " ab CD  01+2+ 3 ", str0: " 0123 ", pos: undefined, result: true }, { v: " abcdeeeeeef 123", str0: "123", pos: 7, result: false } ] ],
 		[ 'v->switch(a, b)', [ { v: true, a: 1, b: 2, result: 1 }, { v: false, a: 'f', b: undefined, result: undefined } ] ],
 		[ 'if v then a else b', [ { v: true, a: 1, b: 2, result: 1 }, { v: false, a: 'f', b: undefined, result: undefined } ] ],
 		[ 'v->switch(a, b)', [ { v: true, a: 1, b: 2, result: 1 }, { v: false, a: 'f', b: undefined, result: undefined } ] ],
@@ -86,7 +86,7 @@ describe('Expression Evaluation test', ()=> {
 		[ 'sum([0,1,2,3]+>[10,20,30,40],100)', [ { result: 206 } ] ],
 		[ 'arr0[3] == 50', [ { arr0: [ 10, 20, 30, 50 ], result: true }, { arr0: [], result: false } ] ],
 		[ 'arr0[i]', [ { arr0: [ 10, 20, 30, 50 ], i: 0, result: 10 }, { arr0: [], i: 5, result: undefined } ] ],
-		[ 'arr0[*] + obj0{*}', [ { arr0: [ undefined, 10, 20 ], obj0: { a: undefined, b: 100 }, result: 110 }, { arr0: [ 1, 2 ], obj0: { a: 1, b: 1 }, result: 2 } ] ],
+		[ 'arr0[1] + obj0{1}', [ { arr0: [ undefined, 10, 20 ], obj0: { a: undefined, b: 100 }, result: 110 }, { arr0: [ 1, 2 ], obj0: { a: 1, b: 1 }, result: 3 } ] ],
 		[ 'range(start, end)[0] + range(start, end)[1]', [ { start: 5, end: 10, result: 11 }, { start: -5, end: -10, result: -19 } ] ],
 		[ 'number s=0,range(start, end)->iterate(void(number x)(s=s+x)),s', [ { start: 1, end: 11, result: 55 }, { start: -1, end: -11, result: -65 } ] ],
 		[ '[p,11]->map( number?(number a) (number t=10, (a>10)->switch(t,null) ) )[i]', [ { i: 1, p: 10, result: 10 }, { i: 0, p: 1, result: undefined } ] ],
@@ -110,7 +110,7 @@ describe('Expression Evaluation test', ()=> {
 		[ 'ooo->entries()[0]."1"', [ { ooo: { a: 0, b: 1 }, result: 0 }, { ooo: { b: 'b', a: 'a' }, result: 'b' } ] ],
 		[ 'o1->keys()[i]', [ { o1: { a: 0, b: 1 }, i: 0, result: 'a' }, { o1: { b: 'baa', c: 'caa' }, i: 1, result: 'c' } ] ],
 		[ 'o1->values()[i]', [ { o1: { a: 0, b: 1 }, i: 0, result: 0 }, { o1: { b: 'baa', c: 'caa' }, i: 1, result: 'caa' } ] ],
-		[ 'num a=myvar/3,variant b=mv*2,a/b', [ { myvar: 6, mv: 1, result: 1 }, { myvar: 30, mv: 5, result: 1 } ] ],
+		[ 'num a=myvar/3,?? b=mv*2,a/b', [ { myvar: 6, mv: 1, result: 1 }, { myvar: 30, mv: 5, result: 1 } ] ],
 		[ 'obj1.`a0`', [ { obj1: { a0: 10 }, result: 10 }, { obj1: { a0: '10' }, result: '10' } ] ],
 		[ 'obj2{"prop"}.a', [ { obj2: { prop: { a: 10 } }, result: 10 }, { obj2: { prop: { a: '10' } }, result: '10' } ] ],
 		[ 'val*myobj{a{"prop"}}+1', [ { val: 1, myobj: { test: 10 }, a: { prop: 'test' }, result: 11 } ] ],
@@ -170,7 +170,7 @@ describe('Expression Evaluation test', ()=> {
 			new Expression('undefined1*2 + undefined2', { strict: true, variables: { defined: typeNumber } });
 		}
 		catch (err: any) {
-			expect(err.message).toContain('parse error');
+			expect(err.message).toContain('error');
 			expect(err.message).toContain('undefined1');
 		}
 	});

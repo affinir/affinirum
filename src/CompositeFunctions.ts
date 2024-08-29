@@ -1,20 +1,19 @@
-import { ExpressionFunction, FUNCTION_ARG_MAX } from './ExpressionFunction.js';
+import { FunctionDefinition, FUNCTION_ARG_MAX } from './FunctionDefinition.js';
 import { Value, typeBoolean, typeNumber, typeBuffer, typeString, typeArray, typeObject, typeFunction,
 	typeOptionalNumber, typeNumberOrString, typeArrayOrObject,
-	typeEnumerable, typeIterable, typeVariant } from './Type.js';
+	typeEnumerable, typeIterable, typeUnknown } from './Type.js';
 
-export const funcAppend = new ExpressionFunction(
+export const funcAppend = new FunctionDefinition(
 	(...values: (ArrayBuffer | string | Value[])[])=>
 		values[ 0 ] instanceof ArrayBuffer
 			? (values as ArrayBuffer[]).reduce((acc, val)=> concatBuffers(acc, val), new ArrayBuffer(0))
 			: typeof values[ 0 ] === 'string'
 				? (values as string[]).reduce((acc, val)=> acc + val, '')
 				: (values as Value[][]).reduce((acc, val)=> [ ...acc, ...val ], []),
-	typeEnumerable, [ typeEnumerable ], 2, FUNCTION_ARG_MAX,
-	(index, vtype, vmask)=> vtype === vmask,
+	typeEnumerable, [ typeEnumerable ], 2, FUNCTION_ARG_MAX, 0,
 );
 
-export const funcLength = new ExpressionFunction(
+export const funcLength = new FunctionDefinition(
 	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value })=>
 		value == null
 			? undefined
@@ -26,7 +25,7 @@ export const funcLength = new ExpressionFunction(
 	typeNumber, [ typeIterable ],
 );
 
-export const funcSlice = new ExpressionFunction(
+export const funcSlice = new FunctionDefinition(
 	(value: ArrayBuffer | string | Value[], start: number = 0, end?: number)=>
 		value == null
 			? undefined
@@ -34,7 +33,7 @@ export const funcSlice = new ExpressionFunction(
 	typeEnumerable, [ typeEnumerable, typeOptionalNumber, typeOptionalNumber ], 1, 3,
 );
 
-export const funcByte = new ExpressionFunction(
+export const funcByte = new FunctionDefinition(
 	(value: ArrayBuffer, pos: number)=>
 		value == null
 			? undefined
@@ -42,7 +41,7 @@ export const funcByte = new ExpressionFunction(
 	typeBuffer, [ typeBuffer, typeNumber ],
 );
 
-export const funcChar = new ExpressionFunction(
+export const funcChar = new FunctionDefinition(
 	(value: string, pos: number)=>
 		value == null
 			? undefined
@@ -50,7 +49,7 @@ export const funcChar = new ExpressionFunction(
 	typeString, [ typeString, typeNumber ],
 );
 
-export const funcCharCode = new ExpressionFunction(
+export const funcCharCode = new FunctionDefinition(
 	(value: string, pos: number)=>
 		value == null
 			? undefined
@@ -58,8 +57,8 @@ export const funcCharCode = new ExpressionFunction(
 	typeNumber, [ typeString, typeNumber ],
 );
 
-export const funcEntries = new ExpressionFunction(
-	(value:  Value[] | { [ key: string ]: Value })=>
+export const funcEntries = new FunctionDefinition(
+	(value: Value[] | { [ key: string ]: Value })=>
 		value == null
 			? undefined
 			: Array.isArray(value)
@@ -68,7 +67,7 @@ export const funcEntries = new ExpressionFunction(
 	typeArray, [ typeArrayOrObject ],
 );
 
-export const funcKeys = new ExpressionFunction(
+export const funcKeys = new FunctionDefinition(
 	(value:  Value[] | { [ key: string ]: Value })=>
 		value == null
 			? undefined
@@ -78,7 +77,7 @@ export const funcKeys = new ExpressionFunction(
 	typeArray, [ typeArrayOrObject ],
 );
 
-export const funcValues = new ExpressionFunction(
+export const funcValues = new FunctionDefinition(
 	(value:  Value[] | { [ key: string ]: Value })=>
 		value == null
 			? undefined
@@ -86,7 +85,7 @@ export const funcValues = new ExpressionFunction(
 	typeArray, [ typeArrayOrObject ],
 );
 
-export const funcAt = new ExpressionFunction(
+export const funcAt = new FunctionDefinition(
 	(value: Value[] | { [ key: string ]: Value }, index: number | string)=> {
 		if (value == null) {
 			return undefined;
@@ -96,31 +95,27 @@ export const funcAt = new ExpressionFunction(
 			return value[ ix < 0 ? value.length + ix : ix ];
 		}
 		else {
-			return value[ String(index) ];
+			return typeof index === 'number'
+				? Object.values(value)[ index ]
+				: value[ String(index) ];
 		}
 	},
-	typeVariant, [ typeArrayOrObject, typeNumberOrString ],
+	typeUnknown, [ typeArrayOrObject, typeNumberOrString ],
 );
 
-export const funcFirstValid = new ExpressionFunction(
-	(value: Value[] | { [ key: string ]: Value })=>
-		value ? Object.values(value).find((v)=> v != null) : undefined,
-	typeVariant, [ typeArrayOrObject ],
-);
-
-export const funcFirst = new ExpressionFunction(
+export const funcFirst = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value.find((v, i, a)=> predicate(v, i, a)),
-	typeVariant, [ typeArray, typeFunction ],
+	typeUnknown, [ typeArray, typeFunction ],
 );
 
-export const funcLast = new ExpressionFunction(
+export const funcLast = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value.reverse().find((v, i, a)=> predicate(v, i, a)),
-	typeVariant, [ typeArray, typeFunction ],
+	typeUnknown, [ typeArray, typeFunction ],
 );
 
-export const funcFirstIndex = new ExpressionFunction(
+export const funcFirstIndex = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=> {
 		const ix = value.findIndex((v, i, a)=> predicate(v, i, a));
 		return ix < 0 ? Number.NaN : ix;
@@ -128,7 +123,7 @@ export const funcFirstIndex = new ExpressionFunction(
 	typeNumber, [ typeArray, typeFunction ],
 );
 
-export const funcLastIndex = new ExpressionFunction(
+export const funcLastIndex = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=> {
 		const ix = [ ...value ].reverse().findIndex((v, i, a)=> predicate(v, i, a));
 		return ix < 0 ? Number.NaN : ix;
@@ -136,43 +131,43 @@ export const funcLastIndex = new ExpressionFunction(
 	typeNumber, [ typeArray, typeFunction ],
 );
 
-export const funcEvery = new ExpressionFunction(
+export const funcEvery = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value.every((v, i, a)=> predicate(v, i, a)),
 	typeBoolean, [ typeArray, typeFunction ],
 );
 
-export const funcAny = new ExpressionFunction(
+export const funcAny = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value.some((v, i, a)=> predicate(v, i, a)),
 	typeBoolean, [ typeArray, typeFunction ],
 );
 
-export const funcFlatten = new ExpressionFunction(
+export const funcFlatten = new FunctionDefinition(
 	(values: Value[], depth?: number)=>
 		(values as []).flat(depth) as Value,
 	typeArray, [ typeArray, typeOptionalNumber ], 1, 2,
 );
 
-export const funcReverse = new ExpressionFunction(
+export const funcReverse = new FunctionDefinition(
 	(value: Value[])=>
 		[ ...value ].reverse(),
 	typeArray, [ typeArray ],
 );
 
-export const funcMap = new ExpressionFunction(
+export const funcMap = new FunctionDefinition(
 	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=>
 		value.map(callback),
 	typeArray, [ typeArray, typeFunction ],
 );
 
-export const funcFilter = new ExpressionFunction(
+export const funcFilter = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value.filter(predicate),
 	typeArray, [ typeArray, typeFunction ],
 );
 
-export const funcIterate = new ExpressionFunction(
+export const funcIterate = new FunctionDefinition(
 	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=> {
 		value.forEach(callback);
 		return value;
@@ -180,13 +175,13 @@ export const funcIterate = new ExpressionFunction(
 	typeArray, [ typeArray, typeFunction ],
 );
 
-export const funcReduce = new ExpressionFunction(
+export const funcReduce = new FunctionDefinition(
 	(value: Value[], callback: (acc: Value, v: Value, i: number, arr: Value[])=> Value, initial?: Value)=>
 		initial != null ? value.reduce(callback, initial) : value.reduce(callback),
-	typeVariant, [ typeArray, typeFunction, typeVariant ], 2, 3,
+	typeUnknown, [ typeArray, typeFunction, typeUnknown ], 2, 3,
 );
 
-export const funcCompose = new ExpressionFunction(
+export const funcCompose = new FunctionDefinition(
 	(value: string[], callback: (acc: { [ key: string ]: Value }, v: string, i: number)=> { [ key: string ]: Value })=> {
 		const obj: Record<string, any> = {};
 		for (let i = 0; i < value.length; ++i) {

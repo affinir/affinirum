@@ -1,60 +1,65 @@
 export type Value = void | undefined | boolean | number | ArrayBuffer | string |
 	Value[] | { [ key: string ]: Value } | ((...args: Value[])=> Value);
-type PrimitiveType = 'void' | 'boolean' | 'number' | 'buffer' | 'string' | 'array' | 'object' | 'function';
-const PRIMITIVE_TYPES: PrimitiveType[] = [ 'void', 'boolean', 'number', 'buffer', 'string', 'array', 'object', 'function' ];
+type ValueType = 'void' | 'boolean' | 'number' | 'buffer' | 'string' | 'array' | 'object' | 'function';
+const VALUE_TYPE_NAMES: ValueType[] = [ 'void', 'boolean', 'number', 'buffer', 'string', 'array', 'object', 'function' ];
+const VALUE_TYPE_COUNT = VALUE_TYPE_NAMES.length;
 
 export class Type {
 
-	protected _vtypes: PrimitiveType[];
+	protected _vtypes: Set<ValueType>;
 
 	constructor(
-		...args: PrimitiveType[]
+		...args: ValueType[]
 	) {
-		this._vtypes = args.length ? PRIMITIVE_TYPES.filter((n)=> args.includes(n)) : PRIMITIVE_TYPES;
+		this._vtypes = new Set(args.length ? args : VALUE_TYPE_NAMES);
 	}
 
-	get isPrimitive(): boolean {
-		return this._vtypes.length === 1;
+	get isSpecific(): boolean {
+		return this._vtypes.size === 1;
 	}
 
 	get isBoolean(): boolean {
-		return this.isPrimitive && this._vtypes[ 0 ] === 'boolean';
+		return this.isSpecific && this._vtypes.has('boolean');
 	}
 
 	get isNumber(): boolean {
-		return this.isPrimitive && this._vtypes[ 0 ] === 'number';
+		return this.isSpecific && this._vtypes.has('number');
 	}
 
 	get isBuffer(): boolean {
-		return this.isPrimitive && this._vtypes[ 0 ] === 'buffer';
+		return this.isSpecific && this._vtypes.has('buffer');
 	}
 
 	get isString(): boolean {
-		return this.isPrimitive && this._vtypes[ 0 ] === 'string';
+		return this.isSpecific && this._vtypes.has('string');
 	}
 
 	get isArray(): boolean {
-		return this.isPrimitive && this._vtypes[ 0 ] === 'array';
+		return this.isSpecific && this._vtypes.has('array');
 	}
 
 	get isObject(): boolean {
-		return this.isPrimitive && this._vtypes[ 0 ] === 'object';
+		return this.isSpecific && this._vtypes.has('object');
 	}
 
 	get isFunction(): boolean {
-		return this.isPrimitive && this._vtypes[ 0 ] === 'function';
+		return this.isSpecific && this._vtypes.has('function');
 	}
 
 	get isVoid(): boolean {
-		return this.isPrimitive && this._vtypes[ 0 ] === 'void';
+		return this.isSpecific && this._vtypes.has('void');
 	}
 
-	infer(mask: Type, func = (vtype: string, vmask: string)=> vtype === vmask): Type | undefined {
+	reduce(mask: Type): Type | undefined {
 		if (mask.isVoid) {
 			return this;
 		}
-		const vtypes = this._vtypes.filter((vtype)=> mask._vtypes.some((mvtype)=> func(vtype, mvtype)));
-		return vtypes.length ? new Type(...vtypes) : undefined;
+		const vtypes = Array.from(this._vtypes.values()).filter((t)=> mask._vtypes.has(t));
+		return vtypes.length === 0
+			? undefined
+			: vtypes.length === this._vtypes.size
+				? this
+				: new Type(...vtypes);
 	}
 
 	toOptional(): Type {
@@ -62,23 +67,31 @@ export class Type {
 	}
 
 	toString(): string {
-		return this._vtypes.join('|');
+		return this._vtypes.size < VALUE_TYPE_COUNT ? Array.from(this._vtypes.values()).join('|') : '??';
 	}
 
 	static of(value: Value): Type {
 		const vtype = value == null
 			? 'void'
-			: Array.isArray(value)
-				? 'array'
-				: value instanceof ArrayBuffer
-					? 'buffer'
-					: typeof value;
-		return new Type(vtype as PrimitiveType);
+			: typeof value === 'boolean'
+				? 'boolean'
+				: typeof value === 'number'
+					? 'number'
+					: value instanceof ArrayBuffer
+						? 'buffer'
+						: typeof value === 'string'
+							? 'string'
+							: Array.isArray(value)
+								? 'array'
+								: typeof value === 'object'
+									? 'object'
+									: 'function';
+		return new Type(vtype as ValueType);
 	}
 
 }
 
-export const typeVariant = new Type();
+export const typeUnknown = new Type();
 export const typeVoid = new Type('void');
 export const typeBoolean = new Type('boolean');
 export const typeNumber = new Type('number');

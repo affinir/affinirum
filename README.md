@@ -33,6 +33,10 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * void type for **null** value
 * optional type modifier **?** for boolean?, number?, buffer?, string?, array?, object?, function?
 * unknown type **??**
+#### Values
+* **null**
+* **true**
+* **false**
 #### Operators
 * Assignment: **=**
 * Grouping: **(...)**
@@ -149,14 +153,11 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Parse object from JSON-formatted string: **void|boolean|number|string|array|object string|void->fromJson()**
 * Create JSON-formatted string from object: **string|void void|boolean|number|string|array|object->toJson()**
 #### Constants
-* **void null**
-* **boolean true**
-* **boolean false**
-* **number NAN**
-* **number POSINF**
-* **number NEGINF**
-* **number EPSILON**
-* **number PI**
+* Not-a-number **NAN**
+* Positive infinity **POSINF**
+* Negative infinity **NEGINF**
+* Epsilon **EPSILON**
+* Pi **PI**
 
 ### Grammar
 The expression parsing is performed using the following grammar:
@@ -241,7 +242,7 @@ const iteratorExpr = new Expression(
 const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
 ...
 const complexExpr = new Expression(
-	'var a=myvar1/10, var b=myvar2-100, a/b + b*a + 600'
+	'?? a=myvar1/10, var b=myvar2-100, a/b + b*a + 600'
 );
 const value = complexExpr.evaluate( { myvar1: 40, myvar2: 104 } ); // 4761
 ...

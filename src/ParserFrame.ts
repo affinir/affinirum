@@ -3,7 +3,7 @@ export class ParserFrame {
 	constructor(
 		protected readonly _expr: string,
 		protected _start = 0,
-		protected _end = 0,	
+		protected _end = 0,
 	) {}
 
 	get expr(): string {
@@ -28,8 +28,17 @@ export class ParserFrame {
 		return this;
 	}
 
-	frame(): ParserFrame {
-		return new ParserFrame(this._expr, this._start, this._end);
+	frame(token?: string): ParserFrame {
+		return token
+			? new ParserFrame(this._expr, this._expr.indexOf(token), this._expr.indexOf(token) + token.length)
+			: new ParserFrame(this._expr, this._start, this._end);
+	}
+
+	throwError(message: string): never {
+		const offset = this._start < 32 ? 0 : this._start - 32;
+		const length = this._end < this._start ? 0 : this._end - this._start - 1;
+		throw new Error(`error: ${message} at position ${this._start}:\n${this._expr.substring(offset, offset + 60)}\n` +
+			`${' '.repeat(this._expr.substring(offset, this._start).length)}^${'\''.repeat(length)}`);
 	}
 
 }

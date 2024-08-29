@@ -1,86 +1,84 @@
-import { ExpressionFunction } from './ExpressionFunction.js';
-import { Value, typeBoolean, typeNumber, typeString, typeArray, typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeVariant } from './Type.js';
+import { FunctionDefinition } from './FunctionDefinition.js';
+import { Value, typeBoolean, typeNumber, typeString, typeArray, typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeUnknown } from './Type.js';
 
-export const funcGreaterThan = new ExpressionFunction(
+export const funcGreaterThan = new FunctionDefinition(
 	(value1: number, value2: number)=>
 		value1 > value2,
 	typeBoolean, [ typeNumber, typeNumber ],
 );
 
-export const funcLessThan = new ExpressionFunction(
+export const funcLessThan = new FunctionDefinition(
 	(value1: number, value2: number)=>
 		value1 < value2,
 	typeBoolean, [ typeNumber, typeNumber ],
 );
 
-export const funcGreaterOrEqual = new ExpressionFunction(
+export const funcGreaterOrEqual = new FunctionDefinition(
 	(value1: number, value2: number)=>
 		value1 >= value2,
 	typeBoolean, [ typeNumber, typeNumber ],
 );
 
-export const funcLessOrEqual = new ExpressionFunction(
+export const funcLessOrEqual = new FunctionDefinition(
 	(value1: number, value2: number)=>
 		value1 <= value2,
 	typeBoolean, [ typeNumber, typeNumber ],
 );
-export const funcEqual = new ExpressionFunction(
+export const funcEqual = new FunctionDefinition(
 	(value1: Value, value2: Value)=>
 		equal(value1, value2),
-	typeBoolean, [ typeVariant, typeVariant ],
+	typeBoolean, [ typeUnknown, typeUnknown ],
 );
 
-export const funcNotEqual = new ExpressionFunction(
+export const funcNotEqual = new FunctionDefinition(
 	(value1: Value, value2: Value)=>
 		!equal(value1, value2),
-	typeBoolean, [ typeVariant, typeVariant ],
+	typeBoolean, [ typeUnknown, typeUnknown ],
 );
 
-export const funcLike = new ExpressionFunction(
+export const funcLike = new FunctionDefinition(
 	(value1: string, value2: string)=>
 		equalStrings(value1, value2, true),
 	typeBoolean, [ typeString, typeString ],
 );
 
-export const funcNotLike = new ExpressionFunction(
+export const funcNotLike = new FunctionDefinition(
 	(value1: string, value2: string)=>
 		!equalStrings(value1, value2, true),
 	typeBoolean, [ typeString, typeString ],
 );
 
-export const funcCoalesce = new ExpressionFunction(
+export const funcCoalesce = new FunctionDefinition(
 	(value: Value, valueOtherwise: Value)=>
 		value ?? valueOtherwise,
-	typeVariant, [ typeVariant, typeVariant ], undefined, undefined,
-	(index, vtype, vmask)=> vtype === vmask
+	typeUnknown, [ typeUnknown, typeUnknown ], undefined, undefined, 0,
 );
 
-export const funcSwitch = new ExpressionFunction(
+export const funcSwitch = new FunctionDefinition(
 	(condition: boolean, value1: Value, value2: Value)=>
 		condition ? value1 : value2,
-	typeVariant, [ typeBoolean, typeVariant, typeVariant ], undefined, undefined,
-	(index, vtype, vmask)=> index === 0 || vtype === vmask
+	typeUnknown, [ typeBoolean, typeUnknown, typeUnknown ], undefined, undefined, 1,
 );
 
-export const funcContains = new ExpressionFunction(
+export const funcContains = new FunctionDefinition(
 	(value: string, search: string, start?: number, ignoreCaseSpaceEtc?: boolean)=>
 		containsString(value, search, start, ignoreCaseSpaceEtc),
 	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
 );
 
-export const funcStartsWith = new ExpressionFunction(
+export const funcStartsWith = new FunctionDefinition(
 	(value: string, search: string, start?: number, ignoreCaseSpaceEtc?: boolean)=>
 		startsWithString(value, search, start, ignoreCaseSpaceEtc),
 	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
 );
 
-export const funcEndsWith = new ExpressionFunction(
+export const funcEndsWith = new FunctionDefinition(
 	(value: string, search: string, end?: number, ignoreCaseSpaceEtc?: boolean)=>
 		endsWithString(value, search, end, ignoreCaseSpaceEtc),
 	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
 );
 
-export const funcAlphanum = new ExpressionFunction(
+export const funcAlphanum = new FunctionDefinition(
 	(value: string)=> {
 		const lowerCase = value.toLowerCase();
 		let result = '';
@@ -94,43 +92,43 @@ export const funcAlphanum = new ExpressionFunction(
 	typeString, [ typeString ],
 );
 
-export const funcTrim = new ExpressionFunction(
+export const funcTrim = new FunctionDefinition(
 	(value: string)=>
 		value.trim(),
 	typeString, [ typeString ],
 );
 
-export const funcTrimStart = new ExpressionFunction(
+export const funcTrimStart = new FunctionDefinition(
 	(value: string)=>
 		value.trimStart(),
 	typeString, [ typeString ],
 );
 
-export const funcTrimEnd = new ExpressionFunction(
+export const funcTrimEnd = new FunctionDefinition(
 	(value: string)=>
 		value.trimEnd(),
 	typeString, [ typeString ],
 );
 
-export const funcLowerCase = new ExpressionFunction(
+export const funcLowerCase = new FunctionDefinition(
 	(value: string)=>
 		value.toLowerCase(),
 	typeString, [ typeString ],
 );
 
-export const funcUpperCase = new ExpressionFunction(
+export const funcUpperCase = new FunctionDefinition(
 	(value: string)=>
 		value.toUpperCase(),
 	typeString, [ typeString ],
 );
 
-export const funcJoin = new ExpressionFunction(
+export const funcJoin = new FunctionDefinition(
 	(value: string[], separator: string = ' ')=>
 		value.join(separator),
 	typeString, [ typeArray, typeOptionalString ], 1, 2,
 );
 
-export const funcUnique = new ExpressionFunction(
+export const funcUnique = new FunctionDefinition(
 	(value: Value[])=> {
 		const result: Value[] = [];
 		value.forEach((i)=> {
@@ -143,13 +141,13 @@ export const funcUnique = new ExpressionFunction(
 	typeArray, [ typeArray ],
 );
 
-export const funcIntersection = new ExpressionFunction(
+export const funcIntersection = new FunctionDefinition(
 	(value1: Value[], value2: Value[])=>
 		value1.filter((i)=> value2.some((v)=> equal(v, i))),
 	typeArray, [ typeArray, typeArray ],
 );
 
-export const funcDifference = new ExpressionFunction(
+export const funcDifference = new FunctionDefinition(
 	(value1: Value[], value2: Value[])=>
 		[ ...value1.filter((i)=> value2.every((v)=> !equal(v, i))), ...value2.filter((i)=> value1.every((v)=> !equal(v, i))) ],
 	typeArray, [ typeArray, typeArray ],
