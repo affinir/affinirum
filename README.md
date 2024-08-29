@@ -32,7 +32,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * function
 * void type for **null** value
 * optional type modifier **?** for boolean?, number?, buffer?, string?, array?, object?, function?
-* variant type for values of unknown type
+* unknown type **??**
 #### Operators
 * Assignment: **=**
 * Grouping: **(...)**

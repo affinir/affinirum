@@ -129,8 +129,8 @@ export class Expression {
 			}
 		}
 		catch (err) {
-			throw new Error(`parse error on ${(err as Error).message} at position ${state.startPos}:\n` +
-				this.point(state.startPos, state.endPos));
+			throw new Error(`parse error on ${(err as Error).message} at position ${state.start}:\n` +
+				this.point(state.start, state.end));
 		}
 		try {
 			this._root = this._root.compile(type);
@@ -202,18 +202,18 @@ export class Expression {
 	}
 
 	protected program(state: ParserState, scope: StaticScope): Node {
-		const start = state.startPos;
+		const frame = state.frame();
 		const nodes: Node[] = [ this.disjunction(state, scope) ];
 		while (state.isSeparator) {
 			nodes.push(this.disjunction(state.next(), scope));
 		}
-		return new ExpressionProgramNode(start, state.endPos, nodes);
+		return new ExpressionProgramNode(frame.ends(state.end), nodes);
 	}
 
 	protected disjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this.conjunction(state, scope);
 		while (state.operator === operOr) {
-			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
+			node = new ExpressionFunctionNode(state, state.operator,
 				[ node, this.conjunction(state.next(), scope) ]);
 		}
 		return node;
@@ -222,28 +222,28 @@ export class Expression {
 	protected conjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this.comparison(state, scope);
 		while (state.operator === operAnd) {
-			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
+			node = new ExpressionFunctionNode(state, state.operator,
 				[ node, this.comparison(state.next(), scope) ]);
 		}
 		return node;
 	}
 
 	protected comparison(state: ParserState, scope: StaticScope): Node {
+		const frame = state.frame();
 		let not = false;
-		let start = -1;
 		while (state.operator === operNot) {
 			not = !not;
-			start = state.startPos;
+			frame.starts(state.start);
 			state.next();
 		}
 		let node = this.aggregate(state, scope);
 		while (state.operator === operGt || state.operator === operLt || state.operator === operGe || state.operator === operLe ||
 			state.operator === operEqual || state.operator === operNotEqual || state.operator === operLike || state.operator === operNotLike) {
-			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
+			node = new ExpressionFunctionNode(state, state.operator,
 				[ node, this.aggregate(state.next(), scope) ]);
 		}
 		if (not) {
-			node = new ExpressionFunctionNode(start, state.endPos, operNot, [ node ]);
+			node = new ExpressionFunctionNode(frame.ends(state.end), operNot, [ node ]);
 		}
 		return node;
 	}
@@ -251,7 +251,7 @@ export class Expression {
 	protected aggregate(state: ParserState, scope: StaticScope): Node {
 		let node = this.product(state, scope);
 		while (state.operator === operAppend || state.operator === operAdd || state.operator === operSub) {
-			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
+			node = new ExpressionFunctionNode(state, state.operator,
 				[ node, this.product(state.next(), scope) ]);
 		}
 		return node;
@@ -260,27 +260,27 @@ export class Expression {
 	protected product(state: ParserState, scope: StaticScope): Node {
 		let node = this.factor(state, scope);
 		while (state.operator === operMul || state.operator === operDiv || state.operator === operPct) {
-			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
+			node = new ExpressionFunctionNode(state, state.operator,
 				[ node, this.factor(state.next(), scope) ]);
 		}
 		return node;
 	}
 
 	protected factor(state: ParserState, scope: StaticScope): Node {
+		const frame = state.frame();
 		let neg = false;
-		let start = -1;
 		while (state.operator === operSub) {
 			neg = !neg;
-			start = state.startPos;
+			frame.starts(state.start);
 			state.next();
 		}
 		let node = this.coalescence(state, scope);
 		while (state.operator === operPow) {
-			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
+			node = new ExpressionFunctionNode(state, state.operator,
 				[ node, this.coalescence(state.next(), scope) ]);
 		}
 		if (neg) {
-			node = new ExpressionFunctionNode(start, state.endPos, operNeg, [ node ]);
+			node = new ExpressionFunctionNode(frame.ends(state.end), operNeg, [ node ]);
 		}
 		return node;
 	}
@@ -288,7 +288,7 @@ export class Expression {
 	protected coalescence(state: ParserState, scope: StaticScope): Node {
 		let node = this.accessor(state, scope);
 		while (state.operator === operCoalesce) {
-			node = new ExpressionFunctionNode(state.startPos, state.endPos, state.operator,
+			node = new ExpressionFunctionNode(state, state.operator,
 				[ node, this.accessor(state.next(), scope) ]);
 		}
 		return node;
@@ -309,12 +309,12 @@ export class Expression {
 			}
 			else if (state.isBracketsOpen) {
 				if (state.next().operator === operMul) {
-					node = new ExpressionFunctionNode(state.startPos, state.endPos, operFv,
+					node = new ExpressionFunctionNode(state, operFv,
 						[ node ]);
 					state.next();
 				}
 				else {
-					node = new ExpressionFunctionNode(state.startPos, state.endPos, operAt,
+					node = new ExpressionFunctionNode(state, operAt,
 						[ node, this.disjunction(state, scope) ]);
 				}
 				if (!state.isBracketsClose) {
@@ -324,12 +324,12 @@ export class Expression {
 			}
 			else if (state.isBracesOpen) {
 				if (state.next().operator === operMul) {
-					node = new ExpressionFunctionNode(state.startPos, state.endPos, operFv,
+					node = new ExpressionFunctionNode(state, operFv,
 						[ node ]);
 					state.next();
 				}
 				else {
-					node = new ExpressionFunctionNode(state.startPos, state.endPos, operAt,
+					node = new ExpressionFunctionNode(state, operAt,
 						[ node, this.disjunction(state, scope) ]);
 				}
 				if (!state.isBracesClose) {
@@ -338,16 +338,16 @@ export class Expression {
 				state.next();
 			}
 			else if (state.operator === operAt) {
-				const start = state.startPos;
+				const frame = state.frame();
 				state.next();
 				if (state.isLiteral && state.literal.type.isString) {
-					node = new ExpressionFunctionNode(start, state.endPos, operAt,
-						[ node, new ExpressionConstantNode(state.startPos, state.endPos, state.literal) ]);
+					node = new ExpressionFunctionNode(frame.ends(state.end), operAt,
+						[ node, new ExpressionConstantNode(state, state.literal) ]);
 					state.next();
 				}
 				else if (state.isToken) {
-					node = new ExpressionFunctionNode(start, state.endPos, operAt,
-						[ node, new ExpressionConstantNode(state.startPos, state.endPos, new ExpressionConstant(state.token)) ]);
+					node = new ExpressionFunctionNode(frame.ends(state.end), operAt,
+						[ node, new ExpressionConstantNode(state, new ExpressionConstant(state.token)) ]);
 					state.next();
 				}
 				else {
@@ -360,19 +360,18 @@ export class Expression {
 
 	protected term(state: ParserState, scope: StaticScope): Node {
 		if (state.isLiteral) {
-			const start = state.startPos;
-			const end = state.endPos;
+			const frame = state.frame();
 			const constant = state.literal;
 			state.next();
-			return new ExpressionConstantNode(start, end, constant);
+			return new ExpressionConstantNode(frame, constant);
 		}
 		else if (state.isToken) {
 			const constant = this._constants.get(state.token);
 			if (constant != null) {
-				const start = state.startPos;
-				const end = state.endPos;
+				const frame = state.frame();
+				const end = state.end;
 				state.next();
-				return new ExpressionConstantNode(start, end, constant);
+				return new ExpressionConstantNode(frame, constant);
 			}
 			const gfunction = this._gfunctions.get(state.token);
 			if (gfunction != null) {
@@ -403,7 +402,7 @@ export class Expression {
 			throw new Error(`unexpected closing parentheses`);
 		}
 		else if (state.isBracketsOpen) {
-			const start = state.startPos;
+			const frame = state.frame();
 			const subnodes: Node[] = [];
 			while (!state.next().isBracketsClose) {
 				subnodes.push(this.disjunction(state, scope));
@@ -414,15 +413,14 @@ export class Expression {
 			if (!state.isBracketsClose) {
 				throw new Error(`missing closing brackets`);
 			}
-			const end = state.endPos;
 			state.next();
-			return new ExpressionArrayNode(start, end, subnodes);
+			return new ExpressionArrayNode(frame, subnodes);
 		}
 		else if (state.isBracketsClose) {
 			throw new Error(`unexpected closing brackets`);
 		}
 		else if (state.isBracesOpen) {
-			const start = state.startPos;
+			const frame = state.frame();
 			const subnodes: [ Node, Node ][] = [];
 			while (!state.next().isBracesClose) {
 				const token = state.isToken ? state.token : undefined;
@@ -430,7 +428,7 @@ export class Expression {
 					state.next();
 				}
 				const key = token
-					? new ExpressionConstantNode(state.startPos, state.endPos, new ExpressionConstant(token))
+					? new ExpressionConstantNode(state, new ExpressionConstant(token))
 					: this.disjunction(state, scope);
 				if (!state.isColon) {
 					throw new Error(`missing object property assignment`);
@@ -444,15 +442,14 @@ export class Expression {
 			if (!state.isBracesClose) {
 				throw new Error(`missing closing braces`);
 			}
-			const end = state.endPos;
 			state.next();
-			return new ExpressionObjectNode(start, end, subnodes);
+			return new ExpressionObjectNode(frame, subnodes);
 		}
 		else if (state.isBracesClose) {
 			throw new Error(`unexpected closing braces`);
 		}
 		else if (state.isIf) {
-			const start = state.startPos;
+			const frame = state.frame();
 			const cnode = this.disjunction(state.next(), scope);
 			if (!state.isThen) {
 				throw new Error(`missing 'then' of conditional statement`);
@@ -462,7 +459,7 @@ export class Expression {
 				throw new Error(`missing 'else' of conditional statement`);
 			}
 			const enode = this.disjunction(state.next(), scope);
-			return new ExpressionFunctionNode(start, state.endPos, operSwitch, [ cnode, tnode, enode ]);
+			return new ExpressionFunctionNode(frame.ends(state.end), operSwitch, [ cnode, tnode, enode ]);
 		}
 		else if (state.isVoid) {
 			throw new Error(`unexpected end of expression`);
@@ -471,7 +468,7 @@ export class Expression {
 	}
 
 	protected function(state: ParserState, scope: StaticScope, func: ExpressionFunction, node?: Node): Node {
-		const start = state.startPos;
+		const frame = state.frame();
 		if (state.next().isParenthesesOpen) {
 			const subnodes: Node[] = node ? [ node ] : [];
 			while (!state.next().isParenthesesClose) {
@@ -489,20 +486,19 @@ export class Expression {
 			if (subnodes.length > func.maxArity) {
 				throw new Error(`excessive number of arguments ${subnodes.length} is more than ${func.maxArity} that function requires`);
 			}
-			const end = state.endPos;
 			state.next();
-			return new ExpressionFunctionNode(start, end, func, subnodes);
+			return new ExpressionFunctionNode(frame, func, subnodes);
 		}
 		else {
 			if (node != null) {
 				if (func.minArity === 1) {
-					return new ExpressionFunctionNode(start, state.endPos, func, [ node ]);
+					return new ExpressionFunctionNode(frame.ends(state.end), func, [ node ]);
 				}
 				else {
 					throw new Error(`missing opening parentheses`);
 				}
 			}
-			return new ExpressionConstantNode(start, state.endPos, new ExpressionConstant(func.evaluate));
+			return new ExpressionConstantNode(frame.ends(state.end), new ExpressionConstant(func.evaluate));
 		}
 	}
 
@@ -530,13 +526,11 @@ export class Expression {
 				scope.set(state.token, variable);
 			}
 		}
-		const start = state.startPos;
-		const end = state.endPos;
-		return new ExpressionVariableNode(start, end, variable, state.next().isAssignment ? this.disjunction(state.next(), scope) : undefined);
+		return new ExpressionVariableNode(state, variable, state.next().isAssignment ? this.disjunction(state.next(), scope) : undefined);
 	}
 
 	protected closure(state: ParserState, scope: StaticScope, type: Type): Node {
-		const start = state.startPos;
+		const frame = state.frame();
 		if (!state.isParenthesesOpen) {
 			throw new Error(`missing opening parentheses for function type`);
 		}
@@ -566,7 +560,7 @@ export class Expression {
 			throw new Error(`missing closing parentheses for function type`);
 		}
 		const subnode = this.disjunction(state.next(), scope.subscope(variables));
-		return new ExpressionClosureNode(start, state.endPos, type, Array.from(variables.values()), subnode);
+		return new ExpressionClosureNode(frame.ends(state.end), type, Array.from(variables.values()), subnode);
 	}
 
 }

@@ -1,4 +1,5 @@
 import { Node } from './Node.js';
+import { ParserFrame } from './ParserFrame.js';
 import { ExpressionConstantNode } from './ExpressionConstantNode.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { ExpressionFunction } from './ExpressionFunction.js';
@@ -9,12 +10,11 @@ export class ExpressionFunctionNode extends Node {
 	protected _type: Type;
 
 	constructor(
-		_startPos: number,
-		_endPos: number,
+		frame: ParserFrame,
 		protected _function: ExpressionFunction,
 		protected _subnodes: Node[],
 	) {
-		super(_startPos, _endPos);
+		super(frame);
 		this._type = _function.type;
 	}
 
@@ -43,7 +43,7 @@ export class ExpressionFunctionNode extends Node {
 			constant &&= subnode instanceof ExpressionConstantNode && !subnode.type.isFunction;
 		}
 		if (constant) {
-			return new ExpressionConstantNode(this._startPos, this._endPos,
+			return new ExpressionConstantNode(this,
 				new ExpressionConstant(this._function.evaluate(...this._subnodes.map((node)=> node.evaluate()))));
 		}
 		return this;

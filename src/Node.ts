@@ -1,26 +1,20 @@
+import { ParserFrame } from './ParserFrame.js';
 import { Type, Value } from './Type.js';
 
-export abstract class Node {
+export abstract class Node extends ParserFrame {
 
 	constructor(
-		protected _startPos: number,
-		protected _endPos: number,
-	) {}
-
-	get startPos(): number {
-		return this._startPos;
-	}
-
-	get endPos(): number {
-		return this._endPos;
+		frame: ParserFrame,
+	) {
+		super(frame.expr, frame.start, frame.end);
 	}
 
 	toString(ident: number = 0): string {
-		return ' '.repeat(ident) + `[${this._startPos}:${this.endPos}]`;
+		return ' '.repeat(ident) + `[${this._start}:${this.end}]`;
 	}
 
 	throwTypeError(type: Type): never {
-		throw new NodeTypeError(this._startPos, this._endPos, this.type, type);
+		throw new NodeTypeError(this._start, this._end, this.type, type);
 	}
 
 	abstract type: Type;

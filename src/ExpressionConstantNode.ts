@@ -1,15 +1,15 @@
 import { Node } from './Node.js';
+import { ParserFrame } from './ParserFrame.js';
 import { ExpressionConstant } from './ExpressionConstant.js';
 import { Type, Value } from './Type.js';
 
 export class ExpressionConstantNode extends Node {
 
 	constructor(
-		_startPos: number,
-		_endPos: number,
+		frame: ParserFrame,
 		protected _constant: ExpressionConstant,
 	) {
-		super(_startPos, _endPos);
+		super(frame);
 	}
 
 	override get type(): Type {

@@ -1,17 +1,17 @@
 import { Node } from './Node.js';
+import { ParserFrame } from './ParserFrame.js';
 import { ExpressionVariable } from './ExpressionVariable.js';
 import { Type, Value, typeFunction } from './Type.js';
 
 export class ExpressionClosureNode extends Node {
 
 	constructor(
-		_startPos: number,
-		_endPos: number,
+		frame: ParserFrame,
 		protected _type: Type,
 		protected _variables: ExpressionVariable[],
 		protected _subnode: Node,
 	) {
-		super(_startPos, _endPos);
+		super(frame);
 	}
 
 	override get type(): Type {
