@@ -16,16 +16,12 @@ export class ArrayNode extends Node {
 		return typeArray;
 	}
 
-	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} array node, subnodes:\n${this._subnodes.map((s)=> s.toString(ident + 1)).join('\n')}`;
-	}
-
 	override compile(type: Type): Node {
 		this.reduceType(type);
 		let constant = true;
 		for (let i = 0; i < this._subnodes.length; ++i) {
 			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile(typeUnknown);
-			constant &&= subnode instanceof ConstantNode;
+			constant &&= subnode.constant;
 		}
 		if (constant) {
 			return new ConstantNode(this, this.evaluate());
@@ -35,6 +31,11 @@ export class ArrayNode extends Node {
 
 	override evaluate(): Value {
 		return this._subnodes.map((s)=> s.evaluate());
+	}
+
+	override toString(ident: number = 0): string {
+		return `${super.toString(ident)} array node`
+			+ `, subnodes:\n${this._subnodes.map((s)=> s.toString(ident + 1)).join('\n')}`;
 	}
 
 }

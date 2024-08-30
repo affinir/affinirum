@@ -167,14 +167,6 @@ export const funcFilter = new FunctionDefinition(
 	typeArray, [ typeArray, typeFunction ],
 );
 
-export const funcIterate = new FunctionDefinition(
-	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=> {
-		value.forEach(callback);
-		return value;
-	},
-	typeArray, [ typeArray, typeFunction ],
-);
-
 export const funcReduce = new FunctionDefinition(
 	(value: Value[], callback: (acc: Value, v: Value, i: number, arr: Value[])=> Value, initial?: Value)=>
 		initial != null ? value.reduce(callback, initial) : value.reduce(callback),

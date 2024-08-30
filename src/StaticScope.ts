@@ -2,10 +2,10 @@ import { Variable } from './Variable.js';
 
 export class StaticScope {
 
-	protected _superscope: StaticScope | undefined = undefined;
+	protected _superscope?: StaticScope;
 	protected _subscopes: StaticScope[] = [];
 	protected _variables = new Map<string, Variable>();
-	protected _definitions = new Set<string>();
+	protected _locals = new Set<string>();
 
 	has(name: string): boolean {
 		return this._variables.has(name) || Boolean(this._superscope?.has(name));
@@ -16,13 +16,13 @@ export class StaticScope {
 	}
 
 	set(name: string, variable: Variable): StaticScope {
-		this._variables.set(name, variable);
+		this._superscope?.set(name, variable) ?? this._variables.set(name, variable);
 		return this;
 	}
 
-	define(name: string, variable: Variable): StaticScope {
+	local(name: string, variable: Variable): StaticScope {
 		this._variables.set(name, variable);
-		this._definitions.add(name);
+		this._locals.add(name);
 		return this;
 	}
 
@@ -31,7 +31,7 @@ export class StaticScope {
 		scope._superscope = this;
 		this._subscopes.push(scope);
 		for (const [ name, variable ] of variables) {
-			scope.define(name, variable);
+			scope.local(name, variable);
 		}
 		return scope;
 	}
@@ -39,11 +39,10 @@ export class StaticScope {
 	variables(): Record<string, Variable> {
 		const variables: Record<string, Variable> = {};
 		for (const [ name, variable ] of this._variables) {
-			if (!this._definitions.has(name)) {
+			if (!this._locals.has(name)) {
 				variables[ name ] = variable;
 			}
 		}
-		this._subscopes.forEach((subscope)=> Object.assign(variables, subscope.variables()));
 		return variables;
 	}
 

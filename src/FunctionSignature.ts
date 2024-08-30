@@ -1,6 +1,10 @@
-import { Type } from './Type.js';
+import { Type, typeUnknown } from './Type.js';
+
+export const FUNCTION_ARG_MAX = 16536;
 
 export class FunctionSignature {
+
+	static readonly unknown = new FunctionSignature(typeUnknown, [ typeUnknown ], 0, FUNCTION_ARG_MAX);
 
 	constructor(
 		protected readonly _type: Type,

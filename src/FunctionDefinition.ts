@@ -1,7 +1,7 @@
 import { FunctionSignature } from './FunctionSignature.js';
 import { Type, Value } from './Type.js';
 
-export const FUNCTION_ARG_MAX = 16536;
+export { FUNCTION_ARG_MAX } from './FunctionSignature.js';
 
 export class FunctionDefinition {
 

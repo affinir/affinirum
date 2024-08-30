@@ -43,12 +43,6 @@ export const funcModulo = new FunctionDefinition(
 	typeNumber, [ typeNumber, typeNumber ],
 );
 
-export const funcPercentage = new FunctionDefinition(
-	(value: number, part: number)=>
-		Math.round(value * part / 100),
-	typeNumber, [ typeNumber, typeNumber ],
-);
-
 export const funcExponent = new FunctionDefinition(
 	(value: number)=>
 		Math.exp(value),

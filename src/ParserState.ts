@@ -3,9 +3,9 @@ import { FunctionDefinition } from './FunctionDefinition.js';
 import { toStringBuffer } from './function/MutationFunctions.js';
 import { funcOr, funcAnd, funcNot } from './function/GlobalFunctions.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcEqual, funcNotEqual, funcLike, funcNotLike, funcCoalesce } from './function/BaseFunctions.js';
+	funcEqual, funcNotEqual, funcLike, funcNotLike, funcSwitch, funcCoalesce } from './function/BaseFunctions.js';
 import { funcAppend, funcAt } from './function/CompositeFunctions.js';
-import { funcAdd, funcSubtract, funcMultiply, funcDivide, funcPercentage, funcPower } from './function/MathFunctions.js';
+import { funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './function/MathFunctions.js';
 import { Type, Value, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeUnknown, typeArray } from './Type.js';
 
 class Literal { constructor(public readonly value: Value) {} }
@@ -23,9 +23,7 @@ const symbolSeparator = Symbol();
 const symbolAssignment = Symbol();
 const symbolOption = Symbol();
 const symbolScope = Symbol();
-const symbolIf = Symbol();
-const symbolThen = Symbol();
-const symbolElse = Symbol();
+const symbolCycle = Symbol();
 
 const isSign = (c: string)=> c === '+' || c === '-';
 const isAlpha = (c: string)=>  c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c === '_' ;
@@ -120,16 +118,8 @@ export class ParserState extends ParserFrame {
 		return this._obj === symbolScope;
 	}
 
-	get isIf(): boolean {
-		return this._obj === symbolIf;
-	}
-
-	get isThen(): boolean {
-		return this._obj === symbolThen;
-	}
-
-	get isElse(): boolean {
-		return this._obj === symbolElse;
+	get isCycle(): boolean {
+		return this._obj === symbolCycle;
 	}
 
 	get isVoid(): boolean {
@@ -152,6 +142,7 @@ export class ParserState extends ParserFrame {
 				case '}': this._obj = symbolBracesClose; break;
 				case ':': this._obj = symbolColon; break;
 				case ',': this._obj = symbolSeparator; break;
+				case '@': this._obj = symbolCycle; break;
 				case '?':
 					switch (this._expr.charAt(this._end)) {
 						case '?': ++this._end; this._obj = typeUnknown; break;
@@ -159,6 +150,7 @@ export class ParserState extends ParserFrame {
 						default: this._obj = symbolOption; break;
 					}
 					break;
+				case '$': this._obj = funcSwitch; break;
 				case '|': this._obj = funcOr; break;
 				case '&': this._obj = funcAnd; break;
 				case '>':
@@ -201,7 +193,7 @@ export class ParserState extends ParserFrame {
 					break;
 				case '*': this._obj = funcMultiply; break;
 				case '/': this._obj = funcDivide; break;
-				case '%': this._obj = funcPercentage; break;
+				case '%': this._obj = funcRemainder; break;
 				case '^': this._obj = funcPower; break;
 				case '.': this._obj = funcAt; break;
 				case '#':
@@ -238,9 +230,6 @@ export class ParserState extends ParserFrame {
 							case 'array': this._obj = typeArray; break;
 							case 'object': this._obj = typeObject; break;
 							case 'function': this._obj = typeFunction; break;
-							case 'if': this._obj = symbolIf; break;
-							case 'then': this._obj = symbolThen; break;
-							case 'else': this._obj = symbolElse; break;
 							default: this._obj = token; break;
 						}
 					}

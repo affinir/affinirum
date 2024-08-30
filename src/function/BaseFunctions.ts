@@ -51,13 +51,13 @@ export const funcNotLike = new FunctionDefinition(
 export const funcCoalesce = new FunctionDefinition(
 	(value: Value, valueOtherwise: Value)=>
 		value ?? valueOtherwise,
-	typeUnknown, [ typeUnknown, typeUnknown ], undefined, undefined, 0,
+	typeUnknown, [ typeUnknown, typeUnknown ], 2, 2, 0,
 );
 
 export const funcSwitch = new FunctionDefinition(
 	(condition: boolean, value1: Value, value2: Value)=>
 		condition ? value1 : value2,
-	typeUnknown, [ typeBoolean, typeUnknown, typeUnknown ], undefined, undefined, 1,
+	typeUnknown, [ typeBoolean, typeUnknown, typeUnknown ], 3, 3, 1,
 );
 
 export const funcContains = new FunctionDefinition(

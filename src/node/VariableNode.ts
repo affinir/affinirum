@@ -18,13 +18,10 @@ export class VariableNode extends Node {
 		return this._variable.type;
 	}
 
-	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} variable node` + (this._subnode ? `, subnode:\n${this._subnode?.toString(ident + 1) ?? ''}` : '');
-	}
-
 	override compile(type: Type): Node {
 		this._subnode = this._subnode?.compile(type);
 		this._variable.type = this.reduceType(this._subnode?.type ?? type);
+		this._variable.signature = this._subnode?.signature;
 		return this;
 	}
 
@@ -33,7 +30,12 @@ export class VariableNode extends Node {
 	}
 
 	override get signature(): FunctionSignature | undefined {
-		return this._subnode?.signature;
+		return this._variable.signature;
+	}
+
+	override toString(ident: number = 0): string {
+		return `${super.toString(ident)} variable node`
+			+ (this._subnode ? `, subnode:\n${this._subnode?.toString(ident + 1) ?? ''}` : '');
 	}
 
 }

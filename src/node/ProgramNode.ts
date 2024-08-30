@@ -16,15 +16,11 @@ export class ProgramNode extends Node {
 		return this._subnodes[ this._subnodes.length - 1 ].type;
 	}
 
-	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} program node, subnodes:\n${this._subnodes.map((s)=> s.toString(ident + 1)).join('\n')}`;
-	}
-
 	override compile(type: Type): Node {
 		let constant = true;
 		for (let i = 0, li = this._subnodes.length - 1; i < this._subnodes.length; ++i) {
 			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile(i < li ? typeUnknown : type);
-			constant &&= subnode instanceof ConstantNode;// && !subnode.retType.isFunction;
+			constant &&= subnode.constant;
 		}
 		if (constant) {
 			return new ConstantNode(this, this.evaluate());
@@ -34,6 +30,11 @@ export class ProgramNode extends Node {
 
 	override evaluate(): Value {
 		return this._subnodes.map((s)=> s.evaluate())[ this._subnodes.length - 1 ];
+	}
+
+	override toString(ident: number = 0): string {
+		return `${super.toString(ident)} program node`
+			+ `, subnodes:\n${this._subnodes.map((s)=> s.toString(ident + 1)).join('\n')}`;
 	}
 
 }

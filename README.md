@@ -2,24 +2,57 @@
 Evaluation of closed-form analytic expressions using recursive descent parser.
 
 Parser supports boolean expressions, regular algebraic expressions,
- numeric, buffer, string array and object functions, variables, and closures.
+ various numeric, buffer, string, array, and object functions.
+It also supports global, and local variables, along with
+ first-order functions and type checking.
 
 Target: ES2022 [browser+NodeJS][ESM+CJS].
 
-## Why
+## Description
 
+Data processing domain requires a language to describe data processing rules in intuitive yet concise form.
+Here are the list of features:
 * Parse once, execute multiple times
 * Efficient expression evaluation and basic type checking
 * Support for boolean, number, buffer, string, array, object, function, void,
   and nullable types, including unknown type
 * Boolean, arithmetic, buffer, string and index operators
 * Numeric, buffer and string comparison operators
-* Variadic functions and subrotuines
+* Variadic functions, first-order functions
 * Input and statement variables
 * Standard math functions
 * Easy to add custom functions or constants
 
-## What
+## Language
+
+Expression may contain multiple comma separated sub-expressions.
+The value of an expression is the value of the last sub-expression in the program.
+
+Number scientific notation is supported.
+Hexadecimal integer literals start with prefix **#**.
+Hexadecimal buffer literals start with prefix **##**.
+
+Array is an ordered sequence of values of any type.
+It can be defined using brackets with comma separated elements inside.
+Array element can be accessed using accessor **[]** with numeric value.
+
+Object is a container of named values of any type.
+It can be defined using braces with comma separated properties with assigned values.
+Object property can be accessed using operator **.** with string literal or using accessor **{}** with string key or numeric index.
+
+Function is a callable unit producing a value.
+Built-in functions can be extended with configuration entries.
+Also it is possible to define subroutines, i.e. functions defined in the code.
+
+Type of any array is **array**.
+Type of any object is **object**.
+Type of any function is **function**.
+Type of **null** is **void**.
+
+Valid variable or function names consist of a letter, or **\_** characters followed by any combination
+of alphanumeric characters, and **\_**. For example: *x*, *\_a1*, *abc25*
+
+Whitespace characters are ignored.
 
 #### Types
 * boolean for values **true** and **false**
@@ -51,20 +84,22 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * String similar to: **\~**
 * String not similar to: **!\~**
 * Null coalescence: **?:**
-* Conditional statement: **if...then...else...**
 * Arithmetic addition: **+**
 * Arithmetic subtraction or negation: **-**
 * Arithmetic multiplication: **\***
 * Arithmetic division: **/**
-* Arithmetic percentage: **%**
+* Arithmetic remainder: **%**
 * Buffer, string, or array concatination: **+>**
-* Function definition: **return-type(argument1-type argument1-name, ...)->...**
+* Subroutine definition: **->...**
+* Strongly typed subroutine definition: **return-type(argument1-type argument1-name, ...)->...**
 * Array definiton: **[element1, ...]**
 * Object definition: **{propery1-key: property1-value, ...}**
+* Cycle statement, iterates evaluation of suffix while prefix is true: **...@...**
+* Switch statement, returns first or second suffix if prefix is true or false: **...$...,...**
 #### Global Functions
 * Boolean disjunction: **boolean or(boolean|array ...values)**
 * Boolean conjunction: **boolean and(boolean|array ...values)**
-* Bolean negation: **boolean not(boolean value)**
+* Boolean negation: **boolean not(boolean value)**
 * Numeric sum: **number sum(number|array ...values)**
 * Numeric minimum: **number min(number|array ...values)**
 * Numeric maximum: **number max(number|array ...values)**
@@ -112,12 +147,10 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Array or object keys: **array array|object.keys()**
 * Array or object values: **array array|object.values()**
 * Array or object value at index: **variant array|object.at(number|string index)**
-* First valid value of array or object: **variant array|object.firstValid()**
 * New array with reverse order of items: **array array.reverse()**
 * New array flattened to specified depth: **array array.flatten(number depth)**
 * Map items: **array array.map(function transformation)**
 * Filter items: **array array.filter(function condition)**
-* Iterate items: **array array.iterate(function iteration)**
 * Reduce array to a single value: **variant array.reduce(function reducer)**
 * Object composition from array of keys with generator function: **object array.compose(function generator)**
 #### Math Method Functions
@@ -126,7 +159,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Arithmetic negation: **number number.negate()**
 * Arithmetic multiplication: **number number.multiply(number ...values)**
 * Arithmetic division: **number number.divide(number divisor)**
-* Arithmetic percentage: **number number.percentage(number divisor)**
+* Arithmetic remainder: **number number.remainder(number divisor)**
 * Exponent: **number number.exponent()**
 * Logarithm: **number number.logarithm()**
 * Power: **number number.power(number exponent)**
@@ -158,7 +191,10 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 ### Grammar
 The expression parsing is performed using the following grammar:
 
-	<program> = <disjunction>{ ","<disjunction> }
+	<program> = <unit>{ ","<unit> }
+	<unit> = <cycle>
+	<cycle> = <switch> "@" <switch>
+	<switch> = <disjunction> "$" <disjunction> "," <disjunction>
 	<disjunction> = <conjunction>{ "|"<conjunction> }
 	<conjunction> = <comparison>{ "&"<comparison> }
 	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "=" | "!=" | "~" | "!~" )<aggregate> }
@@ -166,48 +202,18 @@ The expression parsing is performed using the following grammar:
 	<product> = <factor>{ ( "*" | "/" | "%" )<factor> }
 	<factor> = { "-" }<coalescence>{ "^"<coalescence> }
 	<coalescence> = <accessor>{ "?:"<accessor> }
-	<accessor> = <term>{ ( "." ( <property-name-string> | <function-name-string> ) |
-		"("{ <disjunction> }{ ","<disjunction> }")" | "["<disjunction>"]" | "{"<disjunction>"}" ) }
+	<accessor> = <term>{ ( "." ( "'"<text-string>"'" | <property-name-string> | <function-name-string> ) |
+		"("{ <unit> }{ ","<unit> }")" | "["<unit>"]" | "{"<unit>"}" ) }
 	<term> = <literal> | <constant-name-string> | <function-name-string> | <variable> | <subroutine> |
-		"("<program>")" | <array> | <object> | "if" <disjunction> "then" <disjunction> "else" <disjunction>
-	<literal> = <decimal-number> | #<hexadecimal-number> | ##<hexadecimal-binary> | "<text-string>"
-	<array> = "["{ <disjunction> }{ ","<disjunction> }"]"
-	<object> = "{"{ <property-name-string>:<disjunction> }{ ","<property-name-string>:<disjunction> }"}"
-	<variable> = { <type> } <variable-name-string>{ ":"<disjunction> }
-	<subroutine> = <type>"("{ <type> <argument-name-string> }{ ","<type> <argument-name-string> }")" "->" <disjunction>
+		"("<program>")" | <array> | <object>
+	<literal> = <decimal-number> | #<hexadecimal-number> | ##<hexadecimal-binary> | "'"<text-string>"'"
+	<array> = "["{ <unit> }{ ","<unit> }"]"
+	<object> = "{"{ <property-name-string>:<unit> }{ ","<property-name-string>:<unit> }"}"
+	<variable> = { <type> } <variable-name-string>{ ":"<unit> }
+	<subroutine> = { <type>"("{ <type> <argument-name-string> }{ ","<type> <argument-name-string> }")" } "->" <unit>
 	<type> = ( "void" | "boolean" | "number" | "buffer" | "string" | "array" | "object" | "function" ){ "?" } | "??"
 
-Whitespace characters are ignored.
-
-Expression may contain multiple comma separated sub-expressions.
-The value of an expression is the value of the last sub-expression in the program.
-
-Number scientific notation is supported.
-Hexadecimal integer literals start with prefix **#**.
-Hexadecimal buffer literals start with prefix **##**.
-
-Array is an ordered sequence of values of any type.
-It can be defined using brackets with comma separated elements inside.
-Array element can be accessed using accessor **[]** with numeric value.
-
-Object is a container of named values of any type.
-It can be defined using braces with comma separated properties with assigned values.
-Object property can be accessed using operator **.** with string literal or using accessor **{}** with string key or numeric index.
-
-Function is a callable unit producing a value.
-It is defined with a return type followed by a comma separated typed function argument list encased in parentheses,
- and a function expression encased in parentheses.
-
-Type of any array is **array**.
-Type of any object is **object**.
-Type of any function is **function**.
-Type of **null** is **void**.
-
-Valid variable or function names consist of a letter, or **\_** characters followed by any combination
-of alphanumeric characters, and **\_**. For example: *x*, *\_a1*, *abc25*
-
-
-## How
+## Reference
 
 Create instance of Expression class with a string containing expression and optional compilation configuration.
 During the parsing any alphanumeric sequence not identified as

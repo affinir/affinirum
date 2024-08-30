@@ -14,11 +14,15 @@ export abstract class Node extends ParserFrame {
 	abstract compile(type: Type): Node;
 	abstract evaluate(): Value;
 
+	get constant(): boolean {
+		return false;
+	}
+
 	get signature(): FunctionSignature | undefined {
 		return;
 	}
 
-	reduceType(type: Type) {
+	protected reduceType(type: Type) {
 		const compiledType = this.type.reduce(type);
 		if (compiledType) {
 			return compiledType;
@@ -26,7 +30,7 @@ export abstract class Node extends ParserFrame {
 		this.throwTypeError(type);
 	}
 
-	throwTypeError(type: Type): never {
+	protected throwTypeError(type: Type): never {
 		return this.throwError(`type ${this.type} mismatch with expected type ${type}`);
 	}
 

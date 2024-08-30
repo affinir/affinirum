@@ -1,10 +1,13 @@
 import { Type, Value, typeUnknown } from './Type.js';
+import { FunctionSignature } from './FunctionSignature.js';
 
 export class Variable {
 
+	protected _value?: Value;
+
 	constructor(
-		protected _value: Value | undefined = undefined,
 		protected _type: Type = typeUnknown,
+		protected _signature?: FunctionSignature,
 	) {}
 
 	get value(): Value | undefined {
@@ -21,6 +24,14 @@ export class Variable {
 
 	set type(type: Type) {
 		this._type = type;
+	}
+
+	get signature(): FunctionSignature | undefined {
+		return this._signature;
+	}
+
+	set signature(value: FunctionSignature | undefined) {
+		this._signature = value;
 	}
 
 }

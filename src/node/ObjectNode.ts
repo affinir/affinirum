@@ -16,10 +16,6 @@ export class ObjectNode extends Node {
 		return typeObject;
 	}
 
-	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} object node, subnodes:\n${this._subnodes.map(([ k, v ])=> `key: ${k.toString(ident + 1)} value: ${v.toString(ident + 1)}`).join('\n')}`;
-	}
-
 	override compile(type: Type): Node {
 		this.reduceType(type);
 		let constant = true;
@@ -40,6 +36,11 @@ export class ObjectNode extends Node {
 			obj[ String(key.evaluate()) ] = value.evaluate();
 		}
 		return obj;
+	}
+
+	override toString(ident: number = 0): string {
+		return `${super.toString(ident)} object node`
+			+ `, subnodes:\n${this._subnodes.map(([ k, v ])=> `key: ${k.toString(ident + 1)} value: ${v.toString(ident + 1)}`).join('\n')}`;
 	}
 
 }
