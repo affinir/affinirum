@@ -188,11 +188,11 @@ Hexadecimal buffer literals start with prefix **##**.
 
 Array is an ordered sequence of values of any type.
 It can be defined using brackets with comma separated elements inside.
-Array element can be accessed using operator **@** with numeric literal or using accessor **[]** with numeric value.
+Array element can be accessed using accessor **[]** with numeric value.
 
 Object is a container of named values of any type.
 It can be defined using braces with comma separated properties with assigned values.
-Object property can be accessed using operator **.** with string literal or using accessor **{}** with string value.
+Object property can be accessed using operator **.** with string literal or using accessor **{}** with string key or numeric index.
 
 Function is a callable unit producing a value.
 It is defined with a return type followed by a comma separated typed function argument list encased in parentheses,
