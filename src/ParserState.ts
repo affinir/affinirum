@@ -1,16 +1,14 @@
 import { ParserFrame } from './ParserFrame.js';
 import { FunctionDefinition } from './FunctionDefinition.js';
-import { toStringBuffer } from './MutationFunctions.js';
-import { operOr, operAnd, operNot, operGt, operLt, operGe, operLe, operEqual, operNotEqual, operLike, operNotLike,
-	operCoalesce, operAppend, operAt, operAdd, operSub, operMul, operDiv, operPct, operPow } from './Operators.js';
+import { toStringBuffer } from './function/MutationFunctions.js';
+import { funcOr, funcAnd, funcNot } from './function/GlobalFunctions.js';
+import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
+	funcEqual, funcNotEqual, funcLike, funcNotLike, funcCoalesce } from './function/BaseFunctions.js';
+import { funcAppend, funcAt } from './function/CompositeFunctions.js';
+import { funcAdd, funcSubtract, funcMultiply, funcDivide, funcPercentage, funcPower } from './function/MathFunctions.js';
 import { Type, Value, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeUnknown, typeArray } from './Type.js';
 
-class Literal {
-
-	constructor(public value: Value) {}
-
-}
-
+class Literal { constructor(public readonly value: Value) {} }
 const valueTrue = new Literal(true);
 const valueFalse = new Literal(false);
 const valueNull = new Literal(undefined);
@@ -24,7 +22,7 @@ const symbolColon = Symbol();
 const symbolSeparator = Symbol();
 const symbolAssignment = Symbol();
 const symbolOption = Symbol();
-const symbolMethod = Symbol();
+const symbolScope = Symbol();
 const symbolIf = Symbol();
 const symbolThen = Symbol();
 const symbolElse = Symbol();
@@ -118,8 +116,8 @@ export class ParserState extends ParserFrame {
 		return this._obj === symbolOption;
 	}
 
-	get isMethod(): boolean {
-		return this._obj === symbolMethod;
+	get isScope(): boolean {
+		return this._obj === symbolScope;
 	}
 
 	get isIf(): boolean {
@@ -157,55 +155,55 @@ export class ParserState extends ParserFrame {
 				case '?':
 					switch (this._expr.charAt(this._end)) {
 						case '?': ++this._end; this._obj = typeUnknown; break;
-						case ':': ++this._end; this._obj = operCoalesce; break;
+						case ':': ++this._end; this._obj = funcCoalesce; break;
 						default: this._obj = symbolOption; break;
 					}
 					break;
-				case '|': this._obj = operOr; break;
-				case '&': this._obj = operAnd; break;
+				case '|': this._obj = funcOr; break;
+				case '&': this._obj = funcAnd; break;
 				case '>':
 					switch (this._expr.charAt(this._end)) {
-						case '=': ++this._end; this._obj = operGe; break;
-						default: this._obj = operGt; break;
+						case '=': ++this._end; this._obj = funcGreaterOrEqual; break;
+						default: this._obj = funcGreaterThan; break;
 					}
 					break;
 				case '<':
 					switch (this._expr.charAt(this._end)) {
-						case '=': ++this._end; this._obj = operLe; break;
-						default: this._obj = operLt; break;
+						case '=': ++this._end; this._obj = funcLessOrEqual; break;
+						default: this._obj = funcLessThan; break;
 					}
 					break;
 				case '!':
 					switch (this._expr.charAt(this._end)) {
-						case '=': ++this._end; this._obj = operNotEqual; break;
-						case '~': ++this._end; this._obj = operNotLike; break;
-						default: this._obj = operNot; break;
+						case '=': ++this._end; this._obj = funcNotEqual; break;
+						case '~': ++this._end; this._obj = funcNotLike; break;
+						default: this._obj = funcNot; break;
 					}
 					break;
 				case '=':
 					switch (this._expr.charAt(this._end)) {
-						case '=': ++this._end; this._obj = operEqual; break;
+						case '=': ++this._end; this._obj = funcEqual; break;
 						default: this._obj = symbolAssignment; break;
 					}
 					break;
-				case '~': this._obj = operLike; break;
+				case '~': this._obj = funcLike; break;
 				case '+':
 					switch (this._expr.charAt(this._end)) {
-						case '>': ++this._end; this._obj = operAppend; break;
-						default: this._obj = operAdd; break;
+						case '>': ++this._end; this._obj = funcAppend; break;
+						default: this._obj = funcAdd; break;
 					}
 					break;
 				case '-':
 					switch (this._expr.charAt(this._end)) {
-						case '>': ++this._end; this._obj = symbolMethod; break;
-						default: this._obj = operSub; break;
+						case '>': ++this._end; this._obj = symbolScope; break;
+						default: this._obj = funcSubtract; break;
 					}
 					break;
-				case '*': this._obj = operMul; break;
-				case '/': this._obj = operDiv; break;
-				case '%': this._obj = operPct; break;
-				case '^': this._obj = operPow; break;
-				case '.': this._obj = operAt; break;
+				case '*': this._obj = funcMultiply; break;
+				case '/': this._obj = funcDivide; break;
+				case '%': this._obj = funcPercentage; break;
+				case '^': this._obj = funcPower; break;
+				case '.': this._obj = funcAt; break;
 				case '#':
 					if (this._expr.charAt(this._end) === '#') {
 						++this._end;
@@ -233,13 +231,13 @@ export class ParserState extends ParserFrame {
 							case 'false': this._obj = valueFalse; break;
 							case 'null': this._obj = valueNull; break;
 							case 'void': this._obj = typeVoid; break;
-							case 'boolean': case 'bool': this._obj = typeBoolean; break;
-							case 'number': case 'num': this._obj = typeNumber; break;
-							case 'buffer': case 'buf': this._obj = typeBuffer; break;
-							case 'string': case 'str': this._obj = typeString; break;
-							case 'array': case 'arr': this._obj = typeArray; break;
-							case 'object': case 'obj': this._obj = typeObject; break;
-							case 'function': case 'func': this._obj = typeFunction; break;
+							case 'boolean': this._obj = typeBoolean; break;
+							case 'number': this._obj = typeNumber; break;
+							case 'buffer': this._obj = typeBuffer; break;
+							case 'string': this._obj = typeString; break;
+							case 'array': this._obj = typeArray; break;
+							case 'object': this._obj = typeObject; break;
+							case 'function': this._obj = typeFunction; break;
 							case 'if': this._obj = symbolIf; break;
 							case 'then': this._obj = symbolThen; break;
 							case 'else': this._obj = symbolElse; break;

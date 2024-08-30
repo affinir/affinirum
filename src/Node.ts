@@ -1,5 +1,6 @@
 import { ParserFrame } from './ParserFrame.js';
 import { Type, Value } from './Type.js';
+import { FunctionSignature } from './FunctionSignature.js';
 
 export abstract class Node extends ParserFrame {
 
@@ -13,6 +14,10 @@ export abstract class Node extends ParserFrame {
 	abstract compile(type: Type): Node;
 	abstract evaluate(): Value;
 
+	get signature(): FunctionSignature | undefined {
+		return;
+	}
+
 	reduceType(type: Type) {
 		const compiledType = this.type.reduce(type);
 		if (compiledType) {
@@ -21,12 +26,12 @@ export abstract class Node extends ParserFrame {
 		this.throwTypeError(type);
 	}
 
-	toString(ident: number = 0): string {
-		return '  '.repeat(ident) + `[${this._start}:${this.end}] <${this.type}>`;
-	}
-
 	throwTypeError(type: Type): never {
 		return this.throwError(`type ${this.type} mismatch with expected type ${type}`);
+	}
+
+	toString(ident: number = 0): string {
+		return '  '.repeat(ident) + `[${this._start}:${this.end}] <${this.type}>`;
 	}
 
 }

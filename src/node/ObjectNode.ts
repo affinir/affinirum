@@ -1,7 +1,7 @@
-import { Node } from './Node.js';
-import { ParserFrame } from './ParserFrame.js';
+import { Node } from '../Node.js';
+import { ParserFrame } from '../ParserFrame.js';
 import { ConstantNode } from './ConstantNode.js';
-import { Type, Value, typeString, typeObject, typeUnknown } from './Type.js';
+import { Type, Value, typeString, typeObject, typeUnknown } from '../Type.js';
 
 export class ObjectNode extends Node {
 
@@ -26,8 +26,7 @@ export class ObjectNode extends Node {
 		for (const [ key, value ] of this._subnodes) {
 			const knode = key.compile(typeString);
 			const vnode = value.compile(typeUnknown);
-			constant &&= knode instanceof ConstantNode// && !knode.type.isFunction
-				&& vnode instanceof ConstantNode;// && !vnode.retType.isFunction;
+			constant &&= knode instanceof ConstantNode && vnode instanceof ConstantNode;
 		}
 		if (constant) {
 			return new ConstantNode(this, this.evaluate());

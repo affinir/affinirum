@@ -1,7 +1,7 @@
-import { FunctionDefinition, FUNCTION_ARG_MAX } from './FunctionDefinition.js';
+import { FunctionDefinition, FUNCTION_ARG_MAX } from '../FunctionDefinition.js';
 import { Value, typeBoolean, typeNumber, typeBuffer, typeString, typeArray, typeObject, typeFunction,
 	typeOptionalNumber, typeNumberOrString, typeArrayOrObject,
-	typeEnumerable, typeIterable, typeUnknown } from './Type.js';
+	typeEnumerable, typeIterable, typeUnknown } from '../Type.js';
 
 export const funcAppend = new FunctionDefinition(
 	(...values: (ArrayBuffer | string | Value[])[])=>

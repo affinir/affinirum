@@ -1,7 +1,7 @@
-import { Node } from './Node.js';
-import { ParserFrame } from './ParserFrame.js';
+import { Node } from '../Node.js';
+import { ParserFrame } from '../ParserFrame.js';
 import { ConstantNode } from './ConstantNode.js';
-import { Type, Value, typeArray, typeUnknown } from './Type.js';
+import { Type, Value, typeArray, typeUnknown } from '../Type.js';
 
 export class ArrayNode extends Node {
 

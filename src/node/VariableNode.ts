@@ -1,13 +1,14 @@
-import { Node } from './Node.js';
-import { ParserFrame } from './ParserFrame.js';
-import { Variable } from './Variable.js';
-import { Type, Value } from './Type.js';
+import { Node } from '../Node.js';
+import { ParserFrame } from '../ParserFrame.js';
+import { Variable } from '../Variable.js';
+import { Type, Value } from '../Type.js';
+import { FunctionSignature } from '../FunctionSignature.js';
 
 export class VariableNode extends Node {
 
 	constructor(
 		frame: ParserFrame,
-		protected _variable: Variable,
+		protected readonly _variable: Variable,
 		protected _subnode?: Node,
 	) {
 		super(frame);
@@ -29,6 +30,10 @@ export class VariableNode extends Node {
 
 	override evaluate(): Value {
 		return this._subnode ? this._variable.value = this._subnode.evaluate() : this._variable.value!;
+	}
+
+	override get signature(): FunctionSignature | undefined {
+		return this._subnode?.signature;
 	}
 
 }

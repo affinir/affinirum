@@ -1,5 +1,5 @@
-import { FunctionDefinition, FUNCTION_ARG_MAX } from './FunctionDefinition.js';
-import { Value, typeBoolean, typeNumber, typeArray, typeObject, typeBooleanOrArray, typeNumberOrArray, typeArrayOrObject } from './Type.js';
+import { FunctionDefinition, FUNCTION_ARG_MAX } from '../FunctionDefinition.js';
+import { Value, typeBoolean, typeNumber, typeArray, typeObject, typeBooleanOrArray, typeNumberOrArray, typeArrayOrObject } from '../Type.js';
 
 export const funcOr = new FunctionDefinition(
 	(...values: (boolean | boolean[])[])=>

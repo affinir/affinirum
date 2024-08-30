@@ -1,5 +1,5 @@
-import { FunctionDefinition } from './FunctionDefinition.js';
-import { Value, typeBoolean, typeNumber, typeString, typeArray, typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeUnknown } from './Type.js';
+import { FunctionDefinition } from '../FunctionDefinition.js';
+import { Value, typeBoolean, typeNumber, typeString, typeArray, typeOptionalBoolean, typeOptionalNumber, typeOptionalString, typeUnknown } from '../Type.js';
 
 export const funcGreaterThan = new FunctionDefinition(
 	(value1: number, value2: number)=>

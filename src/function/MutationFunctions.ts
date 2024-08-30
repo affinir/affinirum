@@ -1,5 +1,5 @@
-import { FunctionDefinition } from './FunctionDefinition.js';
-import { Value, typeNumber, typeBuffer, typeString, typeOptionalNumber, typeOptionalString, typeJson } from './Type.js';
+import { FunctionDefinition } from '../FunctionDefinition.js';
+import { Value, typeNumber, typeBuffer, typeString, typeOptionalNumber, typeOptionalString, typeJson } from '../Type.js';
 
 export const funcToNumberBuffer = new FunctionDefinition(
 	(value: number, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
