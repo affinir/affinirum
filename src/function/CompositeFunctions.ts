@@ -95,9 +95,7 @@ export const funcAt = new FunctionDefinition(
 			return value[ ix < 0 ? value.length + ix : ix ];
 		}
 		else {
-			return typeof index === 'number'
-				? Object.values(value)[ index ]
-				: value[ String(index) ];
+			return value[ String(index) ];
 		}
 	},
 	typeUnknown, [ typeArrayOrObject, typeNumberOrString ],
@@ -155,7 +153,7 @@ export const funcReverse = new FunctionDefinition(
 	typeArray, [ typeArray ],
 );
 
-export const funcMap = new FunctionDefinition(
+export const funcTransform = new FunctionDefinition(
 	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=>
 		value.map(callback),
 	typeArray, [ typeArray, typeFunction ],

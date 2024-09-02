@@ -6,9 +6,9 @@ import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, fun
 	funcUnique, funcIntersection, funcDifference } from './function/BaseFunctions.js';
 import { funcAppend, funcLength, funcSlice, funcByte, funcChar, funcCharCode, funcEntries, funcKeys, funcValues,
 	funcAt, funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny, funcFlatten, funcReverse,
-	funcMap, funcFilter, funcReduce, funcCompose } from './function/CompositeFunctions.js';
+	funcTransform, funcFilter, funcReduce, funcCompose } from './function/CompositeFunctions.js';
 import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcRemainder, funcModulo, funcExponent, funcLogarithm,
-	funcPower, funcRoot, funcSquare, funcSqrt, funcAbs, funcCeil, funcFloor, funcRound } from './function/MathFunctions.js';
+	funcPower, funcRoot, funcAbs, funcCeil, funcFloor, funcRound } from './function/MathFunctions.js';
 import { funcToNumberBuffer, funcFromNumberBuffer, funcToStringBuffer, funcFromStringBuffer,
 	funcToNumberString, funcFromNumberString, funcToBufferString, funcFromBufferString, funcFromJson, funcToJson } from './function/MutationFunctions.js';
 import { StaticScope } from './StaticScope.js';
@@ -48,12 +48,12 @@ const mfunctions: [ string, FunctionDefinition][] = [
 	[ 'entries', funcEntries ], [ 'keys', funcKeys ], [ 'values', funcValues ], [ 'at', funcAt ],
 	[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
 	[ 'any', funcAny ], [ 'every', funcEvery ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ],
-	[ 'map', funcMap ], [ 'filter', funcFilter ], [ 'reduce', funcReduce ], [ 'compose', funcCompose ],
+	[ 'transform', funcTransform ], [ 'filter', funcFilter ], [ 'reduce', funcReduce ], [ 'compose', funcCompose ],
 
 	[ 'add', funcAdd ], [ 'subtract', funcSubtract ], [ 'negate', funcNegate ],
 	[ 'multiply', funcMultiply ], [ 'divide', funcDivide ], [ 'remainder', funcRemainder ], [ 'modulo', funcModulo ],
-	[ 'exponent', funcExponent ], [ 'logarithm', funcLogarithm ], [ 'power', funcPower ], [ 'root', funcRoot ], [ 'square', funcSquare ], [ 'sqrt', funcSqrt ],
-	[ 'abs', funcAbs ], [ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ],
+	[ 'exponent', funcExponent ], [ 'logarithm', funcLogarithm ], [ 'power', funcPower ], [ 'root', funcRoot ], [ 'abs', funcAbs ],
+	[ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ],
 
 	[ 'toNumberBuffer', funcToNumberBuffer ], [ 'fromNumberBuffer', funcFromNumberBuffer ], [ 'toStringBuffer', funcToStringBuffer ], [ 'fromStringBuffer', funcFromStringBuffer ],
 	[ 'toNumberString', funcToNumberString ], [ 'fromNumberString', funcFromNumberString ], [ 'toBufferString', funcToBufferString ], [ 'fromBufferString', funcFromBufferString ],
@@ -194,20 +194,20 @@ export class Expression {
 	protected cycle(state: ParserState, scope: StaticScope): Node {
 		let node = this.switch(state, scope);
 		while (state.isCycle) {
-			node = new CycleNode(state, node, this.switch(state.next(), scope));
+			node = new CycleNode(state.frame(), node, this.switch(state.next(), scope));
 		}
 		return node;
 	}
 
 	protected switch(state: ParserState, scope: StaticScope): Node {
+		const frame = state.frame();
 		let node = this.disjunction(state, scope);
-		while (state.operator === funcSwitch) {
-			const frame = state.frame();
-			const subnode = this.disjunction(state.next(), scope);
-			if (!state.isSeparator) {
-				state.throwError('missing switch separator');
+		if (state.operator === funcSwitch) {
+			const subnode = this.unit(state.next(), scope);
+			if (!state.isColon) {
+				state.throwError('missing switch else condition clause');
 			}
-			node = this.call(frame, funcSwitch, [ node, subnode, this.disjunction(state.next(), scope) ]);
+			node = this.call(frame.ends(state.end), funcSwitch, [ node, subnode, this.unit(state.next(), scope) ]);
 		}
 		return node;
 	}
@@ -215,7 +215,7 @@ export class Expression {
 	protected disjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this.conjunction(state, scope);
 		while (state.operator === funcOr) {
-			node = this.call(state, state.operator, [ node, this.conjunction(state.next(), scope) ]);
+			node = this.call(state.frame(), state.operator, [ node, this.conjunction(state.next(), scope) ]);
 		}
 		return node;
 	}
@@ -223,7 +223,7 @@ export class Expression {
 	protected conjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this.comparison(state, scope);
 		while (state.operator === funcAnd) {
-			node = this.call(state, state.operator, [ node, this.comparison(state.next(), scope) ]);
+			node = this.call(state.frame(), state.operator, [ node, this.comparison(state.next(), scope) ]);
 		}
 		return node;
 	}
@@ -239,9 +239,8 @@ export class Expression {
 		let node = this.aggregate(state, scope);
 		while (state.operator === funcGreaterThan || state.operator === funcLessThan
 			|| state.operator === funcGreaterOrEqual || state.operator === funcLessOrEqual
-			|| state.operator === funcEqual || state.operator === funcNotEqual
-			|| state.operator === funcLike || state.operator === funcNotLike) {
-			node = this.call(state, state.operator, [ node, this.aggregate(state.next(), scope) ]);
+			|| state.operator === funcEqual || state.operator === funcNotEqual) {
+			node = this.call(state.frame(), state.operator, [ node, this.aggregate(state.next(), scope) ]);
 		}
 		if (not) {
 			node = this.call(frame.ends(state.end), funcNot, [ node ]);
@@ -252,7 +251,7 @@ export class Expression {
 	protected aggregate(state: ParserState, scope: StaticScope): Node {
 		let node = this.product(state, scope);
 		while (state.operator === funcAppend || state.operator === funcAdd || state.operator === funcSubtract) {
-			node = this.call(state, state.operator,
+			node = this.call(state.frame(), state.operator,
 				[ node, this.product(state.next(), scope) ]);
 		}
 		return node;
@@ -261,7 +260,7 @@ export class Expression {
 	protected product(state: ParserState, scope: StaticScope): Node {
 		let node = this.factor(state, scope);
 		while (state.operator === funcMultiply || state.operator === funcDivide || state.operator === funcRemainder) {
-			node = this.call(state, state.operator, [ node, this.factor(state.next(), scope) ]);
+			node = this.call(state.frame(), state.operator, [ node, this.factor(state.next(), scope) ]);
 		}
 		return node;
 	}
@@ -276,7 +275,7 @@ export class Expression {
 		}
 		let node = this.coalescence(state, scope);
 		while (state.operator === funcPower) {
-			node = this.call(state, state.operator, [ node, this.coalescence(state.next(), scope) ]);
+			node = this.call(state.frame(), state.operator, [ node, this.coalescence(state.next(), scope) ]);
 		}
 		if (neg) {
 			node = this.call(frame.ends(state.end), funcNegate, [ node ]);
@@ -287,46 +286,16 @@ export class Expression {
 	protected coalescence(state: ParserState, scope: StaticScope): Node {
 		let node = this.accessor(state, scope);
 		while (state.operator === funcCoalesce) {
-			node = this.call(state, state.operator, [ node, this.accessor(state.next(), scope) ]);
+			node = this.call(state.frame(), state.operator, [ node, this.accessor(state.next(), scope) ]);
 		}
 		return node;
 	}
 
 	protected accessor(state: ParserState, scope: StaticScope): Node {
 		let node = this.term(state, scope);
-		while (state.isParenthesesOpen || state.isBracketsOpen || state.isBracesOpen || state.operator === funcAt) {
-			if (state.isParenthesesOpen) {
-				const frame = state.frame();
-				const subnodes: Node[] = [];
-				while (!state.next().isParenthesesClose) {
-					subnodes.push(this.unit(state, scope));
-					if (!state.isSeparator) {
-						break;
-					}
-				}
-				if (!state.isParenthesesClose) {
-					state.throwError('missing closing parentheses calling function');
-				}
-				frame.ends(state.end);
-				node = new CallNode(frame, node, subnodes);
-				state.next();
-			}
-			else if (state.isBracketsOpen) {
-				node = this.call(state, funcAt, [ node, this.unit(state.next(), scope) ]);
-				if (!state.isBracketsClose) {
-					state.throwError('missing closing brackets accessing array element');
-				}
-				state.next();
-			}
-			else if (state.isBracesOpen) {
-				node = this.call(state, funcAt, [ node, this.unit(state.next(), scope) ]);
-				if (!state.isBracesClose) {
-					state.throwError('missing closing braces accessing object property');
-				}
-				state.next();
-			}
-			else if (state.operator === funcAt) {
-				const frame = state.frame();
+		while (state.operator === funcAt || state.isParenthesesOpen || state.isBracketsOpen) {
+			const frame = state.frame();
+			if (state.operator === funcAt) {
 				state.next();
 				if (state.isLiteral && typeof state.literal === 'string') {
 					node = this.call(frame.ends(state.end), funcAt, [ node, new ConstantNode(state, state.literal) ]);
@@ -337,7 +306,6 @@ export class Expression {
 					const mfunction = this._mfunctions.get(state.token) ?? this._gfunctions.get(state.token);
 					if (mfunction) {
 						if (state.next().isParenthesesOpen) {
-							const frame = state.frame();
 							const subnodes: Node[] = [ node ];
 							while (!state.next().isParenthesesClose) {
 								subnodes.push(this.unit(state, scope));
@@ -346,7 +314,7 @@ export class Expression {
 								}
 							}
 							if (!state.isParenthesesClose) {
-								state.throwError('missing closing parentheses calling method function');
+								state.throwError('missing closing method function parentheses');
 							}
 							frame.ends(state.end);
 							node = this.call(frame, mfunction, subnodes);
@@ -362,8 +330,29 @@ export class Expression {
 					}
 				}
 				else {
-					state.throwError('missing array index or object key');
+					state.throwError('missing array or object index');
 				}
+			}
+			else if (state.isParenthesesOpen) {
+				const subnodes: Node[] = [];
+				while (!state.next().isParenthesesClose) {
+					subnodes.push(this.unit(state, scope));
+					if (!state.isSeparator) {
+						break;
+					}
+				}
+				if (!state.isParenthesesClose) {
+					state.throwError('missing closing function parentheses');
+				}
+				node = new CallNode(frame.ends(state.end), node, subnodes);
+				state.next();
+			}
+			else if (state.isBracketsOpen) {
+				node = this.call(frame, funcAt, [ node, this.unit(state.next(), scope) ]);
+				if (!state.isBracketsClose) {
+					state.throwError('missing closing index brackets');
+				}
+				state.next();
 			}
 		}
 		return node;
@@ -402,8 +391,22 @@ export class Expression {
 			}
 			return this.subroutine(state, scope, type);
 		}
-		else if (state.isParenthesesOpen) {
+		else if (state.isScope) {
+			return this.subroutine(state, scope);
+		}
+		else if (state.isBracesOpen) {
 			const node = this.program(state.next(), scope);
+			if (!state.isBracesClose) {
+				state.throwError('missing closing braces');
+			}
+			state.next();
+			return node;
+		}
+		else if (state.isBracesClose) {
+			state.throwError('unexpected closing braces');
+		}
+		else if (state.isParenthesesOpen) {
+			const node = this.unit(state.next(), scope);
 			if (!state.isParenthesesClose) {
 				state.throwError('missing closing parentheses');
 			}
@@ -415,9 +418,33 @@ export class Expression {
 		}
 		else if (state.isBracketsOpen) {
 			const frame = state.frame();
-			const subnodes: Node[] = [];
+			const ifEmpty = state.clone();
+			if (ifEmpty.next().isBracketsClose) {
+				return new ConstantNode(frame.ends(state.next().next().end), []);
+			}
+			else if (ifEmpty.isColon && ifEmpty.next().isBracketsClose) {
+				return new ConstantNode(frame.ends(state.next().next().next().end), {});
+			}
+			const subnodes: [ number | string, Node ][] = [];
+			let index = 0;
 			while (!state.next().isBracketsClose) {
-				subnodes.push(this.unit(state, scope));
+				const key = state.isToken
+					? state.token
+					: state.isLiteral && typeof state.literal === 'string'
+						? state.literal
+						: undefined;
+				if (key) {
+					const ifColon = state.clone();
+					if (ifColon.next().isColon) {
+						subnodes.push([ key, this.unit(state.next().next(), scope) ]);
+					}
+					else {
+						subnodes.push([ index++, this.unit(state, scope) ]);
+					}
+				}
+				else {
+					subnodes.push([ index++, this.unit(state, scope) ]);
+				}
 				if (!state.isSeparator) {
 					break;
 				}
@@ -426,42 +453,17 @@ export class Expression {
 				state.throwError('missing closing brackets');
 			}
 			state.next();
-			return new ArrayNode(frame, subnodes);
+			if (subnodes.some(([ k, ])=> typeof k === 'string')) {
+				const subnode: { [ key: string ]: Node } = {};
+				for (const [ key, node ] of subnodes) {
+					subnode[ String(key) ] = node;
+				}
+				return new ObjectNode(frame, subnode);
+			}
+			return new ArrayNode(frame, subnodes.map(([ , v ])=> v));
 		}
 		else if (state.isBracketsClose) {
 			state.throwError('unexpected closing brackets');
-		}
-		else if (state.isBracesOpen) {
-			const frame = state.frame();
-			const subnodes: [ Node, Node ][] = [];
-			while (!state.next().isBracesClose) {
-				const token = state.isToken ? state.token : undefined;
-				if (token) {
-					state.next();
-				}
-				const knode = token
-					? new ConstantNode(state, token)
-					: this.unit(state, scope);
-				if (!state.isColon) {
-					state.throwError('missing object property assignment');
-				}
-				const vnode = this.unit(state.next(), scope);
-				subnodes.push([ knode, vnode ]);
-				if (!state.isSeparator) {
-					break;
-				}
-			}
-			if (!state.isBracesClose) {
-				state.throwError('missing closing braces');
-			}
-			state.next();
-			return new ObjectNode(frame, subnodes);
-		}
-		else if (state.isBracesClose) {
-			state.throwError('unexpected closing braces');
-		}
-		else if (state.isScope) {
-			return this.subroutine(state, scope);
 		}
 		else if (state.isVoid) {
 			state.throwError('unexpected end of expression');
@@ -493,7 +495,10 @@ export class Expression {
 				scope.set(state.token, variable);
 			}
 		}
-		return new VariableNode(state, variable, state.next().isAssignment ? this.unit(state.next(), scope) : undefined);
+		const frame = state.frame();
+		return new VariableNode(frame.ends(state.end), variable, state.next().isAssignment
+			?	this.unit(state.next(), scope)
+			: undefined);
 	}
 
 	protected subroutine(state: ParserState, scope: StaticScope, type?: Type): Node {
@@ -501,7 +506,7 @@ export class Expression {
 		const variables = new Map<string, Variable>();
 		if (type) {
 			if (!state.isParenthesesOpen) {
-				state.throwError('missing opening parentheses for function type');
+				state.throwError('missing opening function type parentheses');
 			}
 			while (!state.next().isParenthesesClose) {
 				if (!state.isType) {
@@ -525,7 +530,7 @@ export class Expression {
 				}
 			}
 			if (!state.isParenthesesClose) {
-				state.throwError('missing closing parentheses for function type');
+				state.throwError('missing closing function type parentheses');
 			}
 			if (!state.next().isScope) {
 				state.throwError('missing function scope');
@@ -533,10 +538,13 @@ export class Expression {
 		}
 		const args = Array.from(variables.values());
 		const subnode = this.unit(state.next(), scope.subscope(variables));
-		return new ConstantNode(frame.ends(state.end), (...values: Value[])=> {
+		const value = (...values: Value[])=> {
 			args.forEach((arg, ix)=> arg.value = values[ ix ]);
 			return subnode.evaluate();
-		}, type ? new FunctionSignature(type, args.map((v)=> v.type)) : FunctionSignature.unknown, subnode);
+		};
+		return new ConstantNode(frame.ends(state.end), value, type
+			? new FunctionSignature(type, args.map((v)=> v.type))
+			: FunctionSignature.unknown, subnode);
 	}
 
 	protected call(frame: ParserFrame, func: FunctionDefinition, subnodes: Node[]): Node {

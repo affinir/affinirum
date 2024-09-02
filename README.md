@@ -32,13 +32,15 @@ Number scientific notation is supported.
 Hexadecimal integer literals start with prefix **#**.
 Hexadecimal buffer literals start with prefix **##**.
 
-Array is an ordered sequence of values of any type.
+Array is an ordered sequence of values of any type, essentially tuple.
 It can be defined using brackets with comma separated elements inside.
-Array element can be accessed using accessor **[]** with numeric value.
+Array element can be accessed using brackets with numeric value inside.
+Empty array can be declared as **[]**.
 
 Object is a container of named values of any type.
-It can be defined using braces with comma separated properties with assigned values.
-Object property can be accessed using operator **.** with string literal or using accessor **{}** with string key or numeric index.
+It can be defined using brackets with comma separated key value pairs separated by colon.
+Object property can be accessed using operator **.** with string literal or using brackets with string key or numeric index inside.
+Empty object can be declared as accessor **[\:]**
 
 Function is a callable unit producing a value.
 Built-in functions can be extended with configuration entries.
@@ -67,10 +69,10 @@ Whitespace characters are ignored.
 * unknown type **??**
 #### Operators
 * Assignment: **=**
-* Grouping: **(...)**
+* Value grouping: **(...)**
+* Unit grouping: **{...}**
 * Next statement: **,**
-* Array element at numeric index: **[]**
-* Object property by string key or numeric index: **{}**
+* Array element at numeric index, or object property by string key: **[]**
 * Object property by string key or method function call: **.**
 * Boolean negation: **!**
 * Boolean disjunction: **|**
@@ -81,8 +83,6 @@ Whitespace characters are ignored.
 * Less than or equals to: **<=**
 * Equals to: **==**
 * Not equals to: **!=**
-* String similar to: **\~**
-* String not similar to: **!\~**
 * Null coalescence: **?:**
 * Arithmetic addition: **+**
 * Arithmetic subtraction or negation: **-**
@@ -93,9 +93,9 @@ Whitespace characters are ignored.
 * Subroutine definition: **->...**
 * Strongly typed subroutine definition: **return-type(argument1-type argument1-name, ...)->...**
 * Array definiton: **[element1, ...]**
-* Object definition: **{propery1-key: property1-value, ...}**
+* Object definition: **[propery1-key: property1-value, ...]**
 * Cycle statement, iterates evaluation of suffix while prefix is true: **...@...**
-* Switch statement, returns first or second suffix if prefix is true or false: **...$...,...**
+* Switch statement, returns first or second suffix if prefix is true or false: **...\$...:...**
 #### Global Functions
 * Boolean disjunction: **boolean or(boolean|array ...values)**
 * Boolean conjunction: **boolean and(boolean|array ...values)**
@@ -164,8 +164,6 @@ Whitespace characters are ignored.
 * Logarithm: **number number.logarithm()**
 * Power: **number number.power(number exponent)**
 * Root: **number number.root(number index)**
-* Square: **number number.square()**
-* Square root: **number number.sqrt()**
 * Absolute value: **number number.abs()**
 * Ceil: **number number.ceil()**
 * Floor: **number number.floor()**
@@ -193,23 +191,23 @@ The expression parsing is performed using the following grammar:
 
 	<program> = <unit>{ ","<unit> }
 	<unit> = <cycle>
-	<cycle> = <switch> "@" <switch>
-	<switch> = <disjunction> "$" <disjunction> "," <disjunction>
+	<cycle> = <switch>{ "@" <switch> }
+	<switch> = <disjunction>{ "$" <unit> ":" <unit> }
 	<disjunction> = <conjunction>{ "|"<conjunction> }
 	<conjunction> = <comparison>{ "&"<comparison> }
-	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "=" | "!=" | "~" | "!~" )<aggregate> }
+	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "==" | "!=" )<aggregate> }
 	<aggregate> = <product>{ ( "+>" | "+" | "-" )<product> }
 	<product> = <factor>{ ( "*" | "/" | "%" )<factor> }
 	<factor> = { "-" }<coalescence>{ "^"<coalescence> }
 	<coalescence> = <accessor>{ "?:"<accessor> }
-	<accessor> = <term>{ ( "." ( "'"<text-string>"'" | <property-name-string> | <function-name-string> ) |
-		"("{ <unit> }{ ","<unit> }")" | "["<unit>"]" | "{"<unit>"}" ) }
+	<accessor> = <term>{ ( "." ( <property> | <function-name-string> ) | "("{ <unit> }{ ","<unit> }")" | "["<unit>"]" ) }
 	<term> = <literal> | <constant-name-string> | <function-name-string> | <variable> | <subroutine> |
-		"("<program>")" | <array> | <object>
+		"{"<program>"}" | "("<unit>")" | <array> | <object>
 	<literal> = <decimal-number> | #<hexadecimal-number> | ##<hexadecimal-binary> | "'"<text-string>"'"
 	<array> = "["{ <unit> }{ ","<unit> }"]"
-	<object> = "{"{ <property-name-string>:<unit> }{ ","<property-name-string>:<unit> }"}"
-	<variable> = { <type> } <variable-name-string>{ ":"<unit> }
+	<object> = "["{ <property>:<unit> }{ "," <property>:<unit> }"]"
+	<property> = "'"<text-string>"'" | <property-name-string>
+	<variable> = { <type> } <variable-name-string>{ "="<unit> }
 	<subroutine> = { <type>"("{ <type> <argument-name-string> }{ ","<type> <argument-name-string> }")" } "->" <unit>
 	<type> = ( "void" | "boolean" | "number" | "buffer" | "string" | "array" | "object" | "function" ){ "?" } | "??"
 
@@ -231,11 +229,11 @@ const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
 const arrExpr = new Expression( 'sum([ 1, 2, 3, a, b, c ])' );
 const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
 ...
-const objExpr = new Expression( '{prop1:a,prop2:`abc`}.prop1+10' );
+const objExpr = new Expression( '[prop1:a,prop2:`abc`].prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new Expression(
-	'arr1.map(number(number a)(a*2)).filter(boolean(number a)->(a>3)).sum()'
+	'arr1.map(number(number a)->a*2).filter(boolean(number a)->a>3).sum()'
 );
 const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
 ...

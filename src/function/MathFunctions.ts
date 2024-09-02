@@ -67,18 +67,6 @@ export const funcRoot = new FunctionDefinition(
 	typeNumber, [ typeNumber, typeNumber ],
 );
 
-export const funcSquare = new FunctionDefinition(
-	(value: number)=>
-		value * value,
-	typeNumber, [ typeNumber ],
-);
-
-export const funcSqrt = new FunctionDefinition(
-	(value: number)=>
-		Math.sqrt(value),
-	typeNumber, [ typeNumber ],
-);
-
 export const funcAbs = new FunctionDefinition(
 	(value: number)=>
 		Math.abs(value),

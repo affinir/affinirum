@@ -22,8 +22,8 @@ describe('Expression Type test', ()=> {
 		[ '[0]', 'array' ],
 		[ '[0,1,2,3]', 'array' ],
 		[ '["0",1,2,"3"]', 'array' ],
-		[ '{}', 'object' ],
-		[ '{a:100,b:"100"}', 'object' ],
+		[ '[:]', 'object' ],
+		[ '[a:100,b:"100"]', 'object' ],
 		[ 'void ()->null', 'function' ],
 		[ 'boolean (number i)->i==0', 'function' ],
 	].forEach(([ expr, expected ])=> {

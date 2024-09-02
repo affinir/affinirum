@@ -30,6 +30,7 @@ const rules = {
 	"func-call-spacing": "off",
 	"generator-star-spacing": [ "error", { "before": true, "after": false } ],
 	"indent": [ "error", "tab", { "SwitchCase": 1 } ],
+	"no-dupe-else-if": "off",
 	"no-empty": [ "warn", { "allowEmptyCatch": true } ],
 	"no-fallthrough": "off",
 	"no-mixed-spaces-and-tabs": "error",

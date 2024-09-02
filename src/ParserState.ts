@@ -3,7 +3,7 @@ import { FunctionDefinition } from './FunctionDefinition.js';
 import { toStringBuffer } from './function/MutationFunctions.js';
 import { funcOr, funcAnd, funcNot } from './function/GlobalFunctions.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcEqual, funcNotEqual, funcLike, funcNotLike, funcSwitch, funcCoalesce } from './function/BaseFunctions.js';
+	funcEqual, funcNotEqual, funcSwitch, funcCoalesce } from './function/BaseFunctions.js';
 import { funcAppend, funcAt } from './function/CompositeFunctions.js';
 import { funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './function/MathFunctions.js';
 import { Type, Value, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeUnknown, typeArray } from './Type.js';
@@ -34,7 +34,7 @@ const isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
 
 export class ParserState extends ParserFrame {
 
-	protected _obj: FunctionDefinition | Literal | Type | symbol | string | undefined;
+	protected _fragment: FunctionDefinition | Literal | Type | symbol | string | undefined;
 
 	constructor(
 		expr: string,
@@ -43,173 +43,179 @@ export class ParserState extends ParserFrame {
 	}
 
 	get literal(): Value {
-		return (this._obj as Literal).value;
+		return (this._fragment as Literal).value;
 	}
 
 	get operator(): FunctionDefinition {
-		return this._obj as FunctionDefinition;
+		return this._fragment as FunctionDefinition;
 	}
 
 	get type(): Type {
-		return this._obj as Type;
+		return this._fragment as Type;
 	}
 
 	get token(): string {
-		return this._obj as string;
+		return this._fragment as string;
 	}
 
 	get isOperator(): boolean {
-		return this._obj instanceof FunctionDefinition;
+		return this._fragment instanceof FunctionDefinition;
 	}
 
 	get isLiteral(): boolean {
-		return this._obj instanceof Literal;
+		return this._fragment instanceof Literal;
 	}
 
 	get isType(): boolean {
-		return this._obj instanceof Type;
+		return this._fragment instanceof Type;
 	}
 
 	get isToken(): boolean {
-		return typeof this._obj === 'string';
+		return typeof this._fragment === 'string';
 	}
 
 	get isParenthesesOpen(): boolean {
-		return this._obj === symbolParenthesesOpen;
+		return this._fragment === symbolParenthesesOpen;
 	}
 
 	get isParenthesesClose(): boolean {
-		return this._obj === symbolParenthesesClose;
+		return this._fragment === symbolParenthesesClose;
 	}
 
 	get isBracketsOpen(): boolean {
-		return this._obj === symbolBracketsOpen;
+		return this._fragment === symbolBracketsOpen;
 	}
 
 	get isBracketsClose(): boolean {
-		return this._obj === symbolBracketsClose;
+		return this._fragment === symbolBracketsClose;
 	}
 
 	get isBracesOpen(): boolean {
-		return this._obj === symbolBracesOpen;
+		return this._fragment === symbolBracesOpen;
 	}
 
 	get isBracesClose(): boolean {
-		return this._obj === symbolBracesClose;
+		return this._fragment === symbolBracesClose;
 	}
 
 	get isColon(): boolean {
-		return this._obj === symbolColon;
+		return this._fragment === symbolColon;
 	}
 
 	get isSeparator(): boolean {
-		return this._obj === symbolSeparator;
+		return this._fragment === symbolSeparator;
 	}
 
 	get isAssignment(): boolean {
-		return this._obj === symbolAssignment;
+		return this._fragment === symbolAssignment;
 	}
 
 	get isOption(): boolean {
-		return this._obj === symbolOption;
+		return this._fragment === symbolOption;
 	}
 
 	get isScope(): boolean {
-		return this._obj === symbolScope;
+		return this._fragment === symbolScope;
 	}
 
 	get isCycle(): boolean {
-		return this._obj === symbolCycle;
+		return this._fragment === symbolCycle;
 	}
 
 	get isVoid(): boolean {
-		return this._obj == null;
+		return this._fragment == null;
+	}
+
+	clone() {
+		const state = new ParserState(this._expr);
+		state._start = this._start;
+		state._end = this._end;
+		state._fragment = this._fragment;
+		return state;
 	}
 
 	next(): ParserState {
-		this._obj = undefined;
-		while (this._end < this._expr.length && this._obj == null) {
+		this._fragment = undefined;
+		while (this._end < this._expr.length && this._fragment == null) {
 			this._start = this._end;
 			const c = this._expr.charAt(this._end);
 			++this._end;
 			switch (c) {
 				case ' ': case '\t': case '\n': case '\r': break;
-				case '(': this._obj = symbolParenthesesOpen; break;
-				case ')': this._obj = symbolParenthesesClose; break;
-				case '[': this._obj = symbolBracketsOpen; break;
-				case ']': this._obj = symbolBracketsClose; break;
-				case '{': this._obj = symbolBracesOpen; break;
-				case '}': this._obj = symbolBracesClose; break;
-				case ':': this._obj = symbolColon; break;
-				case ',': this._obj = symbolSeparator; break;
-				case '@': this._obj = symbolCycle; break;
+				case '(': this._fragment = symbolParenthesesOpen; break;
+				case ')': this._fragment = symbolParenthesesClose; break;
+				case '[': this._fragment = symbolBracketsOpen; break;
+				case ']': this._fragment = symbolBracketsClose; break;
+				case '{': this._fragment = symbolBracesOpen; break;
+				case '}': this._fragment = symbolBracesClose; break;
+				case ':': this._fragment = symbolColon; break;
+				case ',': this._fragment = symbolSeparator; break;
+				case '@': this._fragment = symbolCycle; break;
 				case '?':
 					switch (this._expr.charAt(this._end)) {
-						case '?': ++this._end; this._obj = typeUnknown; break;
-						case ':': ++this._end; this._obj = funcCoalesce; break;
-						default: this._obj = symbolOption; break;
+						case '?': ++this._end; this._fragment = typeUnknown; break;
+						case ':': ++this._end; this._fragment = funcCoalesce; break;
+						default: this._fragment = symbolOption; break;
 					}
 					break;
-				case '$': this._obj = funcSwitch; break;
-				case '|': this._obj = funcOr; break;
-				case '&': this._obj = funcAnd; break;
+				case '$': this._fragment = funcSwitch; break;
+				case '|': this._fragment = funcOr; break;
+				case '&': this._fragment = funcAnd; break;
 				case '>':
 					switch (this._expr.charAt(this._end)) {
-						case '=': ++this._end; this._obj = funcGreaterOrEqual; break;
-						default: this._obj = funcGreaterThan; break;
+						case '=': ++this._end; this._fragment = funcGreaterOrEqual; break;
+						default: this._fragment = funcGreaterThan; break;
 					}
 					break;
 				case '<':
 					switch (this._expr.charAt(this._end)) {
-						case '=': ++this._end; this._obj = funcLessOrEqual; break;
-						default: this._obj = funcLessThan; break;
+						case '=': ++this._end; this._fragment = funcLessOrEqual; break;
+						default: this._fragment = funcLessThan; break;
 					}
 					break;
 				case '!':
 					switch (this._expr.charAt(this._end)) {
-						case '=': ++this._end; this._obj = funcNotEqual; break;
-						case '~': ++this._end; this._obj = funcNotLike; break;
-						default: this._obj = funcNot; break;
+						case '=': ++this._end; this._fragment = funcNotEqual; break;
+						default: this._fragment = funcNot; break;
 					}
 					break;
 				case '=':
 					switch (this._expr.charAt(this._end)) {
-						case '=': ++this._end; this._obj = funcEqual; break;
-						default: this._obj = symbolAssignment; break;
+						case '=': ++this._end; this._fragment = funcEqual; break;
+						default: this._fragment = symbolAssignment; break;
 					}
 					break;
-				case '~': this._obj = funcLike; break;
 				case '+':
 					switch (this._expr.charAt(this._end)) {
-						case '>': ++this._end; this._obj = funcAppend; break;
-						default: this._obj = funcAdd; break;
+						case '>': ++this._end; this._fragment = funcAppend; break;
+						default: this._fragment = funcAdd; break;
 					}
 					break;
 				case '-':
 					switch (this._expr.charAt(this._end)) {
-						case '>': ++this._end; this._obj = symbolScope; break;
-						default: this._obj = funcSubtract; break;
+						case '>': ++this._end; this._fragment = symbolScope; break;
+						default: this._fragment = funcSubtract; break;
 					}
 					break;
-				case '*': this._obj = funcMultiply; break;
-				case '/': this._obj = funcDivide; break;
-				case '%': this._obj = funcRemainder; break;
-				case '^': this._obj = funcPower; break;
-				case '.': this._obj = funcAt; break;
+				case '*': this._fragment = funcMultiply; break;
+				case '/': this._fragment = funcDivide; break;
+				case '%': this._fragment = funcRemainder; break;
+				case '^': this._fragment = funcPower; break;
+				case '.': this._fragment = funcAt; break;
 				case '#':
 					if (this._expr.charAt(this._end) === '#') {
 						++this._end;
 						while (isHexadecimal(this._expr.charAt(this._end))) {
 							++this._end;
 						}
-						this._obj = new Literal(toStringBuffer(this._expr.substring(this._start + 2, this._end)));
+						this._fragment = new Literal(toStringBuffer(this._expr.substring(this._start + 2, this._end)));
 					}
 					else {
 						++this._end;
 						while (isHexadecimal(this._expr.charAt(this._end))) {
 							++this._end;
 						}
-						this._obj = new Literal(parseInt(this._expr.substring(this._start + 1, this._end), 16));
+						this._fragment = new Literal(parseInt(this._expr.substring(this._start + 1, this._end), 16));
 					}
 					break;
 				default:
@@ -219,18 +225,18 @@ export class ParserState extends ParserFrame {
 						}
 						const token = this._expr.substring(this._start, this._end);
 						switch (token) {
-							case 'true': this._obj = valueTrue; break;
-							case 'false': this._obj = valueFalse; break;
-							case 'null': this._obj = valueNull; break;
-							case 'void': this._obj = typeVoid; break;
-							case 'boolean': this._obj = typeBoolean; break;
-							case 'number': this._obj = typeNumber; break;
-							case 'buffer': this._obj = typeBuffer; break;
-							case 'string': this._obj = typeString; break;
-							case 'array': this._obj = typeArray; break;
-							case 'object': this._obj = typeObject; break;
-							case 'function': this._obj = typeFunction; break;
-							default: this._obj = token; break;
+							case 'true': this._fragment = valueTrue; break;
+							case 'false': this._fragment = valueFalse; break;
+							case 'null': this._fragment = valueNull; break;
+							case 'void': this._fragment = typeVoid; break;
+							case 'boolean': this._fragment = typeBoolean; break;
+							case 'number': this._fragment = typeNumber; break;
+							case 'buffer': this._fragment = typeBuffer; break;
+							case 'string': this._fragment = typeString; break;
+							case 'array': this._fragment = typeArray; break;
+							case 'object': this._fragment = typeObject; break;
+							case 'function': this._fragment = typeFunction; break;
+							default: this._fragment = token; break;
 						}
 					}
 					else if (isNumeric(c)) {
@@ -258,7 +264,7 @@ export class ParserState extends ParserFrame {
 								}
 							}
 						}
-						this._obj = new Literal(parseFloat(this._expr.substring(this._start, this._end)));
+						this._fragment = new Literal(parseFloat(this._expr.substring(this._start, this._end)));
 					}
 					else if (isQuotation(c)) {
 						while (this._expr.charAt(this._end) !== '' && this._expr.charAt(this._end) !== c) {
@@ -268,7 +274,7 @@ export class ParserState extends ParserFrame {
 							this._start = this._expr.length;
 							throw new Error(`missing closing quotation mark ${c}`);
 						}
-						this._obj = new Literal(this._expr.substring(this._start + 1, this._end++));
+						this._fragment = new Literal(this._expr.substring(this._start + 1, this._end++));
 					}
 					else {
 						throw new Error(`unknown symbol ${c}`);
