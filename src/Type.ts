@@ -1,7 +1,7 @@
 export type Value = void | undefined | boolean | number | ArrayBuffer | string |
 	Value[] | { [ key: string ]: Value } | ((...args: Value[])=> Value);
 type ValueType = 'void' | 'boolean' | 'number' | 'buffer' | 'string' | 'array' | 'object' | 'function';
-const VALUE_TYPE_NAMES: ValueType[] = [ 'void', 'boolean', 'number', 'buffer', 'string', 'array', 'object', 'function' ];
+const VALUE_TYPE_NAMES: ValueType[] = ['void', 'boolean', 'number', 'buffer', 'string', 'array', 'object', 'function'];
 const VALUE_TYPE_COUNT = VALUE_TYPE_NAMES.length;
 
 export class Type {

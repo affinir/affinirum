@@ -24,7 +24,7 @@ const rules = {
 	"@typescript-eslint/type-annotation-spacing": [ "error", { "before": false, "after": true } ],
 	"arrow-parens": "error",
 	"arrow-spacing": [ "error", { "before": false, "after": true } ],
-	"array-bracket-spacing": [ "error", "always" ],
+	"array-bracket-spacing": [ "error", "never" ],
 	"computed-property-spacing": [ "error", "always" ],
 	"curly": "error",
 	"func-call-spacing": "off",

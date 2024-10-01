@@ -2,7 +2,7 @@ import { FunctionDefinition } from './FunctionDefinition.js';
 import { funcOr, funcAnd, funcNot, funcSum, funcMax, funcMin, funcRange, funcMerge, funcChain } from './function/GlobalFunctions.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual, funcLike, funcNotLike,
 	funcCoalesce, funcSwitch, funcContains, funcStartsWith, funcEndsWith,
-	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin,
+	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin, funcSplit,
 	funcUnique, funcIntersection, funcDifference } from './function/BaseFunctions.js';
 import { funcAppend, funcLength, funcSlice, funcByte, funcChar, funcCharCode, funcEntries, funcKeys, funcValues,
 	funcAt, funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny, funcFlatten, funcReverse,
@@ -26,43 +26,43 @@ import { ObjectNode } from './node/ObjectNode.js';
 import { ProgramNode } from './node/ProgramNode.js';
 import { FunctionSignature } from './FunctionSignature.js';
 
-const keywords = [ 'void', 'boolean', 'bool', 'number', 'num', 'buffer', 'buf', 'string', 'str', 'array', 'arr', 'object', 'obj', 'function', 'func',
+const keywords = ['void', 'boolean', 'bool', 'number', 'num', 'buffer', 'buf', 'string', 'str', 'array', 'arr', 'object', 'obj', 'function', 'func',
 	'variant', 'var', 'if', 'then', 'else',
 ];
 const constants: [ string, Value ][] = [
-	[ 'NAN', Number.NaN ], [ 'POSINF', Number.POSITIVE_INFINITY ], [ 'NEGINF', Number.NEGATIVE_INFINITY ], [ 'EPSILON', 2.718281828459045 ], [ 'PI', 3.141592653589793 ],
+	['NAN', Number.NaN], ['POSINF', Number.POSITIVE_INFINITY], ['NEGINF', Number.NEGATIVE_INFINITY], ['EPSILON', 2.718281828459045], ['PI', 3.141592653589793],
 ];
 const gfunctions: [ string, FunctionDefinition][] = [
-	[ 'or', funcOr ], [ 'and', funcAnd ], [ 'not', funcNot ], [ 'sum', funcSum ], [ 'max', funcMax ], [ 'min', funcMin ],
-	[ 'range', funcRange ], [ 'chain', funcChain ], [ 'merge', funcMerge ],
+	['or', funcOr], ['and', funcAnd], ['not', funcNot], ['sum', funcSum], ['max', funcMax], ['min', funcMin],
+	['range', funcRange], ['chain', funcChain], ['merge', funcMerge],
 ];
 const mfunctions: [ string, FunctionDefinition][] = [
-	[ 'greaterThan', funcGreaterThan ], [ 'lessThan', funcLessThan ], [ 'greaterOrEqual', funcGreaterOrEqual ], [ 'lessOrEqual', funcLessOrEqual ],
-	[ 'equal', funcEqual ], [ 'unequal', funcNotEqual ], [ 'like', funcLike ], [ 'unlike', funcNotLike ], [ 'coalesce', funcCoalesce ],
-	[ 'switch', funcSwitch ], [ 'contains', funcContains ], [ 'startsWith', funcStartsWith ], [ 'endsWith', funcEndsWith ], [ 'alphanum', funcAlphanum ],
-	[ 'trim', funcTrim ], [ 'trimStart', funcTrimStart ], [ 'trimEnd', funcTrimEnd ],
-	[ 'lowerCase', funcLowerCase ], [ 'upperCase', funcUpperCase ], [ 'join', funcJoin ],
-	[ 'unique', funcUnique ], [ 'intersection', funcIntersection ], [ 'difference', funcDifference ],
+	['greaterThan', funcGreaterThan], ['lessThan', funcLessThan], ['greaterOrEqual', funcGreaterOrEqual], ['lessOrEqual', funcLessOrEqual],
+	['equal', funcEqual], ['unequal', funcNotEqual], ['like', funcLike], ['unlike', funcNotLike], ['coalesce', funcCoalesce],
+	['switch', funcSwitch], ['contains', funcContains], ['startsWith', funcStartsWith], ['endsWith', funcEndsWith], ['alphanum', funcAlphanum],
+	['trim', funcTrim], ['trimStart', funcTrimStart], ['trimEnd', funcTrimEnd],
+	['lowerCase', funcLowerCase], ['upperCase', funcUpperCase], ['join', funcJoin], ['split', funcSplit],
+	['unique', funcUnique], ['intersection', funcIntersection], ['difference', funcDifference],
 
-	[ 'append', funcAppend ], [ 'length', funcLength ], [ 'slice', funcSlice ], [ 'byte', funcByte ], [ 'char', funcChar ], [ 'charCode', funcCharCode ],
-	[ 'entries', funcEntries ], [ 'keys', funcKeys ], [ 'values', funcValues ], [ 'at', funcAt ],
-	[ 'first', funcFirst ], [ 'last', funcLast ], [ 'firstIndex', funcFirstIndex ], [ 'lastIndex', funcLastIndex ],
-	[ 'any', funcAny ], [ 'every', funcEvery ], [ 'flatten', funcFlatten ], [ 'reverse', funcReverse ],
-	[ 'transform', funcTransform ], [ 'filter', funcFilter ], [ 'reduce', funcReduce ], [ 'compose', funcCompose ],
+	['append', funcAppend], ['length', funcLength], ['slice', funcSlice], ['byte', funcByte], ['char', funcChar], ['charCode', funcCharCode],
+	['entries', funcEntries], ['keys', funcKeys], ['values', funcValues], ['at', funcAt],
+	['first', funcFirst], ['last', funcLast], ['firstIndex', funcFirstIndex], ['lastIndex', funcLastIndex],
+	['any', funcAny], ['every', funcEvery], ['flatten', funcFlatten], ['reverse', funcReverse],
+	['transform', funcTransform], ['filter', funcFilter], ['reduce', funcReduce], ['compose', funcCompose],
 
-	[ 'add', funcAdd ], [ 'subtract', funcSubtract ], [ 'negate', funcNegate ],
-	[ 'multiply', funcMultiply ], [ 'divide', funcDivide ], [ 'remainder', funcRemainder ], [ 'modulo', funcModulo ],
-	[ 'exponent', funcExponent ], [ 'logarithm', funcLogarithm ], [ 'power', funcPower ], [ 'root', funcRoot ], [ 'abs', funcAbs ],
-	[ 'ceil', funcCeil ], [ 'floor', funcFloor ], [ 'round', funcRound ],
+	['add', funcAdd], ['subtract', funcSubtract], ['negate', funcNegate],
+	['multiply', funcMultiply], ['divide', funcDivide], ['remainder', funcRemainder], ['modulo', funcModulo],
+	['exponent', funcExponent], ['logarithm', funcLogarithm], ['power', funcPower], ['root', funcRoot], ['abs', funcAbs],
+	['ceil', funcCeil], ['floor', funcFloor], ['round', funcRound],
 
-	[ 'toNumberBuffer', funcToNumberBuffer ], [ 'fromNumberBuffer', funcFromNumberBuffer ], [ 'toStringBuffer', funcToStringBuffer ], [ 'fromStringBuffer', funcFromStringBuffer ],
-	[ 'toNumberString', funcToNumberString ], [ 'fromNumberString', funcFromNumberString ], [ 'toBufferString', funcToBufferString ], [ 'fromBufferString', funcFromBufferString ],
-	[ 'toJson', funcToJson ], [ 'fromJson', funcFromJson ],
+	['toNumberBuffer', funcToNumberBuffer], ['fromNumberBuffer', funcFromNumberBuffer], ['toStringBuffer', funcToStringBuffer], ['fromStringBuffer', funcFromStringBuffer],
+	['toNumberString', funcToNumberString], ['fromNumberString', funcFromNumberString], ['toBufferString', funcToBufferString], ['fromBufferString', funcFromBufferString],
+	['toJson', funcToJson], ['fromJson', funcFromJson],
 ];
 
 export class Expression {
 
-	static readonly keywords = [ ...keywords, ...constants.map((c)=> c[ 0 ]), ...gfunctions.map((f)=> f[ 0 ]) ];
+	static readonly keywords = [...keywords, ...constants.map((c)=> c[ 0 ]), ...gfunctions.map((f)=> f[ 0 ])];
 	protected readonly _expression: string;
 	protected readonly _strict: boolean;
 	protected readonly _root: Node;
@@ -180,7 +180,7 @@ export class Expression {
 
 	protected program(state: ParserState, scope: StaticScope): Node {
 		const frame = state.frame();
-		const nodes: Node[] = [ this.unit(state, scope) ];
+		const nodes: Node[] = [this.unit(state, scope)];
 		while (state.isSeparator) {
 			nodes.push(this.unit(state.next(), scope));
 		}
@@ -207,7 +207,7 @@ export class Expression {
 			if (!state.isColon) {
 				state.throwError('missing switch else condition clause');
 			}
-			node = this.call(frame.ends(state.end), funcSwitch, [ node, subnode, this.unit(state.next(), scope) ]);
+			node = this.call(frame.ends(state.end), funcSwitch, [node, subnode, this.unit(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -215,7 +215,7 @@ export class Expression {
 	protected disjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this.conjunction(state, scope);
 		while (state.operator === funcOr) {
-			node = this.call(state.frame(), state.operator, [ node, this.conjunction(state.next(), scope) ]);
+			node = this.call(state.frame(), state.operator, [node, this.conjunction(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -223,7 +223,7 @@ export class Expression {
 	protected conjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this.comparison(state, scope);
 		while (state.operator === funcAnd) {
-			node = this.call(state.frame(), state.operator, [ node, this.comparison(state.next(), scope) ]);
+			node = this.call(state.frame(), state.operator, [node, this.comparison(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -240,10 +240,10 @@ export class Expression {
 		while (state.operator === funcGreaterThan || state.operator === funcLessThan
 			|| state.operator === funcGreaterOrEqual || state.operator === funcLessOrEqual
 			|| state.operator === funcEqual || state.operator === funcNotEqual) {
-			node = this.call(state.frame(), state.operator, [ node, this.aggregate(state.next(), scope) ]);
+			node = this.call(state.frame(), state.operator, [node, this.aggregate(state.next(), scope)]);
 		}
 		if (not) {
-			node = this.call(frame.ends(state.end), funcNot, [ node ]);
+			node = this.call(frame.ends(state.end), funcNot, [node]);
 		}
 		return node;
 	}
@@ -252,7 +252,7 @@ export class Expression {
 		let node = this.product(state, scope);
 		while (state.operator === funcAppend || state.operator === funcAdd || state.operator === funcSubtract) {
 			node = this.call(state.frame(), state.operator,
-				[ node, this.product(state.next(), scope) ]);
+				[node, this.product(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -260,7 +260,7 @@ export class Expression {
 	protected product(state: ParserState, scope: StaticScope): Node {
 		let node = this.factor(state, scope);
 		while (state.operator === funcMultiply || state.operator === funcDivide || state.operator === funcRemainder) {
-			node = this.call(state.frame(), state.operator, [ node, this.factor(state.next(), scope) ]);
+			node = this.call(state.frame(), state.operator, [node, this.factor(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -275,10 +275,10 @@ export class Expression {
 		}
 		let node = this.coalescence(state, scope);
 		while (state.operator === funcPower) {
-			node = this.call(state.frame(), state.operator, [ node, this.coalescence(state.next(), scope) ]);
+			node = this.call(state.frame(), state.operator, [node, this.coalescence(state.next(), scope)]);
 		}
 		if (neg) {
-			node = this.call(frame.ends(state.end), funcNegate, [ node ]);
+			node = this.call(frame.ends(state.end), funcNegate, [node]);
 		}
 		return node;
 	}
@@ -286,7 +286,7 @@ export class Expression {
 	protected coalescence(state: ParserState, scope: StaticScope): Node {
 		let node = this.accessor(state, scope);
 		while (state.operator === funcCoalesce) {
-			node = this.call(state.frame(), state.operator, [ node, this.accessor(state.next(), scope) ]);
+			node = this.call(state.frame(), state.operator, [node, this.accessor(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -298,7 +298,7 @@ export class Expression {
 			if (state.operator === funcAt) {
 				state.next();
 				if (state.isLiteral && typeof state.literal === 'string') {
-					node = this.call(frame.ends(state.end), funcAt, [ node, new ConstantNode(state, state.literal) ]);
+					node = this.call(frame.ends(state.end), funcAt, [node, new ConstantNode(state, state.literal)]);
 					state.next();
 				}
 				else if (state.isToken) {
@@ -306,7 +306,7 @@ export class Expression {
 					const mfunction = this._mfunctions.get(state.token) ?? this._gfunctions.get(state.token);
 					if (mfunction) {
 						if (state.next().isParenthesesOpen) {
-							const subnodes: Node[] = [ node ];
+							const subnodes: Node[] = [node];
 							while (!state.next().isParenthesesClose) {
 								subnodes.push(this.unit(state, scope));
 								if (!state.isSeparator) {
@@ -321,11 +321,11 @@ export class Expression {
 							state.next();
 						}
 						else {
-							node = this.call(frame, mfunction, [ node ]);
+							node = this.call(frame, mfunction, [node]);
 						}
 					}
 					else {
-						node = this.call(frame, funcAt, [ node, new ConstantNode(state, state.token) ]);
+						node = this.call(frame, funcAt, [node, new ConstantNode(state, state.token)]);
 						state.next();
 					}
 				}
@@ -348,7 +348,7 @@ export class Expression {
 				state.next();
 			}
 			else if (state.isBracketsOpen) {
-				node = this.call(frame, funcAt, [ node, this.unit(state.next(), scope) ]);
+				node = this.call(frame, funcAt, [node, this.unit(state.next(), scope)]);
 				if (!state.isBracketsClose) {
 					state.throwError('missing closing index brackets');
 				}
@@ -436,14 +436,14 @@ export class Expression {
 				if (key) {
 					const ifColon = state.clone();
 					if (ifColon.next().isColon) {
-						subnodes.push([ key, this.unit(state.next().next(), scope) ]);
+						subnodes.push([key, this.unit(state.next().next(), scope)]);
 					}
 					else {
-						subnodes.push([ index++, this.unit(state, scope) ]);
+						subnodes.push([index++, this.unit(state, scope)]);
 					}
 				}
 				else {
-					subnodes.push([ index++, this.unit(state, scope) ]);
+					subnodes.push([index++, this.unit(state, scope)]);
 				}
 				if (!state.isSeparator) {
 					break;
@@ -453,14 +453,14 @@ export class Expression {
 				state.throwError('missing closing brackets');
 			}
 			state.next();
-			if (subnodes.some(([ k, ])=> typeof k === 'string')) {
+			if (subnodes.some(([k,])=> typeof k === 'string')) {
 				const subnode: { [ key: string ]: Node } = {};
-				for (const [ key, node ] of subnodes) {
+				for (const [key, node] of subnodes) {
 					subnode[ String(key) ] = node;
 				}
 				return new ObjectNode(frame, subnode);
 			}
-			return new ArrayNode(frame, subnodes.map(([ , v ])=> v));
+			return new ArrayNode(frame, subnodes.map(([, v])=> v));
 		}
 		else if (state.isBracketsClose) {
 			state.throwError('unexpected closing brackets');

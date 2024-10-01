@@ -4,78 +4,78 @@ import { Value, typeBoolean, typeNumber, typeString, typeArray, typeOptionalBool
 export const funcGreaterThan = new FunctionDefinition(
 	(value1: number, value2: number)=>
 		value1 > value2,
-	typeBoolean, [ typeNumber, typeNumber ],
+	typeBoolean, [typeNumber, typeNumber],
 );
 
 export const funcLessThan = new FunctionDefinition(
 	(value1: number, value2: number)=>
 		value1 < value2,
-	typeBoolean, [ typeNumber, typeNumber ],
+	typeBoolean, [typeNumber, typeNumber],
 );
 
 export const funcGreaterOrEqual = new FunctionDefinition(
 	(value1: number, value2: number)=>
 		value1 >= value2,
-	typeBoolean, [ typeNumber, typeNumber ],
+	typeBoolean, [typeNumber, typeNumber],
 );
 
 export const funcLessOrEqual = new FunctionDefinition(
 	(value1: number, value2: number)=>
 		value1 <= value2,
-	typeBoolean, [ typeNumber, typeNumber ],
+	typeBoolean, [typeNumber, typeNumber],
 );
 export const funcEqual = new FunctionDefinition(
 	(value1: Value, value2: Value)=>
 		equal(value1, value2),
-	typeBoolean, [ typeUnknown, typeUnknown ],
+	typeBoolean, [typeUnknown, typeUnknown],
 );
 
 export const funcNotEqual = new FunctionDefinition(
 	(value1: Value, value2: Value)=>
 		!equal(value1, value2),
-	typeBoolean, [ typeUnknown, typeUnknown ],
+	typeBoolean, [typeUnknown, typeUnknown],
 );
 
 export const funcLike = new FunctionDefinition(
 	(value1: string, value2: string)=>
 		equalStrings(value1, value2, true),
-	typeBoolean, [ typeString, typeString ],
+	typeBoolean, [typeString, typeString],
 );
 
 export const funcNotLike = new FunctionDefinition(
 	(value1: string, value2: string)=>
 		!equalStrings(value1, value2, true),
-	typeBoolean, [ typeString, typeString ],
+	typeBoolean, [typeString, typeString],
 );
 
 export const funcCoalesce = new FunctionDefinition(
 	(value: Value, valueOtherwise: Value)=>
 		value ?? valueOtherwise,
-	typeUnknown, [ typeUnknown, typeUnknown ], 2, 2, 0,
+	typeUnknown, [typeUnknown, typeUnknown], 2, 2, 0,
 );
 
 export const funcSwitch = new FunctionDefinition(
 	(condition: boolean, value1: Value, value2: Value)=>
 		condition ? value1 : value2,
-	typeUnknown, [ typeBoolean, typeUnknown, typeUnknown ], 3, 3, 1,
+	typeUnknown, [typeBoolean, typeUnknown, typeUnknown], 3, 3, 1,
 );
 
 export const funcContains = new FunctionDefinition(
 	(value: string, search: string, start?: number, ignoreCaseSpaceEtc?: boolean)=>
 		containsString(value, search, start, ignoreCaseSpaceEtc),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
+	typeBoolean, [typeString, typeString, typeOptionalNumber, typeOptionalBoolean], 2, 4,
 );
 
 export const funcStartsWith = new FunctionDefinition(
 	(value: string, search: string, start?: number, ignoreCaseSpaceEtc?: boolean)=>
 		startsWithString(value, search, start, ignoreCaseSpaceEtc),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
+	typeBoolean, [typeString, typeString, typeOptionalNumber, typeOptionalBoolean], 2, 4,
 );
 
 export const funcEndsWith = new FunctionDefinition(
 	(value: string, search: string, end?: number, ignoreCaseSpaceEtc?: boolean)=>
 		endsWithString(value, search, end, ignoreCaseSpaceEtc),
-	typeBoolean, [ typeString, typeString, typeOptionalNumber, typeOptionalBoolean ], 2, 4,
+	typeBoolean, [typeString, typeString, typeOptionalNumber, typeOptionalBoolean], 2, 4,
 );
 
 export const funcAlphanum = new FunctionDefinition(
@@ -89,43 +89,49 @@ export const funcAlphanum = new FunctionDefinition(
 		}
 		return result;
 	},
-	typeString, [ typeString ],
+	typeString, [typeString],
 );
 
 export const funcTrim = new FunctionDefinition(
 	(value: string)=>
 		value.trim(),
-	typeString, [ typeString ],
+	typeString, [typeString],
 );
 
 export const funcTrimStart = new FunctionDefinition(
 	(value: string)=>
 		value.trimStart(),
-	typeString, [ typeString ],
+	typeString, [typeString],
 );
 
 export const funcTrimEnd = new FunctionDefinition(
 	(value: string)=>
 		value.trimEnd(),
-	typeString, [ typeString ],
+	typeString, [typeString],
 );
 
 export const funcLowerCase = new FunctionDefinition(
 	(value: string)=>
 		value.toLowerCase(),
-	typeString, [ typeString ],
+	typeString, [typeString],
 );
 
 export const funcUpperCase = new FunctionDefinition(
 	(value: string)=>
 		value.toUpperCase(),
-	typeString, [ typeString ],
+	typeString, [typeString],
 );
 
 export const funcJoin = new FunctionDefinition(
 	(value: string[], separator: string = ' ')=>
 		value.join(separator),
-	typeString, [ typeArray, typeOptionalString ], 1, 2,
+	typeString, [typeArray, typeOptionalString], 1, 2,
+);
+
+export const funcSplit = new FunctionDefinition(
+	(value: string, separator: string = ' ')=>
+		value.split(separator),
+	typeArray, [typeString, typeOptionalString], 1, 2,
 );
 
 export const funcUnique = new FunctionDefinition(
@@ -138,19 +144,19 @@ export const funcUnique = new FunctionDefinition(
 		});
 		return result;
 	},
-	typeArray, [ typeArray ],
+	typeArray, [typeArray],
 );
 
 export const funcIntersection = new FunctionDefinition(
 	(value1: Value[], value2: Value[])=>
 		value1.filter((i)=> value2.some((v)=> equal(v, i))),
-	typeArray, [ typeArray, typeArray ],
+	typeArray, [typeArray, typeArray],
 );
 
 export const funcDifference = new FunctionDefinition(
 	(value1: Value[], value2: Value[])=>
-		[ ...value1.filter((i)=> value2.every((v)=> !equal(v, i))), ...value2.filter((i)=> value1.every((v)=> !equal(v, i))) ],
-	typeArray, [ typeArray, typeArray ],
+		[...value1.filter((i)=> value2.every((v)=> !equal(v, i))), ...value2.filter((i)=> value1.every((v)=> !equal(v, i)))],
+	typeArray, [typeArray, typeArray],
 );
 
 const equal = (value1: Value, value2: Value)=> {
@@ -174,7 +180,7 @@ const equal = (value1: Value, value2: Value)=> {
 		}
 		return false;
 	}
-	const props = new Set([ ...Object.getOwnPropertyNames(value1), ...Object.getOwnPropertyNames(value2) ]);
+	const props = new Set([...Object.getOwnPropertyNames(value1), ...Object.getOwnPropertyNames(value2)]);
 	for (const prop of props) {
 		if (!equal((value1 as any)[ prop ] as Value, (value2 as any)[ prop ] as Value)) {
 			return false;

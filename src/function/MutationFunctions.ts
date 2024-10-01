@@ -32,7 +32,7 @@ export const funcToNumberBuffer = new FunctionDefinition(
 		}
 		return dv.buffer;
 	},
-	typeBuffer, [ typeNumber, typeString ],
+	typeBuffer, [typeNumber, typeString],
 );
 
 export const funcFromNumberBuffer = new FunctionDefinition(
@@ -58,7 +58,7 @@ export const funcFromNumberBuffer = new FunctionDefinition(
 			default: throw new Error(`${encoding} encoding not supported`);
 		}
 	},
-	typeNumber, [ typeBuffer, typeString, typeOptionalNumber ], 2, 3,
+	typeNumber, [typeBuffer, typeString, typeOptionalNumber], 2, 3,
 );
 
 export const funcToStringBuffer = new FunctionDefinition(
@@ -75,7 +75,7 @@ export const funcToStringBuffer = new FunctionDefinition(
 			return dv.buffer;
 		}
 	},
-	typeBuffer, [ typeString, typeOptionalString ], 1, 2,
+	typeBuffer, [typeString, typeOptionalString], 1, 2,
 );
 
 export const funcFromStringBuffer = new FunctionDefinition(
@@ -93,43 +93,43 @@ export const funcFromStringBuffer = new FunctionDefinition(
 			return str;
 		}
 	},
-	typeString, [ typeBuffer, typeOptionalString, typeOptionalNumber, typeOptionalNumber ], 1, 4,
+	typeString, [typeBuffer, typeOptionalString, typeOptionalNumber, typeOptionalNumber], 1, 4,
 );
 
 export const funcToNumberString = new FunctionDefinition(
 	(value: number, radix?: number)=>
 		value.toString(radix),
-	typeString, [ typeNumber ], 1, 2,
+	typeString, [typeNumber], 1, 2,
 );
 
 export const funcFromNumberString = new FunctionDefinition(
 	(value: string)=>
 		Number.parseFloat(value),
-	typeNumber, [ typeString ],
+	typeNumber, [typeString],
 );
 
 export const funcToBufferString = new FunctionDefinition(
 	(value: ArrayBuffer)=>
 		fromStringBuffer(value),
-	typeString, [ typeBuffer ],
+	typeString, [typeBuffer],
 );
 
 export const funcFromBufferString = new FunctionDefinition(
 	(value: string)=>
 		toStringBuffer(value),
-	typeBuffer, [ typeString ],
+	typeBuffer, [typeString],
 );
 
 export const funcToJson = new FunctionDefinition(
 	(value: undefined | boolean | number | string | [] | { [ key: string ]: Value })=>
 		value ? JSON.stringify(value) : undefined,
-	typeOptionalString, [ typeJson ],
+	typeOptionalString, [typeJson],
 );
 
 export const funcFromJson = new FunctionDefinition(
 	(value: undefined | string)=>
 		value ? JSON.parse(value) as Value : undefined,
-	typeJson, [ typeOptionalString ],
+	typeJson, [typeOptionalString],
 );
 
 export const fromStringBuffer = (value: ArrayBuffer)=> {

@@ -128,7 +128,8 @@ Whitespace characters are ignored.
 * Trim whitespace at end: **string string.trimEnd()**
 * Lower case: **string string.lowerCase()**
 * Upper case: **string string.upperCase()**
-* Concatination of array of strings with separator: **string array.join(separator = ' ')**
+* Concatination of array of strings with separator: **string array.join(string separator = ' ')**
+* Split string into array of strings using separator: **array string.split(string separator = ' ')**
 * Array of unique values: **array array.unique()**
 * Intersection of values of two arrays: **array array.intersection(array value)**
 * Symmetrical difference between two arrays: **array array.difference(array value)**

@@ -30,7 +30,7 @@ export class StaticScope {
 		const scope = new StaticScope();
 		scope._superscope = this;
 		this._subscopes.push(scope);
-		for (const [ name, variable ] of variables) {
+		for (const [name, variable] of variables) {
 			scope.local(name, variable);
 		}
 		return scope;
@@ -38,7 +38,7 @@ export class StaticScope {
 
 	variables(): Record<string, Variable> {
 		const variables: Record<string, Variable> = {};
-		for (const [ name, variable ] of this._variables) {
+		for (const [name, variable] of this._variables) {
 			if (!this._locals.has(name)) {
 				variables[ name ] = variable;
 			}

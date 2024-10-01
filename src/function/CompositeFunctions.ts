@@ -9,8 +9,8 @@ export const funcAppend = new FunctionDefinition(
 			? (values as ArrayBuffer[]).reduce((acc, val)=> concatBuffers(acc, val), new ArrayBuffer(0))
 			: typeof values[ 0 ] === 'string'
 				? (values as string[]).reduce((acc, val)=> acc + val, '')
-				: (values as Value[][]).reduce((acc, val)=> [ ...acc, ...val ], []),
-	typeEnumerable, [ typeEnumerable ], 2, FUNCTION_ARG_MAX, 0,
+				: (values as Value[][]).reduce((acc, val)=> [...acc, ...val], []),
+	typeEnumerable, [typeEnumerable], 2, FUNCTION_ARG_MAX, 0,
 );
 
 export const funcLength = new FunctionDefinition(
@@ -22,7 +22,7 @@ export const funcLength = new FunctionDefinition(
 				: typeof value === 'string' || Array.isArray(value)
 					? value.length
 					: Object.keys(value).length,
-	typeNumber, [ typeIterable ],
+	typeNumber, [typeIterable],
 );
 
 export const funcSlice = new FunctionDefinition(
@@ -30,7 +30,7 @@ export const funcSlice = new FunctionDefinition(
 		value == null
 			? undefined
 			: value.slice(start, end) as Value,
-	typeEnumerable, [ typeEnumerable, typeOptionalNumber, typeOptionalNumber ], 1, 3,
+	typeEnumerable, [typeEnumerable, typeOptionalNumber, typeOptionalNumber], 1, 3,
 );
 
 export const funcByte = new FunctionDefinition(
@@ -38,7 +38,7 @@ export const funcByte = new FunctionDefinition(
 		value == null
 			? undefined
 			: value.slice(pos, pos + 1),
-	typeBuffer, [ typeBuffer, typeNumber ],
+	typeBuffer, [typeBuffer, typeNumber],
 );
 
 export const funcChar = new FunctionDefinition(
@@ -46,7 +46,7 @@ export const funcChar = new FunctionDefinition(
 		value == null
 			? undefined
 			: value.charAt(pos < 0 ? value.length + pos : pos),
-	typeString, [ typeString, typeNumber ],
+	typeString, [typeString, typeNumber],
 );
 
 export const funcCharCode = new FunctionDefinition(
@@ -54,7 +54,7 @@ export const funcCharCode = new FunctionDefinition(
 		value == null
 			? undefined
 			: value.charCodeAt(pos < 0 ? value.length + pos : pos),
-	typeNumber, [ typeString, typeNumber ],
+	typeNumber, [typeString, typeNumber],
 );
 
 export const funcEntries = new FunctionDefinition(
@@ -62,9 +62,9 @@ export const funcEntries = new FunctionDefinition(
 		value == null
 			? undefined
 			: Array.isArray(value)
-				? Object.entries(value).map((e)=> [ Number(e[ 0 ]), e[ 1 ] ])
+				? Object.entries(value).map((e)=> [Number(e[ 0 ]), e[ 1 ]])
 				: Object.entries(value),
-	typeArray, [ typeArrayOrObject ],
+	typeArray, [typeArrayOrObject],
 );
 
 export const funcKeys = new FunctionDefinition(
@@ -74,7 +74,7 @@ export const funcKeys = new FunctionDefinition(
 			: Array.isArray(value)
 				? Object.keys(value).map((k)=> Number(k))
 				: Object.keys(value),
-	typeArray, [ typeArrayOrObject ],
+	typeArray, [typeArrayOrObject],
 );
 
 export const funcValues = new FunctionDefinition(
@@ -82,7 +82,7 @@ export const funcValues = new FunctionDefinition(
 		value == null
 			? undefined
 			: Object.values(value),
-	typeArray, [ typeArrayOrObject ],
+	typeArray, [typeArrayOrObject],
 );
 
 export const funcAt = new FunctionDefinition(
@@ -98,19 +98,19 @@ export const funcAt = new FunctionDefinition(
 			return value[ String(index) ];
 		}
 	},
-	typeUnknown, [ typeArrayOrObject, typeNumberOrString ],
+	typeUnknown, [typeArrayOrObject, typeNumberOrString],
 );
 
 export const funcFirst = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value.find((v, i, a)=> predicate(v, i, a)),
-	typeUnknown, [ typeArray, typeFunction ],
+	typeUnknown, [typeArray, typeFunction],
 );
 
 export const funcLast = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value.reverse().find((v, i, a)=> predicate(v, i, a)),
-	typeUnknown, [ typeArray, typeFunction ],
+	typeUnknown, [typeArray, typeFunction],
 );
 
 export const funcFirstIndex = new FunctionDefinition(
@@ -118,57 +118,57 @@ export const funcFirstIndex = new FunctionDefinition(
 		const ix = value.findIndex((v, i, a)=> predicate(v, i, a));
 		return ix < 0 ? Number.NaN : ix;
 	},
-	typeNumber, [ typeArray, typeFunction ],
+	typeNumber, [typeArray, typeFunction],
 );
 
 export const funcLastIndex = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=> {
-		const ix = [ ...value ].reverse().findIndex((v, i, a)=> predicate(v, i, a));
+		const ix = [...value].reverse().findIndex((v, i, a)=> predicate(v, i, a));
 		return ix < 0 ? Number.NaN : ix;
 	},
-	typeNumber, [ typeArray, typeFunction ],
+	typeNumber, [typeArray, typeFunction],
 );
 
 export const funcEvery = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value.every((v, i, a)=> predicate(v, i, a)),
-	typeBoolean, [ typeArray, typeFunction ],
+	typeBoolean, [typeArray, typeFunction],
 );
 
 export const funcAny = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value.some((v, i, a)=> predicate(v, i, a)),
-	typeBoolean, [ typeArray, typeFunction ],
+	typeBoolean, [typeArray, typeFunction],
 );
 
 export const funcFlatten = new FunctionDefinition(
 	(values: Value[], depth?: number)=>
 		(values as []).flat(depth) as Value,
-	typeArray, [ typeArray, typeOptionalNumber ], 1, 2,
+	typeArray, [typeArray, typeOptionalNumber], 1, 2,
 );
 
 export const funcReverse = new FunctionDefinition(
 	(value: Value[])=>
-		[ ...value ].reverse(),
-	typeArray, [ typeArray ],
+		[...value].reverse(),
+	typeArray, [typeArray],
 );
 
 export const funcTransform = new FunctionDefinition(
 	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=>
 		value.map(callback),
-	typeArray, [ typeArray, typeFunction ],
+	typeArray, [typeArray, typeFunction],
 );
 
 export const funcFilter = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value.filter(predicate),
-	typeArray, [ typeArray, typeFunction ],
+	typeArray, [typeArray, typeFunction],
 );
 
 export const funcReduce = new FunctionDefinition(
 	(value: Value[], callback: (acc: Value, v: Value, i: number, arr: Value[])=> Value, initial?: Value)=>
 		initial != null ? value.reduce(callback, initial) : value.reduce(callback),
-	typeUnknown, [ typeArray, typeFunction, typeUnknown ], 2, 3,
+	typeUnknown, [typeArray, typeFunction, typeUnknown], 2, 3,
 );
 
 export const funcCompose = new FunctionDefinition(
@@ -180,7 +180,7 @@ export const funcCompose = new FunctionDefinition(
 		}
 		return obj;
 	},
-	typeObject, [ typeArray, typeFunction ],
+	typeObject, [typeArray, typeFunction],
 );
 
 export const concatBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
