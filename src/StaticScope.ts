@@ -40,7 +40,7 @@ export class StaticScope {
 		const variables: Record<string, Variable> = {};
 		for (const [name, variable] of this._variables) {
 			if (!this._locals.has(name)) {
-				variables[ name ] = variable;
+				variables[name] = variable;
 			}
 		}
 		return variables;

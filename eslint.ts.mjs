@@ -25,7 +25,7 @@ const rules = {
 	"arrow-parens": "error",
 	"arrow-spacing": [ "error", { "before": false, "after": true } ],
 	"array-bracket-spacing": [ "error", "never" ],
-	"computed-property-spacing": [ "error", "always" ],
+	"computed-property-spacing": [ "error", "never" ],
 	"curly": "error",
 	"func-call-spacing": "off",
 	"generator-star-spacing": [ "error", { "before": true, "after": false } ],

@@ -13,13 +13,13 @@ export class ProgramNode extends Node {
 	}
 
 	override get type(): Type {
-		return this._subnodes[ this._subnodes.length - 1 ].type;
+		return this._subnodes[this._subnodes.length - 1].type;
 	}
 
 	override compile(type: Type): Node {
 		let constant = true;
 		for (let i = 0, li = this._subnodes.length - 1; i < this._subnodes.length; ++i) {
-			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile(i < li ? typeUnknown : type);
+			const subnode = this._subnodes[i] = this._subnodes[i].compile(i < li ? typeUnknown : type);
 			constant &&= subnode.constant;
 		}
 		if (constant) {
@@ -29,7 +29,7 @@ export class ProgramNode extends Node {
 	}
 
 	override evaluate(): Value {
-		return this._subnodes.map((s)=> s.evaluate())[ this._subnodes.length - 1 ];
+		return this._subnodes.map((s)=> s.evaluate())[this._subnodes.length - 1];
 	}
 
 	override toString(ident: number = 0): string {

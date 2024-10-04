@@ -1,5 +1,35 @@
 import { FunctionDefinition } from '../FunctionDefinition.js';
-import { Value, typeNumber, typeBuffer, typeString, typeOptionalNumber, typeOptionalString, typeJson } from '../Type.js';
+import { Value, typeNumber, typeBuffer, typeString, typeArray, typeOptionalNumber, typeOptionalString, typeJson } from '../Type.js';
+
+export const funcToUniversalTime = new FunctionDefinition(
+	(value: number)=> {
+		const v = new Date(value);
+		return [v.getUTCFullYear(), v.getUTCMonth() + 1, v.getUTCDate(),
+			v.getUTCHours(), v.getUTCMinutes(), v.getUTCSeconds(), v.getUTCMilliseconds()];
+	},
+	typeArray, [typeNumber],
+);
+
+export const funcToLocalTime = new FunctionDefinition(
+	(value: number)=> {
+		const v = new Date(value);
+		return [v.getFullYear(), v.getMonth() + 1, v.getDate(),
+			v.getHours(), v.getMinutes(), v.getSeconds(), v.getMilliseconds()];
+	},
+	typeArray, [typeNumber],
+);
+
+export const funcFromUniversalTime = new FunctionDefinition(
+	(time: number[])=>
+		Date.UTC(time[0] ?? 1970, (time[1] ?? 1) - 1, time[2] ?? 1, time[3] ?? 0, time[4] ?? 0, time[5] ?? 0, time[6] ?? 0),
+	typeNumber, [typeArray],
+);
+
+export const funcFromLocalTime = new FunctionDefinition(
+	(time: number[])=>
+		new Date(time[0] ?? 1970, (time[1] ?? 1) - 1, time[2] ?? 1, time[3] ?? 0, time[4] ?? 0, time[5] ?? 0, time[6] ?? 0).getTime(),
+	typeNumber, [typeArray],
+);
 
 export const funcToNumberBuffer = new FunctionDefinition(
 	(value: number, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
@@ -7,7 +37,7 @@ export const funcToNumberBuffer = new FunctionDefinition(
 			| 'float32' | 'float32le' | 'float64' | 'float64le')=> {
 		let bits = '';
 		for (let i = 0; i < encoding.length; ++i) {
-			const c = encoding[ i ];
+			const c = encoding[i];
 			if (c >= '0' && c <= '9') {
 				bits += c;
 			}
@@ -136,7 +166,7 @@ export const fromStringBuffer = (value: ArrayBuffer)=> {
 	const bytes = new Uint8Array(value);
 	let str = '';
 	for (let i = 0; i < bytes.byteLength; ++i) {
-		str += bytes[ i ].toString(16).padStart(2, '0');
+		str += bytes[i].toString(16).padStart(2, '0');
 	}
 	return str;
 };
@@ -144,7 +174,7 @@ export const fromStringBuffer = (value: ArrayBuffer)=> {
 export const toStringBuffer = (value: string)=> {
 	const bytes = new Uint8Array(Math.ceil(value.length / 2));
 	for (let i = 0, c = 0; c < value.length; ++i) {
-		bytes[ i ] = Number.parseInt(value.slice(c, c += 2), 16);
+		bytes[i] = Number.parseInt(value.slice(c, c += 2), 16);
 	}
 	return bytes.buffer;
 };

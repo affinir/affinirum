@@ -39,7 +39,7 @@ export class CallNode extends Node {
 			if (!argTypeInference) {
 				this.throwTypeError(type);
 			}
-			const subnode = this._subnodes[ i ] = this._subnodes[ i ].compile(argTypeInference);
+			const subnode = this._subnodes[i] = this._subnodes[i].compile(argTypeInference);
 			constant &&= subnode.constant;
 		}
 		if (constant) {

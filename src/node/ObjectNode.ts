@@ -20,7 +20,7 @@ export class ObjectNode extends Node {
 		this.reduceType(type);
 		let constant = true;
 		for (const [key, node] of Object.entries(this._subnode)) {
-			this._subnode[ key ] = node.compile(typeUnknown);
+			this._subnode[key] = node.compile(typeUnknown);
 			constant &&= node instanceof ConstantNode;
 		}
 		if (constant) {
@@ -32,7 +32,7 @@ export class ObjectNode extends Node {
 	override evaluate(): Value {
 		const obj: { [ key: string ]: Value } = {};
 		for (const [key, value] of Object.entries(this._subnode)) {
-			obj[ key ] = value.evaluate();
+			obj[key] = value.evaluate();
 		}
 		return obj;
 	}

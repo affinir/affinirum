@@ -1,13 +1,13 @@
 import { FunctionDefinition, FUNCTION_ARG_MAX } from '../FunctionDefinition.js';
 import { Value, typeBoolean, typeNumber, typeBuffer, typeString, typeArray, typeObject, typeFunction,
-	typeOptionalNumber, typeNumberOrString, typeArrayOrObject,
+	typeOptionalNumber, typeOptionalArray, typeNumberOrString, typeOptionalArrayOrObject,
 	typeEnumerable, typeIterable, typeUnknown } from '../Type.js';
 
 export const funcAppend = new FunctionDefinition(
 	(...values: (ArrayBuffer | string | Value[])[])=>
-		values[ 0 ] instanceof ArrayBuffer
+		values[0] instanceof ArrayBuffer
 			? (values as ArrayBuffer[]).reduce((acc, val)=> concatBuffers(acc, val), new ArrayBuffer(0))
-			: typeof values[ 0 ] === 'string'
+			: typeof values[0] === 'string'
 				? (values as string[]).reduce((acc, val)=> acc + val, '')
 				: (values as Value[][]).reduce((acc, val)=> [...acc, ...val], []),
 	typeEnumerable, [typeEnumerable], 2, FUNCTION_ARG_MAX, 0,
@@ -58,47 +58,47 @@ export const funcCharCode = new FunctionDefinition(
 );
 
 export const funcEntries = new FunctionDefinition(
-	(value: Value[] | { [ key: string ]: Value })=>
+	(value: Value[] | { [ key: string ]: Value } | undefined)=>
 		value == null
 			? undefined
 			: Array.isArray(value)
-				? Object.entries(value).map((e)=> [Number(e[ 0 ]), e[ 1 ]])
+				? Object.entries(value).map((e)=> [Number(e[0]), e[1]])
 				: Object.entries(value),
-	typeArray, [typeArrayOrObject],
+	typeOptionalArray, [typeOptionalArrayOrObject],
 );
 
 export const funcKeys = new FunctionDefinition(
-	(value:  Value[] | { [ key: string ]: Value })=>
+	(value:  Value[] | { [ key: string ]: Value } | undefined)=>
 		value == null
 			? undefined
 			: Array.isArray(value)
 				? Object.keys(value).map((k)=> Number(k))
 				: Object.keys(value),
-	typeArray, [typeArrayOrObject],
+	typeOptionalArray, [typeOptionalArrayOrObject],
 );
 
 export const funcValues = new FunctionDefinition(
-	(value:  Value[] | { [ key: string ]: Value })=>
+	(value:  Value[] | { [ key: string ]: Value } | undefined)=>
 		value == null
 			? undefined
 			: Object.values(value),
-	typeArray, [typeArrayOrObject],
+	typeOptionalArray, [typeOptionalArrayOrObject],
 );
 
 export const funcAt = new FunctionDefinition(
-	(value: Value[] | { [ key: string ]: Value }, index: number | string)=> {
+	(value: Value[] | { [ key: string ]: Value } | undefined, index: number | string)=> {
 		if (value == null) {
 			return undefined;
 		}
 		else if (Array.isArray(value)) {
 			const ix = Number(index);
-			return value[ ix < 0 ? value.length + ix : ix ];
+			return value[ix < 0 ? value.length + ix : ix];
 		}
 		else {
-			return value[ String(index) ];
+			return value[String(index)];
 		}
 	},
-	typeUnknown, [typeArrayOrObject, typeNumberOrString],
+	typeUnknown, [typeOptionalArrayOrObject, typeNumberOrString],
 );
 
 export const funcFirst = new FunctionDefinition(
@@ -175,8 +175,8 @@ export const funcCompose = new FunctionDefinition(
 	(value: string[], callback: (acc: { [ key: string ]: Value }, v: string, i: number)=> { [ key: string ]: Value })=> {
 		const obj: Record<string, any> = {};
 		for (let i = 0; i < value.length; ++i) {
-			const key =  value[ i ];
-			obj[ key ] = callback(obj, key, i);
+			const key =  value[i];
+			obj[key] = callback(obj, key, i);
 		}
 		return obj;
 	},

@@ -83,8 +83,8 @@ export const funcAlphanum = new FunctionDefinition(
 		const lowerCase = value.toLowerCase();
 		let result = '';
 		for (let i = 0; i < lowerCase.length; ++i) {
-			if (!isCaseSpaceEtc(value[ i ])) {
-				result += value[ i ];
+			if (!isCaseSpaceEtc(value[i])) {
+				result += value[i];
 			}
 		}
 		return result;
@@ -172,7 +172,7 @@ const equal = (value1: Value, value2: Value)=> {
 	if (Array.isArray(value1) && Array.isArray(value2)) {
 		if (value1.length === value2.length) {
 			for (let i = 0; i < value1.length; ++i) {
-				if (!equal(value1[ i ], value2[ i ])) {
+				if (!equal(value1[i], value2[i])) {
 					return false;
 				}
 			}
@@ -182,7 +182,7 @@ const equal = (value1: Value, value2: Value)=> {
 	}
 	const props = new Set([...Object.getOwnPropertyNames(value1), ...Object.getOwnPropertyNames(value2)]);
 	for (const prop of props) {
-		if (!equal((value1 as any)[ prop ] as Value, (value2 as any)[ prop ] as Value)) {
+		if (!equal((value1 as any)[prop] as Value, (value2 as any)[prop] as Value)) {
 			return false;
 		}
 	}
@@ -222,13 +222,13 @@ const equalStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boole
 	const str1 = value1.toLowerCase();
 	const str2 = value2.toLowerCase();
 	for (let i1 = 0, i2 = 0; i1 < str1.length && i2 < str2.length; ++i1, ++i2) {
-		while (isCaseSpaceEtc(str1[ i1 ]) && i1 < str1.length) {
+		while (isCaseSpaceEtc(str1[i1]) && i1 < str1.length) {
 			++i1;
 		}
-		while (isCaseSpaceEtc(str2[ i2 ]) && i2 < str2.length) {
+		while (isCaseSpaceEtc(str2[i2]) && i2 < str2.length) {
 			++i2;
 		}
-		if (str1[ i1 ] != str2[ i2 ]) {
+		if (str1[i1] != str2[i2]) {
 			return false;
 		}
 	}
@@ -246,16 +246,16 @@ const containsString = (value: string, search: string, startPos?: number, ignore
 	}
 	const pos = startPos == null ? 0 : startPos < 0 ? value.length + startPos : startPos;
 	for (let i1 = pos, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2) {
-		while (isCaseSpaceEtc(valueStr[ i1 ]) && i1 < valueStr.length) {
+		while (isCaseSpaceEtc(valueStr[i1]) && i1 < valueStr.length) {
 			++i1;
 		}
-		while (isCaseSpaceEtc(searchStr[ i2 ]) && i2 < searchStr.length) {
+		while (isCaseSpaceEtc(searchStr[i2]) && i2 < searchStr.length) {
 			++i2;
 		}
-		while (valueStr[ i1 ] != searchStr[ i2 ] && i1 < valueStr.length) {
+		while (valueStr[i1] != searchStr[i2] && i1 < valueStr.length) {
 			++i1;
 		}
-		if (valueStr[ i1 ] != searchStr[ i2 ] && i2 < searchStr.length) {
+		if (valueStr[i1] != searchStr[i2] && i2 < searchStr.length) {
 			return false;
 		}
 	}
@@ -273,13 +273,13 @@ const startsWithString = (value: string, search: string, startPos?: number, igno
 	}
 	const pos = startPos == null ? 0 : startPos < 0 ? value.length + startPos : startPos;
 	for (let i1 = pos, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2) {
-		while (isCaseSpaceEtc(valueStr[ i1 ]) && i1 < valueStr.length) {
+		while (isCaseSpaceEtc(valueStr[i1]) && i1 < valueStr.length) {
 			++i1;
 		}
-		while (isCaseSpaceEtc(searchStr[ i2 ]) && i2 < searchStr.length) {
+		while (isCaseSpaceEtc(searchStr[i2]) && i2 < searchStr.length) {
 			++i2;
 		}
-		if (valueStr[ i1 ] != searchStr[ i2 ] && i2 < searchStr.length) {
+		if (valueStr[i1] != searchStr[i2] && i2 < searchStr.length) {
 			return false;
 		}
 	}
@@ -297,13 +297,13 @@ const endsWithString = (value: string, search: string, endPos?: number, ignoreCa
 	}
 	const pos = endPos == null ? valueStr.length : endPos < 0 ? value.length + endPos : endPos;
 	for (let i1 = pos - 1, i2 = searchStr.length - 1; i1 > -1 && i2 > -1; --i1, --i2) {
-		while (isCaseSpaceEtc(valueStr[ i1 ]) && i1 > -1) {
+		while (isCaseSpaceEtc(valueStr[i1]) && i1 > -1) {
 			--i1;
 		}
-		while (isCaseSpaceEtc(searchStr[ i2 ]) && i2 > -1) {
+		while (isCaseSpaceEtc(searchStr[i2]) && i2 > -1) {
 			--i2;
 		}
-		if (valueStr[ i1 ] != searchStr[ i2 ] && i2 > -1) {
+		if (valueStr[i1] != searchStr[i2] && i2 > -1) {
 			return false;
 		}
 	}

@@ -111,12 +111,12 @@ Whitespace characters are ignored.
 * Less than: **boolean number.lessThan(number value)**
 * Greater than or equals to: **boolean number.greaterOrEqual(number value)**
 * Less than or equals to: **boolean number.lessOrEqual(number value)**
-* Equals to: **boolean variant.equal(variant value)**
-* Not equals to: **boolean variant.unequal(variant value)**
+* Equals to: **boolean ??.equal(?? value)**
+* Not equals to: **boolean ??.unequal(?? value)**
 * String alphanumerically equals to: **boolean string.like(string value)**
 * String alphanumerically not equals to: **boolean string.unlike(string value)**
-* Null coalescence: **variant variant.coalesce(variant valueIfNull)**
-* Conditional statement: **variant boolean.switch(variant valueIfTrue, variant valueIfFalse)**
+* Null coalescence: **?? ??.coalesce(?? valueIfNull)**
+* Conditional statement: **?? boolean.switch(?? valueIfTrue, ?? valueIfFalse)**
 * String contains substring: **boolean string.contains(string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)**
 * String starts with substring: **boolean string.startsWith(string search, number? startPos, boolean? ignoreCaseSpaceEtc)**
 * String ends with substring: **boolean string.endsWith(string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)**
@@ -140,19 +140,19 @@ Whitespace characters are ignored.
 * Byte at position: **buffer buffer.byte(number pos)**
 * Character at position: **string string.char(number pos)**
 * Character code at position: **number string.charCode(number pos)**
-* Find first item satisfying condition: **variant array.first(function condition)**
-* Find last item satisfying condition: **variant array.last(function condition)**
+* Find first item satisfying condition: **?? array.first(function condition)**
+* Find last item satisfying condition: **?? array.last(function condition)**
 * Find first index of item satisfying condition: **number array.firstIndex(function condition)**
 * Find last index of item satisfying condition: **number array.lastIndex(function condition)**
-* Array or object key-value pairs: **array array|object.entries()**
-* Array or object keys: **array array|object.keys()**
-* Array or object values: **array array|object.values()**
-* Array or object value at index: **variant array|object.at(number|string index)**
+* Array or object key-value pairs: **array? array?|object?.entries()**
+* Array or object keys: **array? array?|object?.keys()**
+* Array or object values: **array? array?|object?.values()**
+* Array or object value at index: **?? array?|object?.at(number|string index)**
 * New array with reverse order of items: **array array.reverse()**
 * New array flattened to specified depth: **array array.flatten(number depth)**
 * Map items: **array array.map(function transformation)**
 * Filter items: **array array.filter(function condition)**
-* Reduce array to a single value: **variant array.reduce(function reducer)**
+* Reduce array to a single value: **?? array.reduce(function reducer)**
 * Object composition from array of keys with generator function: **object array.compose(function generator)**
 #### Math Method Functions
 * Arithmetic addition: **number number.add(number ...values)**
@@ -170,6 +170,10 @@ Whitespace characters are ignored.
 * Floor: **number number.floor()**
 * Rounded value: **number number.round()**
 #### Mutation Method Functions
+* Get UTC time array from milliseconds since 1970: **array number.toUniversalTime()**
+* Get milliseconds since 1970 from UTC time array: **number array.fromUniversalTime()**
+* Get local time array from milliseconds since 1970: **array number.toLocalTime()**
+* Get milliseconds since 1970 from local time array: **number array.fromLocalTime()**
 * Encode number: **buffer number.toNumberBuffer(string encoding)**
 * Decode number: **number buffer.fromNumberBuffer(string encoding, number? offset)**
 * Encode string: **buffer string.toStringBuffer(string encoding)**
@@ -178,8 +182,8 @@ Whitespace characters are ignored.
 * Parse number from decimal string: **buffer string.fromNumberString()**
 * Create hexadecimal string from buffer: **string buffer.toBufferString()**
 * Parse buffer from hexadecimal string: **buffer string.fromBufferString()**
-* Parse object from JSON-formatted string: **void|boolean|number|string|array|object string|void.fromJson()**
-* Create JSON-formatted string from object: **string|void void|boolean|number|string|array|object.toJson()**
+* Parse object from JSON-formatted string: **boolean?|number?|string?|array?|object? string?.fromJson()**
+* Create JSON-formatted string from object: **string? boolean?|number?|string?|array?|object?.toJson()**
 #### Constants
 * Not-a-number **NAN**
 * Positive infinity **POSINF**

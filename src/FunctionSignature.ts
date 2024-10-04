@@ -27,7 +27,7 @@ export class FunctionSignature {
 	}
 
 	argType(index: number) {
-		return this._argTypes[ index ] ?? this._argTypes[ this._argTypes.length - 1 ];
+		return this._argTypes[index] ?? this._argTypes[this._argTypes.length - 1];
 	}
 
 	argTypeInference(type: Type, index: number) {

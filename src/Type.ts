@@ -113,6 +113,7 @@ export const typeBufferOrArray = new Type('buffer', 'array');
 export const typeStringOrArray = new Type('string', 'array');
 export const typeNumberOrString = new Type('number', 'string');
 export const typeArrayOrObject = new Type('array', 'object');
+export const typeOptionalArrayOrObject = new Type('void', 'array', 'object');
 export const typeEnumerable = new Type('buffer', 'string', 'array');
 export const typeIterable = new Type('buffer', 'string', 'array', 'object');
 export const typeJson = new Type('void', 'boolean', 'number', 'string', 'array', 'object');

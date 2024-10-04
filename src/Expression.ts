@@ -9,8 +9,10 @@ import { funcAppend, funcLength, funcSlice, funcByte, funcChar, funcCharCode, fu
 	funcTransform, funcFilter, funcReduce, funcCompose } from './function/CompositeFunctions.js';
 import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcRemainder, funcModulo, funcExponent, funcLogarithm,
 	funcPower, funcRoot, funcAbs, funcCeil, funcFloor, funcRound } from './function/MathFunctions.js';
-import { funcToNumberBuffer, funcFromNumberBuffer, funcToStringBuffer, funcFromStringBuffer,
-	funcToNumberString, funcFromNumberString, funcToBufferString, funcFromBufferString, funcFromJson, funcToJson } from './function/MutationFunctions.js';
+import { funcToUniversalTime, funcToLocalTime, funcFromUniversalTime, funcFromLocalTime,
+	funcToNumberBuffer, funcFromNumberBuffer, funcToStringBuffer, funcFromStringBuffer,
+	funcToNumberString, funcFromNumberString, funcToBufferString, funcFromBufferString,
+	funcFromJson, funcToJson } from './function/MutationFunctions.js';
 import { StaticScope } from './StaticScope.js';
 import { Variable } from './Variable.js';
 import { Type, Value, typeUnknown } from './Type.js';
@@ -55,6 +57,7 @@ const mfunctions: [ string, FunctionDefinition][] = [
 	['exponent', funcExponent], ['logarithm', funcLogarithm], ['power', funcPower], ['root', funcRoot], ['abs', funcAbs],
 	['ceil', funcCeil], ['floor', funcFloor], ['round', funcRound],
 
+	['toUniversalTime', funcToUniversalTime], ['toLocalTime', funcToLocalTime], ['fromUniversalTime', funcFromUniversalTime], ['fromLocalTime', funcFromLocalTime],
 	['toNumberBuffer', funcToNumberBuffer], ['fromNumberBuffer', funcFromNumberBuffer], ['toStringBuffer', funcToStringBuffer], ['fromStringBuffer', funcFromStringBuffer],
 	['toNumberString', funcToNumberString], ['fromNumberString', funcFromNumberString], ['toBufferString', funcToBufferString], ['fromBufferString', funcFromBufferString],
 	['toJson', funcToJson], ['fromJson', funcFromJson],
@@ -62,7 +65,7 @@ const mfunctions: [ string, FunctionDefinition][] = [
 
 export class Expression {
 
-	static readonly keywords = [...keywords, ...constants.map((c)=> c[ 0 ]), ...gfunctions.map((f)=> f[ 0 ])];
+	static readonly keywords = [...keywords, ...constants.map((c)=> c[0]), ...gfunctions.map((f)=> f[0])];
 	protected readonly _expression: string;
 	protected readonly _strict: boolean;
 	protected readonly _root: Node;
@@ -100,23 +103,23 @@ export class Expression {
 		this._strict = config?.strict ?? false;
 		if (config?.variables) {
 			for (const v in config.variables) {
-				this._variables.set(v, new Variable(config.variables[ v ]));
+				this._variables.set(v, new Variable(config.variables[v]));
 			}
 		}
 		if (config?.constants) {
 			for (const c in config.constants) {
-				this._constants.set(c, config.constants[ c ]);
+				this._constants.set(c, config.constants[c]);
 			}
 		}
 		if (config?.functions) {
 			for (const f in config.constants) {
 				this._gfunctions.set(f, new FunctionDefinition(
-					config.functions[ f ].func,
-					config.functions[ f ].type,
-					config.functions[ f ].argTypes,
-					config.functions[ f ].minArity,
-					config.functions[ f ].maxArity,
-					config.functions[ f ].typeInference,
+					config.functions[f].func,
+					config.functions[f].type,
+					config.functions[f].argTypes,
+					config.functions[f].minArity,
+					config.functions[f].maxArity,
+					config.functions[f].typeInference,
 				));
 			}
 		}
@@ -152,7 +155,7 @@ export class Expression {
 		const types: Record<string, Type> = {};
 		const variables = this._scope.variables();
 		for (const name in variables) {
-			types[ name ] = variables[ name ].type;
+			types[name] = variables[name].type;
 		}
 		return types;
 	}
@@ -168,8 +171,8 @@ export class Expression {
 			if (!Object.prototype.hasOwnProperty.call(values, name)) {
 				this._root.frame(name).throwError(`undefined variable ${name}:\n`);
 			}
-			const variable = variables[ name ];
-			const value = values[ name ] ?? undefined;
+			const variable = variables[name];
+			const value = values[name] ?? undefined;
 			if (!variable.type.reduce(Type.of(value))) {
 				this._root.frame(name).throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
 			}
@@ -297,7 +300,7 @@ export class Expression {
 			const frame = state.frame();
 			if (state.operator === funcAt) {
 				state.next();
-				if (state.isLiteral && typeof state.literal === 'string') {
+				if (state.isLiteral && (typeof state.literal === 'string' || typeof state.literal === 'number')) {
 					node = this.call(frame.ends(state.end), funcAt, [node, new ConstantNode(state, state.literal)]);
 					state.next();
 				}
@@ -456,7 +459,7 @@ export class Expression {
 			if (subnodes.some(([k,])=> typeof k === 'string')) {
 				const subnode: { [ key: string ]: Node } = {};
 				for (const [key, node] of subnodes) {
-					subnode[ String(key) ] = node;
+					subnode[String(key)] = node;
 				}
 				return new ObjectNode(frame, subnode);
 			}
@@ -539,7 +542,7 @@ export class Expression {
 		const args = Array.from(variables.values());
 		const subnode = this.unit(state.next(), scope.subscope(variables));
 		const value = (...values: Value[])=> {
-			args.forEach((arg, ix)=> arg.value = values[ ix ]);
+			args.forEach((arg, ix)=> arg.value = values[ix]);
 			return subnode.evaluate();
 		};
 		return new ConstantNode(frame.ends(state.end), value, type

@@ -125,6 +125,7 @@ describe('Expression Evaluation test', ()=> {
 		['a.difference(b).sum()', [{ a: [-1, -2, 1, 2], b: [1, 2], result: -3 }]],
 		['a.b.c.d ?: 10', [{ a: { b: { c: undefined } }, result: 10 }, { a: { b: {} }, result: 10 }]],
 		['a[4][0][0] ?: 10', [{ a: [0], result: 10 }, { a: [[0]], result: 10 }]],
+		['a.1', [{ a: [0, 1], result: 1 }, { a: ['-1', '-2'], result: '-2' }]],
 		['a[x]', [{ a: { b: 1 }, x: 'a', result: undefined }, { a: { b: 1 }, x: '1', result: undefined }], [{ a: [0,  1], x: 5, result: undefined }, { a: [0], x: -5, result: undefined }]],
 		['1000 + {a < b @ a = a + 1, {b, a+100}}', [{ a: 1, b: 10, result: 1110 }, { a: -5, b: -1, result: 1099 }]],
 		['function f=boolean(number a)->{a=a*100, a>0},a.filter(f).sum()', [{ a: [-10, -20, 1, 2], result: 3 }]],
@@ -134,6 +135,8 @@ describe('Expression Evaluation test', ()=> {
 		['a$b:c$d:e', [{ a: true, b: false, c: false, d: 10, e: 20, result: false }, { a: false, b: true, c: false, d: 10, e: 20, result: 20 }]],
 		['a<10@a=a+1<20@a=a+1', [{ a: 1, result: 19 }]],
 		['a<10@(a=a+1)<20@a=a+1', [{ a: 1, result: 11 }]],
+		['[2000, 1, 2, 3, 4, 5, 999].fromUniversalTime.toUniversalTime[i]', [{ i: 0, result: 2000 }, { i: 1, result: 1 }, { i: 2, result: 2 }, { i: 3, result: 3 }, { i: 4, result: 4 }, { i: 5, result: 5 }, { i: 6, result: 999 }]],
+		['[2000, 1, 2, 3, 4, 5, 999].fromLocalTime.toLocalTime[i]', [{ i: 0, result: 2000 }, { i: 1, result: 1 }, { i: 2, result: 2 }, { i: 3, result: 3 }, { i: 4, result: 4 }, { i: 5, result: 5 }, { i: 6, result: 999 }]],
 	].forEach(([expr, args])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
 			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v)}`, ()=> {
