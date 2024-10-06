@@ -98,7 +98,7 @@ export const funcToStringBuffer = new FunctionDefinition(
 		}
 		else {
 			const dv = new DataView(new Uint16Array(value.length).buffer);
-			const lessOrEqual = encoding.endsWith('lessOrEqual');
+			const lessOrEqual = encoding.endsWith('le');
 			for (let i = 0; i < value.length; ++i) {
 				dv.setUint16(i << 1, value.charCodeAt(i), lessOrEqual);
 			}
@@ -115,7 +115,7 @@ export const funcFromStringBuffer = new FunctionDefinition(
 		}
 		else {
 			const dv = new DataView(value, byteOffset, byteLength);
-			const lessOrEqual = encoding.endsWith('lessOrEqual');
+			const lessOrEqual = encoding.endsWith('le');
 			let str = '';
 			for (let i = 0; i < dv.byteLength; i += 2) {
 				str += String.fromCharCode(dv.getUint16(i, lessOrEqual));

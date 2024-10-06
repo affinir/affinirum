@@ -42,7 +42,7 @@ export const funcLike = new FunctionDefinition(
 	typeBoolean, [typeString, typeString],
 );
 
-export const funcNotLike = new FunctionDefinition(
+export const funcUnlike = new FunctionDefinition(
 	(value1: string, value2: string)=>
 		!equalStrings(value1, value2, true),
 	typeBoolean, [typeString, typeString],

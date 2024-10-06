@@ -97,93 +97,94 @@ Whitespace characters are ignored.
 * Cycle statement, iterates evaluation of suffix while prefix is true: **...@...**
 * Switch statement, returns first or second suffix if prefix is true or false: **...\$...:...**
 #### Global Functions
-* Boolean disjunction: **boolean or(boolean|array ...values)**
-* Boolean conjunction: **boolean and(boolean|array ...values)**
-* Boolean negation: **boolean not(boolean value)**
-* Numeric sum: **number sum(number|array ...values)**
-* Numeric minimum: **number min(number|array ...values)**
-* Numeric maximum: **number max(number|array ...values)**
-* New array filled with integers in between given two numbers: **array range(number inclusiveFrom, number exclusiveTo)**
-* Chain array of any depths into single array: **array chain(array ...values)**
-* Merge objects into single object: **object merge(array|object ...values)**
+* Boolean disjunction: **boolean Or(boolean|array ...values)**
+* Boolean conjunction: **boolean And(boolean|array ...values)**
+* Boolean negation: **boolean Not(boolean value)**
+* Numeric sum: **number Sum(number|array ...values)**
+* Numeric minimum: **number Min(number|array ...values)**
+* Numeric maximum: **number Max(number|array ...values)**
+* New array filled with integers in between given two numbers: **array Range(number inclusiveFrom, number exclusiveTo)**
+* Chain array of any depths into single array: **array Chain(array ...values)**
+* Merge objects into single object: **object Merge(array|object ...values)**
 #### Base Method Functions
-* Greater than: **boolean number.greaterThan(number value)**
-* Less than: **boolean number.lessThan(number value)**
-* Greater than or equals to: **boolean number.greaterOrEqual(number value)**
-* Less than or equals to: **boolean number.lessOrEqual(number value)**
-* Equals to: **boolean ??.equal(?? value)**
-* Not equals to: **boolean ??.unequal(?? value)**
-* String alphanumerically equals to: **boolean string.like(string value)**
-* String alphanumerically not equals to: **boolean string.unlike(string value)**
-* Null coalescence: **?? ??.coalesce(?? valueIfNull)**
-* Conditional statement: **?? boolean.switch(?? valueIfTrue, ?? valueIfFalse)**
-* String contains substring: **boolean string.contains(string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)**
-* String starts with substring: **boolean string.startsWith(string search, number? startPos, boolean? ignoreCaseSpaceEtc)**
-* String ends with substring: **boolean string.endsWith(string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)**
-* Check if every item satisfies condition: **boolean array.every(function condition)**
-* Check if any item satisfies condition: **boolean array.any(function condition)**
-* Get alphanumeric digest of string: **string string.alphanum()**
-* Trim whitespace: **string string.trim()**
-* Trim whitespace at start: **string string.trimStart()**
-* Trim whitespace at end: **string string.trimEnd()**
-* Lower case: **string string.lowerCase()**
-* Upper case: **string string.upperCase()**
-* Concatination of array of strings with separator: **string array.join(string separator = ' ')**
-* Split string into array of strings using separator: **array string.split(string separator = ' ')**
-* Array of unique values: **array array.unique()**
-* Intersection of values of two arrays: **array array.intersection(array value)**
-* Symmetrical difference between two arrays: **array array.difference(array value)**
+* Greater than: **boolean number.GreaterThan(number value)**
+* Less than: **boolean number.LessThan(number value)**
+* Greater than or equals to: **boolean number.GreaterOrEqual(number value)**
+* Less than or equals to: **boolean number.LessOrEqual(number value)**
+* Equals to: **boolean ??.Equal(?? value)**
+* Not equals to: **boolean ??.Unequal(?? value)**
+* String alphanumerically equals to: **boolean string.Like(string value)**
+* String alphanumerically not equals to: **boolean string.Unlike(string value)**
+* Null coalescence: **?? ??.Coalesce(?? valueIfNull)**
+* Conditional statement: **?? boolean.Switch(?? valueIfTrue, ?? valueIfFalse)**
+* String contains substring: **boolean string.Contains(string search, number? startPos, boolean? boolean? ignoreCaseSpaceEtc)**
+* String starts with substring: **boolean string.StartsWith(string search, number? startPos, boolean? ignoreCaseSpaceEtc)**
+* String ends with substring: **boolean string.EndsWith(string search, number? endPos, boolean? boolean? ignoreCaseSpaceEtc)**
+* Check if every item satisfies condition: **boolean array.Every(function condition)**
+* Check if any item satisfies condition: **boolean array.Any(function condition)**
+* Get alphanumeric digest of string: **string string.Alphanum()**
+* Trim whitespace: **string string.Trim()**
+* Trim whitespace at start: **string string.TrimStart()**
+* Trim whitespace at end: **string string.TrimEnd()**
+* Lower case: **string string.LowerCase()**
+* Upper case: **string string.UpperCase()**
+* Concatination of array of strings with separator: **string array.Join(string separator = ' ')**
+* Split string into array of strings using separator: **array string.Split(string separator = ' ')**
+* Array of unique values: **array array.Unique()**
+* Intersection of values of two arrays: **array array.Intersection(array value)**
+* Symmetrical difference between two arrays: **array array.Difference(array value)**
 #### Composite Method Functions
-* Append buffer, string or array: **buffer|string|array buffer|string|array.append(buffer|string|array ...values)**
-* Length of buffer, string, array or object: **number buffer|string|array|object.length()**
-* New buffer, string or array slice: **buffer|string|array buffer|string|array.slice(number? beginIndex, number? endIndex)**
-* Byte at position: **buffer buffer.byte(number pos)**
-* Character at position: **string string.char(number pos)**
-* Character code at position: **number string.charCode(number pos)**
-* Find first item satisfying condition: **?? array.first(function condition)**
-* Find last item satisfying condition: **?? array.last(function condition)**
-* Find first index of item satisfying condition: **number array.firstIndex(function condition)**
-* Find last index of item satisfying condition: **number array.lastIndex(function condition)**
-* Array or object key-value pairs: **array? array?|object?.entries()**
-* Array or object keys: **array? array?|object?.keys()**
-* Array or object values: **array? array?|object?.values()**
-* Array or object value at index: **?? array?|object?.at(number|string index)**
-* New array with reverse order of items: **array array.reverse()**
-* New array flattened to specified depth: **array array.flatten(number depth)**
-* Map items: **array array.map(function transformation)**
-* Filter items: **array array.filter(function condition)**
-* Reduce array to a single value: **?? array.reduce(function reducer)**
-* Object composition from array of keys with generator function: **object array.compose(function generator)**
+* Append buffer, string or array: **buffer|string|array buffer|string|array.Append(buffer|string|array ...values)**
+* Length of buffer, string, array or object: **number buffer|string|array|object.Length()**
+* New buffer, string or array slice: **buffer|string|array buffer|string|array.Slice(number? beginIndex, number? endIndex)**
+* Byte at position: **buffer buffer.Byte(number pos)**
+* Character at position: **string string.Char(number pos)**
+* Character code at position: **number string.CharCode(number pos)**
+* Find first item satisfying condition: **?? array.First(function condition)**
+* Find last item satisfying condition: **?? array.Last(function condition)**
+* Find first index of item satisfying condition: **number array.FirstIndex(function condition)**
+* Find last index of item satisfying condition: **number array.LastIndex(function condition)**
+* Array or object key-value pairs: **array? array?|object?.Entries()**
+* Array or object keys: **array? array?|object?.Keys()**
+* Array or object values: **array? array?|object?.Values()**
+* Array or object value at index: **?? array?|object?.At(number|string index)**
+* New array with reverse order of items: **array array.Reverse()**
+* New array flattened to specified depth: **array array.Flatten(number depth)**
+* Transform items: **array array.Transform(function transformation)**
+* Filter items: **array array.Filter(function condition)**
+* Reduce array to a single value: **?? array.Reduce(function reducer)**
+* Object composition from array of keys with generator function: **object array.Compose(function generator)**
 #### Math Method Functions
-* Arithmetic addition: **number number.add(number ...values)**
-* Arithmetic subtraction: **number number.subtract(number subtrahend)**
-* Arithmetic negation: **number number.negate()**
-* Arithmetic multiplication: **number number.multiply(number ...values)**
-* Arithmetic division: **number number.divide(number divisor)**
-* Arithmetic remainder: **number number.remainder(number divisor)**
-* Exponent: **number number.exponent()**
-* Logarithm: **number number.logarithm()**
-* Power: **number number.power(number exponent)**
-* Root: **number number.root(number index)**
-* Absolute value: **number number.abs()**
-* Ceil: **number number.ceil()**
-* Floor: **number number.floor()**
-* Rounded value: **number number.round()**
+* Arithmetic addition: **number number.Add(number ...values)**
+* Arithmetic subtraction: **number number.Subtract(number subtrahend)**
+* Arithmetic negation: **number number.Negate()**
+* Arithmetic multiplication: **number number.Multiply(number ...values)**
+* Arithmetic division: **number number.Divide(number divisor)**
+* Arithmetic remainder: **number number.Remainder(number divisor)**
+* Arithmetic modulo: **number number.Modulo(number divisor)**
+* Exponent: **number number.Exponent()**
+* Logarithm: **number number.Logarithm()**
+* Power: **number number.Power(number exponent)**
+* Root: **number number.Root(number index)**
+* Absolute value: **number number.Abs()**
+* Ceil: **number number.Ceil()**
+* Floor: **number number.Floor()**
+* Rounded value: **number number.Round()**
 #### Mutation Method Functions
-* Get UTC time array from milliseconds since 1970: **array number.toUniversalTime()**
-* Get milliseconds since 1970 from UTC time array: **number array.fromUniversalTime()**
-* Get local time array from milliseconds since 1970: **array number.toLocalTime()**
-* Get milliseconds since 1970 from local time array: **number array.fromLocalTime()**
-* Encode number: **buffer number.toNumberBuffer(string encoding)**
-* Decode number: **number buffer.fromNumberBuffer(string encoding, number? offset)**
-* Encode string: **buffer string.toStringBuffer(string encoding)**
-* Decode string: **string buffer.fromStringBuffer(string? encoding, number? offset, number? length)**
-* Create decimal string from number: **string number.toNumberString()**
-* Parse number from decimal string: **buffer string.fromNumberString()**
-* Create hexadecimal string from buffer: **string buffer.toBufferString()**
-* Parse buffer from hexadecimal string: **buffer string.fromBufferString()**
-* Parse object from JSON-formatted string: **boolean?|number?|string?|array?|object? string?.fromJson()**
-* Create JSON-formatted string from object: **string? boolean?|number?|string?|array?|object?.toJson()**
+* Get UTC time array from milliseconds since 1970: **array number.ToUniversalTime()**
+* Get milliseconds since 1970 from UTC time array: **number array.FromUniversalTime()**
+* Get local time array from milliseconds since 1970: **array number.ToLocalTime()**
+* Get milliseconds since 1970 from local time array: **number array.FromLocalTime()**
+* Encode number: **buffer number.ToNumberBuffer(string encoding)**
+* Decode number: **number buffer.FromNumberBuffer(string encoding, number? offset)**
+* Encode string: **buffer string.ToStringBuffer(string encoding)**
+* Decode string: **string buffer.FromStringBuffer(string? encoding, number? offset, number? length)**
+* Create decimal string from number: **string number.ToNumberString()**
+* Parse number from decimal string: **buffer string.FromNumberString()**
+* Create hexadecimal string from buffer: **string buffer.ToBufferString()**
+* Parse buffer from hexadecimal string: **buffer string.FromBufferString()**
+* Parse object from JSON-formatted string: **boolean?|number?|string?|array?|object? string?.FromJson()**
+* Create JSON-formatted string from object: **string? boolean?|number?|string?|array?|object?.ToJson()**
 #### Constants
 * Not-a-number **NAN**
 * Positive infinity **POSINF**
@@ -231,14 +232,14 @@ const expr = new Expression( 'x * (y + abc / 5) > 10' );
 const value1 = expr.evaluate( { x: 10, y: 20, abc: 10 } ); // true
 const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
 ...
-const arrExpr = new Expression( 'sum([ 1, 2, 3, a, b, c ])' );
+const arrExpr = new Expression( 'Sum([ 1, 2, 3, a, b, c ])' );
 const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
 ...
 const objExpr = new Expression( '[prop1:a,prop2:`abc`].prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new Expression(
-	'arr1.map(number(number a)->a*2).filter(boolean(number a)->a>3).sum()'
+	'arr1.Transform(number(number a)->a*2).Filter(boolean(number a)->a>3).Sum()'
 );
 const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
 ...

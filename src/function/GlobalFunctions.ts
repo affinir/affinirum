@@ -25,15 +25,15 @@ export const funcSum = new FunctionDefinition(
 	typeNumber, [typeNumberOrArray], 1, FUNCTION_ARG_MAX,
 );
 
-export const funcMax = new FunctionDefinition(
-	(...values: (number | number[])[])=>
-		Math.max(Number.NEGATIVE_INFINITY, ...values.flat(FUNCTION_ARG_MAX)),
-	typeNumber, [typeNumberOrArray], 1, FUNCTION_ARG_MAX,
-);
-
 export const funcMin = new FunctionDefinition(
 	(...values: (number | number[])[])=>
 		Math.min(Number.POSITIVE_INFINITY, ...values.flat(FUNCTION_ARG_MAX)),
+	typeNumber, [typeNumberOrArray], 1, FUNCTION_ARG_MAX,
+);
+
+export const funcMax = new FunctionDefinition(
+	(...values: (number | number[])[])=>
+		Math.max(Number.NEGATIVE_INFINITY, ...values.flat(FUNCTION_ARG_MAX)),
 	typeNumber, [typeNumberOrArray], 1, FUNCTION_ARG_MAX,
 );
 

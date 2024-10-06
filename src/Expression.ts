@@ -1,6 +1,6 @@
 import { FunctionDefinition } from './FunctionDefinition.js';
 import { funcOr, funcAnd, funcNot, funcSum, funcMax, funcMin, funcRange, funcMerge, funcChain } from './function/GlobalFunctions.js';
-import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual, funcLike, funcNotLike,
+import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual, funcLike, funcUnlike,
 	funcCoalesce, funcSwitch, funcContains, funcStartsWith, funcEndsWith,
 	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin, funcSplit,
 	funcUnique, funcIntersection, funcDifference } from './function/BaseFunctions.js';
@@ -35,32 +35,32 @@ const constants: [ string, Value ][] = [
 	['NAN', Number.NaN], ['POSINF', Number.POSITIVE_INFINITY], ['NEGINF', Number.NEGATIVE_INFINITY], ['EPSILON', 2.718281828459045], ['PI', 3.141592653589793],
 ];
 const gfunctions: [ string, FunctionDefinition][] = [
-	['or', funcOr], ['and', funcAnd], ['not', funcNot], ['sum', funcSum], ['max', funcMax], ['min', funcMin],
-	['range', funcRange], ['chain', funcChain], ['merge', funcMerge],
+	['Or', funcOr], ['And', funcAnd], ['Not', funcNot], ['Sum', funcSum], ['Min', funcMin], ['Max', funcMax],
+	['Range', funcRange], ['Chain', funcChain], ['Merge', funcMerge],
 ];
 const mfunctions: [ string, FunctionDefinition][] = [
-	['greaterThan', funcGreaterThan], ['lessThan', funcLessThan], ['greaterOrEqual', funcGreaterOrEqual], ['lessOrEqual', funcLessOrEqual],
-	['equal', funcEqual], ['unequal', funcNotEqual], ['like', funcLike], ['unlike', funcNotLike], ['coalesce', funcCoalesce],
-	['switch', funcSwitch], ['contains', funcContains], ['startsWith', funcStartsWith], ['endsWith', funcEndsWith], ['alphanum', funcAlphanum],
-	['trim', funcTrim], ['trimStart', funcTrimStart], ['trimEnd', funcTrimEnd],
-	['lowerCase', funcLowerCase], ['upperCase', funcUpperCase], ['join', funcJoin], ['split', funcSplit],
-	['unique', funcUnique], ['intersection', funcIntersection], ['difference', funcDifference],
+	['GreaterThan', funcGreaterThan], ['LessThan', funcLessThan], ['GreaterOrEqual', funcGreaterOrEqual], ['LessOrEqual', funcLessOrEqual],
+	['Equal', funcEqual], ['Unequal', funcNotEqual], ['Like', funcLike], ['Unlike', funcUnlike], ['Coalesce', funcCoalesce],
+	['Switch', funcSwitch], ['Contains', funcContains], ['StartsWith', funcStartsWith], ['EndsWith', funcEndsWith], ['Alphanum', funcAlphanum],
+	['Trim', funcTrim], ['TrimStart', funcTrimStart], ['TrimEnd', funcTrimEnd],
+	['LowerCase', funcLowerCase], ['UpperCase', funcUpperCase], ['Join', funcJoin], ['Split', funcSplit],
+	['Unique', funcUnique], ['Intersection', funcIntersection], ['Difference', funcDifference],
 
-	['append', funcAppend], ['length', funcLength], ['slice', funcSlice], ['byte', funcByte], ['char', funcChar], ['charCode', funcCharCode],
-	['entries', funcEntries], ['keys', funcKeys], ['values', funcValues], ['at', funcAt],
-	['first', funcFirst], ['last', funcLast], ['firstIndex', funcFirstIndex], ['lastIndex', funcLastIndex],
-	['any', funcAny], ['every', funcEvery], ['flatten', funcFlatten], ['reverse', funcReverse],
-	['transform', funcTransform], ['filter', funcFilter], ['reduce', funcReduce], ['compose', funcCompose],
+	['Append', funcAppend], ['Length', funcLength], ['Slice', funcSlice], ['Byte', funcByte], ['Char', funcChar], ['CharCode', funcCharCode],
+	['Entries', funcEntries], ['Keys', funcKeys], ['Values', funcValues], ['At', funcAt],
+	['First', funcFirst], ['Last', funcLast], ['FirstIndex', funcFirstIndex], ['LastIndex', funcLastIndex],
+	['Any', funcAny], ['Every', funcEvery], ['Flatten', funcFlatten], ['Reverse', funcReverse],
+	['Transform', funcTransform], ['Filter', funcFilter], ['Reduce', funcReduce], ['Compose', funcCompose],
 
-	['add', funcAdd], ['subtract', funcSubtract], ['negate', funcNegate],
-	['multiply', funcMultiply], ['divide', funcDivide], ['remainder', funcRemainder], ['modulo', funcModulo],
-	['exponent', funcExponent], ['logarithm', funcLogarithm], ['power', funcPower], ['root', funcRoot], ['abs', funcAbs],
-	['ceil', funcCeil], ['floor', funcFloor], ['round', funcRound],
+	['Add', funcAdd], ['Subtract', funcSubtract], ['Negate', funcNegate],
+	['Multiply', funcMultiply], ['Divide', funcDivide], ['Remainder', funcRemainder], ['Modulo', funcModulo],
+	['Exponent', funcExponent], ['Logarithm', funcLogarithm], ['Power', funcPower], ['Root', funcRoot], ['Abs', funcAbs],
+	['Ceil', funcCeil], ['Floor', funcFloor], ['Round', funcRound],
 
-	['toUniversalTime', funcToUniversalTime], ['toLocalTime', funcToLocalTime], ['fromUniversalTime', funcFromUniversalTime], ['fromLocalTime', funcFromLocalTime],
-	['toNumberBuffer', funcToNumberBuffer], ['fromNumberBuffer', funcFromNumberBuffer], ['toStringBuffer', funcToStringBuffer], ['fromStringBuffer', funcFromStringBuffer],
-	['toNumberString', funcToNumberString], ['fromNumberString', funcFromNumberString], ['toBufferString', funcToBufferString], ['fromBufferString', funcFromBufferString],
-	['toJson', funcToJson], ['fromJson', funcFromJson],
+	['ToUniversalTime', funcToUniversalTime], ['ToLocalTime', funcToLocalTime], ['FromUniversalTime', funcFromUniversalTime], ['FromLocalTime', funcFromLocalTime],
+	['ToNumberBuffer', funcToNumberBuffer], ['FromNumberBuffer', funcFromNumberBuffer], ['ToStringBuffer', funcToStringBuffer], ['FromStringBuffer', funcFromStringBuffer],
+	['ToNumberString', funcToNumberString], ['FromNumberString', funcFromNumberString], ['ToBufferString', funcToBufferString], ['FromBufferString', funcFromBufferString],
+	['ToJson', funcToJson], ['FromJson', funcFromJson],
 ];
 
 export class Expression {
