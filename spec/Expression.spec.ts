@@ -137,6 +137,10 @@ describe('Expression Evaluation test', ()=> {
 		['a<10@(a=a+1)<20@a=a+1', [{ a: 1, result: 11 }]],
 		['[2000, 1, 2, 3, 4, 5, 999].FromUniversalTime.ToUniversalTime[i]', [{ i: 0, result: 2000 }, { i: 1, result: 1 }, { i: 2, result: 2 }, { i: 3, result: 3 }, { i: 4, result: 4 }, { i: 5, result: 5 }, { i: 6, result: 999 }]],
 		['[2000, 1, 2, 3, 4, 5, 999].FromLocalTime.ToLocalTime[i]', [{ i: 0, result: 2000 }, { i: 1, result: 1 }, { i: 2, result: 2 }, { i: 3, result: 3 }, { i: 4, result: 4 }, { i: 5, result: 5 }, { i: 6, result: 999 }]],
+		['[2000, 2, 2, 3, 4, 5, 999].FromUniversalTime.ToUniversalTimeMonthIndex', [{ result: 1 }]],
+		['[2000, 2, 2, 3, 4, 5, 999].FromLocalTime.ToLocalTimeMonthIndex', [{ result: 1 }]],
+		['[2000, 2, 2, 3, 4, 5, 999].FromUniversalTime.ToUniversalTimeWeekdayIndex', [{ result: 3 }]],
+		['[2000, 2, 2, 3, 4, 5, 999].FromLocalTime.ToLocalTimeWeekdayIndex', [{ result: 3 }]],
 	].forEach(([expr, args])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
 			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v)}`, ()=> {

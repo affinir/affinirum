@@ -10,6 +10,12 @@ export const funcToUniversalTime = new FunctionDefinition(
 	typeArray, [typeNumber],
 );
 
+export const funcFromUniversalTime = new FunctionDefinition(
+	(time: number[])=>
+		Date.UTC(time[0] ?? 1970, (time[1] ?? 1) - 1, time[2] ?? 1, time[3] ?? 0, time[4] ?? 0, time[5] ?? 0, time[6] ?? 0),
+	typeNumber, [typeArray],
+);
+
 export const funcToLocalTime = new FunctionDefinition(
 	(value: number)=> {
 		const v = new Date(value);
@@ -19,16 +25,30 @@ export const funcToLocalTime = new FunctionDefinition(
 	typeArray, [typeNumber],
 );
 
-export const funcFromUniversalTime = new FunctionDefinition(
-	(time: number[])=>
-		Date.UTC(time[0] ?? 1970, (time[1] ?? 1) - 1, time[2] ?? 1, time[3] ?? 0, time[4] ?? 0, time[5] ?? 0, time[6] ?? 0),
-	typeNumber, [typeArray],
-);
-
 export const funcFromLocalTime = new FunctionDefinition(
 	(time: number[])=>
 		new Date(time[0] ?? 1970, (time[1] ?? 1) - 1, time[2] ?? 1, time[3] ?? 0, time[4] ?? 0, time[5] ?? 0, time[6] ?? 0).getTime(),
 	typeNumber, [typeArray],
+);
+
+export const funcToUniversalTimeMonthIndex = new FunctionDefinition(
+	(value: number)=> new Date(value).getUTCMonth(),
+	typeNumber, [typeNumber],
+);
+
+export const funcToLocalTimeMonthIndex = new FunctionDefinition(
+	(value: number)=> new Date(value).getMonth(),
+	typeNumber, [typeNumber],
+);
+
+export const funcToUniversalTimeWeekdayIndex = new FunctionDefinition(
+	(value: number)=> new Date(value).getUTCDay(),
+	typeNumber, [typeNumber],
+);
+
+export const funcToLocalTimeWeekdayIndex = new FunctionDefinition(
+	(value: number)=> new Date(value).getDay(),
+	typeNumber, [typeNumber],
 );
 
 export const funcToNumberBuffer = new FunctionDefinition(

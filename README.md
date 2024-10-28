@@ -175,6 +175,10 @@ Whitespace characters are ignored.
 * Get milliseconds since 1970 from UTC time array: **number array.FromUniversalTime()**
 * Get local time array from milliseconds since 1970: **array number.ToLocalTime()**
 * Get milliseconds since 1970 from local time array: **number array.FromLocalTime()**
+* Get UTC time month index from milliseconds since 1970: **array number.ToUniversalTimeMonthIndex()**
+* Get local time month index from milliseconds since 1970: **array number.ToLocalTimeMonthIndex()**
+* Get UTC time weekday index from milliseconds since 1970: **array number.ToUniversalTimeWeekdayIndex()**
+* Get local time weekday index from milliseconds since 1970: **array number.ToLocalTimeWeekdayIndex()**
 * Encode number: **buffer number.ToNumberBuffer(string encoding)**
 * Decode number: **number buffer.FromNumberBuffer(string encoding, number? offset)**
 * Encode string: **buffer string.ToStringBuffer(string encoding)**

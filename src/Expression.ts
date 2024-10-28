@@ -10,6 +10,7 @@ import { funcAppend, funcLength, funcSlice, funcByte, funcChar, funcCharCode, fu
 import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcRemainder, funcModulo, funcExponent, funcLogarithm,
 	funcPower, funcRoot, funcAbs, funcCeil, funcFloor, funcRound } from './function/MathFunctions.js';
 import { funcToUniversalTime, funcToLocalTime, funcFromUniversalTime, funcFromLocalTime,
+	funcToUniversalTimeMonthIndex, funcToLocalTimeMonthIndex, funcToUniversalTimeWeekdayIndex, funcToLocalTimeWeekdayIndex,
 	funcToNumberBuffer, funcFromNumberBuffer, funcToStringBuffer, funcFromStringBuffer,
 	funcToNumberString, funcFromNumberString, funcToBufferString, funcFromBufferString,
 	funcFromJson, funcToJson } from './function/MutationFunctions.js';
@@ -57,9 +58,14 @@ const mfunctions: [ string, FunctionDefinition][] = [
 	['Exponent', funcExponent], ['Logarithm', funcLogarithm], ['Power', funcPower], ['Root', funcRoot], ['Abs', funcAbs],
 	['Ceil', funcCeil], ['Floor', funcFloor], ['Round', funcRound],
 
-	['ToUniversalTime', funcToUniversalTime], ['ToLocalTime', funcToLocalTime], ['FromUniversalTime', funcFromUniversalTime], ['FromLocalTime', funcFromLocalTime],
-	['ToNumberBuffer', funcToNumberBuffer], ['FromNumberBuffer', funcFromNumberBuffer], ['ToStringBuffer', funcToStringBuffer], ['FromStringBuffer', funcFromStringBuffer],
-	['ToNumberString', funcToNumberString], ['FromNumberString', funcFromNumberString], ['ToBufferString', funcToBufferString], ['FromBufferString', funcFromBufferString],
+	['ToUniversalTime', funcToUniversalTime], ['FromUniversalTime', funcFromUniversalTime],
+	['ToLocalTime', funcToLocalTime], ['FromLocalTime', funcFromLocalTime],
+	['ToUniversalTimeMonthIndex', funcToUniversalTimeMonthIndex], ['ToLocalTimeMonthIndex', funcToLocalTimeMonthIndex],
+	['ToUniversalTimeWeekdayIndex', funcToUniversalTimeWeekdayIndex], ['ToLocalTimeWeekdayIndex', funcToLocalTimeWeekdayIndex],
+	['ToNumberBuffer', funcToNumberBuffer], ['FromNumberBuffer', funcFromNumberBuffer],
+	['ToStringBuffer', funcToStringBuffer], ['FromStringBuffer', funcFromStringBuffer],
+	['ToNumberString', funcToNumberString], ['FromNumberString', funcFromNumberString],
+	['ToBufferString', funcToBufferString], ['FromBufferString', funcFromBufferString],
 	['ToJson', funcToJson], ['FromJson', funcFromJson],
 ];
 
