@@ -427,32 +427,22 @@ export class Expression {
 		}
 		else if (state.isBracketsOpen) {
 			const frame = state.frame();
-			const ifEmpty = state.clone();
-			if (ifEmpty.next().isBracketsClose) {
+			const checkEmptyState = state.clone();
+			if (checkEmptyState.next().isBracketsClose) {
 				return new ConstantNode(frame.ends(state.next().next().end), []);
 			}
-			else if (ifEmpty.isColon && ifEmpty.next().isBracketsClose) {
+			else if (checkEmptyState.isColon && checkEmptyState.next().isBracketsClose) {
 				return new ConstantNode(frame.ends(state.next().next().next().end), {});
 			}
-			const subnodes: [ number | string, Node ][] = [];
+			const subnodes: [ Node | number, Node ][] = [];
 			let index = 0;
 			while (!state.next().isBracketsClose) {
-				const key = state.isToken
-					? state.token
-					: state.isLiteral && typeof state.literal === 'string'
-						? state.literal
-						: undefined;
-				if (key) {
-					const ifColon = state.clone();
-					if (ifColon.next().isColon) {
-						subnodes.push([key, this.unit(state.next().next(), scope)]);
-					}
-					else {
-						subnodes.push([index++, this.unit(state, scope)]);
-					}
+				const node = this.unit(state, scope);
+				if (state.isColon) {
+					subnodes.push([node, this.unit(state.next(), scope)]);
 				}
 				else {
-					subnodes.push([index++, this.unit(state, scope)]);
+					subnodes.push([index++, node]);
 				}
 				if (!state.isSeparator) {
 					break;
@@ -461,15 +451,12 @@ export class Expression {
 			if (!state.isBracketsClose) {
 				state.throwError('missing closing brackets');
 			}
+			frame.ends(state.end);
 			state.next();
-			if (subnodes.some(([k,])=> typeof k === 'string')) {
-				const subnode: { [ key: string ]: Node } = {};
-				for (const [key, node] of subnodes) {
-					subnode[String(key)] = node;
-				}
-				return new ObjectNode(frame, subnode);
+			if (subnodes.every(([k,])=> typeof k === 'number')) {
+				return new ArrayNode(frame, subnodes.map(([, v])=> v));
 			}
-			return new ArrayNode(frame, subnodes.map(([, v])=> v));
+			return new ObjectNode(frame, subnodes.map(([k, v])=> [typeof k === 'number' ? new ConstantNode(v, String(k)) : k, v] as const));
 		}
 		else if (state.isBracketsClose) {
 			state.throwError('unexpected closing brackets');

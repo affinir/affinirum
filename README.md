@@ -215,8 +215,7 @@ The expression parsing is performed using the following grammar:
 		"{"<program>"}" | "("<unit>")" | <array> | <object>
 	<literal> = <decimal-number> | #<hexadecimal-number> | ##<hexadecimal-binary> | "'"<text-string>"'"
 	<array> = "["{ <unit> }{ ","<unit> }"]"
-	<object> = "["{ <property>:<unit> }{ "," <property>:<unit> }"]"
-	<property> = "'"<text-string>"'" | <property-name-string>
+	<object> = "["{ <unit>:<unit> }{ "," <unit>:<unit> }"]"
 	<variable> = { <type> } <variable-name-string>{ "="<unit> }
 	<subroutine> = { <type>"("{ <type> <argument-name-string> }{ ","<type> <argument-name-string> }")" } "->" <unit>
 	<type> = ( "void" | "boolean" | "number" | "buffer" | "string" | "array" | "object" | "function" ){ "?" } | "??"
@@ -239,7 +238,7 @@ const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
 const arrExpr = new Expression( 'Sum([ 1, 2, 3, a, b, c ])' );
 const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
 ...
-const objExpr = new Expression( '[prop1:a,prop2:`abc`].prop1+10' );
+const objExpr = new Expression( '[`prop1`:a,`prop2`:`abc`].prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new Expression(

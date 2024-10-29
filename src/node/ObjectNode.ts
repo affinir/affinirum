@@ -1,13 +1,13 @@
 import { Node } from '../Node.js';
 import { ParserFrame } from '../ParserFrame.js';
 import { ConstantNode } from './ConstantNode.js';
-import { Type, Value, typeObject, typeUnknown } from '../Type.js';
+import { Type, Value, typeObject, typeString, typeUnknown } from '../Type.js';
 
 export class ObjectNode extends Node {
 
 	constructor(
 		frame: ParserFrame,
-		protected _subnode: { [ key: string ]: Node },
+		protected _subnodes: [Node, Node][],
 	) {
 		super(frame);
 	}
@@ -18,12 +18,11 @@ export class ObjectNode extends Node {
 
 	override compile(type: Type): Node {
 		this.reduceType(type);
-		let constant = true;
-		for (const [key, node] of Object.entries(this._subnode)) {
-			this._subnode[key] = node.compile(typeUnknown);
-			constant &&= node instanceof ConstantNode;
+		for (let i = 0; i < this._subnodes.length; ++i) {
+			this._subnodes[i][0] = this._subnodes[i][0].compile(typeString);
+			this._subnodes[i][1] = this._subnodes[i][1].compile(typeUnknown);
 		}
-		if (constant) {
+		if (this._subnodes.flat().every((node)=> node.constant)) {
 			return new ConstantNode(this, this.evaluate());
 		}
 		return this;
@@ -31,15 +30,15 @@ export class ObjectNode extends Node {
 
 	override evaluate(): Value {
 		const obj: { [ key: string ]: Value } = {};
-		for (const [key, value] of Object.entries(this._subnode)) {
-			obj[key] = value.evaluate();
+		for (const [key, value] of this._subnodes) {
+			obj[key.evaluate() as string] = value.evaluate();
 		}
 		return obj;
 	}
 
 	override toString(ident: number = 0): string {
 		return `${super.toString(ident)} object node`
-			+ `, subnode:\n${Object.entries(this._subnode).map(([k, v])=> `${v.toString(ident + 1)} [${k}]`).join('\n')}`;
+			+ `, subnodes:\n${this._subnodes.map(([k, v])=> `${k.toString(ident + 1)}:\n${v.toString(ident + 1)}`).join('\n')}`;
 	}
 
 }

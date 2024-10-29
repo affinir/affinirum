@@ -82,7 +82,7 @@ describe('Expression Evaluation test', ()=> {
 		['[100,200,300].Entries()[1][1]+[1,2,3].Entries()[1][0]', [{ result: 201 }]],
 		['[0,1,2,3].Append([10,20,30,40])[5]', [{ result: 20 }]],
 		['[1,2,3,4].Reduce(number (number a, number b)->a.Subtract(b))', [{ result: -8 }]],
-		['Merge([:], [:], [a:x], [b:x]).Length', [{ x: 1, result: 2 }, { x: undefined, result: 2 }]],
+		['Merge([:], [:], ["a":x], [`b`:x]).Length', [{ x: 1, result: 2 }, { x: undefined, result: 2 }]],
 		['a.Unique().Reduce(?? (?? acc,?? val)->(acc+val))', [{ a: [1, 2, 3, 3, 2, 1], result: 6 }, { a: ['a', 'b', 'c', 'a', 'b', 'c'], result: 'abc' }]],
 		['Sum([0,1,2,3]+>[10,20,30,40],100)', [{ result: 206 }]],
 		['arr0[3] == 50', [{ arr0: [10, 20, 30, 50], result: true }, { arr0: [], result: false }]],
@@ -103,8 +103,8 @@ describe('Expression Evaluation test', ()=> {
 		['arr0.Any(boolean(number a) -> a > 0 )', [{ arr0: [1, -2, -3, -4], result: true }, { arr0: [-1, -2, -3, -4], result: false }]],
 		['arr0.Every(boolean(number a)->( a > 0 ) )', [{ arr0: [1, 2, 3, 4], result: true }, { arr0: [1, -2, 3, 4], result: false }]],
 		['boolean x=arr0.Any(boolean(number a)->a<0),boolean b=c,x&b', [{ arr0: [0, -1], c: true, result: true }]],
-		['[a:a1+a2, "b": b1, c: "10", d: a1*a2, "p": 10][p]', [{ a1: 1, a2: 2, b1: 'b', p: 'd', result: 2 }, { a1: -2, a2: 18, b1: 'bb', p: 'a', result: 16 }]],
-		['[n:50,"a" : 10,b:`my string`][p]', [{ p: 'n', result: 50 }, { p: 'a', result: 10 }, { p: 'b', result: 'my string' }]],
+		['[`a`:a1+a2, "b": b1, "c": "10", `d`: a1*a2, "p": 10][p]', [{ a1: 1, a2: 2, b1: 'b', p: 'd', result: 2 }, { a1: -2, a2: 18, b1: 'bb', p: 'a', result: 16 }]],
+		['[`n`:50,"a" : 10,"b":`my string`,][p]', [{ p: 'n', result: 50 }, { p: 'a', result: 10 }, { p: 'b', result: 'my string' }]],
 		['(a.Merge(b)).i == 0', [{ a: { f: 0, d: 0 }, b: { i: 0 }, result: true }, { a: { i: 50, d: 0 }, b: { i: 0 }, result: true }]],
 		['a.Merge(b,c).i == 0', [{ a: { f: 0, d: 0 }, b: { i: 0 }, c: {}, result: true }, { a: { i: 50, d: 0 }, b: { i: 0 }, c: { prop: 1 }, result: true }]],
 		['a.Compose(string (object acc, string key)->key.Char(0))."a"', [{ a: ['a', 'b', 'c'], result: 'a' }, { a: ['b', 'a'], result: 'a' }]],
@@ -141,6 +141,7 @@ describe('Expression Evaluation test', ()=> {
 		['[2000, 2, 2, 3, 4, 5, 999].FromLocalTime.ToLocalTimeMonthIndex', [{ result: 1 }]],
 		['[2000, 2, 2, 3, 4, 5, 999].FromUniversalTime.ToUniversalTimeWeekdayIndex', [{ result: 3 }]],
 		['[2000, 2, 2, 3, 4, 5, 999].FromLocalTime.ToLocalTimeWeekdayIndex', [{ result: 3 }]],
+		['[a:1, b:2,][c]', [{ a: 'abc', b: 'def', c: 'abc', result: 1 }, { a: 'abc', b: 'def', c: 'def', result: 2 }]],
 	].forEach(([expr, args])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
 			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v)}`, ()=> {

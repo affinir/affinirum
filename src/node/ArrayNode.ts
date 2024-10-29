@@ -18,12 +18,10 @@ export class ArrayNode extends Node {
 
 	override compile(type: Type): Node {
 		this.reduceType(type);
-		let constant = true;
 		for (let i = 0; i < this._subnodes.length; ++i) {
-			const subnode = this._subnodes[i] = this._subnodes[i].compile(typeUnknown);
-			constant &&= subnode.constant;
+			this._subnodes[i] = this._subnodes[i].compile(typeUnknown);
 		}
-		if (constant) {
+		if (this._subnodes.every((node)=> node.constant)) {
 			return new ConstantNode(this, this.evaluate());
 		}
 		return this;
