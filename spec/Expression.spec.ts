@@ -142,6 +142,7 @@ describe('Expression Evaluation test', ()=> {
 		['[2000, 2, 2, 3, 4, 5, 999].FromUniversalTime.ToUniversalTimeWeekdayIndex', [{ result: 3 }]],
 		['[2000, 2, 2, 3, 4, 5, 999].FromLocalTime.ToLocalTimeWeekdayIndex', [{ result: 3 }]],
 		['[a:1, b:2,][c]', [{ a: 'abc', b: 'def', c: 'abc', result: 1 }, { a: 'abc', b: 'def', c: 'def', result: 2 }]],
+		['[x == `a` $ x : `a` :1].a', [{ x: 'a', result: 1 }, { x: 'b', result: 1 }]],
 	].forEach(([expr, args])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
 			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v)}`, ()=> {
