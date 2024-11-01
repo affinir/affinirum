@@ -11,6 +11,7 @@ import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcRemain
 	funcPower, funcRoot, funcAbs, funcCeil, funcFloor, funcRound } from './function/MathFunctions.js';
 import { funcToUniversalTime, funcToLocalTime, funcFromUniversalTime, funcFromLocalTime,
 	funcToUniversalTimeMonthIndex, funcToLocalTimeMonthIndex, funcToUniversalTimeWeekdayIndex, funcToLocalTimeWeekdayIndex,
+	funcToTimeString, funcFromTimeString,
 	funcToNumberBuffer, funcFromNumberBuffer, funcToStringBuffer, funcFromStringBuffer,
 	funcToNumberString, funcFromNumberString, funcToBufferString, funcFromBufferString,
 	funcFromJson, funcToJson } from './function/MutationFunctions.js';
@@ -62,6 +63,7 @@ const mfunctions: [ string, FunctionDefinition][] = [
 	['ToLocalTime', funcToLocalTime], ['FromLocalTime', funcFromLocalTime],
 	['ToUniversalTimeMonthIndex', funcToUniversalTimeMonthIndex], ['ToLocalTimeMonthIndex', funcToLocalTimeMonthIndex],
 	['ToUniversalTimeWeekdayIndex', funcToUniversalTimeWeekdayIndex], ['ToLocalTimeWeekdayIndex', funcToLocalTimeWeekdayIndex],
+	['ToTimeString', funcToTimeString], ['FromTimeString', funcFromTimeString],
 	['ToNumberBuffer', funcToNumberBuffer], ['FromNumberBuffer', funcFromNumberBuffer],
 	['ToStringBuffer', funcToStringBuffer], ['FromStringBuffer', funcFromStringBuffer],
 	['ToNumberString', funcToNumberString], ['FromNumberString', funcFromNumberString],

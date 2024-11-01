@@ -103,18 +103,21 @@ export const funcAt = new FunctionDefinition(
 
 export const funcFirst = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
-		value.find((v, i, a)=> predicate(v, i, a)),
+		value?.find((v, i, a)=> predicate(v, i, a)),
 	typeUnknown, [typeArray, typeFunction],
 );
 
 export const funcLast = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
-		value.reverse().find((v, i, a)=> predicate(v, i, a)),
+		value?.reverse().find((v, i, a)=> predicate(v, i, a)),
 	typeUnknown, [typeArray, typeFunction],
 );
 
 export const funcFirstIndex = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=> {
+		if (value == null) {
+			return undefined;
+		}
 		const ix = value.findIndex((v, i, a)=> predicate(v, i, a));
 		return ix < 0 ? Number.NaN : ix;
 	},
@@ -123,6 +126,9 @@ export const funcFirstIndex = new FunctionDefinition(
 
 export const funcLastIndex = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=> {
+		if (value == null) {
+			return undefined;
+		}
 		const ix = [...value].reverse().findIndex((v, i, a)=> predicate(v, i, a));
 		return ix < 0 ? Number.NaN : ix;
 	},
@@ -131,19 +137,19 @@ export const funcLastIndex = new FunctionDefinition(
 
 export const funcEvery = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
-		value.every((v, i, a)=> predicate(v, i, a)),
+		value?.every((v, i, a)=> predicate(v, i, a)),
 	typeBoolean, [typeArray, typeFunction],
 );
 
 export const funcAny = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
-		value.some((v, i, a)=> predicate(v, i, a)),
+		value?.some((v, i, a)=> predicate(v, i, a)),
 	typeBoolean, [typeArray, typeFunction],
 );
 
 export const funcFlatten = new FunctionDefinition(
 	(values: Value[], depth?: number)=>
-		(values as []).flat(depth) as Value,
+		(values as [])?.flat(depth) as Value,
 	typeArray, [typeArray, typeOptionalNumber], 1, 2,
 );
 
@@ -155,24 +161,27 @@ export const funcReverse = new FunctionDefinition(
 
 export const funcTransform = new FunctionDefinition(
 	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=>
-		value.map(callback),
+		value?.map(callback),
 	typeArray, [typeArray, typeFunction],
 );
 
 export const funcFilter = new FunctionDefinition(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
-		value.filter(predicate),
+		value?.filter(predicate),
 	typeArray, [typeArray, typeFunction],
 );
 
 export const funcReduce = new FunctionDefinition(
 	(value: Value[], callback: (acc: Value, v: Value, i: number, arr: Value[])=> Value, initial?: Value)=>
-		initial != null ? value.reduce(callback, initial) : value.reduce(callback),
+		initial != null ? value?.reduce(callback, initial) : value?.reduce(callback),
 	typeUnknown, [typeArray, typeFunction, typeUnknown], 2, 3,
 );
 
 export const funcCompose = new FunctionDefinition(
 	(value: string[], callback: (acc: { [ key: string ]: Value }, v: string, i: number)=> { [ key: string ]: Value })=> {
+		if (value == null) {
+			return undefined;
+		}
 		const obj: Record<string, any> = {};
 		for (let i = 0; i < value.length; ++i) {
 			const key =  value[i];

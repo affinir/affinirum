@@ -179,6 +179,8 @@ Whitespace characters are ignored.
 * Get local time month index from milliseconds since 1970: **array number.ToLocalTimeMonthIndex()**
 * Get UTC time weekday index from milliseconds since 1970: **array number.ToUniversalTimeWeekdayIndex()**
 * Get local time weekday index from milliseconds since 1970: **array number.ToLocalTimeWeekdayIndex()**
+* Get ISO time string from milliseconds since 1970: **string number.ToTimeString()**
+* Get milliseconds since 1970 from ISO time string: **number string.FromTimeString()**
 * Encode number: **buffer number.ToNumberBuffer(string encoding)**
 * Decode number: **number buffer.FromNumberBuffer(string encoding, number? offset)**
 * Encode string: **buffer string.ToStringBuffer(string encoding)**

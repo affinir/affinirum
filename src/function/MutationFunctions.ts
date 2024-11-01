@@ -51,6 +51,16 @@ export const funcToLocalTimeWeekdayIndex = new FunctionDefinition(
 	typeNumber, [typeNumber],
 );
 
+export const funcToTimeString = new FunctionDefinition(
+	(value: number)=> new Date(value).toISOString(),
+	typeString, [typeNumber],
+);
+
+export const funcFromTimeString = new FunctionDefinition(
+	(value: string)=> new Date(value).getTime(),
+	typeNumber, [typeString],
+);
+
 export const funcToNumberBuffer = new FunctionDefinition(
 	(value: number, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
 			| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
