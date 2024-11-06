@@ -180,13 +180,13 @@ export const funcFromBufferString = new FunctionDefinition(
 	typeBuffer, [typeString],
 );
 
-export const funcToJson = new FunctionDefinition(
+export const funcToJsonString = new FunctionDefinition(
 	(value: undefined | boolean | number | string | [] | { [ key: string ]: Value })=>
 		value ? JSON.stringify(value) : undefined,
 	typeOptionalString, [typeJson],
 );
 
-export const funcFromJson = new FunctionDefinition(
+export const funcFromJsonString = new FunctionDefinition(
 	(value: undefined | string)=>
 		value ? JSON.parse(value) as Value : undefined,
 	typeJson, [typeOptionalString],

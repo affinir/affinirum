@@ -14,7 +14,7 @@ import { funcToUniversalTime, funcToLocalTime, funcFromUniversalTime, funcFromLo
 	funcToTimeString, funcFromTimeString,
 	funcToNumberBuffer, funcFromNumberBuffer, funcToStringBuffer, funcFromStringBuffer,
 	funcToNumberString, funcFromNumberString, funcToBufferString, funcFromBufferString,
-	funcFromJson, funcToJson } from './function/MutationFunctions.js';
+	funcFromJsonString, funcToJsonString } from './function/MutationFunctions.js';
 import { StaticScope } from './StaticScope.js';
 import { Variable } from './Variable.js';
 import { Type, Value, typeUnknown } from './Type.js';
@@ -68,7 +68,7 @@ const mfunctions: [ string, FunctionDefinition][] = [
 	['ToStringBuffer', funcToStringBuffer], ['FromStringBuffer', funcFromStringBuffer],
 	['ToNumberString', funcToNumberString], ['FromNumberString', funcFromNumberString],
 	['ToBufferString', funcToBufferString], ['FromBufferString', funcFromBufferString],
-	['ToJson', funcToJson], ['FromJson', funcFromJson],
+	['ToJsonString', funcToJsonString], ['FromJsonString', funcFromJsonString],
 ];
 
 export class Expression {

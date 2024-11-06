@@ -1,6 +1,6 @@
 {
 	"name": "expression-evaluation",
-	"version": "2.2.1",
+	"version": "2.2.2",
 	"description": "Expression Evaluation",
 	"main": "dst/cjs/index.js",
 	"module": "dst/index.js",

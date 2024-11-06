@@ -189,8 +189,8 @@ Whitespace characters are ignored.
 * Parse number from decimal string: **buffer string.FromNumberString()**
 * Create hexadecimal string from buffer: **string buffer.ToBufferString()**
 * Parse buffer from hexadecimal string: **buffer string.FromBufferString()**
-* Parse object from JSON-formatted string: **boolean?|number?|string?|array?|object? string?.FromJson()**
-* Create JSON-formatted string from object: **string? boolean?|number?|string?|array?|object?.ToJson()**
+* Parse object from JSON-formatted string: **boolean?|number?|string?|array?|object? string?.FromJsonString()**
+* Create JSON-formatted string from object: **string? boolean?|number?|string?|array?|object?.ToJsonString()**
 #### Constants
 * Not-a-number **NAN**
 * Positive infinity **POSINF**
