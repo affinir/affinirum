@@ -1,11 +1,11 @@
 import { ParserFrame } from './ParserFrame.js';
 import { FunctionDefinition } from './FunctionDefinition.js';
-import { toStringBuffer } from './function/MutationFunctions.js';
 import { funcOr, funcAnd, funcNot } from './function/GlobalFunctions.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcEqual, funcNotEqual, funcSwitch, funcCoalesce } from './function/BaseFunctions.js';
 import { funcAppend, funcAt } from './function/CompositeFunctions.js';
 import { funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './function/MathFunctions.js';
+import { parseBuffer } from './function/MutationFunctions.js';
 import { Type, Value, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeUnknown, typeArray } from './Type.js';
 
 class Literal { constructor(public readonly value: Value) {} }
@@ -208,7 +208,7 @@ export class ParserState extends ParserFrame {
 						while (isHexadecimal(this._expr.charAt(this._end))) {
 							++this._end;
 						}
-						this._fragment = new Literal(toStringBuffer(this._expr.substring(this._start + 2, this._end)));
+						this._fragment = new Literal(parseBuffer(this._expr.substring(this._start + 2, this._end)));
 					}
 					else {
 						++this._end;

@@ -145,6 +145,11 @@ describe('Expression Evaluation test', ()=> {
 		['[a:1, b:2,][c]', [{ a: 'abc', b: 'def', c: 'abc', result: 1 }, { a: 'abc', b: 'def', c: 'def', result: 2 }]],
 		['[x == `a` $ x : `a` :1].a', [{ x: 'a', result: 1 }, { x: 'b', result: 1 }]],
 		['["entity":[d.id:["a1", "a2"]]].entity.abc[0]', [{ d: { id: 'abc' }, result: 'a1' }, { d: { id: 'a' }, result: undefined }]],
+		['c.RandomBuffer.Length', [{ c: 0, result: 0 }, { c: 64, result: 64 }]],
+		['Now().ToUniversalTime[0]', [{ result: new Date().getUTCFullYear() }]],
+		['Now().ToLocalTime[0]', [{ result: new Date().getFullYear() }]],
+		['Now().ToUniversalTime[2]', [{ result: new Date().getUTCDate() }]],
+		['Now().ToLocalTime[2]', [{ result: new Date().getDate() }]],
 	].forEach(([expr, args])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
 			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v)}`, ()=> {

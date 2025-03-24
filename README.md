@@ -38,12 +38,13 @@ Array element can be accessed using brackets with numeric value inside.
 Empty array can be declared as **[]**.
 
 Object is a container of named values of any type.
-It can be defined using brackets with comma separated key value pairs separated by colon.
+It can be defined using brackets with comma separated key value pairs.
+Pair elements are separated by colon.
 Object property can be accessed using operator **.** with string literal or using brackets with string key or numeric index inside.
-Empty object can be declared as accessor **[\:]**
+Empty object can be declared as **[\:]**.
 
 Function is a callable unit producing a value.
-Built-in functions can be extended with configuration entries.
+The set of built-in functions can be extended with configuration entries.
 Also it is possible to define subroutines, i.e. functions defined in the code.
 
 Type of any array is **array**.
@@ -106,6 +107,7 @@ Whitespace characters are ignored.
 * New array filled with integers in between given two numbers: **array Range(number inclusiveFrom, number exclusiveTo)**
 * Chain array of any depths into single array: **array Chain(array ...values)**
 * Merge objects into single object: **object Merge(array|object ...values)**
+* Current date time as milliseconds since epoch: **number Now()**
 #### Base Method Functions
 * Greater than: **boolean number.GreaterThan(number value)**
 * Less than: **boolean number.LessThan(number value)**
@@ -170,6 +172,9 @@ Whitespace characters are ignored.
 * Ceil: **number number.Ceil()**
 * Floor: **number number.Floor()**
 * Rounded value: **number number.Round()**
+* Random number: **number number.RandomNumber()**
+* Random integer: **number number.RandomInteger()**
+* Random buffer: **buffer number.RandomBuffer()**
 #### Mutation Method Functions
 * Get UTC time array from milliseconds since 1970: **array number.ToUniversalTime()**
 * Get milliseconds since 1970 from UTC time array: **number array.FromUniversalTime()**

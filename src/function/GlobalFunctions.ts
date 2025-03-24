@@ -56,3 +56,9 @@ export const funcMerge = new FunctionDefinition(
 		values.flat(FUNCTION_ARG_MAX).reduce((acc, val)=> Object.assign(acc, val), {}),
 	typeObject, [typeArrayOrObject], 1, FUNCTION_ARG_MAX,
 );
+
+export const funcNow = new FunctionDefinition(
+	()=>
+		new Date().getTime(),
+	typeNumber, [],
+);

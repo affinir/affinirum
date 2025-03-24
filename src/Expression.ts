@@ -1,5 +1,5 @@
 import { FunctionDefinition } from './FunctionDefinition.js';
-import { funcOr, funcAnd, funcNot, funcSum, funcMax, funcMin, funcRange, funcMerge, funcChain } from './function/GlobalFunctions.js';
+import { funcOr, funcAnd, funcNot, funcSum, funcMax, funcMin, funcRange, funcMerge, funcChain, funcNow } from './function/GlobalFunctions.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual, funcLike, funcUnlike,
 	funcCoalesce, funcSwitch, funcContains, funcStartsWith, funcEndsWith,
 	funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin, funcSplit,
@@ -8,7 +8,8 @@ import { funcAppend, funcLength, funcSlice, funcByte, funcChar, funcCharCode, fu
 	funcAt, funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny, funcFlatten, funcReverse,
 	funcTransform, funcFilter, funcReduce, funcCompose } from './function/CompositeFunctions.js';
 import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcRemainder, funcModulo, funcExponent, funcLogarithm,
-	funcPower, funcRoot, funcAbs, funcCeil, funcFloor, funcRound } from './function/MathFunctions.js';
+	funcPower, funcRoot, funcAbs, funcCeil, funcFloor, funcRound,
+	funcRandomNumber, funcRandomInteger, funcRandomBuffer } from './function/MathFunctions.js';
 import { funcToUniversalTime, funcToLocalTime, funcFromUniversalTime, funcFromLocalTime,
 	funcToUniversalTimeMonthIndex, funcToLocalTimeMonthIndex, funcToUniversalTimeWeekdayIndex, funcToLocalTimeWeekdayIndex,
 	funcToTimeString, funcFromTimeString,
@@ -38,7 +39,7 @@ const constants: [ string, Value ][] = [
 ];
 const gfunctions: [ string, FunctionDefinition][] = [
 	['Or', funcOr], ['And', funcAnd], ['Not', funcNot], ['Sum', funcSum], ['Min', funcMin], ['Max', funcMax],
-	['Range', funcRange], ['Chain', funcChain], ['Merge', funcMerge],
+	['Range', funcRange], ['Chain', funcChain], ['Merge', funcMerge], ['Now', funcNow],
 ];
 const mfunctions: [ string, FunctionDefinition][] = [
 	['GreaterThan', funcGreaterThan], ['LessThan', funcLessThan], ['GreaterOrEqual', funcGreaterOrEqual], ['LessOrEqual', funcLessOrEqual],
@@ -58,6 +59,7 @@ const mfunctions: [ string, FunctionDefinition][] = [
 	['Multiply', funcMultiply], ['Divide', funcDivide], ['Remainder', funcRemainder], ['Modulo', funcModulo],
 	['Exponent', funcExponent], ['Logarithm', funcLogarithm], ['Power', funcPower], ['Root', funcRoot], ['Abs', funcAbs],
 	['Ceil', funcCeil], ['Floor', funcFloor], ['Round', funcRound],
+	['RandomNumber', funcRandomNumber], ['RandomInteger', funcRandomInteger], ['RandomBuffer', funcRandomBuffer],
 
 	['ToUniversalTime', funcToUniversalTime], ['FromUniversalTime', funcFromUniversalTime],
 	['ToLocalTime', funcToLocalTime], ['FromLocalTime', funcFromLocalTime],
@@ -173,14 +175,14 @@ export class Expression {
 		@param values Record with variable names and values.
 		@returns Calculated value.
 	*/
-	evaluate(values: Record<string, Value>): Value {
+	evaluate(values?: Record<string, Value>): Value {
 		const variables = this._scope.variables();
 		for (const name in variables) {
 			if (!Object.prototype.hasOwnProperty.call(values, name)) {
 				this._root.frame(name).throwError(`undefined variable ${name}:\n`);
 			}
 			const variable = variables[name];
-			const value = values[name] ?? undefined;
+			const value = values?.[name] ?? undefined;
 			if (!variable.type.reduce(Type.of(value))) {
 				this._root.frame(name).throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
 			}

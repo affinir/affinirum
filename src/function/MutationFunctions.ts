@@ -170,13 +170,13 @@ export const funcFromNumberString = new FunctionDefinition(
 
 export const funcToBufferString = new FunctionDefinition(
 	(value: ArrayBuffer)=>
-		fromStringBuffer(value),
+		stringifyBuffer(value),
 	typeString, [typeBuffer],
 );
 
 export const funcFromBufferString = new FunctionDefinition(
 	(value: string)=>
-		toStringBuffer(value),
+		parseBuffer(value),
 	typeBuffer, [typeString],
 );
 
@@ -192,7 +192,7 @@ export const funcFromJsonString = new FunctionDefinition(
 	typeJson, [typeOptionalString],
 );
 
-export const fromStringBuffer = (value: ArrayBuffer)=> {
+export const stringifyBuffer = (value: ArrayBuffer)=> {
 	const bytes = new Uint8Array(value);
 	let str = '';
 	for (let i = 0; i < bytes.byteLength; ++i) {
@@ -201,7 +201,7 @@ export const fromStringBuffer = (value: ArrayBuffer)=> {
 	return str;
 };
 
-export const toStringBuffer = (value: string)=> {
+export const parseBuffer = (value: string)=> {
 	const bytes = new Uint8Array(Math.ceil(value.length / 2));
 	for (let i = 0, c = 0; c < value.length; ++i) {
 		bytes[i] = Number.parseInt(value.slice(c, c += 2), 16);

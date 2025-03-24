@@ -1,5 +1,5 @@
 import { FunctionDefinition, FUNCTION_ARG_MAX } from '../FunctionDefinition.js';
-import { typeNumber } from '../Type.js';
+import { typeBuffer, typeNumber } from '../Type.js';
 
 export const funcAdd = new FunctionDefinition(
 	(...values: number[])=>
@@ -89,4 +89,22 @@ export const funcRound = new FunctionDefinition(
 	(value: number)=>
 		Math.round(value),
 	typeNumber, [typeNumber],
+);
+
+export const funcRandomNumber = new FunctionDefinition(
+	(value: number)=>
+		value == null ? undefined : Math.random() * value,
+	typeNumber, [typeNumber],
+);
+
+export const funcRandomInteger = new FunctionDefinition(
+	(value: number)=>
+		value == null ? undefined : Math.floor(Math.random() * value),
+	typeNumber, [typeNumber],
+);
+
+export const funcRandomBuffer = new FunctionDefinition(
+	(value: number)=>
+		value == null ? undefined : crypto.getRandomValues(new Uint8Array(value)),
+	typeBuffer, [typeNumber],
 );
