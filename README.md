@@ -108,6 +108,10 @@ Whitespace characters are ignored.
 * Chain array of any depths into single array: **array Chain(array ...values)**
 * Merge objects into single object: **object Merge(array|object ...values)**
 * Current date time as milliseconds since epoch: **number Now()**
+* Random number: **number number.RandomNumber()**
+* Random integer: **number number.RandomInteger()**
+* Random buffer: **buffer number.RandomBuffer()**
+* Random alphanumeric string: **string number.RandomString()**
 #### Base Method Functions
 * Greater than: **boolean number.GreaterThan(number value)**
 * Less than: **boolean number.LessThan(number value)**
@@ -172,9 +176,6 @@ Whitespace characters are ignored.
 * Ceil: **number number.Ceil()**
 * Floor: **number number.Floor()**
 * Rounded value: **number number.Round()**
-* Random number: **number number.RandomNumber()**
-* Random integer: **number number.RandomInteger()**
-* Random buffer: **buffer number.RandomBuffer()**
 #### Mutation Method Functions
 * Get UTC time array from milliseconds since 1970: **array number.ToUniversalTime()**
 * Get milliseconds since 1970 from UTC time array: **number array.FromUniversalTime()**

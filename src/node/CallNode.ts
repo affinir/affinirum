@@ -33,17 +33,18 @@ export class CallNode extends Node {
 				this.throwError(`excessive number of arguments ${this._subnodes.length} is more than ${signature.maxArity} that function requires`);
 			}
 		}
+		let constant = signature?.pure;
 		for (let i = 0; i < this._subnodes.length; ++i) {
 			const argTypeInference = signature?.argTypeInference(this.type, i) ?? typeUnknown;
 			if (!argTypeInference) {
 				this.throwTypeError(type);
 			}
 			this._subnodes[i] = this._subnodes[i].compile(argTypeInference);
+			constant &&= this._subnodes[i].constant;
 		}
-		if (this._fnode.constant && this._subnodes.every((node)=> node.constant)) {
-			return new ConstantNode(this, (this._fnode.evaluate() as (...values: Value[])=> Value)(...this._subnodes.map((node)=> node.evaluate())));
-		}
-		return this;
+		return constant && this._fnode.constant
+			? new ConstantNode(this, (this._fnode.evaluate() as (...values: Value[])=> Value)(...this._subnodes.map((node)=> node.evaluate())))
+			: this;
 	}
 
 	override evaluate(): Value {

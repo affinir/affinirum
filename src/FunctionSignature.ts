@@ -12,7 +12,12 @@ export class FunctionSignature {
 		protected readonly _minArity?: number,
 		protected readonly _maxArity?: number,
 		protected readonly _typeInference?: number,
+		protected readonly _pure = true,
 	) {}
+
+	get pure() {
+		return this._pure;
+	}
 
 	get minArity(): number {
 		return this._minArity ?? this._argTypes.length;

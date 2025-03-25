@@ -1,5 +1,6 @@
 import { FunctionDefinition, FUNCTION_ARG_MAX } from '../FunctionDefinition.js';
-import { Value, typeBoolean, typeNumber, typeArray, typeObject, typeBooleanOrArray, typeNumberOrArray, typeArrayOrObject } from '../Type.js';
+import { Value, typeBoolean, typeNumber, typeBuffer, typeString, typeArray, typeObject,
+	typeBooleanOrArray, typeNumberOrArray, typeArrayOrObject } from '../Type.js';
 
 export const funcOr = new FunctionDefinition(
 	(...values: (boolean | boolean[])[])=>
@@ -60,5 +61,37 @@ export const funcMerge = new FunctionDefinition(
 export const funcNow = new FunctionDefinition(
 	()=>
 		new Date().getTime(),
-	typeNumber, [],
+	typeNumber, [], undefined, undefined, undefined, false,
+);
+
+export const funcRandomNumber = new FunctionDefinition(
+	(value: number)=>
+		value == null ? undefined : Math.random() * value,
+	typeNumber, [typeNumber], undefined, undefined, undefined, false,
+);
+
+export const funcRandomInteger = new FunctionDefinition(
+	(value: number)=>
+		value == null ? undefined : Math.floor(Math.random() * value),
+	typeNumber, [typeNumber], undefined, undefined, undefined, false,
+);
+
+export const funcRandomBuffer = new FunctionDefinition(
+	(value: number)=>
+		value == null || value < 0 ? undefined : crypto.getRandomValues(new Uint8Array(value)),
+	typeBuffer, [typeNumber], undefined, undefined, undefined, false,
+);
+
+export const funcRandomString = new FunctionDefinition(
+	(value: number)=> {
+		if (value == null || value < 0) {
+			return undefined;
+		}
+		let str = '';
+		while (str.length < value) {
+			str += Math.random().toString(36).slice(2);
+		}
+		return str.slice(0, value);
+	},
+	typeString, [typeNumber], undefined, undefined, undefined, false,
 );

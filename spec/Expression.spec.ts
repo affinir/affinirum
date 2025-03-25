@@ -145,7 +145,8 @@ describe('Expression Evaluation test', ()=> {
 		['[a:1, b:2,][c]', [{ a: 'abc', b: 'def', c: 'abc', result: 1 }, { a: 'abc', b: 'def', c: 'def', result: 2 }]],
 		['[x == `a` $ x : `a` :1].a', [{ x: 'a', result: 1 }, { x: 'b', result: 1 }]],
 		['["entity":[d.id:["a1", "a2"]]].entity.abc[0]', [{ d: { id: 'abc' }, result: 'a1' }, { d: { id: 'a' }, result: undefined }]],
-		['c.RandomBuffer.Length', [{ c: 0, result: 0 }, { c: 64, result: 64 }]],
+		['c.RandomBuffer.Length + c.RandomString.Length', [{ c: 0, result: 0 }, { c: 64, result: 128 }]],
+		['RandomBuffer(c).Length + RandomString(c).Length', [{ c: 0, result: 0 }, { c: 64, result: 128 }]],
 		['Now().ToUniversalTime[0]', [{ result: new Date().getUTCFullYear() }]],
 		['Now().ToLocalTime[0]', [{ result: new Date().getFullYear() }]],
 		['Now().ToUniversalTime[2]', [{ result: new Date().getUTCDate() }]],
@@ -196,5 +197,13 @@ describe('Expression Evaluation test', ()=> {
 			expect(err.message).toContain('error');
 			expect(err.message).toContain('undefined1');
 		}
+	});
+	it('parses random number function and evaluates multiple times', ()=> {
+		const expression = new Expression('RandomNumber(1000000)');
+		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
+	});
+	it('parses random string function and evaluates multiple times', ()=> {
+		const expression = new Expression('RandomString(20)');
+		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 });

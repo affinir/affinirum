@@ -14,8 +14,9 @@ export class FunctionDefinition {
 		minArity?: number,
 		maxArity?: number,
 		typeInference?: number,
+		pure = true,
 	) {
-		this._signature = new FunctionSignature(type, argTypes, minArity, maxArity, typeInference);
+		this._signature = new FunctionSignature(type, argTypes, minArity, maxArity, typeInference, pure);
 	}
 
 	get evaluate(): (...values: any[])=> Value {

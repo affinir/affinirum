@@ -90,21 +90,3 @@ export const funcRound = new FunctionDefinition(
 		Math.round(value),
 	typeNumber, [typeNumber],
 );
-
-export const funcRandomNumber = new FunctionDefinition(
-	(value: number)=>
-		value == null ? undefined : Math.random() * value,
-	typeNumber, [typeNumber],
-);
-
-export const funcRandomInteger = new FunctionDefinition(
-	(value: number)=>
-		value == null ? undefined : Math.floor(Math.random() * value),
-	typeNumber, [typeNumber],
-);
-
-export const funcRandomBuffer = new FunctionDefinition(
-	(value: number)=>
-		value == null ? undefined : crypto.getRandomValues(new Uint8Array(value)),
-	typeBuffer, [typeNumber],
-);
