@@ -1,79 +1,89 @@
 # expression-evaluation
-Evaluation of closed-form analytic expressions using recursive descent parser.
+A recursive descent parser for efficient evaluation of algorithmic expressions.
 
 Parser supports boolean expressions, regular algebraic expressions,
  various numeric, buffer, string, array, and object functions.
 It also supports global, and local variables, along with
  first-order functions and type checking.
 
+Supports boolean, algebraic, conditional expressions and loops,
+ along with a comprehensive set of numeric, buffer, string, array, and object functions.
+Also includes global and local variables, first-order functions, and shallow type checking.
+
 Target: ES2022 [browser+NodeJS][ESM+CJS].
 
-## Description
+## Features
 
-Data processing domain requires a language to describe data processing rules in intuitive yet concise form.
-Here are the list of features:
-* Parse once, execute multiple times
-* Efficient expression evaluation and basic type checking
-* Support for boolean, number, buffer, string, array, object, function, void,
-  and nullable types, including unknown type
-* Boolean, arithmetic, buffer, string and index operators
-* Numeric, buffer and string comparison operators
+* Parse once, execute multiple times for provided variable values
+* Constant expression optimization and basic type checking
+* Boolean, arithmetic, buffer, string and indexing operators
+* Comparison operators for numeric, buffer, and string types
 * Variadic functions, first-order functions
-* Input and statement variables
-* Standard math functions
-* Easy to add custom functions or constants
+* Support for input and statement variables
+* Standard mathematical and composition functions
+* Ability to inject custom functions and constants
 
-## Language
+## Language Specifications
 
-Expression may contain multiple comma separated sub-expressions.
-The value of an expression is the value of the last sub-expression in the program.
+Expressions can contain multiple comma-separated sub-expressions.
+The value of an expression is determined by the value of the last sub-expression in the program.
+* Scientific notation is supported for numbers
+* Hexadecimal integer values are prefixed with **#**
+* Hexadecimal buffer values are prefixed with **##**
+* String literals are enclosed in single (**'**), double (**"**), or backtick (**`**) quotes
 
-Number scientific notation is supported.
-Hexadecimal integer literals start with prefix **#**.
-Hexadecimal buffer literals start with prefix **##**.
-
-Array is an ordered sequence of values of any type, essentially tuple.
-It can be defined using brackets with comma separated elements inside.
-Array element can be accessed using brackets with numeric value inside.
-Empty array can be declared as **[]**.
+Array is an ordered sequence of values of any type.
+It is defined by comma-separated values enclosed in brackets (**[]**).
+An empty array is represented as **[]**.
+Examples: *[0,1,2]*, *["a","b","c"]*
+Array elements can be accessed using brackets with a zero-based numeric index.
+Examples: *theArray[0]*, *theArray[10]*, *theArray[indexVar]*
 
 Object is a container of named values of any type.
-It can be defined using brackets with comma separated key value pairs.
-Pair elements are separated by colon.
-Object property can be accessed using operator **.** with string literal or using brackets with string key or numeric index inside.
-Empty object can be declared as **[\:]**.
+It is defined by comma-separated key-value pair enclosed in brackets (**[]**).
+Key is separated from value by colon (**:**).
+An empty object is represented as **[\:]**.
+Examples: *["NumericProperty":100, "StringProperty":"abc"]*, *["a":0,"b":"str":"c":valueVar]*
+Object properties can be accessed using the dot (**.**) access operator with a string literal,
+ or with brackets containing a string key or numeric index.
+Examples: *theObject.NumericProperty*, *theObject["StringProperty"]*, *theObject[indexVar]*
 
-Function is a callable unit producing a value.
-The set of built-in functions can be extended with configuration entries.
-Also it is possible to define subroutines, i.e. functions defined in the code.
+A function is a callable unit that produces a value.
+The set of built-in functions can be extended through configuration entries.
+Additionally, subroutines (functions defined within the code) can be created.
 
-Type of any array is **array**.
-Type of any object is **object**.
-Type of any function is **function**.
-Type of **null** is **void**.
-
-Valid variable or function names consist of a letter, or **\_** characters followed by any combination
-of alphanumeric characters, and **\_**. For example: *x*, *\_a1*, *abc25*
+Valid variable and function names must start with a letter or underscore (**\_**)
+ and can be followed by any combination of alphanumeric characters or underscores.
+Examples: *x*, *\_a1*, *abc25*
 
 Whitespace characters are ignored.
 
 #### Types
-* boolean for values **true** and **false**
-* number
-* buffer
-* string
-* array
-* object
-* function
-* void for value **null**
-* type modifier **?** to make any type optional (nullable)
-* unknown type **??**
-#### Operators
+* **boolean** for values **true** and **false**
+* **number**
+* **buffer** for ordered sequences of bytes
+* **string** for ordered sequences of characters, text strings
+* **array** for ordered sequences of values of any type
+* **object** for sets of named values of any type
+* **function** for any built-in, injected or script-defined subroutines
+* **void** for value **null**
+Type modifier **?** can be used to make any type optional (nullable).
+Unknown or value-defined type is declared as **??**.
+
+#### Definitions
 * Value grouping: **(...)**
 * Unit grouping: **{...}**
-* Next statement: **,**
+* Value and unit separator: **,**
 * Array element at numeric index, or object property by string key: **[]**
 * Object property by string key or method function call: **.**
+* Array definiton: **[element1, ...]**
+* Object definition: **[propery1-key: property1-value, ...]**
+* Subroutine definition: **return-type(argument1-type argument1-name, ...)->...**
+* Shorthand parameterless subroutine definition: **->...**
+* Loop definition, iteratively evaluates suffix while prefix is true, returns last evaluated value: **...@...**
+* Conditional switch definition, returns first or second suffix if prefix is true or false: **...\$...:...**
+
+#### Operators
 * Boolean negation (Logical NOT): **!**
 * Boolean disjunction (Logical OR): **|**
 * Boolean conjunction (Logical AND): **&**
@@ -90,12 +100,6 @@ Whitespace characters are ignored.
 * Arithmetic division: **/**
 * Arithmetic remainder: **%**
 * Buffer, string, or array concatination: **+>**
-* Subroutine definition: **->...**
-* Strongly typed subroutine definition: **return-type(argument1-type argument1-name, ...)->...**
-* Array definiton: **[element1, ...]**
-* Object definition: **[propery1-key: property1-value, ...]**
-* Cycle statement, iterates evaluation of suffix while prefix is true: **...@...**
-* Switch statement, returns first or second suffix if prefix is true or false: **...\$...:...**
 * Assignment: **=**
 * Boolean disjunction (Logical OR) assignment: **|=**
 * Boolean conjunction (Logical AND) assignment: **&=**
@@ -215,9 +219,9 @@ Whitespace characters are ignored.
 The expression parsing is performed using the following grammar:
 
 	<program> = <unit>{ ","<unit> }
-	<unit> = <cycle>
-	<cycle> = <switch>{ "@" <switch> }
-	<switch> = <disjunction>{ "$" <unit> ":" <unit> }
+	<unit> = <loop>
+	<loop> = <condition>{ "@" <condition> }
+	<condition> = <disjunction>{ "$" <unit> ":" <unit> }
 	<disjunction> = <conjunction>{ "|"<conjunction> }
 	<conjunction> = <comparison>{ "&"<comparison> }
 	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "==" | "!=" )<aggregate> }

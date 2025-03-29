@@ -2,7 +2,7 @@ import { Node } from '../Node.js';
 import { ParserFrame } from '../ParserFrame.js';
 import { Type, Value, typeBoolean } from '../Type.js';
 
-export class CycleNode extends Node {
+export class LoopNode extends Node {
 
 	constructor(
 		frame: ParserFrame,
@@ -31,7 +31,7 @@ export class CycleNode extends Node {
 	}
 
 	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} cycle node`
+		return `${super.toString(ident)} loop node`
 			+ `, cnode:\n${this._cnode.toString(ident + 1)}`
 			+ `, subnode:\n${this._subnode.toString(ident + 1)}`;
 	}

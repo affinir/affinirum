@@ -25,7 +25,7 @@ import { Node } from './Node.js';
 import { ConstantNode } from './node/ConstantNode.js';
 import { CallNode } from './node/CallNode.js';
 import { VariableNode } from './node/VariableNode.js';
-import { CycleNode } from './node/CycleNode.js';
+import { LoopNode } from './node/LoopNode.js';
 import { ArrayNode } from './node/ArrayNode.js';
 import { ObjectNode } from './node/ObjectNode.js';
 import { ProgramNode } from './node/ProgramNode.js';
@@ -200,24 +200,24 @@ export class Expression {
 	}
 
 	protected unit(state: ParserState, scope: StaticScope): Node {
-		return this.cycle(state, scope);
+		return this.loop(state, scope);
 	}
 
-	protected cycle(state: ParserState, scope: StaticScope): Node {
-		let node = this.switch(state, scope);
+	protected loop(state: ParserState, scope: StaticScope): Node {
+		let node = this.condition(state, scope);
 		while (state.isCycle) {
-			node = new CycleNode(state.frame(), node, this.switch(state.next(), scope));
+			node = new LoopNode(state.frame(), node, this.condition(state.next(), scope));
 		}
 		return node;
 	}
 
-	protected switch(state: ParserState, scope: StaticScope): Node {
+	protected condition(state: ParserState, scope: StaticScope): Node {
 		const frame = state.frame();
 		let node = this.disjunction(state, scope);
 		if (state.operator === funcSwitch) {
 			const subnode = this.unit(state.next(), scope);
 			if (!state.isColonSeparator) {
-				state.throwError('missing switch else condition clause');
+				state.throwError('missing else conditional clause');
 			}
 			node = this.call(frame.ends(state.end), funcSwitch, [node, subnode, this.unit(state.next(), scope)]);
 		}
