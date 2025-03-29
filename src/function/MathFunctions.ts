@@ -1,5 +1,5 @@
 import { FunctionDefinition, FUNCTION_ARG_MAX } from '../FunctionDefinition.js';
-import { typeBuffer, typeNumber } from '../Type.js';
+import { typeNumber } from '../Type.js';
 
 export const funcAdd = new FunctionDefinition(
 	(...values: number[])=>

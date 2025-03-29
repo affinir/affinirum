@@ -69,15 +69,14 @@ Whitespace characters are ignored.
 * type modifier **?** to make any type optional (nullable)
 * unknown type **??**
 #### Operators
-* Assignment: **=**
 * Value grouping: **(...)**
 * Unit grouping: **{...}**
 * Next statement: **,**
 * Array element at numeric index, or object property by string key: **[]**
 * Object property by string key or method function call: **.**
-* Boolean negation: **!**
-* Boolean disjunction: **|**
-* Boolean conjunction: **&**
+* Boolean negation (Logical NOT): **!**
+* Boolean disjunction (Logical OR): **|**
+* Boolean conjunction (Logical AND): **&**
 * Greater than: **>**
 * Less than: **<**
 * Greater than or equals to: **>=**
@@ -97,6 +96,14 @@ Whitespace characters are ignored.
 * Object definition: **[propery1-key: property1-value, ...]**
 * Cycle statement, iterates evaluation of suffix while prefix is true: **...@...**
 * Switch statement, returns first or second suffix if prefix is true or false: **...\$...:...**
+* Assignment: **=**
+* Boolean disjunction (Logical OR) assignment: **|=**
+* Boolean conjunction (Logical AND) assignment: **&=**
+* Arithmetic addition assignment: **+=**
+* Arithmetic subtraction assignment: **-=**
+* Arithmetic multiplication assignment: ***=**
+* Arithmetic division assignment: **/=**
+* Arithmetic remainder assignment: **%=**
 #### Global Functions
 * Boolean disjunction: **boolean Or(boolean|array ...values)**
 * Boolean conjunction: **boolean And(boolean|array ...values)**

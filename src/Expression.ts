@@ -193,7 +193,7 @@ export class Expression {
 	protected program(state: ParserState, scope: StaticScope): Node {
 		const frame = state.frame();
 		const nodes: Node[] = [this.unit(state, scope)];
-		while (state.isSeparator) {
+		while (state.isCommaSeparator) {
 			nodes.push(this.unit(state.next(), scope));
 		}
 		return new ProgramNode(frame.ends(state.end), nodes);
@@ -216,7 +216,7 @@ export class Expression {
 		let node = this.disjunction(state, scope);
 		if (state.operator === funcSwitch) {
 			const subnode = this.unit(state.next(), scope);
-			if (!state.isColon) {
+			if (!state.isColonSeparator) {
 				state.throwError('missing switch else condition clause');
 			}
 			node = this.call(frame.ends(state.end), funcSwitch, [node, subnode, this.unit(state.next(), scope)]);
@@ -309,8 +309,8 @@ export class Expression {
 			const frame = state.frame();
 			if (state.operator === funcAt) {
 				state.next();
-				if (state.isLiteral && (typeof state.literal === 'string' || typeof state.literal === 'number')) {
-					node = this.call(frame.ends(state.end), funcAt, [node, new ConstantNode(state, state.literal)]);
+				if (state.isLiteral && (typeof state.literalValue === 'string' || typeof state.literalValue === 'number')) {
+					node = this.call(frame.ends(state.end), funcAt, [node, new ConstantNode(state, state.literalValue)]);
 					state.next();
 				}
 				else if (state.isToken) {
@@ -321,7 +321,7 @@ export class Expression {
 							const subnodes: Node[] = [node];
 							while (!state.next().isParenthesesClose) {
 								subnodes.push(this.unit(state, scope));
-								if (!state.isSeparator) {
+								if (!state.isCommaSeparator) {
 									break;
 								}
 							}
@@ -349,7 +349,7 @@ export class Expression {
 				const subnodes: Node[] = [];
 				while (!state.next().isParenthesesClose) {
 					subnodes.push(this.unit(state, scope));
-					if (!state.isSeparator) {
+					if (!state.isCommaSeparator) {
 						break;
 					}
 				}
@@ -373,7 +373,7 @@ export class Expression {
 	protected term(state: ParserState, scope: StaticScope): Node {
 		if (state.isLiteral) {
 			const frame = state.frame();
-			const constant = state.literal;
+			const constant = state.literalValue;
 			state.next();
 			return new ConstantNode(frame, constant);
 		}
@@ -394,7 +394,7 @@ export class Expression {
 		}
 		else if (state.isType) {
 			let type = state.type;
-			if (state.next().isOption) {
+			if (state.next().isOptionalType) {
 				type = type.toOptional();
 				state.next();
 			}
@@ -434,20 +434,20 @@ export class Expression {
 			if (checkEmptyState.next().isBracketsClose) {
 				return new ConstantNode(frame.ends(state.next().next().end), []);
 			}
-			else if (checkEmptyState.isColon && checkEmptyState.next().isBracketsClose) {
+			else if (checkEmptyState.isColonSeparator && checkEmptyState.next().isBracketsClose) {
 				return new ConstantNode(frame.ends(state.next().next().next().end), {});
 			}
 			const subnodes: [ Node | number, Node ][] = [];
 			let index = 0;
 			while (!state.next().isBracketsClose) {
 				const node = this.unit(state, scope);
-				if (state.isColon) {
+				if (state.isColonSeparator) {
 					subnodes.push([node, this.unit(state.next(), scope)]);
 				}
 				else {
 					subnodes.push([index++, node]);
 				}
-				if (!state.isSeparator) {
+				if (!state.isCommaSeparator) {
 					break;
 				}
 			}
@@ -491,13 +491,16 @@ export class Expression {
 						variable = new Variable();
 					}
 				}
-				scope.set(state.token, variable);
+				scope.global(state.token, variable);
 			}
 		}
 		const frame = state.frame();
 		return new VariableNode(frame.ends(state.end), variable, state.next().isAssignment
-			?	this.unit(state.next(), scope)
-			: undefined);
+			? state.assignmentOperator
+				? this.call(frame.ends(state.end), state.assignmentOperator, [new VariableNode(frame.ends(state.end), variable), this.unit(state.next(), scope)])
+				: this.unit(state.next(), scope)
+			: undefined
+		);
 	}
 
 	protected subroutine(state: ParserState, scope: StaticScope, type?: Type): Node {
@@ -512,7 +515,7 @@ export class Expression {
 					state.throwError('missing function argument type');
 				}
 				let argType = state.type;
-				if (state.next().isOption) {
+				if (state.next().isOptionalType) {
 					argType = argType.toOptional();
 					state.next();
 				}
@@ -524,7 +527,7 @@ export class Expression {
 					state.throwError('variable redefinition');
 				}
 				variables.set(token, new Variable(argType));
-				if (!state.next().isSeparator) {
+				if (!state.next().isCommaSeparator) {
 					break;
 				}
 			}
@@ -543,7 +546,8 @@ export class Expression {
 		};
 		return new ConstantNode(frame.ends(state.end), value, type
 			? new FunctionSignature(type, args.map((v)=> v.type))
-			: FunctionSignature.unknown, subnode);
+			: FunctionSignature.unknown, subnode
+		);
 	}
 
 	protected call(frame: ParserFrame, func: FunctionDefinition, subnodes: Node[]): Node {

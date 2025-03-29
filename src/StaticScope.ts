@@ -15,8 +15,8 @@ export class StaticScope {
 		return this._variables.get(name) ?? this._superscope?.get(name);
 	}
 
-	set(name: string, variable: Variable): StaticScope {
-		this._superscope?.set(name, variable) ?? this._variables.set(name, variable);
+	global(name: string, variable: Variable): StaticScope {
+		this._superscope?.global(name, variable) ?? this._variables.set(name, variable);
 		return this;
 	}
 

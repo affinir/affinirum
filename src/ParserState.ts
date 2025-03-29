@@ -12,16 +12,24 @@ class Literal { constructor(public readonly value: Value) {} }
 const valueTrue = new Literal(true);
 const valueFalse = new Literal(false);
 const valueNull = new Literal(undefined);
+class Assignment { constructor(public readonly operator?: FunctionDefinition) {} }
+const funcAssignment = new Assignment();
+const funcOrAssignment = new Assignment(funcOr);
+const funcAndAssignment = new Assignment(funcAnd);
+const funcAddAssignment = new Assignment(funcAdd);
+const funcSubtractAssignment = new Assignment(funcSubtract);
+const funcMultiplyAssignment = new Assignment(funcMultiply);
+const funcDivideAssignment = new Assignment(funcDivide);
+const funcRemainderAssignment = new Assignment(funcRemainder);
 const symbolParenthesesOpen = Symbol();
 const symbolParenthesesClose = Symbol();
 const symbolBracketsOpen = Symbol();
 const symbolBracketsClose = Symbol();
 const symbolBracesOpen = Symbol();
 const symbolBracesClose = Symbol();
-const symbolColon = Symbol();
-const symbolSeparator = Symbol();
-const symbolAssignment = Symbol();
-const symbolOption = Symbol();
+const symbolColonSeparator = Symbol();
+const symbolCommaSeparator = Symbol();
+const symbolOptionalType = Symbol();
 const symbolScope = Symbol();
 const symbolCycle = Symbol();
 
@@ -34,7 +42,7 @@ const isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
 
 export class ParserState extends ParserFrame {
 
-	protected _fragment: FunctionDefinition | Literal | Type | symbol | string | undefined;
+	protected _fragment: Literal | Assignment | FunctionDefinition | Type | symbol | string | undefined;
 
 	constructor(
 		expr: string,
@@ -42,8 +50,12 @@ export class ParserState extends ParserFrame {
 		super(expr);
 	}
 
-	get literal(): Value {
+	get literalValue(): Value {
 		return (this._fragment as Literal).value;
+	}
+
+	get assignmentOperator(): FunctionDefinition | undefined {
+		return (this._fragment as Assignment).operator;
 	}
 
 	get operator(): FunctionDefinition {
@@ -64,6 +76,10 @@ export class ParserState extends ParserFrame {
 
 	get isLiteral(): boolean {
 		return this._fragment instanceof Literal;
+	}
+
+	get isAssignment(): boolean {
+		return this._fragment instanceof Assignment;
 	}
 
 	get isType(): boolean {
@@ -98,20 +114,16 @@ export class ParserState extends ParserFrame {
 		return this._fragment === symbolBracesClose;
 	}
 
-	get isColon(): boolean {
-		return this._fragment === symbolColon;
+	get isColonSeparator(): boolean {
+		return this._fragment === symbolColonSeparator;
 	}
 
-	get isSeparator(): boolean {
-		return this._fragment === symbolSeparator;
+	get isCommaSeparator(): boolean {
+		return this._fragment === symbolCommaSeparator;
 	}
 
-	get isAssignment(): boolean {
-		return this._fragment === symbolAssignment;
-	}
-
-	get isOption(): boolean {
-		return this._fragment === symbolOption;
+	get isOptionalType(): boolean {
+		return this._fragment === symbolOptionalType;
 	}
 
 	get isScope(): boolean {
@@ -148,19 +160,29 @@ export class ParserState extends ParserFrame {
 				case ']': this._fragment = symbolBracketsClose; break;
 				case '{': this._fragment = symbolBracesOpen; break;
 				case '}': this._fragment = symbolBracesClose; break;
-				case ':': this._fragment = symbolColon; break;
-				case ',': this._fragment = symbolSeparator; break;
+				case ':': this._fragment = symbolColonSeparator; break;
+				case ',': this._fragment = symbolCommaSeparator; break;
 				case '@': this._fragment = symbolCycle; break;
 				case '?':
 					switch (this._expr.charAt(this._end)) {
 						case '?': ++this._end; this._fragment = typeUnknown; break;
 						case ':': ++this._end; this._fragment = funcCoalesce; break;
-						default: this._fragment = symbolOption; break;
+						default: this._fragment = symbolOptionalType; break;
 					}
 					break;
 				case '$': this._fragment = funcSwitch; break;
-				case '|': this._fragment = funcOr; break;
-				case '&': this._fragment = funcAnd; break;
+				case '|':
+					switch (this._expr.charAt(this._end)) {
+						case '=': ++this._end; this._fragment = funcOrAssignment; break;
+						default: this._fragment = funcOr; break;
+					}
+					break;
+				case '&':
+					switch (this._expr.charAt(this._end)) {
+						case '=': ++this._end; this._fragment = funcAndAssignment; break;
+						default: this._fragment = funcAnd; break;
+					}
+					break;
 				case '>':
 					switch (this._expr.charAt(this._end)) {
 						case '=': ++this._end; this._fragment = funcGreaterOrEqual; break;
@@ -182,24 +204,41 @@ export class ParserState extends ParserFrame {
 				case '=':
 					switch (this._expr.charAt(this._end)) {
 						case '=': ++this._end; this._fragment = funcEqual; break;
-						default: this._fragment = symbolAssignment; break;
+						default: this._fragment = funcAssignment; break;
 					}
 					break;
 				case '+':
 					switch (this._expr.charAt(this._end)) {
 						case '>': ++this._end; this._fragment = funcAppend; break;
+						case '=': ++this._end; this._fragment = funcAddAssignment; break;
 						default: this._fragment = funcAdd; break;
 					}
 					break;
 				case '-':
 					switch (this._expr.charAt(this._end)) {
 						case '>': ++this._end; this._fragment = symbolScope; break;
+						case '=': ++this._end; this._fragment = funcSubtractAssignment; break;
 						default: this._fragment = funcSubtract; break;
 					}
 					break;
-				case '*': this._fragment = funcMultiply; break;
-				case '/': this._fragment = funcDivide; break;
-				case '%': this._fragment = funcRemainder; break;
+				case '*':
+					switch (this._expr.charAt(this._end)) {
+						case '=': ++this._end; this._fragment = funcMultiplyAssignment; break;
+						default: this._fragment = funcMultiply; break;
+					}
+					break;
+				case '/':
+					switch (this._expr.charAt(this._end)) {
+						case '=': ++this._end; this._fragment = funcDivideAssignment; break;
+					 	default: this._fragment = funcDivide; break;
+					}
+					break;
+				case '%':
+					switch (this._expr.charAt(this._end)) {
+						case '=': ++this._end; this._fragment = funcRemainderAssignment; break;
+						default: this._fragment = funcRemainder; break;
+					}
+					break;
 				case '^': this._fragment = funcPower; break;
 				case '.': this._fragment = funcAt; break;
 				case '#':

@@ -151,6 +151,15 @@ describe('Expression Evaluation test', ()=> {
 		['Now().ToLocalTime[0]', [{ result: new Date().getFullYear() }]],
 		['Now().ToUniversalTime[2]', [{ result: new Date().getUTCDate() }]],
 		['Now().ToLocalTime[2]', [{ result: new Date().getDate() }]],
+		['a|=b', [{ a: true, b: false, result: true }, { a: false, b: true, result: true }, { a: false, b: false, result: false }, { a: true, b: true, result: true }]],
+		['a&=b', [{ a: true, b: false, result: false }, { a: false, b: true, result: false }, { a: false, b: false, result: false }, { a: true, b: true, result: true }]],
+		['a+=b', [{ a: 0, b: 10, result: 10 }, { a: 1, b: 10, result: 11 }]],
+		['a-=b', [{ a: 0, b: 2, result: -2 }, { a: 1, b: 0, result: 1 }]],
+		['a*=b', [{ a: 1, b: 2, result: 2 }, { a: 0, b: 2, result: 0 }]],
+		['a/=b', [{ a: 4, b: 2, result: 2 }, { a: 0, b: 2, result: 0 }]],
+		['a %= b', [{ a: 6, b: 5, result: 1 }, { a: 0, b: 2, result: 0 }]],
+		['(a+=10) + (b-=10) + (c*=2) + (d/=2) + (e %= 5)', [{ a: 1, b: 2, c: 3, d: 4, e: 6, result: 12 }]],
+		['a+=10 + b-=10 + c*=2 + d/=2 + e %= 2', [{ a: 10, b: 2, c: 3, d: 4, e: 6, result: 0 }]],
 	].forEach(([expr, args])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
 			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v)}`, ()=> {
