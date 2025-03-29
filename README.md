@@ -35,26 +35,28 @@ The value of an expression is determined by the value of the last sub-expression
 Array is an ordered sequence of values of any type.
 It is defined by comma-separated values enclosed in brackets (**[]**).
 An empty array is represented as **[]**.
-Examples: *[0,1,2]*, *["a","b","c"]*
+<br>Examples: *[0,1,2]*, *["a","b","c"]*
+
 Array elements can be accessed using brackets with a zero-based numeric index.
-Examples: *theArray[0]*, *theArray[10]*, *theArray[indexVar]*
+<br>Examples: *theArray[0]*, *theArray[10]*, *theArray[indexVar]*
 
 Object is a container of named values of any type.
 It is defined by comma-separated key-value pair enclosed in brackets (**[]**).
 Key is separated from value by colon (**:**).
 An empty object is represented as **[\:]**.
-Examples: *["NumericProperty":100, "StringProperty":"abc"]*, *["a":0,"b":"str":"c":valueVar]*
+<br>Examples: *["NumericProperty":100, "StringProperty":"abc"]*, *["a":0,"b":"str":"c":valueVar]*
+
 Object properties can be accessed using the dot (**.**) access operator with a string literal,
  or with brackets containing a string key or numeric index.
-Examples: *theObject.NumericProperty*, *theObject["StringProperty"]*, *theObject[indexVar]*
+<br>Examples: *theObject.NumericProperty*, *theObject["StringProperty"]*, *theObject[indexVar]*
 
-A function is a callable unit that produces a value.
+A function is a callable code unit that produces a value.
 The set of built-in functions can be extended through configuration entries.
-Additionally, subroutines (functions defined within the code) can be created.
+Additionally, subroutines (functions defined in code) can be created.
 
 Valid variable and function names must start with a letter or underscore (**\_**)
  and can be followed by any combination of alphanumeric characters or underscores.
-Examples: *x*, *\_a1*, *abc25*
+<br>Examples: *x*, *\_a1*, *abc25*
 
 Whitespace characters are ignored.
 
@@ -67,8 +69,11 @@ Whitespace characters are ignored.
 * **object** for sets of named values of any type
 * **function** for any built-in, injected or script-defined subroutines
 * **void** for value **null**
+
 Type modifier **?** can be used to make any type optional (nullable).
-Unknown or value-defined type is declared as **??**.
+<br>Examples: *number? optNumVar*, *array? optArrayVar*
+
+Unknown or variant type is declared as **??**.
 
 #### Definitions
 * Value grouping: **(...)**
@@ -79,9 +84,10 @@ Unknown or value-defined type is declared as **??**.
 * Array definiton: **[element1, ...]**
 * Object definition: **[propery1-key: property1-value, ...]**
 * Subroutine definition: **return-type(argument1-type argument1-name, ...)->...**
-* Shorthand parameterless subroutine definition: **->...**
-* Loop definition, iteratively evaluates suffix while prefix is true, returns last evaluated value: **...@...**
 * Conditional switch definition, returns first or second suffix if prefix is true or false: **...\$...:...**
+* Loop definition, iteratively evaluates suffix while prefix is true, returns last evaluated value: **...@...**
+
+Parameterless subroutine definition can be shorthanded as **->...**.
 
 #### Operators
 * Boolean negation (Logical NOT): **!**
@@ -215,7 +221,8 @@ Unknown or value-defined type is declared as **??**.
 * Epsilon **EPSILON**
 * Pi **PI**
 
-### Grammar
+## Language Grammar
+
 The expression parsing is performed using the following grammar:
 
 	<program> = <unit>{ ","<unit> }
