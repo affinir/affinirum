@@ -27,4 +27,8 @@ export class FunctionDefinition {
 		return this._signature
 	}
 
+	toString(): string {
+		return this._signature.toString();
+	}
+
 }

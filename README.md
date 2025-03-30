@@ -27,36 +27,30 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 
 Expressions can contain multiple comma-separated sub-expressions.
 The value of an expression is determined by the value of the last sub-expression in the program.
-* Scientific notation is supported for numbers
-* Hexadecimal integer values are prefixed with **#**
-* Hexadecimal buffer values are prefixed with **##**
-* String literals are enclosed in single (**'**), double (**"**), or backtick (**`**) quotes
+* Scientific notation is supported for numbers, like *0.1281e+2*
+* Hexadecimal integer values are prefixed with **#**, like *#a011*
+* Hexadecimal buffer values are enclosed in **#**, like *#10ab0901#*
+* String literals are enclosed in single (**'**), double (**"**), or backtick (**`**) quotes, like *'string value'*
 
 Array is an ordered sequence of values of any type.
-It is defined by comma-separated values enclosed in brackets (**[]**).
-An empty array is represented as **[]**.
-<br>Examples: *[0,1,2]*, *["a","b","c"]*
+It is defined by comma-separated values enclosed in brackets (**[]**), like  *[0,1,2]*, *["a","b","c"]*.
+<br>An empty array is represented as **[]**.
 
-Array elements can be accessed using brackets with a zero-based numeric index.
-<br>Examples: *theArray[0]*, *theArray[10]*, *theArray[indexVar]*
+Array elements can be accessed using brackets with a zero-based numeric index, like *theArray[0]*, *theArray[10]*, *theArray[indexVar]*
 
 Object is a container of named values of any type.
-It is defined by comma-separated key-value pair enclosed in brackets (**[]**).
-Key is separated from value by colon (**:**).
-An empty object is represented as **[\:]**.
-<br>Examples: *["NumericProperty":100, "StringProperty":"abc"]*, *["a":0,"b":"str":"c":valueVar]*
+It is defined by comma-separated key-value pair enclosed in brackets (**[]**) where key is separated from value by colon (**:**), like *["NumericProperty":100, "StringProperty":"abc"]*, *["a":0,"b":"str":"c":valueVar]*.
+<br>An empty object is represented as **[\:]**.
 
 Object properties can be accessed using the dot (**.**) access operator with a string literal,
- or with brackets containing a string key or numeric index.
-<br>Examples: *theObject.NumericProperty*, *theObject["StringProperty"]*, *theObject[indexVar]*
+ or with brackets containing a string key or numeric index, like *theObject.NumericProperty*, *theObject["StringProperty"]*, *theObject[indexVar]*
 
 A function is a callable code unit that produces a value.
 The set of built-in functions can be extended through configuration entries.
 Additionally, subroutines (functions defined in code) can be created.
 
 Valid variable and function names must start with a letter or underscore (**\_**)
- and can be followed by any combination of alphanumeric characters or underscores.
-<br>Examples: *x*, *\_a1*, *abc25*
+ and can be followed by any combination of alphanumeric characters or underscores, like *x*, *\_a1*, *abc25*
 
 Whitespace characters are ignored.
 
@@ -194,26 +188,29 @@ Parameterless subroutine definition can be shorthanded as **->...**.
 * Floor: **number number.Floor()**
 * Rounded value: **number number.Round()**
 #### Mutation Method Functions
-* Get UTC time array from milliseconds since 1970: **array number.ToUniversalTime()**
+* Get UTC time array from milliseconds since 1970: **array number|string.ToUniversalTime()**
 * Get milliseconds since 1970 from UTC time array: **number array.FromUniversalTime()**
-* Get local time array from milliseconds since 1970: **array number.ToLocalTime()**
+* Get local time array from milliseconds since 1970: **array number|string.ToLocalTime()**
 * Get milliseconds since 1970 from local time array: **number array.FromLocalTime()**
-* Get UTC time month index from milliseconds since 1970: **array number.ToUniversalTimeMonthIndex()**
-* Get local time month index from milliseconds since 1970: **array number.ToLocalTimeMonthIndex()**
-* Get UTC time weekday index from milliseconds since 1970: **array number.ToUniversalTimeWeekdayIndex()**
-* Get local time weekday index from milliseconds since 1970: **array number.ToLocalTimeWeekdayIndex()**
-* Get ISO time string from milliseconds since 1970: **string number.ToTimeString()**
+* Get UTC time month index from milliseconds since 1970: **array number|string.ToUniversalTimeMonthIndex()**
+* Get local time month index from milliseconds since 1970: **array number|string.ToLocalTimeMonthIndex()**
+* Get UTC time weekday index from milliseconds since 1970: **array number|string.ToUniversalTimeWeekdayIndex()**
+* Get local time weekday index from milliseconds since 1970: **array number|string.ToLocalTimeWeekdayIndex()**
+* Get ISO time string from milliseconds since 1970: **string number|string.ToTimeString()**
 * Get milliseconds since 1970 from ISO time string: **number string.FromTimeString()**
 * Encode number: **buffer number.ToNumberBuffer(string encoding)**
 * Decode number: **number buffer.FromNumberBuffer(string encoding, number? offset)**
-* Encode string: **buffer string.ToStringBuffer(string encoding)**
+* Encode string: **buffer string.ToStringBuffer(string? encoding)**
 * Decode string: **string buffer.FromStringBuffer(string? encoding, number? offset, number? length)**
-* Create decimal string from number: **string number.ToNumberString()**
-* Parse number from decimal string: **buffer string.FromNumberString()**
-* Create hexadecimal string from buffer: **string buffer.ToBufferString()**
-* Parse buffer from hexadecimal string: **buffer string.FromBufferString()**
+* Create string from boolean: **string? boolean?.ToBooleanString()**
+* Parse boolean from string: **boolean? string?.FromBooleanString()**
+* Create decimal string from number: **string? number?.ToNumberString()**
+* Parse number from decimal string: **number? string?.FromNumberString()**
+* Create hexadecimal string from buffer: **string? buffer?.ToBufferString()**
+* Parse buffer from hexadecimal string: **buffer? string?.FromBufferString()**
 * Parse object from JSON-formatted string: **boolean?|number?|string?|array?|object? string?.FromJsonString()**
-* Create JSON-formatted string from object: **string? boolean?|number?|string?|array?|object?.ToJsonString()**
+* Create JSON-formatted string from object: **string? boolean?|number?|string?|array?|object?.ToJsonString(string? whitespace)**
+* Create text from any value: **string ??.ToText(string? whitespace)**
 #### Constants
 * Not-a-number **NAN**
 * Positive infinity **POSINF**
@@ -236,15 +233,17 @@ The expression parsing is performed using the following grammar:
 	<product> = <factor>{ ( "*" | "/" | "%" )<factor> }
 	<factor> = { "-" }<coalescence>{ "^"<coalescence> }
 	<coalescence> = <accessor>{ "?:"<accessor> }
-	<accessor> = <term>{ ( "." ( <property> | <function-name-string> ) | "("{ <unit> }{ ","<unit> }")" | "["<unit>"]" ) }
-	<term> = <literal> | <constant-name-string> | <function-name-string> | <variable> | <subroutine> |
+	<accessor> = <term>{ ( "." ( <property> | <function-name> ) | <function> | "["<unit>"]" ) }
+	<term> = <literal> | <constant-name> | <variable> | <function> | <subroutine> |
 		"{"<program>"}" | "("<unit>")" | <array> | <object>
-	<literal> = <decimal-number> | #<hexadecimal-number> | ##<hexadecimal-binary> | "'"<text-string>"'"
+	<literal> = <decimal-number> | #<hexadecimal-number> | #<hexadecimal-binary># | "'"<text-string>"'"
 	<array> = "["{ <unit> }{ ","<unit> }"]"
 	<object> = "["{ <unit>:<unit> }{ "," <unit>:<unit> }"]"
-	<variable> = { <type> } <variable-name-string>{ "="<unit> }
-	<subroutine> = { <type>"("{ <type> <argument-name-string> }{ ","<type> <argument-name-string> }")" } "->" <unit>
-	<type> = ( "void" | "boolean" | "number" | "buffer" | "string" | "array" | "object" | "function" ){ "?" } | "??"
+	<variable> = { <type> } <variable-name>{ ( "=" | "|=" | "&=" | "+=" | "-=" | "*=" | "/=" | "%=" )<unit> }
+	<function> = <function-name>"("{ <unit> }{ ","<unit> }")"
+	<subroutine> = { <type>"("{ <type> <argument-name> }{ ","<type> <argument-name> }")" }"->"<unit>
+	<type> = ( "void" | "boolean" | "number" | "buffer" | "string" |
+		"array" | "object" | "function" ){ "?" } | "??"
 
 ## Reference
 

@@ -1,63 +1,64 @@
 import { FunctionDefinition } from '../FunctionDefinition.js';
-import { Value, typeNumber, typeBuffer, typeString, typeArray, typeOptionalNumber, typeOptionalString, typeJson } from '../Type.js';
+import { Value, typeUnknown, typeNumber, typeBuffer, typeString, typeArray,
+	typeOptionalBoolean, typeOptionalNumber, typeOptionalBuffer, typeOptionalString, typeNumberOrString, typeJson } from '../Type.js';
 
 export const funcToUniversalTime = new FunctionDefinition(
-	(value: number)=> {
-		const v = new Date(value);
-		return [v.getUTCFullYear(), v.getUTCMonth() + 1, v.getUTCDate(),
-			v.getUTCHours(), v.getUTCMinutes(), v.getUTCSeconds(), v.getUTCMilliseconds()];
+	(value: number | string)=> {
+		const v = parseDate(value);
+		return v ? [v.getUTCFullYear(), v.getUTCMonth() + 1, v.getUTCDate(),
+			v.getUTCHours(), v.getUTCMinutes(), v.getUTCSeconds(), v.getUTCMilliseconds()] : undefined;
 	},
-	typeArray, [typeNumber],
+	typeArray, [typeNumberOrString],
 );
 
 export const funcFromUniversalTime = new FunctionDefinition(
-	(time: number[])=>
-		Date.UTC(time[0] ?? 1970, (time[1] ?? 1) - 1, time[2] ?? 1, time[3] ?? 0, time[4] ?? 0, time[5] ?? 0, time[6] ?? 0),
+	(value: number[])=>
+		Date.UTC(value[0] ?? 1970, (value[1] ?? 1) - 1, value[2] ?? 1, value[3] ?? 0, value[4] ?? 0, value[5] ?? 0, value[6] ?? 0),
 	typeNumber, [typeArray],
 );
 
 export const funcToLocalTime = new FunctionDefinition(
-	(value: number)=> {
-		const v = new Date(value);
-		return [v.getFullYear(), v.getMonth() + 1, v.getDate(),
-			v.getHours(), v.getMinutes(), v.getSeconds(), v.getMilliseconds()];
+	(value: number | string)=> {
+		const v = parseDate(value);
+		return v ? [v.getFullYear(), v.getMonth() + 1, v.getDate(),
+			v.getHours(), v.getMinutes(), v.getSeconds(), v.getMilliseconds()] : undefined;
 	},
-	typeArray, [typeNumber],
+	typeArray, [typeNumberOrString],
 );
 
 export const funcFromLocalTime = new FunctionDefinition(
-	(time: number[])=>
-		new Date(time[0] ?? 1970, (time[1] ?? 1) - 1, time[2] ?? 1, time[3] ?? 0, time[4] ?? 0, time[5] ?? 0, time[6] ?? 0).getTime(),
+	(value: number[])=>
+		new Date(value[0] ?? 1970, (value[1] ?? 1) - 1, value[2] ?? 1, value[3] ?? 0, value[4] ?? 0, value[5] ?? 0, value[6] ?? 0).getTime(),
 	typeNumber, [typeArray],
 );
 
 export const funcToUniversalTimeMonthIndex = new FunctionDefinition(
-	(value: number)=> new Date(value).getUTCMonth(),
-	typeNumber, [typeNumber],
+	(value: number | string)=> parseDate(value)?.getUTCMonth(),
+	typeNumber, [typeNumberOrString],
 );
 
 export const funcToLocalTimeMonthIndex = new FunctionDefinition(
-	(value: number)=> new Date(value).getMonth(),
-	typeNumber, [typeNumber],
+	(value: number | string)=> parseDate(value)?.getMonth(),
+	typeNumber, [typeNumberOrString],
 );
 
 export const funcToUniversalTimeWeekdayIndex = new FunctionDefinition(
-	(value: number)=> new Date(value).getUTCDay(),
-	typeNumber, [typeNumber],
+	(value: number | string)=> parseDate(value)?.getUTCDay(),
+	typeNumber, [typeNumberOrString],
 );
 
 export const funcToLocalTimeWeekdayIndex = new FunctionDefinition(
-	(value: number)=> new Date(value).getDay(),
-	typeNumber, [typeNumber],
+	(value: number | string)=> parseDate(value)?.getDay(),
+	typeNumber, [typeNumberOrString],
 );
 
 export const funcToTimeString = new FunctionDefinition(
-	(value: number)=> new Date(value).toISOString(),
-	typeString, [typeNumber],
+	(value: number | string)=> parseDate(value)?.toISOString(),
+	typeString, [typeNumberOrString],
 );
 
 export const funcFromTimeString = new FunctionDefinition(
-	(value: string)=> new Date(value).getTime(),
+	(value: string)=> parseDate(value)?.getTime(),
 	typeNumber, [typeString],
 );
 
@@ -65,6 +66,9 @@ export const funcToNumberBuffer = new FunctionDefinition(
 	(value: number, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
 			| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
 			| 'float32' | 'float32le' | 'float64' | 'float64le')=> {
+		if (value == null) {
+			return undefined;
+		}
 		let bits = '';
 		for (let i = 0; i < encoding.length; ++i) {
 			const c = encoding[i];
@@ -96,10 +100,13 @@ export const funcToNumberBuffer = new FunctionDefinition(
 );
 
 export const funcFromNumberBuffer = new FunctionDefinition(
-	(buffer: ArrayBuffer, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
+	(value: ArrayBuffer, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
 			| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
 			| 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: number)=> {
-		const dv = new DataView(buffer, byteOffset);
+		if (value == null) {
+			return undefined;
+		}
+		const dv = new DataView(value, byteOffset);
 		switch (encoding) {
 			case 'int8': return dv.getInt8(0);
 			case 'int16': return dv.getInt16(0);
@@ -123,6 +130,9 @@ export const funcFromNumberBuffer = new FunctionDefinition(
 
 export const funcToStringBuffer = new FunctionDefinition(
 	(value: string, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8')=> {
+		if (value == null) {
+			return undefined;
+		}
 		if (encoding === 'utf8') {
 			return new TextEncoder().encode(value).buffer;
 		}
@@ -140,6 +150,9 @@ export const funcToStringBuffer = new FunctionDefinition(
 
 export const funcFromStringBuffer = new FunctionDefinition(
 	(value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: number, byteLength?: number)=> {
+		if (value == null) {
+			return undefined;
+		}
 		if (encoding === 'utf8') {
 			return new TextDecoder().decode(new DataView(value, byteOffset, byteLength));
 		}
@@ -156,55 +169,115 @@ export const funcFromStringBuffer = new FunctionDefinition(
 	typeString, [typeBuffer, typeOptionalString, typeOptionalNumber, typeOptionalNumber], 1, 4,
 );
 
+export const funcToBooleanString = new FunctionDefinition(
+	(value: boolean | undefined)=>
+		value?.toString(),
+	typeOptionalString, [typeOptionalBoolean],
+);
+
+export const funcFromBooleanString = new FunctionDefinition(
+	(value: string | undefined)=>
+		value ? value.toLowerCase() === 'true' : undefined,
+	typeOptionalBoolean, [typeOptionalString],
+);
+
 export const funcToNumberString = new FunctionDefinition(
-	(value: number, radix?: number)=>
-		value.toString(radix),
-	typeString, [typeNumber], 1, 2,
+	(value: number | undefined, radix?: number)=>
+		value?.toString(radix),
+	typeOptionalString, [typeOptionalNumber], 1, 2,
 );
 
 export const funcFromNumberString = new FunctionDefinition(
-	(value: string)=>
-		Number.parseFloat(value),
-	typeNumber, [typeString],
+	(value: string | undefined)=>
+		value ? Number.parseFloat(value) : undefined,
+	typeOptionalNumber, [typeOptionalString],
 );
 
 export const funcToBufferString = new FunctionDefinition(
-	(value: ArrayBuffer)=>
+	(value: ArrayBuffer | undefined)=>
 		stringifyBuffer(value),
-	typeString, [typeBuffer],
+	typeOptionalString, [typeOptionalBuffer],
 );
 
 export const funcFromBufferString = new FunctionDefinition(
 	(value: string)=>
 		parseBuffer(value),
-	typeBuffer, [typeString],
+	typeOptionalBuffer, [typeOptionalString],
 );
 
 export const funcToJsonString = new FunctionDefinition(
-	(value: undefined | boolean | number | string | [] | { [ key: string ]: Value })=>
-		value ? JSON.stringify(value) : undefined,
-	typeOptionalString, [typeJson],
-);
+	(value: undefined | boolean | number | string | [] | { [ key: string ]: Value }, whitespace?: string)=>
+		value ? JSON.stringify(value, undefined, whitespace) : undefined,
+	typeOptionalString, [typeJson, typeOptionalString], 1, 2,
+)
 
 export const funcFromJsonString = new FunctionDefinition(
 	(value: undefined | string)=>
 		value ? JSON.parse(value) as Value : undefined,
 	typeJson, [typeOptionalString],
+)
+
+export const funcToText = new FunctionDefinition(
+	(value: Value, whitespace?: string)=> textifyValue(value, whitespace),
+	typeString, [typeUnknown], 1, 2,
 );
 
-export const stringifyBuffer = (value: ArrayBuffer)=> {
+export function parseDate(value?: number | string) {
+	if (value == null) {
+		return undefined;
+	}
+	const date = new Date(value);
+	return isNaN(date.getTime()) ? undefined : date;
+}
+
+export function parseBuffer(value?: string) {
+	if (value == null) {
+		return undefined;
+	}
+	const bytes = new Uint8Array(Math.ceil(value.length / 2));
+	for (let i = 0, c = 0; c < value.length; ++i) {
+		bytes[i] = Number.parseInt(value.slice(c, c += 2), 16);
+	}
+	return bytes.buffer;
+}
+
+export function stringifyBuffer(value?: ArrayBuffer) {
+	if (value == null) {
+		return undefined;
+	}
 	const bytes = new Uint8Array(value);
 	let str = '';
 	for (let i = 0; i < bytes.byteLength; ++i) {
 		str += bytes[i].toString(16).padStart(2, '0');
 	}
 	return str;
-};
+}
 
-export const parseBuffer = (value: string)=> {
-	const bytes = new Uint8Array(Math.ceil(value.length / 2));
-	for (let i = 0, c = 0; c < value.length; ++i) {
-		bytes[i] = Number.parseInt(value.slice(c, c += 2), 16);
+export function textifyValue(value: Value, whitespace?: string): string {
+	const str = value == null
+		? 'null'
+		: typeof value === 'boolean'
+			? value.toString()
+			: typeof value === 'number'
+				? value.toString()
+				: value instanceof ArrayBuffer
+					? `#${stringifyBuffer(value)}#`
+					: typeof value === 'string'
+						? `"${value}"`
+						: undefined;
+	if (str != null) {
+		return str;
 	}
-	return bytes.buffer;
-};
+	const prefix = whitespace ? '\n' + whitespace : '';
+	const suffix = whitespace ? '\n' : '';
+	if (Array.isArray(value)) {
+		const lines = (value as []).map((i)=> `${prefix}${textifyValue(i, whitespace).split('\n').join(prefix)}`);
+		return `[${lines.join(',')}${suffix}]`;
+	}
+	if (typeof value === 'object') {
+		const separator = whitespace ? ' ' : '';
+		const lines = Object.entries(value).map(([k,v])=> `${prefix}"${k}":${separator}${textifyValue(v, whitespace).split('\n').join(prefix)}`);
+		return `[${lines.join(',')}${suffix}]`;
+	}
+	return 'function';
+}

@@ -1,6 +1,6 @@
 import { Expression, Type } from '../src/index.js';
 
-describe('Expression Type test', ()=> {
+describe('Expression Value Type test', ()=> {
 	[
 		['null', 'void'],
 		['true', 'boolean'],
@@ -11,9 +11,9 @@ describe('Expression Type test', ()=> {
 		['#', 'number'],
 		['#0', 'number'],
 		['##', 'buffer'],
-		['##0', 'buffer'],
-		['##00', 'buffer'],
-		['##01ff', 'buffer'],
+		['#0#', 'buffer'],
+		['#00#', 'buffer'],
+		['#01ff#', 'buffer'],
 		['""', 'string'],
 		['``', 'string'],
 		['" "', 'string'],

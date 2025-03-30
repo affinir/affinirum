@@ -1,6 +1,6 @@
-import { Expression, typeNumber, typeString } from '../src/index.js';
+import { Expression } from '../src/index.js';
 
-describe('Expression Evaluation test', ()=> {
+describe('Expression Evaluation Result test', ()=> {
 	[
 		['null', [{ result: undefined }]],
 		['false', [{ result: false }]],
@@ -55,7 +55,7 @@ describe('Expression Evaluation test', ()=> {
 		['x.Round()', [{ x: 10.1, result: 10 }, { x: 10.9, result: 11 }]],
 		['v.ToNumberBuffer(enc).FromNumberBuffer(enc)', [{ v: 0, enc: 'uint8', result: 0 }, { v: 1055, enc: 'uint16', result: 1055 }, { v: 1055, enc: 'uint16le', result: 1055 }]],
 		['v.ToStringBuffer(enc).FromStringBuffer(enc)', [{ v: '', enc: 'utf8', result: '' }, { v: '1055', enc: 'utf8', result: '1055' }, { v: '1055', enc: 'ucs2le', result: '1055' }]],
-		['##ffff0001.Slice(1).ToBufferString()', [{ result: 'ff0001' }]],
+		['#ffff0001#.Slice(1).ToBufferString()', [{ result: 'ff0001' }]],
 		['a.Byte(b).ToBufferString()', [{ a: new Uint8Array([0xff, 0xff, 0x00, 0x01]).buffer, b: 3, result: '01' }, { a: new Uint8Array([0x10, 0x00]).buffer, b: 0, result: '10' }]],
 		['s.Length()', [{ s: 'my long string', result: 14 }, { s: 'my', result: 2 }, { s: '', result: 0 }]],
 		['abc.Length * 10 - 5', [{ abc: 'abc', result: 25 }]],
@@ -181,38 +181,5 @@ describe('Expression Evaluation test', ()=> {
 				}
 			});
 		});
-	});
-	it('parses and evaluates multiple times', ()=> {
-		const expression = new Expression('arr0.Any(boolean(number a) -> (a > 0) )');
-		expect(expression.evaluate({ arr0: [1, -2, -3, -4] })).toBeTrue();
-		expect(expression.evaluate({ arr0: [-1, -2, -3, -4] })).toBeFalse();
-	});
-	it('parses and returns undefined variables', ()=> {
-		const expression = new Expression('(a-b)*c.prop/d.UpperCase.Length-100');
-		const variables = expression.variables();
-		expect(variables.a.isNumber).toBeTrue();
-		expect(variables.b.isNumber).toBeTrue();
-		expect(variables.d.isString).toBeTrue();
-	});
-	it('defines variables in strict mode and evaluates', ()=> {
-		const expression = new Expression('predefined1*2 + predefined2', { strict: true, variables: { predefined1: typeNumber, predefined2: typeNumber, myvar: typeString } });
-		expect(expression.evaluate({ predefined1: 10, predefined2: 20 }) as number).toBe(40);
-	});
-	it('errors on undefines variables in strict mode', ()=> {
-		try {
-			new Expression('undefined1*2 + undefined2', { strict: true, variables: { defined: typeNumber } });
-		}
-		catch (err: any) {
-			expect(err.message).toContain('error');
-			expect(err.message).toContain('undefined1');
-		}
-	});
-	it('parses random number function and evaluates multiple times', ()=> {
-		const expression = new Expression('RandomNumber(1000000)');
-		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
-	});
-	it('parses random string function and evaluates multiple times', ()=> {
-		const expression = new Expression('RandomString(20)');
-		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 });

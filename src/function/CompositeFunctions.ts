@@ -192,7 +192,7 @@ export const funcCompose = new FunctionDefinition(
 	typeObject, [typeArray, typeFunction],
 );
 
-export const concatBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
+function concatBuffers(value1: ArrayBuffer, value2: ArrayBuffer) {
 	const bytes = new Uint8Array(value1.byteLength + value2.byteLength);
 	bytes.set(new Uint8Array(value1), 0);
 	bytes.set(new Uint8Array(value2), value1.byteLength);

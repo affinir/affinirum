@@ -12,10 +12,9 @@ import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcRemain
 	funcPower, funcRoot, funcAbs, funcCeil, funcFloor, funcRound } from './function/MathFunctions.js';
 import { funcToUniversalTime, funcToLocalTime, funcFromUniversalTime, funcFromLocalTime,
 	funcToUniversalTimeMonthIndex, funcToLocalTimeMonthIndex, funcToUniversalTimeWeekdayIndex, funcToLocalTimeWeekdayIndex,
-	funcToTimeString, funcFromTimeString,
-	funcToNumberBuffer, funcFromNumberBuffer, funcToStringBuffer, funcFromStringBuffer,
-	funcToNumberString, funcFromNumberString, funcToBufferString, funcFromBufferString,
-	funcFromJsonString, funcToJsonString } from './function/MutationFunctions.js';
+	funcToTimeString, funcFromTimeString, funcToNumberBuffer, funcFromNumberBuffer, funcToStringBuffer, funcFromStringBuffer,
+	funcToBooleanString, funcFromBooleanString, funcToNumberString, funcFromNumberString, funcToBufferString, funcFromBufferString,
+	funcFromJsonString, funcToJsonString, funcToText } from './function/MutationFunctions.js';
 import { StaticScope } from './StaticScope.js';
 import { Variable } from './Variable.js';
 import { Type, Value, typeUnknown } from './Type.js';
@@ -68,9 +67,10 @@ const mfunctions: [ string, FunctionDefinition][] = [
 	['ToTimeString', funcToTimeString], ['FromTimeString', funcFromTimeString],
 	['ToNumberBuffer', funcToNumberBuffer], ['FromNumberBuffer', funcFromNumberBuffer],
 	['ToStringBuffer', funcToStringBuffer], ['FromStringBuffer', funcFromStringBuffer],
+	['ToBooleanString', funcToNumberString], ['FromBooleanString', funcFromNumberString],
 	['ToNumberString', funcToNumberString], ['FromNumberString', funcFromNumberString],
 	['ToBufferString', funcToBufferString], ['FromBufferString', funcFromBufferString],
-	['ToJsonString', funcToJsonString], ['FromJsonString', funcFromJsonString],
+	['ToJsonString', funcToJsonString], ['FromJsonString', funcFromJsonString], ['ToText', funcToText],
 ];
 
 export class Expression {

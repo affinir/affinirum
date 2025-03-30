@@ -159,7 +159,7 @@ export const funcDifference = new FunctionDefinition(
 	typeArray, [typeArray, typeArray],
 );
 
-const equal = (value1: Value, value2: Value)=> {
+function equal(value1: Value, value2: Value) {
 	if (value1 == null || value2 == null) {
 		return value1 == value2;
 	}
@@ -189,7 +189,7 @@ const equal = (value1: Value, value2: Value)=> {
 	return true;
 }
 
-const equalBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
+function equalBuffers(value1: ArrayBuffer, value2: ArrayBuffer) {
 	if (value1.byteLength !== value2.byteLength) {
 		return false;
 	}
@@ -213,9 +213,11 @@ const equalBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	return true;
 };
 
-const isCaseSpaceEtc = (c: string)=> (c < 'a' || c > 'z') && (c < '0' || c > '9');
+function isCaseSpaceEtc(c: string) {
+	return (c < 'a' || c > 'z') && (c < '0' || c > '9');
+}
 
-const equalStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boolean)=> {
+function equalStrings(value1: string, value2: string, ignoreCaseSpaceEtc?: boolean) {
 	if (!ignoreCaseSpaceEtc) {
 		return value1 === value2;
 	}
@@ -235,7 +237,7 @@ const equalStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boole
 	return true;
 };
 
-const containsString = (value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+function containsString(value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean) {
 	if (!ignoreCaseSpaceEtc) {
 		return value.includes(search, startPos);
 	}
@@ -262,7 +264,7 @@ const containsString = (value: string, search: string, startPos?: number, ignore
 	return true;
 };
 
-const startsWithString = (value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+function startsWithString(value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean) {
 	if (!ignoreCaseSpaceEtc) {
 		return value.startsWith(search, startPos);
 	}
@@ -286,7 +288,7 @@ const startsWithString = (value: string, search: string, startPos?: number, igno
 	return true;
 };
 
-const endsWithString = (value: string, search: string, endPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+function endsWithString(value: string, search: string, endPos?: number, ignoreCaseSpaceEtc?: boolean) {
 	if (!ignoreCaseSpaceEtc) {
 		return value.endsWith(search, endPos);
 	}

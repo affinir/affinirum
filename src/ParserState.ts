@@ -242,20 +242,13 @@ export class ParserState extends ParserFrame {
 				case '^': this._fragment = funcPower; break;
 				case '.': this._fragment = funcAt; break;
 				case '#':
-					if (this._expr.charAt(this._end) === '#') {
+					while (isHexadecimal(this._expr.charAt(this._end))) {
 						++this._end;
-						while (isHexadecimal(this._expr.charAt(this._end))) {
-							++this._end;
-						}
-						this._fragment = new Literal(parseBuffer(this._expr.substring(this._start + 2, this._end)));
 					}
-					else {
-						++this._end;
-						while (isHexadecimal(this._expr.charAt(this._end))) {
-							++this._end;
-						}
-						this._fragment = new Literal(parseInt(this._expr.substring(this._start + 1, this._end), 16));
-					}
+					this._fragment = new Literal(this._expr.charAt(this._end) === '#'
+						? parseBuffer(this._expr.substring(this._start + 1, this._end++))
+						: parseInt(this._expr.substring(this._start + 1, this._end), 16)
+					);
 					break;
 				default:
 					if (isAlpha(c)) {

@@ -39,4 +39,8 @@ export class FunctionSignature {
 		return this._typeInference && this._typeInference <= index ? this.argType(index).reduce(type) : this.argType(index);
 	}
 
+	toString() {
+		return `${this._type.toString()}(${this._argTypes.map((i)=> i.toString()).join(', ')})`;
+	}
+
 }
