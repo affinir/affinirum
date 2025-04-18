@@ -1,4 +1,4 @@
-import { Expression, Type } from '../src/index.js';
+import { Expression, ValueType } from '../src/index.js';
 
 describe('Expression Value Type test', ()=> {
 	[
@@ -32,7 +32,7 @@ describe('Expression Value Type test', ()=> {
 				const expression = new Expression(expr);
 				expect(expression).toBeDefined();
 				const value = expression.evaluate({});
-				if (Type.of(value).toString() !== expected) {
+				if (ValueType.of(value).toString() !== expected) {
 					fail(`value ${value} not matching expectation ${expected}`)
 				}
 			}

@@ -1,18 +1,19 @@
+import { isSign, isAlpha, isNumeric, isAlphanumeric, isHexadecimal, isQuotation } from './base/String.js';
+import { parseBuffer } from './base/Buffer.js';
+import { Constant } from './Constant.js';
+import { funcOr, funcAnd, funcNot } from './function/BooleanFunctions.js';
+import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual } from './function/ComparisonFunctions.js';
+import { funcAppend, funcAt } from './function/IterationFunctions.js';
+import { funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './function/MathematicalFunctions.js';
+import { funcSwitch, funcCoalesce } from './function/StructuralFunctions.js';
+import { ValueType, Value, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeUnknown, typeArray } from './ValueType.js';
 import { ParserFrame } from './ParserFrame.js';
-import { FunctionDefinition } from './FunctionDefinition.js';
-import { funcOr, funcAnd, funcNot } from './function/GlobalFunctions.js';
-import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcEqual, funcNotEqual, funcSwitch, funcCoalesce } from './function/BaseFunctions.js';
-import { funcAppend, funcAt } from './function/CompositeFunctions.js';
-import { funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './function/MathFunctions.js';
-import { parseBuffer } from './function/MutationFunctions.js';
-import { Type, Value, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeUnknown, typeArray } from './Type.js';
 
 class Literal { constructor(public readonly value: Value) {} }
 const valueTrue = new Literal(true);
 const valueFalse = new Literal(false);
 const valueNull = new Literal(undefined);
-class Assignment { constructor(public readonly operator?: FunctionDefinition) {} }
+class Assignment { constructor(public readonly operator?: Constant) {} }
 const funcAssignment = new Assignment();
 const funcOrAssignment = new Assignment(funcOr);
 const funcAndAssignment = new Assignment(funcAnd);
@@ -33,16 +34,9 @@ const symbolOptionalType = Symbol();
 const symbolScope = Symbol();
 const symbolCycle = Symbol();
 
-const isSign = (c: string)=> c === '+' || c === '-';
-const isAlpha = (c: string)=>  c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c === '_' ;
-const isNumeric = (c: string)=>  c >= '0' && c <= '9' ;
-const isAlphanumeric = (c: string)=> isAlpha(c) || isNumeric(c);
-const isHexadecimal = (c: string)=> isNumeric(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
-const isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
-
 export class ParserState extends ParserFrame {
 
-	protected _fragment: Literal | Assignment | FunctionDefinition | Type | symbol | string | undefined;
+	protected _fragment: Literal | Assignment | Constant | ValueType | symbol | string | undefined;
 
 	constructor(
 		expr: string,
@@ -54,16 +48,16 @@ export class ParserState extends ParserFrame {
 		return (this._fragment as Literal).value;
 	}
 
-	get assignmentOperator(): FunctionDefinition | undefined {
+	get assignmentOperator(): Constant | undefined {
 		return (this._fragment as Assignment).operator;
 	}
 
-	get operator(): FunctionDefinition {
-		return this._fragment as FunctionDefinition;
+	get operator(): Constant {
+		return this._fragment as Constant;
 	}
 
-	get type(): Type {
-		return this._fragment as Type;
+	get type(): ValueType {
+		return this._fragment as ValueType;
 	}
 
 	get token(): string {
@@ -71,7 +65,7 @@ export class ParserState extends ParserFrame {
 	}
 
 	get isOperator(): boolean {
-		return this._fragment instanceof FunctionDefinition;
+		return this._fragment instanceof Constant;
 	}
 
 	get isLiteral(): boolean {
@@ -83,7 +77,7 @@ export class ParserState extends ParserFrame {
 	}
 
 	get isType(): boolean {
-		return this._fragment instanceof Type;
+		return this._fragment instanceof ValueType;
 	}
 
 	get isToken(): boolean {

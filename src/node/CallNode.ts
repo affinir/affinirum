@@ -1,11 +1,11 @@
 import { Node } from '../Node.js';
 import { ParserFrame } from '../ParserFrame.js';
 import { ConstantNode } from './ConstantNode.js';
-import { Value, Type, typeUnknown, typeFunction } from '../Type.js';
+import { Value, ValueType, typeUnknown, typeFunction } from '../ValueType.js';
 
 export class CallNode extends Node {
 
-	protected _type: Type;
+	protected _type: ValueType;
 
 	constructor(
 		frame: ParserFrame,
@@ -16,11 +16,11 @@ export class CallNode extends Node {
 		this._type = _fnode.signature?.type ?? typeUnknown;
 	}
 
-	override get type(): Type {
+	override get type(): ValueType {
 		return this._type;
 	}
 
-	override compile(type: Type): Node {
+	override compile(type: ValueType): Node {
 		this._fnode = this._fnode.compile(typeFunction);
 		this._type = this._fnode.signature?.type ?? typeUnknown;
 		this._type = this.reduceType(type);

@@ -1,14 +1,12 @@
-import { Type, typeUnknown } from './Type.js';
+import { ValueType } from './ValueType.js';
 
 export const FUNCTION_ARG_MAX = 16536;
 
-export class FunctionSignature {
-
-	static readonly unknown = new FunctionSignature(typeUnknown, [typeUnknown], 0, FUNCTION_ARG_MAX);
+export class FunctionType {
 
 	constructor(
-		protected readonly _type: Type,
-		protected readonly _argTypes: Type[],
+		protected readonly _type: ValueType,
+		protected readonly _argTypes: ValueType[],
 		protected readonly _minArity?: number,
 		protected readonly _maxArity?: number,
 		protected readonly _typeInference?: number,
@@ -27,7 +25,7 @@ export class FunctionSignature {
 		return this._maxArity ?? this._argTypes.length;
 	}
 
-	get type(): Type {
+	get type(): ValueType {
 		return this._type;
 	}
 
@@ -35,7 +33,7 @@ export class FunctionSignature {
 		return this._argTypes[index] ?? this._argTypes[this._argTypes.length - 1];
 	}
 
-	argTypeInference(type: Type, index: number) {
+	argTypeInference(type: ValueType, index: number) {
 		return this._typeInference && this._typeInference <= index ? this.argType(index).reduce(type) : this.argType(index);
 	}
 

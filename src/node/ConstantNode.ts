@@ -1,28 +1,26 @@
 import { Node } from '../Node.js';
 import { ParserFrame } from '../ParserFrame.js';
-import { Type, Value } from '../Type.js';
-import { FunctionSignature } from '../FunctionSignature.js';
+import { ValueType, typeUnknown, Value } from '../ValueType.js';
+import { FunctionType } from '../FunctionType.js';
 
 export class ConstantNode extends Node {
 
 	constructor(
 		frame: ParserFrame,
 		protected readonly _value: Value,
-		protected readonly _signature?: FunctionSignature,
+		protected readonly _signature?: FunctionType,
 		protected _subnode?: Node,
 	) {
 		super(frame);
 	}
 
-	override get type(): Type {
-		return Type.of(this._value);
+	override get type(): ValueType {
+		return ValueType.of(this._value);
 	}
 
-	override compile(type: Type): Node {
+	override compile(type: ValueType): Node {
 		this.reduceType(type);
-		if (this._signature && this._subnode) {
-			this._subnode = this._subnode.compile(this._signature.type);
-		}
+		this._subnode = this._subnode?.compile(this._signature?.type ?? typeUnknown);
 		return this;
 	}
 
@@ -34,7 +32,7 @@ export class ConstantNode extends Node {
 		return !this._subnode;
 	}
 
-	override get signature(): FunctionSignature | undefined {
+	override get signature(): FunctionType | undefined {
 		return this._signature;
 	}
 

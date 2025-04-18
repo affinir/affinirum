@@ -1,19 +1,47 @@
-import { FunctionDefinition, FUNCTION_ARG_MAX } from '../FunctionDefinition.js';
-import { Value, typeBoolean, typeNumber, typeBuffer, typeString, typeArray, typeObject, typeFunction,
+import { equal } from '../base/Unknown.js';
+import { concatBuffers } from '../base/Buffer.js';
+import { FunctionType, FUNCTION_ARG_MAX } from '../FunctionType.js';
+import { Constant } from '../Constant.js';
+import { Value, typeUnknown, typeBoolean, typeNumber, typeBuffer, typeString, typeArray, typeObject, typeFunction,
 	typeOptionalNumber, typeOptionalArray, typeNumberOrString, typeOptionalArrayOrObject,
-	typeEnumerable, typeIterable, typeUnknown } from '../Type.js';
+	typeEnumerable, typeIterable } from '../ValueType.js';
 
-export const funcAppend = new FunctionDefinition(
+export const funcUnique = new Constant(
+	(value: Value[])=> {
+		const result: Value[] = [];
+		value.forEach((i)=> {
+			if (result.every((v)=> !equal(v, i))) {
+				result.push(i);
+			}
+		});
+		return result;
+	},
+	new FunctionType(typeArray, [typeArray]),
+);
+
+export const funcIntersection = new Constant(
+	(value1: Value[], value2: Value[])=>
+		value1.filter((i)=> value2.some((v)=> equal(v, i))),
+	new FunctionType(typeArray, [typeArray, typeArray]),
+);
+
+export const funcDifference = new Constant(
+	(value1: Value[], value2: Value[])=>
+		[...value1.filter((i)=> value2.every((v)=> !equal(v, i))), ...value2.filter((i)=> value1.every((v)=> !equal(v, i)))],
+	new FunctionType(typeArray, [typeArray, typeArray]),
+);
+
+export const funcAppend = new Constant(
 	(...values: (ArrayBuffer | string | Value[])[])=>
 		values[0] instanceof ArrayBuffer
 			? (values as ArrayBuffer[]).reduce((acc, val)=> concatBuffers(acc, val), new ArrayBuffer(0))
 			: typeof values[0] === 'string'
 				? (values as string[]).reduce((acc, val)=> acc + val, '')
 				: (values as Value[][]).reduce((acc, val)=> [...acc, ...val], []),
-	typeEnumerable, [typeEnumerable], 2, FUNCTION_ARG_MAX, 0,
+	new FunctionType(typeEnumerable, [typeEnumerable], 2, FUNCTION_ARG_MAX, 0),
 );
 
-export const funcLength = new FunctionDefinition(
+export const funcLength = new Constant(
 	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value })=>
 		value == null
 			? undefined
@@ -22,70 +50,70 @@ export const funcLength = new FunctionDefinition(
 				: typeof value === 'string' || Array.isArray(value)
 					? value.length
 					: Object.keys(value).length,
-	typeNumber, [typeIterable],
+	new FunctionType(typeNumber, [typeIterable]),
 );
 
-export const funcSlice = new FunctionDefinition(
+export const funcSlice = new Constant(
 	(value: ArrayBuffer | string | Value[], start: number = 0, end?: number)=>
 		value == null
 			? undefined
 			: value.slice(start, end) as Value,
-	typeEnumerable, [typeEnumerable, typeOptionalNumber, typeOptionalNumber], 1, 3,
+	new FunctionType(typeEnumerable, [typeEnumerable, typeOptionalNumber, typeOptionalNumber], 1, 3),
 );
 
-export const funcByte = new FunctionDefinition(
+export const funcByte = new Constant(
 	(value: ArrayBuffer, pos: number)=>
 		value == null
 			? undefined
 			: value.slice(pos, pos + 1),
-	typeBuffer, [typeBuffer, typeNumber],
+	new FunctionType(typeBuffer, [typeBuffer, typeNumber]),
 );
 
-export const funcChar = new FunctionDefinition(
+export const funcChar = new Constant(
 	(value: string, pos: number)=>
 		value == null
 			? undefined
 			: value.charAt(pos < 0 ? value.length + pos : pos),
-	typeString, [typeString, typeNumber],
+	new FunctionType(typeString, [typeString, typeNumber]),
 );
 
-export const funcCharCode = new FunctionDefinition(
+export const funcCharCode = new Constant(
 	(value: string, pos: number)=>
 		value == null
 			? undefined
 			: value.charCodeAt(pos < 0 ? value.length + pos : pos),
-	typeNumber, [typeString, typeNumber],
+	new FunctionType(typeNumber, [typeString, typeNumber]),
 );
 
-export const funcEntries = new FunctionDefinition(
+export const funcEntries = new Constant(
 	(value: Value[] | { [ key: string ]: Value } | undefined)=>
 		value == null
 			? undefined
 			: Array.isArray(value)
 				? Object.entries(value).map((e)=> [Number(e[0]), e[1]])
 				: Object.entries(value),
-	typeOptionalArray, [typeOptionalArrayOrObject],
+	new FunctionType(typeOptionalArray, [typeOptionalArrayOrObject]),
 );
 
-export const funcKeys = new FunctionDefinition(
+export const funcKeys = new Constant(
 	(value:  Value[] | { [ key: string ]: Value } | undefined)=>
 		value == null
 			? undefined
 			: Array.isArray(value)
 				? Object.keys(value).map((k)=> Number(k))
 				: Object.keys(value),
-	typeOptionalArray, [typeOptionalArrayOrObject],
+	new FunctionType(typeOptionalArray, [typeOptionalArrayOrObject]),
 );
 
-export const funcValues = new FunctionDefinition(
+export const funcValues = new Constant(
 	(value:  Value[] | { [ key: string ]: Value } | undefined)=>
 		value == null
 			? undefined
 			: Object.values(value),
-	typeOptionalArray, [typeOptionalArrayOrObject],
+	new FunctionType(typeOptionalArray, [typeOptionalArrayOrObject]),
 );
 
-export const funcAt = new FunctionDefinition(
+export const funcAt = new Constant(
 	(value: Value[] | { [ key: string ]: Value } | undefined, index: number | string)=> {
 		if (value == null) {
 			return undefined;
@@ -98,22 +126,22 @@ export const funcAt = new FunctionDefinition(
 			return value[String(index)];
 		}
 	},
-	typeUnknown, [typeOptionalArrayOrObject, typeNumberOrString],
+	new FunctionType(typeUnknown, [typeOptionalArrayOrObject, typeNumberOrString]),
 );
 
-export const funcFirst = new FunctionDefinition(
+export const funcFirst = new Constant(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value?.find((v, i, a)=> predicate(v, i, a)),
-	typeUnknown, [typeArray, typeFunction],
+	new FunctionType(typeUnknown, [typeArray, typeFunction]),
 );
 
-export const funcLast = new FunctionDefinition(
+export const funcLast = new Constant(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value?.reverse().find((v, i, a)=> predicate(v, i, a)),
-	typeUnknown, [typeArray, typeFunction],
+	new FunctionType(typeUnknown, [typeArray, typeFunction]),
 );
 
-export const funcFirstIndex = new FunctionDefinition(
+export const funcFirstIndex = new Constant(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=> {
 		if (value == null) {
 			return undefined;
@@ -121,10 +149,10 @@ export const funcFirstIndex = new FunctionDefinition(
 		const ix = value.findIndex((v, i, a)=> predicate(v, i, a));
 		return ix < 0 ? Number.NaN : ix;
 	},
-	typeNumber, [typeArray, typeFunction],
+	new FunctionType(typeNumber, [typeArray, typeFunction]),
 );
 
-export const funcLastIndex = new FunctionDefinition(
+export const funcLastIndex = new Constant(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=> {
 		if (value == null) {
 			return undefined;
@@ -132,52 +160,52 @@ export const funcLastIndex = new FunctionDefinition(
 		const ix = [...value].reverse().findIndex((v, i, a)=> predicate(v, i, a));
 		return ix < 0 ? Number.NaN : ix;
 	},
-	typeNumber, [typeArray, typeFunction],
+	new FunctionType(typeNumber, [typeArray, typeFunction]),
 );
 
-export const funcEvery = new FunctionDefinition(
+export const funcEvery = new Constant(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value?.every((v, i, a)=> predicate(v, i, a)),
-	typeBoolean, [typeArray, typeFunction],
+	new FunctionType(typeBoolean, [typeArray, typeFunction]),
 );
 
-export const funcAny = new FunctionDefinition(
+export const funcAny = new Constant(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value?.some((v, i, a)=> predicate(v, i, a)),
-	typeBoolean, [typeArray, typeFunction],
+	new FunctionType(typeBoolean, [typeArray, typeFunction]),
 );
 
-export const funcFlatten = new FunctionDefinition(
+export const funcFlatten = new Constant(
 	(values: Value[], depth?: number)=>
 		(values as [])?.flat(depth) as Value,
-	typeArray, [typeArray, typeOptionalNumber], 1, 2,
+	new FunctionType(typeArray, [typeArray, typeOptionalNumber], 1, 2),
 );
 
-export const funcReverse = new FunctionDefinition(
+export const funcReverse = new Constant(
 	(value: Value[])=>
 		[...value].reverse(),
-	typeArray, [typeArray],
+	new FunctionType(typeArray, [typeArray]),
 );
 
-export const funcTransform = new FunctionDefinition(
+export const funcTransform = new Constant(
 	(value: Value[], callback: (v: Value, i: number, a: Value[])=> Value)=>
 		value?.map(callback),
-	typeArray, [typeArray, typeFunction],
+	new FunctionType(typeArray, [typeArray, typeFunction]),
 );
 
-export const funcFilter = new FunctionDefinition(
+export const funcFilter = new Constant(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
 		value?.filter(predicate),
-	typeArray, [typeArray, typeFunction],
+	new FunctionType(typeArray, [typeArray, typeFunction]),
 );
 
-export const funcReduce = new FunctionDefinition(
+export const funcReduce = new Constant(
 	(value: Value[], callback: (acc: Value, v: Value, i: number, arr: Value[])=> Value, initial?: Value)=>
 		initial != null ? value?.reduce(callback, initial) : value?.reduce(callback),
-	typeUnknown, [typeArray, typeFunction, typeUnknown], 2, 3,
+	new FunctionType(typeUnknown, [typeArray, typeFunction, typeUnknown], 2, 3),
 );
 
-export const funcCompose = new FunctionDefinition(
+export const funcCompose = new Constant(
 	(value: string[], callback: (acc: { [ key: string ]: Value }, v: string, i: number)=> { [ key: string ]: Value })=> {
 		if (value == null) {
 			return undefined;
@@ -189,12 +217,5 @@ export const funcCompose = new FunctionDefinition(
 		}
 		return obj;
 	},
-	typeObject, [typeArray, typeFunction],
+	new FunctionType(typeObject, [typeArray, typeFunction]),
 );
-
-function concatBuffers(value1: ArrayBuffer, value2: ArrayBuffer) {
-	const bytes = new Uint8Array(value1.byteLength + value2.byteLength);
-	bytes.set(new Uint8Array(value1), 0);
-	bytes.set(new Uint8Array(value2), value1.byteLength);
-	return bytes.buffer;
-};

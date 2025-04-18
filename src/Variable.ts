@@ -1,13 +1,13 @@
-import { Type, Value, typeUnknown } from './Type.js';
-import { FunctionSignature } from './FunctionSignature.js';
+import { ValueType, Value, typeUnknown } from './ValueType.js';
+import { FunctionType } from './FunctionType.js';
 
 export class Variable {
 
 	protected _value?: Value;
 
 	constructor(
-		protected _type: Type = typeUnknown,
-		protected _signature?: FunctionSignature,
+		protected _type: ValueType = typeUnknown,
+		protected _signature?: FunctionType,
 	) {}
 
 	get value(): Value | undefined {
@@ -18,19 +18,19 @@ export class Variable {
 		this._value = value;
 	}
 
-	get type(): Type {
+	get type(): ValueType {
 		return this._type;
 	}
 
-	set type(type: Type) {
+	set type(type: ValueType) {
 		this._type = type;
 	}
 
-	get signature(): FunctionSignature | undefined {
+	get signature(): FunctionType | undefined {
 		return this._signature;
 	}
 
-	set signature(value: FunctionSignature | undefined) {
+	set signature(value: FunctionType | undefined) {
 		this._signature = value;
 	}
 

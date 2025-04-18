@@ -1,10 +1,10 @@
-# expression-evaluation
-A recursive descent parser for efficient evaluation of algorithmic expressions.
+# Affinirum
+A scripting language with a recursive descent parser for efficient evaluation of algorithmic expressions.
 
-Parser supports boolean expressions, regular algebraic expressions,
+Language supports boolean expressions, regular algebraic expressions,
  various numeric, buffer, string, array, and object functions.
 It also supports global, and local variables, along with
- first-order functions and type checking.
+ first-order functions and shallow type checking.
 
 Supports boolean, algebraic, conditional expressions and loops,
  along with a comprehensive set of numeric, buffer, string, array, and object functions.
@@ -23,7 +23,7 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 * Standard mathematical and composition functions
 * Ability to inject custom functions and constants
 
-## Language Specifications
+## Specifications
 
 Expressions can contain multiple comma-separated sub-expressions.
 The value of an expression is determined by the value of the last sub-expression in the program.
@@ -119,10 +119,10 @@ Parameterless subroutine definition can be shorthanded as **->...**.
 * Chain array of any depths into single array: **array Chain(array ...values)**
 * Merge objects into single object: **object Merge(array|object ...values)**
 * Current date time as milliseconds since epoch: **number Now()**
-* Random number: **number number.RandomNumber()**
-* Random integer: **number number.RandomInteger()**
-* Random buffer: **buffer number.RandomBuffer()**
-* Random alphanumeric string: **string number.RandomString()**
+* Random number: **number RandomNumber(number exclusiveTo)**
+* Random integer: **number RandomInteger(number exclusiveTo)**
+* Random buffer: **buffer RandomBuffer(number length)**
+* Random alphanumeric string: **string RandomString(number length)**
 #### Base Method Functions
 * Greater than: **boolean number.GreaterThan(number value)**
 * Less than: **boolean number.LessThan(number value)**
@@ -208,14 +208,14 @@ Parameterless subroutine definition can be shorthanded as **->...**.
 * Parse number from decimal string: **number? string?.FromNumberString()**
 * Create hexadecimal string from buffer: **string? buffer?.ToBufferString()**
 * Parse buffer from hexadecimal string: **buffer? string?.FromBufferString()**
-* Parse object from JSON-formatted string: **boolean?|number?|string?|array?|object? string?.FromJsonString()**
-* Create JSON-formatted string from object: **string? boolean?|number?|string?|array?|object?.ToJsonString(string? whitespace)**
-* Create text from any value: **string ??.ToText(string? whitespace)**
+* Parse object from JSON-formatted string: **boolean?|number?|string?|array?|object? string?.FromJSON()**
+* Create JSON-formatted string from object: **string? boolean?|number?|string?|array?|object?.ToJSON(string? whitespace)**
+* Notate any value: **string ??.ToAN(string? whitespace)**
 #### Constants
 * Not-a-number **NAN**
 * Positive infinity **POSINF**
 * Negative infinity **NEGINF**
-* Epsilon **EPSILON**
+* Epsilon **E**
 * Pi **PI**
 
 ## Language Grammar

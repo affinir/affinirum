@@ -35,11 +35,11 @@ describe('Expression Evaluation Result test', ()=> {
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses and evaluates null value conversion to text', ()=> {
-		const expression = new Expression('obj.ToText()');
+		const expression = new Expression('obj.ToAN()');
 		expect(expression.evaluate({ obj: undefined }) as string).toBe('null');
 	});
 	it('parses and evaluates value conversion to text', ()=> {
-		const expression = new Expression('obj.ToText()');
+		const expression = new Expression('obj.ToAN()');
 		expect(expression.evaluate({ obj: {
 			bool: true,
 			num: -50,

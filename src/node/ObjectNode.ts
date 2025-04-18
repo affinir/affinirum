@@ -1,7 +1,7 @@
 import { Node } from '../Node.js';
 import { ParserFrame } from '../ParserFrame.js';
 import { ConstantNode } from './ConstantNode.js';
-import { Type, Value, typeObject, typeString, typeUnknown } from '../Type.js';
+import { ValueType, Value, typeObject, typeString, typeUnknown } from '../ValueType.js';
 
 export class ObjectNode extends Node {
 
@@ -12,11 +12,11 @@ export class ObjectNode extends Node {
 		super(frame);
 	}
 
-	override get type(): Type {
+	override get type(): ValueType {
 		return typeObject;
 	}
 
-	override compile(type: Type): Node {
+	override compile(type: ValueType): Node {
 		this.reduceType(type);
 		let constant = true;
 		for (let i = 0; i < this._subnodes.length; ++i) {
