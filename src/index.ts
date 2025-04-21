@@ -26,7 +26,7 @@ import { StaticScope } from './StaticScope.js';
 import { Constant } from './Constant.js';
 import { Variable } from './Variable.js';
 import { Value } from './Value.js';
-import { IType, Type } from './Type.js';
+import { Type } from './Type.js';
 import { ParserFrame } from './ParserFrame.js';
 import { ParserState } from './ParserState.js';
 import { Node } from './Node.js';
@@ -101,10 +101,10 @@ export class Expression {
 			If strict mode is set then undeclared variables will not be allowed in expression.
 	*/
 	constructor(expr: string, config?: {
-		type?: IType,
+		type?: Type,
 		strict?: boolean,
-		variables?: Record<string, IType>,
-		constants?: Record<string, [Value, IType?]>,
+		variables?: Record<string, Type>,
+		constants?: Record<string, [Value, Type?]>,
 	}) {
 		this._expression = expr;
 		const type = config?.type ?? Type.Unknown;
@@ -131,7 +131,7 @@ export class Expression {
 	/**
 		Returns compiled expression return value type.
 	*/
-	get type(): IType {
+	get type(): Type {
 		return this._root.type;
 	}
 
@@ -147,8 +147,8 @@ export class Expression {
 		Returns record with compiled variable names and expected types.
 		@returns Record with variable names and types.
 	*/
-	variables(): Record<string, IType> {
-		const types: Record<string, IType> = {};
+	variables(): Record<string, Type> {
+		const types: Record<string, Type> = {};
 		const variables = this._scope.variables();
 		for (const name in variables) {
 			types[name] = variables[name].type;
@@ -462,7 +462,7 @@ export class Expression {
 		state.throwError('unexpected expression token');
 	}
 
-	protected variable(state: ParserState, scope: StaticScope, type?: IType): Node {
+	protected variable(state: ParserState, scope: StaticScope, type?: Type): Node {
 		let variable: Variable | undefined = undefined;
 		if (type) {
 			if (scope.has(state.token)) {
@@ -495,7 +495,7 @@ export class Expression {
 		);
 	}
 
-	protected subroutine(state: ParserState, scope: StaticScope, type?: IType): Node {
+	protected subroutine(state: ParserState, scope: StaticScope, type?: Type): Node {
 		const frame = state.frame();
 		const variables = new Map<string, Variable>();
 		if (type) {

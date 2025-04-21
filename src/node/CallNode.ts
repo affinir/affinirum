@@ -3,12 +3,12 @@ import { ParserFrame } from '../ParserFrame.js';
 import { Constant } from '../Constant.js';
 import { ConstantNode } from './ConstantNode.js';
 import { Value } from '../Value.js';
-import { IType } from '../Type.js';
+import { Type } from '../Type.js';
 import { FunctionType } from '../FunctionType.js';
 
 export class CallNode extends Node {
 
-	protected _type: IType;
+	protected _type: Type;
 
 	constructor(
 		frame: ParserFrame,
@@ -19,11 +19,11 @@ export class CallNode extends Node {
 		this._type = this._functionType.retType;
 	}
 
-	override get type(): IType {
+	override get type(): Type {
 		return this._type;
 	}
 
-	override compile(type: IType): Node {
+	override compile(type: Type): Node {
 		this._fnode = this._fnode.compile(this._fnode.type);
 		this._type = this._functionType.retType;
 		this._type = this.reduceType(type);

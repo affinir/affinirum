@@ -1,12 +1,12 @@
 import { Value } from './Value.js';
-import { IType, Type } from './Type.js';
+import { Type } from './Type.js';
 
 export class Variable {
 
 	protected _value?: Value;
 
 	constructor(
-		protected _type: IType = Type.Unknown,
+		protected _type: Type = Type.Unknown,
 	) {}
 
 	get value(): Value | undefined {
@@ -17,11 +17,11 @@ export class Variable {
 		this._value = value;
 	}
 
-	get type(): IType {
+	get type(): Type {
 		return this._type;
 	}
 
-	set type(type: IType) {
+	set type(type: Type) {
 		this._type = type;
 	}
 

@@ -3,7 +3,7 @@ import { ParserFrame } from '../ParserFrame.js';
 import { Constant } from '../Constant.js';
 import { ConstantNode } from './ConstantNode.js';
 import { Value } from '../Value.js';
-import { IType, Type } from '../Type.js';
+import { Type } from '../Type.js';
 
 export class ProgramNode extends Node {
 
@@ -14,11 +14,11 @@ export class ProgramNode extends Node {
 		super(frame);
 	}
 
-	override get type(): IType {
+	override get type(): Type {
 		return this._subnodes[this._subnodes.length - 1].type;
 	}
 
-	override compile(type: IType): Node {
+	override compile(type: Type): Node {
 		let constant = true;
 		for (let i = 0, last = this._subnodes.length - 1; i < this._subnodes.length; ++i) {
 			this._subnodes[i] = this._subnodes[i].compile(i < last ? Type.Unknown : type);

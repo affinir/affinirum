@@ -1,4 +1,4 @@
-import { IType } from './Type.js';
+import { Type } from './Type.js';
 
 export interface IFunctionTypeOptions {
 	inference?: number,
@@ -9,8 +9,8 @@ export interface IFunctionTypeOptions {
 export class FunctionType {
 
 	constructor(
-		protected readonly _retType: IType,
-		protected readonly _argTypes: IType[],
+		protected readonly _retType: Type,
+		protected readonly _argTypes: Type[],
 		protected readonly _options?: IFunctionTypeOptions,
 	) {
 		let i = _argTypes.length - 1;
@@ -49,7 +49,7 @@ export class FunctionType {
 		return true;
 	}
 
-	argType(index: number, type?: IType) {
+	argType(index: number, type?: Type) {
 		const argType = this._argTypes[index] ?? this._argTypes[this._argTypes.length - 1];
 		return type && this._options?.inference != null && this._options.inference <= index
 			? argType.reduce(type)
@@ -57,7 +57,7 @@ export class FunctionType {
 	}
 
 	toString(): string {
-		return `${this._retType.toString()}(${this._argTypes.map((i)=> i.toString()).join(', ')})`;
+		return `${this._retType.toString()}(${this._argTypes.map((i)=> i.toString()).join(', ')}${this._options?.variadic ? ',...' : ''})`;
 	}
 
 }

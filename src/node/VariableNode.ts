@@ -2,7 +2,7 @@ import { Node } from '../Node.js';
 import { ParserFrame } from '../ParserFrame.js';
 import { Variable } from '../Variable.js';
 import { Value } from '../Value.js';
-import { IType } from '../Type.js';
+import { Type } from '../Type.js';
 
 export class VariableNode extends Node {
 
@@ -14,11 +14,11 @@ export class VariableNode extends Node {
 		super(frame);
 	}
 
-	override get type(): IType {
+	override get type(): Type {
 		return this._variable.type;
 	}
 
-	override compile(type: IType): Node {
+	override compile(type: Type): Node {
 		this._subnode = this._subnode?.compile(type);
 		this._variable.type = this.reduceType(this._subnode?.type ?? type);
 		return this;

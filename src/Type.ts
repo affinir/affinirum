@@ -4,26 +4,7 @@ import { IFunctionTypeOptions, FunctionType } from './FunctionType.js';
 export type PrimitiveType = 'void' | 'boolean' | 'number' | 'buffer' | 'string' | 'array' | 'object';
 export type ConcreteType = PrimitiveType | FunctionType;
 
-export interface IType {
-	get isUnknown(): boolean;
-	get isConcrete(): boolean;
-	get isOptional(): boolean;
-	get isVoid(): boolean;
-	get isBoolean(): boolean;
-	get isNumber(): boolean;
-	get isBuffer(): boolean;
-	get isString(): boolean;
-	get isArray(): boolean;
-	get isObject(): boolean;
-	get isFunction(): boolean;
-	get functionType(): FunctionType | undefined;
-	equals(type: IType): boolean;
-	reduce(type: IType): IType | undefined;
-	toOptional(): IType;
-	toString(): string;
-}
-
-export class Type implements IType {
+export class Type {
 
 	protected _concreteTypes: ConcreteType[] = [];
 
@@ -141,8 +122,8 @@ export class Type implements IType {
 	}
 
 	static functionType(
-		type: IType,
-		argTypes: IType[],
+		type: Type,
+		argTypes: Type[],
 		options?: IFunctionTypeOptions,
 	) {
 		return new Type(new FunctionType(type, argTypes, options));

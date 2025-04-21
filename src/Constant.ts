@@ -1,18 +1,18 @@
 import { Value } from './Value.js';
-import { IType, Type } from './Type.js';
+import { Type } from './Type.js';
 
 export class Constant {
 
 	constructor(
 		protected readonly _value: Value,
-		protected _type: IType = Type.of(_value),
+		protected _type: Type = Type.of(_value),
 	) {}
 
 	get value() {
 		return this._value;
 	}
 
-	get type(): IType {
+	get type(): Type {
 		return this._type;
 	}
 
