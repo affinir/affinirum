@@ -16,6 +16,10 @@ export class Constant {
 		return this._type;
 	}
 
+	set type(type: Type) {
+		this._type = type;
+	}
+
 	static EmptyArray = new Constant([]);
 	static EmptyObject = new Constant({});
 

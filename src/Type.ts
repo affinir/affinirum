@@ -12,7 +12,7 @@ export class Type {
 		...types: ConcreteType[] | Type[]
 	) {
 		types.map((i)=> i instanceof Type ? i._concreteTypes : [i]).flat().forEach((i)=> {
-			if (this._concreteTypes.every((c)=> !Type.equate(c, i))) {
+			if (!this._concreteTypes.includes(i)) {
 				this._concreteTypes.push(i);
 			}
 		});
@@ -67,15 +67,14 @@ export class Type {
 	}
 
 	includes(mask: ConcreteType) {
-		return this._concreteTypes.some((i)=> Type.equate(i, mask));
-	}
-
-	equals(type: Type) {
-		return type._concreteTypes.length === this._concreteTypes.length && type._concreteTypes.every((i)=> this.includes(i));
+		return this._concreteTypes.some((i)=>
+			i === mask
+				|| i instanceof FunctionType && mask instanceof FunctionType && i.isCompatible(mask)
+		);
 	}
 
 	reduce(mask: Type) {
-		if (mask.isUnknown) {
+		if (mask.isUnknown || mask.isVoid) {
 			return this;
 		}
 		if (this.isUnknown) {
@@ -94,7 +93,9 @@ export class Type {
 	}
 
 	toString() {
-		return this._concreteTypes.length ? this._concreteTypes.map((p)=> p.toString()).sort().join('|') : '??';
+		return this._concreteTypes.length
+			? this._concreteTypes.sort((a, b)=> Type._order(a) - Type._order(b)).map((i)=> i.toString()).join('|')
+			: '??';
 	}
 
 	static of(value: Value) {
@@ -112,13 +113,8 @@ export class Type {
 								? 'array'
 								: typeof value === 'object'
 									? 'object'
-									: new FunctionType(Type.Unknown, [Type.Unknown], { variadic: true })
+									: Type.DefaultFunctionType
 		);
-	}
-
-	static equate(a: ConcreteType, b: ConcreteType) {
-		return a === b
-			|| a instanceof FunctionType && b instanceof FunctionType && a.equals(b);
 	}
 
 	static functionType(
@@ -132,18 +128,35 @@ export class Type {
 	static Unknown = new Type();
 	static Void = new Type('void');
 	static Boolean = new Type('boolean');
-	static Number = new Type('number');
-	static Buffer = new Type('buffer');
-	static String = new Type('string');
-	static Array = new Type('array');
-	static Object = new Type('object');
 	static OptionalBoolean = new Type('void', 'boolean');
+	static Number = new Type('number');
 	static OptionalNumber = new Type('void', 'number');
+	static Buffer = new Type('buffer');
 	static OptionalBuffer = new Type('void', 'buffer');
+	static String = new Type('string');
 	static OptionalString = new Type('void', 'string');
+	static Array = new Type('array');
 	static OptionalArray = new Type('void', 'array');
+	static Object = new Type('object');
 	static OptionalObject = new Type('void', 'object');
+	static DefaultFunctionType = new FunctionType(Type.Unknown, [Type.Unknown], { variadic: true });
+	static Function = new Type(Type.DefaultFunctionType);
+	static OptionalFunction = new Type('void', Type.DefaultFunctionType);
 	static Enumerable = new Type('buffer', 'string', 'array');
 	static Iterable = new Type('buffer', 'string', 'array', 'object');
+
+	private static _order(mask: ConcreteType): number {
+		switch (mask) {
+			case 'void': return 0;
+			case 'boolean': return 1;
+			case 'number': return 2;
+			//case 'integer': return 4;
+			case 'buffer': return 8;
+			case 'string': return 9;
+			case 'array': return 0x100;
+			case 'object': return 0x10000;
+			default: return 0x100000000 + mask.retType._concreteTypes.reduce((acc, i)=> acc + Type._order(i), 0);
+		}
+	};
 
 }

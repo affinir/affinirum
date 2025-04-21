@@ -37,12 +37,12 @@ export class FunctionType {
 		return !this._options?.impure;
 	}
 
-	equals(ftype: FunctionType) {
-		if (this._retType !== ftype._retType) {
+	isCompatible(ftype: FunctionType) {
+		if (!this._retType.reduce(ftype._retType) || this.minArity > ftype.maxArity || this.maxArity < ftype.minArity) {
 			return false;
 		}
-		for (let i = 0; i < this._argTypes.length; ++i) {
-			if (!this._argTypes[i].equals(ftype._argTypes[i])) {
+		for (let i = 0, argc = Math.max(this.minArity, ftype.minArity); i < argc; ++i) {
+			if (!this._argTypes[i].reduce(ftype._argTypes[i])) {
 				return false;
 			}
 		}
@@ -57,7 +57,7 @@ export class FunctionType {
 	}
 
 	toString(): string {
-		return `${this._retType.toString()}(${this._argTypes.map((i)=> i.toString()).join(', ')}${this._options?.variadic ? ',...' : ''})`;
+		return `function ${this._retType.toString()}(${this._argTypes.map((i)=> i.toString()).join(', ')}${this._options?.variadic ? ',...' : ''})`;
 	}
 
 }

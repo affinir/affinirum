@@ -16,7 +16,7 @@ export class CallNode extends Node {
 		protected _subnodes: Node[],
 	) {
 		super(frame);
-		this._type = this._functionType.retType;
+		this._type = this._fnode.type.functionType?.retType ?? Type.Unknown;
 	}
 
 	override get type(): Type {
@@ -25,17 +25,20 @@ export class CallNode extends Node {
 
 	override compile(type: Type): Node {
 		this._fnode = this._fnode.compile(this._fnode.type);
-		this._type = this._functionType.retType;
+		this._type = this._fnode.type.functionType?.retType ?? Type.Unknown;
 		this._type = this.reduceType(type);
-		if (this._subnodes.length < this._functionType.minArity) {
-			this.throwError(`function requires ${this._functionType.minArity} arguments not ${this._subnodes.length}`);
+		const ftype = this._fnode.type.functionType;
+		if (ftype) {
+			if (this._subnodes.length < ftype.minArity) {
+				this.throwError(`function requires ${ftype.minArity} arguments not ${this._subnodes.length}`);
+			}
+			if (this._subnodes.length > ftype.maxArity) {
+				this.throwError(`function requires ${ftype.maxArity} arguments not ${this._subnodes.length}`);
+			}
 		}
-		if (this._subnodes.length > this._functionType.maxArity) {
-			this.throwError(`function requires ${this._functionType.maxArity} arguments not ${this._subnodes.length}`);
-		}
-		let constant = this._functionType.isPure;
+		let constant = ftype?.isPure ?? true;
 		for (let i = 0; i < this._subnodes.length; ++i) {
-			const atype = this._functionType.argType(i, this.type);
+			const atype = ftype?.argType(i, this.type) ?? Type.Unknown;
 			if (!atype) {
 				this.throwTypeError(type);
 			}
@@ -57,12 +60,4 @@ export class CallNode extends Node {
 			+ `, subnodes:\n${this._subnodes.map((s)=> s.toString(ident + 1)).join('\n')}`;
 	}
 
-	protected get _functionType() {
-		if (this._fnode.type.functionType) {
-			return this._fnode.type.functionType;
-		}
-		else {
-			this.throwError(`type ${this._fnode.type} mismatch with expected type function`);
-		}
-	}
 }

@@ -1,7 +1,6 @@
-/*
 import { Expression, Type } from '../src/index.js';
 
-xdescribe('Expression Evaluation Result test', ()=> {
+describe('Expression Evaluation Result test', ()=> {
 	it('parses and evaluates multiple times', ()=> {
 		const expression = new Expression('arr0.Any(boolean(number a) -> (a > 0) )');
 		expect(expression.evaluate({ arr0: [1, -2, -3, -4] })).toBeTrue();
@@ -51,4 +50,3 @@ xdescribe('Expression Evaluation Result test', ()=> {
 		} }) as string).toBe('["bool":true,"num":-50,"buf":#0a141e0004430c0bc8dc0032#,"str":"string value","func":function,"arr":[1,2,3],"obj":["a":1,"b":2]]');
 	});
 });
-*/

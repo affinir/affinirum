@@ -262,6 +262,7 @@ export class ParserState extends ParserFrame {
 							case 'string': this._fragment = Type.String; break;
 							case 'array': this._fragment = Type.Array; break;
 							case 'object': this._fragment = Type.Object; break;
+							case 'function': this._fragment = Type.Function; break;
 							default: this._fragment = token; break;
 						}
 					}

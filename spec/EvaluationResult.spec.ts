@@ -1,7 +1,6 @@
-/*
 import { Expression } from '../src/index.js';
 
-xdescribe('Expression Evaluation Result test', ()=> {
+describe('Expression Evaluation Result test', ()=> {
 	([
 		['null', [{ result: undefined }]],
 		['false', [{ result: false }]],
@@ -190,4 +189,3 @@ xdescribe('Expression Evaluation Result test', ()=> {
 		});
 	});
 });
-*/

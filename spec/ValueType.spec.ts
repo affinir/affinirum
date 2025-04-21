@@ -24,8 +24,8 @@ describe('Expression Value Type test', ()=> {
 		['["0",1,2,"3"]', 'array'],
 		['[:]', 'object'],
 		['[`a`:100,`b`:"100"]', 'object'],
-		['void ()->null', 'void()'],
-		['boolean (number i)->i==0', 'boolean(number)'],
+		['void ()->null', 'function void()'],
+		['boolean (number i)->i==0', 'function boolean(number)'],
 	] as [string, string][]).forEach(([expr, expected])=> {
 		it(`parses expression ${expr} and determines value type`, ()=> {
 			try {

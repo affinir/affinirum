@@ -19,7 +19,7 @@ export class ConstantNode extends Node {
 	}
 
 	override compile(type: Type): Node {
-		this.reduceType(type);
+		this._constant.type = this.reduceType(type);
 		this._subnode = this._subnode?.compile(this._constant.type.functionType?.retType ?? Type.Unknown);
 		return this;
 	}

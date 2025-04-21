@@ -530,6 +530,7 @@ export class Expression {
 				state.throwError('missing function scope');
 			}
 		}
+		frame.ends(state.end);
 		const args = Array.from(variables.values());
 		const subnode = this.unit(state.next(), scope.subscope(variables));
 		const value = (...values: Value[])=> {
@@ -537,7 +538,7 @@ export class Expression {
 			return subnode.evaluate();
 		};
 		const constant = new Constant(value, type ? Type.functionType(type, args.map((v)=> v.type)) : undefined);
-		return new ConstantNode(frame.ends(state.end), constant, subnode);
+		return new ConstantNode(frame, constant, subnode);
 	}
 
 	protected call(frame: ParserFrame, func: Constant, subnodes: Node[]): Node {
