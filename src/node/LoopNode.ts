@@ -1,6 +1,7 @@
 import { Node } from '../Node.js';
 import { ParserFrame } from '../ParserFrame.js';
-import { ValueType, Value, typeBoolean } from '../ValueType.js';
+import { Value } from '../Value.js';
+import { IType, Type } from '../Type.js';
 
 export class LoopNode extends Node {
 
@@ -12,12 +13,12 @@ export class LoopNode extends Node {
 		super(frame);
 	}
 
-	override get type(): ValueType {
+	override get type(): IType {
 		return this._subnode.type;
 	}
 
-	override compile(type: ValueType): Node {
-		this._cnode = this._cnode.compile(typeBoolean);
+	override compile(type: IType): Node {
+		this._cnode = this._cnode.compile(Type.Boolean);
 		this._subnode = this._subnode.compile(type);
 		return this;
 	}

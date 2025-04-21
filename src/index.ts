@@ -1,14 +1,17 @@
-export * from './ValueType.js';
+export * from './Value.js';
+export * from './Type.js';
+export * from './FunctionType.js';
+import { constNumber } from './constant/Number.js';
 import { funcSum, funcMax, funcMin, funcRange, funcMerge, funcChain } from './function/AggregationFunctions.js';
 import { funcOr, funcAnd, funcNot } from './function/BooleanFunctions.js';
-import {funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual,
+import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual,
 	funcLike, funcUnlike, funcContains, funcStartsWith, funcEndsWith } from './function/ComparisonFunctions.js';
 import { funcUnique, funcIntersection, funcDifference, funcAppend, funcLength, funcSlice,
 	funcByte, funcChar, funcCharCode, funcEntries, funcKeys, funcValues, funcAt,
 	funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny, funcFlatten, funcReverse,
 	funcTransform, funcFilter, funcReduce, funcCompose } from './function/IterationFunctions.js';
-	import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcRemainder, funcModulo, funcExponent, funcLogarithm,
-		funcPower, funcRoot, funcAbs, funcCeil, funcFloor, funcRound } from './function/MathematicalFunctions.js';
+import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcRemainder, funcModulo, funcExponent, funcLogarithm,
+	funcPower, funcRoot, funcAbs, funcCeil, funcFloor, funcRound } from './function/MathematicalFunctions.js';
 import { funcFromJSON, funcToJSON, funcToAN } from './function/NotationFunctions.js';
 import { funcRandomNumber, funcRandomInteger, funcRandomBuffer, funcRandomString } from './function/RandomizationFunctions.js';
 import { funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin, funcSplit,
@@ -22,7 +25,8 @@ import { funcNow, funcToUniversalTime, funcToLocalTime, funcFromUniversalTime, f
 import { StaticScope } from './StaticScope.js';
 import { Constant } from './Constant.js';
 import { Variable } from './Variable.js';
-import { ValueType, Value, typeUnknown } from './ValueType.js';
+import { Value } from './Value.js';
+import { IType, Type } from './Type.js';
 import { ParserFrame } from './ParserFrame.js';
 import { ParserState } from './ParserState.js';
 import { Node } from './Node.js';
@@ -33,20 +37,12 @@ import { LoopNode } from './node/LoopNode.js';
 import { ArrayNode } from './node/ArrayNode.js';
 import { ObjectNode } from './node/ObjectNode.js';
 import { ProgramNode } from './node/ProgramNode.js';
-import { FunctionType } from './FunctionType.js';
 
 const keywords = ['void', 'boolean', 'bool', 'number', 'num', 'buffer', 'buf', 'string', 'str', 'array', 'arr', 'object', 'obj', 'function', 'func',
 	'variant', 'var', 'if', 'then', 'else',
 ];
 const constants: [string, Constant][] = [
-	['NUMBER', new Constant({
-		NAN: Number.NaN,
-		POSINF: Number.POSITIVE_INFINITY,
-		NEGINF: Number.NEGATIVE_INFINITY,
-		EPSILON: Number.EPSILON,
-		E: 2.718281828459045,
-		PI: 3.141592653589793,
-	})],
+	['Number', constNumber],
 ];
 const gfunctions: [string, Constant][] = [
 	['Or', funcOr], ['And', funcAnd], ['Not', funcNot], ['Sum', funcSum], ['Min', funcMin], ['Max', funcMax],
@@ -105,20 +101,13 @@ export class Expression {
 			If strict mode is set then undeclared variables will not be allowed in expression.
 	*/
 	constructor(expr: string, config?: {
-		type?: ValueType,
+		type?: IType,
 		strict?: boolean,
-		variables?: Record<string, ValueType>,
-		constants?: Record<string, [Value, {
-			type: ValueType,
-			argTypes: ValueType[],
-			minArity?: number,
-			maxArity?: number,
-			typeInference?: number,
-			pure?: boolean,
-		}]>,
+		variables?: Record<string, IType>,
+		constants?: Record<string, [Value, IType?]>,
 	}) {
 		this._expression = expr;
-		const type = config?.type ?? typeUnknown;
+		const type = config?.type ?? Type.Unknown;
 		this._strict = config?.strict ?? false;
 		if (config?.variables) {
 			for (const v in config.variables) {
@@ -127,11 +116,8 @@ export class Expression {
 		}
 		if (config?.constants) {
 			for (const c in config.constants) {
-				const [value, signature] = config.constants[c];
-				this._constants.set(c, new Constant(value, signature
-					? new FunctionType(signature.type, signature.argTypes, signature.minArity, signature.maxArity, signature.typeInference, signature.pure)
-					: undefined
-				));
+				const [value, type] = config.constants[c];
+				this._constants.set(c, new Constant(value, type));
 			}
 		}
 		const state = new ParserState(this._expression);
@@ -145,7 +131,7 @@ export class Expression {
 	/**
 		Returns compiled expression return value type.
 	*/
-	get type(): ValueType {
+	get type(): IType {
 		return this._root.type;
 	}
 
@@ -161,8 +147,8 @@ export class Expression {
 		Returns record with compiled variable names and expected types.
 		@returns Record with variable names and types.
 	*/
-	variables(): Record<string, ValueType> {
-		const types: Record<string, ValueType> = {};
+	variables(): Record<string, IType> {
+		const types: Record<string, IType> = {};
 		const variables = this._scope.variables();
 		for (const name in variables) {
 			types[name] = variables[name].type;
@@ -183,8 +169,8 @@ export class Expression {
 			}
 			const variable = variables[name];
 			const value = values?.[name] ?? undefined;
-			if (!variable.type.reduce(ValueType.of(value))) {
-				this._root.frame(name).throwError(`unexpected type ${ValueType.of(value)} for variable ${name} of type ${variable.type}:\n`);
+			if (!variable.type.reduce(Type.of(value))) {
+				this._root.frame(name).throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
 			}
 			variable.value = value;
 		}
@@ -311,7 +297,7 @@ export class Expression {
 			if (state.operator === funcAt) {
 				state.next();
 				if (state.isLiteral && (typeof state.literalValue === 'string' || typeof state.literalValue === 'number')) {
-					node = this.call(frame.ends(state.end), funcAt, [node, new ConstantNode(state, state.literalValue)]);
+					node = this.call(frame.ends(state.end), funcAt, [node, new ConstantNode(state, new Constant(state.literalValue))]);
 					state.next();
 				}
 				else if (state.isToken) {
@@ -338,7 +324,7 @@ export class Expression {
 						}
 					}
 					else {
-						node = this.call(frame, funcAt, [node, new ConstantNode(state, state.token)]);
+						node = this.call(frame, funcAt, [node, new ConstantNode(state, new Constant(state.token))]);
 						state.next();
 					}
 				}
@@ -374,7 +360,7 @@ export class Expression {
 	protected term(state: ParserState, scope: StaticScope): Node {
 		if (state.isLiteral) {
 			const frame = state.frame();
-			const constant = state.literalValue;
+			const constant = new Constant(state.literalValue);
 			state.next();
 			return new ConstantNode(frame, constant);
 		}
@@ -383,13 +369,13 @@ export class Expression {
 			if (constant != null) {
 				const frame = state.frame();
 				state.next();
-				return new ConstantNode(frame, constant.value);
+				return new ConstantNode(frame, constant);
 			}
 			const gfunction = this._gfunctions.get(state.token);
 			if (gfunction != null) {
 				const frame = state.frame();
 				state.next();
-				return new ConstantNode(frame, gfunction.value, gfunction.signature);
+				return new ConstantNode(frame, gfunction);
 			}
 			return this.variable(state, scope);
 		}
@@ -398,6 +384,9 @@ export class Expression {
 			if (state.next().isOptionalType) {
 				type = type.toOptional();
 				state.next();
+			}
+			else {
+				//TODO typesets
 			}
 			if (state.isToken) {
 				return this.variable(state, scope, type);
@@ -433,10 +422,10 @@ export class Expression {
 			const frame = state.frame();
 			const checkEmptyState = state.clone();
 			if (checkEmptyState.next().isBracketsClose) {
-				return new ConstantNode(frame.ends(state.next().next().end), []);
+				return new ConstantNode(frame.ends(state.next().next().end), Constant.EmptyArray);
 			}
 			else if (checkEmptyState.isColonSeparator && checkEmptyState.next().isBracketsClose) {
-				return new ConstantNode(frame.ends(state.next().next().next().end), {});
+				return new ConstantNode(frame.ends(state.next().next().next().end), Constant.EmptyObject);
 			}
 			const subnodes: [ Node | number, Node ][] = [];
 			let index = 0;
@@ -460,7 +449,9 @@ export class Expression {
 			if (subnodes.every(([k,])=> typeof k === 'number')) {
 				return new ArrayNode(frame, subnodes.map(([, v])=> v));
 			}
-			return new ObjectNode(frame, subnodes.map(([k, v])=> [typeof k === 'number' ? new ConstantNode(v, String(k)) : k, v] as const));
+			return new ObjectNode(frame, subnodes.map(([k, v])=>
+				[typeof k === 'number' ? new ConstantNode(v, new Constant(String(k))) : k, v] as const
+			));
 		}
 		else if (state.isBracketsClose) {
 			state.throwError('unexpected closing brackets');
@@ -471,7 +462,7 @@ export class Expression {
 		state.throwError('unexpected expression token');
 	}
 
-	protected variable(state: ParserState, scope: StaticScope, type?: ValueType): Node {
+	protected variable(state: ParserState, scope: StaticScope, type?: IType): Node {
 		let variable: Variable | undefined = undefined;
 		if (type) {
 			if (scope.has(state.token)) {
@@ -504,7 +495,7 @@ export class Expression {
 		);
 	}
 
-	protected subroutine(state: ParserState, scope: StaticScope, type?: ValueType): Node {
+	protected subroutine(state: ParserState, scope: StaticScope, type?: IType): Node {
 		const frame = state.frame();
 		const variables = new Map<string, Variable>();
 		if (type) {
@@ -545,12 +536,12 @@ export class Expression {
 			args.forEach((arg, ix)=> arg.value = values[ix]);
 			return subnode.evaluate();
 		};
-		const signature = type ? new FunctionType(type, args.map((v)=> v.type)) : undefined;
-		return new ConstantNode(frame.ends(state.end), value, signature, subnode);
+		const constant = new Constant(value, type ? Type.functionType(type, args.map((v)=> v.type)) : undefined);
+		return new ConstantNode(frame.ends(state.end), constant, subnode);
 	}
 
 	protected call(frame: ParserFrame, func: Constant, subnodes: Node[]): Node {
-		return new CallNode(frame, new ConstantNode(frame, func.value, func.signature), subnodes);
+		return new CallNode(frame, new ConstantNode(frame, func), subnodes);
 	}
 
 }

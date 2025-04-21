@@ -1,4 +1,4 @@
-export const equalBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
+export const equateBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	if (value1.byteLength !== value2.byteLength) {
 		return false;
 	}
@@ -40,7 +40,7 @@ export const parseBuffer = (value?: string)=> {
 	return bytes.buffer;
 };
 
-export const toBufferString = (value?: ArrayBuffer)=> {
+export const formatBuffer = (value?: ArrayBuffer)=> {
 	if (value == null) {
 		return undefined;
 	}

@@ -1,8 +1,7 @@
-import { parseBuffer, toBufferString } from '../base/Buffer.js';
-import { isCaseSpaceEtc } from '../base/String.js';
-import { FunctionType, FUNCTION_ARG_MAX } from '../FunctionType.js';
 import { Constant } from '../Constant.js';
-import { typeString, typeArray, typeOptionalBoolean, typeOptionalNumber, typeOptionalBuffer, typeOptionalString } from '../ValueType.js';
+import { Type } from '../Type.js';
+import { parseBuffer, formatBuffer } from '../base/Buffer.js';
+import { isCaseSpaceEtc } from '../base/String.js';
 
 export const funcAlphanum = new Constant(
 	(value: string)=> {
@@ -15,83 +14,83 @@ export const funcAlphanum = new Constant(
 		}
 		return result;
 	},
-	new FunctionType(typeString, [typeString]),
+	Type.functionType(Type.String, [Type.String]),
 );
 
 export const funcTrim = new Constant(
 	(value: string)=>
 		value.trim(),
-	new FunctionType(typeString, [typeString]),
+	Type.functionType(Type.String, [Type.String]),
 );
 
 export const funcTrimStart = new Constant(
 	(value: string)=>
 		value.trimStart(),
-	new FunctionType(typeString, [typeString]),
+	Type.functionType(Type.String, [Type.String]),
 );
 
 export const funcTrimEnd = new Constant(
 	(value: string)=>
 		value.trimEnd(),
-	new FunctionType(typeString, [typeString]),
+	Type.functionType(Type.String, [Type.String]),
 );
 
 export const funcLowerCase = new Constant(
 	(value: string)=>
 		value.toLowerCase(),
-	new FunctionType(typeString, [typeString]),
+	Type.functionType(Type.String, [Type.String]),
 );
 
 export const funcUpperCase = new Constant(
 	(value: string)=>
 		value.toUpperCase(),
-	new FunctionType(typeString, [typeString]),
+	Type.functionType(Type.String, [Type.String]),
 );
 
 export const funcJoin = new Constant(
 	(value: string[], separator: string = ' ')=>
 		value.join(separator),
-	new FunctionType(typeString, [typeArray, typeOptionalString], 1, 2),
+	Type.functionType(Type.String, [Type.Array, Type.OptionalString]),
 );
 
 export const funcSplit = new Constant(
 	(value: string, separator: string = ' ')=>
 		value.split(separator),
-	new FunctionType(typeArray, [typeString, typeOptionalString], 1, 2),
+	Type.functionType(Type.Array, [Type.String, Type.OptionalString]),
 );
 
 export const funcToBooleanString = new Constant(
 	(value: boolean | undefined)=>
 		value?.toString(),
-	new FunctionType(typeOptionalString, [typeOptionalBoolean]),
+	Type.functionType(Type.OptionalString, [Type.OptionalBoolean]),
 );
 
 export const funcFromBooleanString = new Constant(
 	(value: string | undefined)=>
 		value ? value.toLowerCase() === 'true' : undefined,
-	new FunctionType(typeOptionalBoolean, [typeOptionalString]),
+	Type.functionType(Type.OptionalBoolean, [Type.OptionalString]),
 );
 
 export const funcToNumberString = new Constant(
 	(value: number | undefined, radix?: number)=>
 		value?.toString(radix),
-	new FunctionType(typeOptionalString, [typeOptionalNumber], 1, 2),
+	Type.functionType(Type.OptionalString, [Type.OptionalNumber]),
 );
 
 export const funcFromNumberString = new Constant(
 	(value: string | undefined)=>
 		value ? Number.parseFloat(value) : undefined,
-	new FunctionType(typeOptionalNumber, [typeOptionalString]),
+	Type.functionType(Type.OptionalNumber, [Type.OptionalString]),
 );
 
 export const funcToBufferString = new Constant(
 	(value: ArrayBuffer | undefined)=>
-		toBufferString(value),
-	new FunctionType(typeOptionalString, [typeOptionalBuffer]),
+		formatBuffer(value),
+	Type.functionType(Type.OptionalString, [Type.OptionalBuffer]),
 );
 
 export const funcFromBufferString = new Constant(
 	(value: string)=>
 		parseBuffer(value),
-	new FunctionType(typeOptionalBuffer, [typeOptionalString]),
+	Type.functionType(Type.OptionalBuffer, [Type.OptionalString]),
 );

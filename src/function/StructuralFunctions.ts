@@ -1,15 +1,15 @@
-import { FunctionType, FUNCTION_ARG_MAX } from '../FunctionType.js';
 import { Constant } from '../Constant.js';
-import { Value, typeUnknown, typeBoolean } from '../ValueType.js';
+import { Value } from '../Value.js';
+import { Type } from '../Type.js';
 
 export const funcCoalesce = new Constant(
 	(value: Value, valueOtherwise: Value)=>
 		value ?? valueOtherwise,
-	new FunctionType(typeUnknown, [typeUnknown, typeUnknown], 2, 2, 0),
+	Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown], { inference: 0 }),
 );
 
 export const funcSwitch = new Constant(
 	(condition: boolean, value1: Value, value2: Value)=>
 		condition ? value1 : value2,
-	new FunctionType(typeUnknown, [typeBoolean, typeUnknown, typeUnknown], 3, 3, 1),
+	Type.functionType(Type.Unknown, [Type.Boolean, Type.Unknown, Type.Unknown], { inference: 1 }),
 );

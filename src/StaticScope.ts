@@ -16,7 +16,12 @@ export class StaticScope {
 	}
 
 	global(name: string, variable: Variable): StaticScope {
-		this._superscope?.global(name, variable) ?? this._variables.set(name, variable);
+		if (this._superscope) {
+			this._superscope.global(name, variable);
+		}
+		else {
+			this._variables.set(name, variable);
+		}
 		return this;
 	}
 

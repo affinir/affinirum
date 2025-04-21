@@ -1,7 +1,7 @@
-import { Value } from '../ValueType.js';
-import { equalBuffers } from './Buffer.js';
+import { Value } from '../Value.js';
+import { equateBuffers, formatBuffer } from './Buffer.js';
 
-export const equal = (value1: Value, value2: Value)=> {
+export const equate = (value1: Value, value2: Value)=> {
 	if (value1 == null || value2 == null) {
 		return value1 == value2;
 	}
@@ -15,12 +15,12 @@ export const equal = (value1: Value, value2: Value)=> {
 		return isNaN(value1) && isNaN(value2 as number) ? true : value1 === value2;
 	}
 	if (value1 instanceof ArrayBuffer && value2 instanceof ArrayBuffer) {
-		return equalBuffers(value1, value2);
+		return equateBuffers(value1, value2);
 	}
 	if (Array.isArray(value1) && Array.isArray(value2)) {
 		if (value1.length === value2.length) {
 			for (let i = 0; i < value1.length; ++i) {
-				if (!equal(value1[i], value2[i])) {
+				if (!equate(value1[i], value2[i])) {
 					return false;
 				}
 			}
@@ -30,9 +30,36 @@ export const equal = (value1: Value, value2: Value)=> {
 	}
 	const props = new Set([...Object.getOwnPropertyNames(value1), ...Object.getOwnPropertyNames(value2)]);
 	for (const prop of props) {
-		if (!equal((value1 as any)[prop] as Value, (value2 as any)[prop] as Value)) {
+		if (!equate((value1 as any)[prop] as Value, (value2 as any)[prop] as Value)) {
 			return false;
 		}
 	}
 	return true;
+};
+
+export const notate = (value: Value, whitespace?: string): string=> {
+	if (value == null) {
+		return 'null';
+	}
+	if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'bigint') {
+		return value.toString();
+	}
+	if (value instanceof ArrayBuffer) {
+		return `#${formatBuffer(value)}#`;
+	}
+	if (typeof value === 'string') {
+		return `"${value}"`;
+	}
+	const prefix = whitespace ? '\n' + whitespace : '';
+	const suffix = whitespace ? '\n' : '';
+	if (Array.isArray(value)) {
+		const lines = (value as []).map((i)=> `${prefix}${notate(i, whitespace).split('\n').join(prefix)}`);
+		return `[${lines.join(',')}${suffix}]`;
+	}
+	if (typeof value === 'object') {
+		const separator = whitespace ? ' ' : '';
+		const lines = Object.entries(value).map(([k, v])=> `${prefix}"${k}":${separator}${notate(v, whitespace).split('\n').join(prefix)}`);
+		return `[${lines.join(',')}${suffix}]`;
+	}
+	return 'function';
 };

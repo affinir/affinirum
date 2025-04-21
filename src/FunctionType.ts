@@ -1,44 +1,63 @@
-import { ValueType } from './ValueType.js';
+import { IType } from './Type.js';
 
-export const FUNCTION_ARG_MAX = 16536;
+export interface IFunctionTypeOptions {
+	inference?: number,
+	impure?: boolean,
+	variadic?: boolean,
+}
 
 export class FunctionType {
 
 	constructor(
-		protected readonly _type: ValueType,
-		protected readonly _argTypes: ValueType[],
-		protected readonly _minArity?: number,
-		protected readonly _maxArity?: number,
-		protected readonly _typeInference?: number,
-		protected readonly _pure = true,
-	) {}
-
-	get pure() {
-		return this._pure;
+		protected readonly _retType: IType,
+		protected readonly _argTypes: IType[],
+		protected readonly _options?: IFunctionTypeOptions,
+	) {
+		let i = _argTypes.length - 1;
+		while (i > 1) {
+			if (!_argTypes[i--].isOptional && _argTypes[i].isOptional) {
+				throw new Error('a required parameter follows an optional parameter');
+			}
+		}
 	}
 
-	get minArity(): number {
-		return this._minArity ?? this._argTypes.length;
+	get retType() {
+		return this._retType;
 	}
 
-	get maxArity(): number {
-		return this._maxArity ?? this._argTypes.length;
+	get minArity() {
+		return this._argTypes.filter((i)=> !i.isOptional).length;
 	}
 
-	get type(): ValueType {
-		return this._type;
+	get maxArity() {
+		return this._options?.variadic ? Number.POSITIVE_INFINITY : this._argTypes.length;
 	}
 
-	argType(index: number) {
-		return this._argTypes[index] ?? this._argTypes[this._argTypes.length - 1];
+	get isPure() {
+		return !this._options?.impure;
 	}
 
-	argTypeInference(type: ValueType, index: number) {
-		return this._typeInference && this._typeInference <= index ? this.argType(index).reduce(type) : this.argType(index);
+	equals(ftype: FunctionType) {
+		if (this._retType !== ftype._retType) {
+			return false;
+		}
+		for (let i = 0; i < this._argTypes.length; ++i) {
+			if (!this._argTypes[i].equals(ftype._argTypes[i])) {
+				return false;
+			}
+		}
+		return true;
 	}
 
-	toString() {
-		return `${this._type.toString()}(${this._argTypes.map((i)=> i.toString()).join(', ')})`;
+	argType(index: number, type?: IType) {
+		const argType = this._argTypes[index] ?? this._argTypes[this._argTypes.length - 1];
+		return type && this._options?.inference != null && this._options.inference <= index
+			? argType.reduce(type)
+			: argType;
+	}
+
+	toString(): string {
+		return `${this._retType.toString()}(${this._argTypes.map((i)=> i.toString()).join(', ')})`;
 	}
 
 }

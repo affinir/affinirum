@@ -1,6 +1,3 @@
-import { toBufferString } from './Buffer.js';
-import { Value } from '../ValueType.js';
-
 export const isSign = (c: string)=> c === '+' || c === '-';
 export const isAlpha = (c: string)=>  c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c === '_' ;
 export const isNumeric = (c: string)=>  c >= '0' && c <= '9' ;
@@ -9,7 +6,7 @@ export const isHexadecimal = (c: string)=> isNumeric(c) || c >= 'a' && c <= 'f' 
 export const isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
 export const isCaseSpaceEtc = (c: string)=> (c < 'a' || c > 'z') && (c < '0' || c > '9');
 
-export const equalStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boolean)=> {
+export const equateStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
 		return value1 === value2;
 	}
@@ -102,31 +99,4 @@ export const endsWithString = (value: string, search: string, endPos?: number, i
 		}
 	}
 	return true;
-};
-
-export const notate = (value: Value, whitespace?: string): string=> {
-	if (value == null) {
-		return 'null';
-	}
-	if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'bigint') {
-		return value.toString();
-	}
-	if (value instanceof ArrayBuffer) {
-		return `#${toBufferString(value)}#`;
-	}
-	if (typeof value === 'string') {
-		return `"${value}"`;
-	}
-	const prefix = whitespace ? '\n' + whitespace : '';
-	const suffix = whitespace ? '\n' : '';
-	if (Array.isArray(value)) {
-		const lines = (value as []).map((i)=> `${prefix}${notate(i, whitespace).split('\n').join(prefix)}`);
-		return `[${lines.join(',')}${suffix}]`;
-	}
-	if (typeof value === 'object') {
-		const separator = whitespace ? ' ' : '';
-		const lines = Object.entries(value).map(([k,v])=> `${prefix}"${k}":${separator}${notate(v, whitespace).split('\n').join(prefix)}`);
-		return `[${lines.join(',')}${suffix}]`;
-	}
-	return 'function';
 };

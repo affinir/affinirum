@@ -1,11 +1,14 @@
 import { Node } from '../Node.js';
 import { ParserFrame } from '../ParserFrame.js';
+import { Constant } from '../Constant.js';
 import { ConstantNode } from './ConstantNode.js';
-import { Value, ValueType, typeUnknown, typeFunction } from '../ValueType.js';
+import { Value } from '../Value.js';
+import { IType } from '../Type.js';
+import { FunctionType } from '../FunctionType.js';
 
 export class CallNode extends Node {
 
-	protected _type: ValueType;
+	protected _type: IType;
 
 	constructor(
 		frame: ParserFrame,
@@ -13,48 +16,53 @@ export class CallNode extends Node {
 		protected _subnodes: Node[],
 	) {
 		super(frame);
-		this._type = _fnode.signature?.type ?? typeUnknown;
+		this._type = this._functionType.retType;
 	}
 
-	override get type(): ValueType {
+	override get type(): IType {
 		return this._type;
 	}
 
-	override compile(type: ValueType): Node {
-		this._fnode = this._fnode.compile(typeFunction);
-		this._type = this._fnode.signature?.type ?? typeUnknown;
+	override compile(type: IType): Node {
+		this._fnode = this._fnode.compile(this._fnode.type);
+		this._type = this._functionType.retType;
 		this._type = this.reduceType(type);
-		const signature = this._fnode.signature;
-		if (signature) {
-			if (this._subnodes.length < signature.minArity) {
-				this.throwError(`insufficient number of arguments ${this._subnodes.length} is less than ${signature.minArity} that function requires`);
-			}
-			if (this._subnodes.length > signature.maxArity) {
-				this.throwError(`excessive number of arguments ${this._subnodes.length} is more than ${signature.maxArity} that function requires`);
-			}
+		if (this._subnodes.length < this._functionType.minArity) {
+			this.throwError(`function requires ${this._functionType.minArity} arguments not ${this._subnodes.length}`);
 		}
-		let constant = signature?.pure;
+		if (this._subnodes.length > this._functionType.maxArity) {
+			this.throwError(`function requires ${this._functionType.maxArity} arguments not ${this._subnodes.length}`);
+		}
+		let constant = this._functionType.isPure;
 		for (let i = 0; i < this._subnodes.length; ++i) {
-			const argTypeInference = signature?.argTypeInference(this.type, i) ?? typeUnknown;
-			if (!argTypeInference) {
+			const atype = this._functionType.argType(i, this.type);
+			if (!atype) {
 				this.throwTypeError(type);
 			}
-			this._subnodes[i] = this._subnodes[i].compile(argTypeInference);
+			this._subnodes[i] = this._subnodes[i].compile(atype);
 			constant &&= this._subnodes[i].constant;
 		}
 		return constant && this._fnode.constant
-			? new ConstantNode(this, (this._fnode.evaluate() as (...values: Value[])=> Value)(...this._subnodes.map((node)=> node.evaluate())))
+			? new ConstantNode(this, new Constant(this.evaluate(), this.type))
 			: this;
 	}
 
 	override evaluate(): Value {
-		return (this._fnode.evaluate() as (...values: Value[])=> Value)(...this._subnodes.map((node)=> node.evaluate()));
+		return (this._fnode.evaluate() as (...values: any[])=> Value)(...this._subnodes.map((node)=> node.evaluate()));
 	}
 
 	override toString(ident: number = 0): string {
 		return `${super.toString(ident)} call node`
-			+ `, fnode:${this._fnode.toString(ident + 1)}`
+			+ `, fnode:\n${this._fnode.toString(ident + 1)}`
 			+ `, subnodes:\n${this._subnodes.map((s)=> s.toString(ident + 1)).join('\n')}`;
 	}
 
+	protected get _functionType() {
+		if (this._fnode.type.functionType) {
+			return this._fnode.type.functionType;
+		}
+		else {
+			this.throwError(`type ${this._fnode.type} mismatch with expected type function`);
+		}
+	}
 }

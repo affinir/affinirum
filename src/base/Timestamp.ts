@@ -1,4 +1,4 @@
-export const parseDate = (value?: number | string)=> {
+export const parseTimestamp = (value?: number | string)=> {
 	if (value == null) {
 		return undefined;
 	}

@@ -1,6 +1,6 @@
 import { ParserFrame } from './ParserFrame.js';
-import { ValueType, Value } from './ValueType.js';
-import { FunctionType } from './FunctionType.js';
+import { Value } from './Value.js';
+import { IType } from './Type.js';
 
 export abstract class Node extends ParserFrame {
 
@@ -10,19 +10,15 @@ export abstract class Node extends ParserFrame {
 		super(frame.expr, frame.start, frame.end);
 	}
 
-	abstract type: ValueType;
-	abstract compile(type: ValueType): Node;
+	abstract type: IType;
+	abstract compile(type: IType): Node;
 	abstract evaluate(): Value;
 
 	get constant(): boolean {
 		return false;
 	}
 
-	get signature(): FunctionType | undefined {
-		return;
-	}
-
-	protected reduceType(type: ValueType) {
+	protected reduceType(type: IType) {
 		const compiledType = this.type.reduce(type);
 		if (compiledType) {
 			return compiledType;
@@ -30,7 +26,7 @@ export abstract class Node extends ParserFrame {
 		this.throwTypeError(type);
 	}
 
-	protected throwTypeError(type: ValueType): never {
+	protected throwTypeError(type: IType): never {
 		return this.throwError(`type ${this.type} mismatch with expected type ${type}`);
 	}
 

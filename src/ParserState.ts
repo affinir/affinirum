@@ -6,7 +6,8 @@ import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, fun
 import { funcAppend, funcAt } from './function/IterationFunctions.js';
 import { funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './function/MathematicalFunctions.js';
 import { funcSwitch, funcCoalesce } from './function/StructuralFunctions.js';
-import { ValueType, Value, typeBoolean, typeNumber, typeBuffer, typeString, typeObject, typeFunction, typeVoid, typeUnknown, typeArray } from './ValueType.js';
+import { Value } from './Value.js';
+import { Type } from './Type.js';
 import { ParserFrame } from './ParserFrame.js';
 
 class Literal { constructor(public readonly value: Value) {} }
@@ -36,7 +37,7 @@ const symbolCycle = Symbol();
 
 export class ParserState extends ParserFrame {
 
-	protected _fragment: Literal | Assignment | Constant | ValueType | symbol | string | undefined;
+	protected _fragment: Literal | Assignment | Constant | Type | symbol | string | undefined;
 
 	constructor(
 		expr: string,
@@ -56,8 +57,8 @@ export class ParserState extends ParserFrame {
 		return this._fragment as Constant;
 	}
 
-	get type(): ValueType {
-		return this._fragment as ValueType;
+	get type(): Type {
+		return this._fragment as Type;
 	}
 
 	get token(): string {
@@ -77,7 +78,7 @@ export class ParserState extends ParserFrame {
 	}
 
 	get isType(): boolean {
-		return this._fragment instanceof ValueType;
+		return this._fragment instanceof Type;
 	}
 
 	get isToken(): boolean {
@@ -159,7 +160,7 @@ export class ParserState extends ParserFrame {
 				case '@': this._fragment = symbolCycle; break;
 				case '?':
 					switch (this._expr.charAt(this._end)) {
-						case '?': ++this._end; this._fragment = typeUnknown; break;
+						case '?': ++this._end; this._fragment = Type.Unknown; break;
 						case ':': ++this._end; this._fragment = funcCoalesce; break;
 						default: this._fragment = symbolOptionalType; break;
 					}
@@ -224,7 +225,7 @@ export class ParserState extends ParserFrame {
 				case '/':
 					switch (this._expr.charAt(this._end)) {
 						case '=': ++this._end; this._fragment = funcDivideAssignment; break;
-					 	default: this._fragment = funcDivide; break;
+						default: this._fragment = funcDivide; break;
 					}
 					break;
 				case '%':
@@ -254,14 +255,13 @@ export class ParserState extends ParserFrame {
 							case 'true': this._fragment = valueTrue; break;
 							case 'false': this._fragment = valueFalse; break;
 							case 'null': this._fragment = valueNull; break;
-							case 'void': this._fragment = typeVoid; break;
-							case 'boolean': this._fragment = typeBoolean; break;
-							case 'number': this._fragment = typeNumber; break;
-							case 'buffer': this._fragment = typeBuffer; break;
-							case 'string': this._fragment = typeString; break;
-							case 'array': this._fragment = typeArray; break;
-							case 'object': this._fragment = typeObject; break;
-							case 'function': this._fragment = typeFunction; break;
+							case 'void': this._fragment = Type.Void; break;
+							case 'boolean': this._fragment = Type.Boolean; break;
+							case 'number': this._fragment = Type.Number; break;
+							case 'buffer': this._fragment = Type.Buffer; break;
+							case 'string': this._fragment = Type.String; break;
+							case 'array': this._fragment = Type.Array; break;
+							case 'object': this._fragment = Type.Object; break;
 							default: this._fragment = token; break;
 						}
 					}

@@ -1,6 +1,5 @@
-import { FunctionType, FUNCTION_ARG_MAX } from '../FunctionType.js';
 import { Constant } from '../Constant.js';
-import { typeNumber, typeBuffer, typeString, typeOptionalBoolean, typeOptionalNumber, typeOptionalBuffer, typeOptionalString } from '../ValueType.js';
+import { Type } from '../Type.js';
 
 export const funcToNumberBuffer = new Constant(
 	(value: number, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
@@ -36,7 +35,7 @@ export const funcToNumberBuffer = new Constant(
 		}
 		return dv.buffer;
 	},
-	new FunctionType(typeBuffer, [typeNumber, typeString]),
+	Type.functionType(Type.Buffer, [Type.Number, Type.String]),
 );
 
 export const funcFromNumberBuffer = new Constant(
@@ -65,7 +64,7 @@ export const funcFromNumberBuffer = new Constant(
 			default: throw new Error(`${encoding} encoding not supported`);
 		}
 	},
-	new FunctionType(typeNumber, [typeBuffer, typeString, typeOptionalNumber], 2, 3),
+	Type.functionType(Type.Number, [Type.Buffer, Type.String, Type.OptionalNumber]),
 );
 
 export const funcToStringBuffer = new Constant(
@@ -85,7 +84,7 @@ export const funcToStringBuffer = new Constant(
 			return dv.buffer;
 		}
 	},
-	new FunctionType(typeBuffer, [typeString, typeOptionalString], 1, 2),
+	Type.functionType(Type.Buffer, [Type.String, Type.OptionalString]),
 );
 
 export const funcFromStringBuffer = new Constant(
@@ -106,5 +105,5 @@ export const funcFromStringBuffer = new Constant(
 			return str;
 		}
 	},
-	new FunctionType(typeString, [typeBuffer, typeOptionalString, typeOptionalNumber, typeOptionalNumber], 1, 4),
+	Type.functionType(Type.String, [Type.Buffer, Type.OptionalString, Type.OptionalNumber, Type.OptionalNumber]),
 );

@@ -1,8 +1,8 @@
 import { Node } from '../Node.js';
 import { ParserFrame } from '../ParserFrame.js';
 import { Variable } from '../Variable.js';
-import { ValueType, Value } from '../ValueType.js';
-import { FunctionType } from '../FunctionType.js';
+import { Value } from '../Value.js';
+import { IType } from '../Type.js';
 
 export class VariableNode extends Node {
 
@@ -14,23 +14,18 @@ export class VariableNode extends Node {
 		super(frame);
 	}
 
-	override get type(): ValueType {
+	override get type(): IType {
 		return this._variable.type;
 	}
 
-	override compile(type: ValueType): Node {
+	override compile(type: IType): Node {
 		this._subnode = this._subnode?.compile(type);
 		this._variable.type = this.reduceType(this._subnode?.type ?? type);
-		this._variable.signature = this._subnode?.signature;
 		return this;
 	}
 
 	override evaluate(): Value {
-		return this._subnode ? this._variable.value = this._subnode.evaluate() : this._variable.value!;
-	}
-
-	override get signature(): FunctionType | undefined {
-		return this._variable.signature;
+		return this._subnode ? this._variable.value = this._subnode.evaluate() : this._variable.value;
 	}
 
 	override toString(ident: number = 0): string {

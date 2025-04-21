@@ -1,23 +1,22 @@
-import { FunctionType } from './FunctionType.js';
-import { Value, typeUnknown } from './ValueType.js';
+import { Value } from './Value.js';
+import { IType, Type } from './Type.js';
 
 export class Constant {
 
 	constructor(
 		protected readonly _value: Value,
-		protected readonly _signature?: FunctionType,
+		protected _type: IType = Type.of(_value),
 	) {}
 
 	get value() {
 		return this._value;
 	}
 
-	get signature() {
-		return this._signature;
+	get type(): IType {
+		return this._type;
 	}
 
-	toString() {
-		return this._signature?.toString() ?? typeUnknown.toString();
-	}
+	static EmptyArray = new Constant([]);
+	static EmptyObject = new Constant({});
 
 }

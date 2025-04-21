@@ -1,21 +1,24 @@
-import { FunctionType, FUNCTION_ARG_MAX } from '../FunctionType.js';
 import { Constant } from '../Constant.js';
-import { typeBoolean, typeBooleanOrArray } from '../ValueType.js';
+import { Type } from '../Type.js';
+
+const MAX_DEPTH = 16384;
+const typeBooleanOrArray = new Type('boolean', 'array');
+const typeBooleanLogic = Type.functionType(Type.Boolean, [typeBooleanOrArray], { variadic: true });
 
 export const funcOr = new Constant(
 	(...values: (boolean | boolean[])[])=>
-		values.flat(FUNCTION_ARG_MAX).some((v)=> v),
-	new FunctionType(typeBoolean, [typeBooleanOrArray], 2, FUNCTION_ARG_MAX),
+		values.flat(MAX_DEPTH).some((v)=> v),
+	typeBooleanLogic,
 );
 
 export const funcAnd = new Constant(
 	(...values: (boolean | boolean[])[])=>
-		values.flat(FUNCTION_ARG_MAX).every((v)=> v),
-	new FunctionType(typeBoolean, [typeBooleanOrArray], 2, FUNCTION_ARG_MAX),
+		values.flat(MAX_DEPTH).every((v)=> v),
+	typeBooleanLogic,
 );
 
 export const funcNot = new Constant(
 	(value: boolean)=>
 		!value,
-	new FunctionType(typeBoolean, [typeBoolean]),
+	Type.functionType(Type.Boolean, [Type.Boolean]),
 );

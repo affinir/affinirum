@@ -1,7 +1,9 @@
 import { Node } from '../Node.js';
 import { ParserFrame } from '../ParserFrame.js';
+import { Constant } from '../Constant.js';
 import { ConstantNode } from './ConstantNode.js';
-import { ValueType, Value, typeObject, typeString, typeUnknown } from '../ValueType.js';
+import { Value } from '../Value.js';
+import { IType, Type } from '../Type.js';
 
 export class ObjectNode extends Node {
 
@@ -12,20 +14,20 @@ export class ObjectNode extends Node {
 		super(frame);
 	}
 
-	override get type(): ValueType {
-		return typeObject;
+	override get type(): IType {
+		return Type.Object;
 	}
 
-	override compile(type: ValueType): Node {
+	override compile(type: IType): Node {
 		this.reduceType(type);
 		let constant = true;
 		for (let i = 0; i < this._subnodes.length; ++i) {
-			this._subnodes[i][0] = this._subnodes[i][0].compile(typeString);
+			this._subnodes[i][0] = this._subnodes[i][0].compile(Type.String);
 			constant &&= this._subnodes[i][0].constant;
-			this._subnodes[i][1] = this._subnodes[i][1].compile(typeUnknown);
+			this._subnodes[i][1] = this._subnodes[i][1].compile(Type.Unknown);
 			constant &&= this._subnodes[i][1].constant;
 		}
-		return constant ? new ConstantNode(this, this.evaluate()) : this;
+		return constant ? new ConstantNode(this, new Constant(this.evaluate(), this.type)) : this;
 	}
 
 	override evaluate(): Value {
