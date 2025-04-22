@@ -2,10 +2,10 @@ import { isSign, isAlpha, isNumeric, isAlphanumeric, isHexadecimal, isQuotation 
 import { parseBuffer } from './base/Buffer.js';
 import { Constant } from './Constant.js';
 import { funcOr, funcAnd, funcNot } from './function/BooleanFunctions.js';
-import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual } from './function/ComparisonFunctions.js';
+import { funcCoalesce, funcGreaterThan, funcLessThan,
+	funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual } from './function/ComparisonFunctions.js';
 import { funcAppend, funcAt } from './function/IterationFunctions.js';
 import { funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './function/MathematicalFunctions.js';
-import { funcSwitch, funcCoalesce } from './function/StructuralFunctions.js';
 import { Value } from './Value.js';
 import { Type } from './Type.js';
 import { ParserFrame } from './ParserFrame.js';
@@ -32,8 +32,8 @@ const symbolBracesClose = Symbol();
 const symbolColonSeparator = Symbol();
 const symbolCommaSeparator = Symbol();
 const symbolOptionalType = Symbol();
-const symbolScope = Symbol();
-const symbolCycle = Symbol();
+const symbolLoop = Symbol();
+const symbolSwitch = Symbol();
 
 export class ParserState extends ParserFrame {
 
@@ -121,16 +121,65 @@ export class ParserState extends ParserFrame {
 		return this._fragment === symbolOptionalType;
 	}
 
-	get isScope(): boolean {
-		return this._fragment === symbolScope;
+	get isLoop(): boolean {
+		return this._fragment === symbolLoop;
 	}
 
-	get isCycle(): boolean {
-		return this._fragment === symbolCycle;
+	get isSwitch(): boolean {
+		return this._fragment === symbolSwitch;
 	}
 
 	get isVoid(): boolean {
 		return this._fragment == null;
+	}
+
+	openParentheses() {
+		if (!this.isParenthesesOpen) {
+			this.throwError('missing opening parentheses');
+		}
+		return this;
+	}
+
+	closeParentheses() {
+		if (!this.isParenthesesClose) {
+			this.throwError('missing closing parentheses');
+		}
+		return this;
+	}
+
+	openBrackets() {
+		if (!this.isBracketsOpen) {
+			this.throwError('missing opening brackets');
+		}
+		return this;
+	}
+
+	closeBrackets() {
+		if (!this.isBracketsClose) {
+			this.throwError('missing closing brackets');
+		}
+		return this;
+	}
+
+	openBraces() {
+		if (!this.isBracesOpen) {
+			this.throwError('missing opening braces');
+		}
+		return this;
+	}
+
+	closeBraces() {
+		if (!this.isBracesClose) {
+			this.throwError('missing closing braces');
+		}
+		return this;
+	}
+
+	separateByColon() {
+		if (!this.isColonSeparator) {
+			this.throwError('missing colon separator')
+		}
+		return this;
 	}
 
 	clone() {
@@ -157,7 +206,6 @@ export class ParserState extends ParserFrame {
 				case '}': this._fragment = symbolBracesClose; break;
 				case ':': this._fragment = symbolColonSeparator; break;
 				case ',': this._fragment = symbolCommaSeparator; break;
-				case '@': this._fragment = symbolCycle; break;
 				case '?':
 					switch (this._expr.charAt(this._end)) {
 						case '?': ++this._end; this._fragment = Type.Unknown; break;
@@ -165,7 +213,6 @@ export class ParserState extends ParserFrame {
 						default: this._fragment = symbolOptionalType; break;
 					}
 					break;
-				case '$': this._fragment = funcSwitch; break;
 				case '|':
 					switch (this._expr.charAt(this._end)) {
 						case '=': ++this._end; this._fragment = funcOrAssignment; break;
@@ -204,14 +251,12 @@ export class ParserState extends ParserFrame {
 					break;
 				case '+':
 					switch (this._expr.charAt(this._end)) {
-						case '>': ++this._end; this._fragment = funcAppend; break;
 						case '=': ++this._end; this._fragment = funcAddAssignment; break;
 						default: this._fragment = funcAdd; break;
 					}
 					break;
 				case '-':
 					switch (this._expr.charAt(this._end)) {
-						case '>': ++this._end; this._fragment = symbolScope; break;
 						case '=': ++this._end; this._fragment = funcSubtractAssignment; break;
 						default: this._fragment = funcSubtract; break;
 					}
@@ -234,6 +279,7 @@ export class ParserState extends ParserFrame {
 						default: this._fragment = funcRemainder; break;
 					}
 					break;
+				case '$': this._fragment = funcAppend; break;
 				case '^': this._fragment = funcPower; break;
 				case '.': this._fragment = funcAt; break;
 				case '#':
@@ -263,6 +309,8 @@ export class ParserState extends ParserFrame {
 							case 'array': this._fragment = Type.Array; break;
 							case 'object': this._fragment = Type.Object; break;
 							case 'function': this._fragment = Type.Function; break;
+							case 'while': this._fragment = symbolLoop; break;
+							case 'if': this._fragment = symbolSwitch; break;
 							default: this._fragment = token; break;
 						}
 					}

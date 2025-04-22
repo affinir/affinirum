@@ -6,32 +6,37 @@ export class ParserFrame {
 		protected _end = 0,
 	) {}
 
-	get expr(): string {
+	get expr() {
 		return this._expr;
 	}
 
-	get start(): number {
+	get start() {
 		return this._start;
 	}
 
-	get end(): number {
+	get end() {
 		return this._end;
 	}
 
-	starts(start: number): ParserFrame {
-		this._start = start;
-		return this;
+	starts(frame?: ParserFrame) {
+		if (frame) {
+			this._start = frame.start;
+			return this;
+		}
+		return new ParserFrame(this._expr, this._start, this._end);
 	}
 
-	ends(end: number): ParserFrame {
-		this._end = end;
-		return this;
+	ends(frame?: ParserFrame) {
+		if (frame) {
+			this._end = frame.end;
+			return this;
+		}
+		return new ParserFrame(this._expr, this._start, this._end);
 	}
 
-	frame(token?: string): ParserFrame {
-		return token
-			? new ParserFrame(this._expr, this._expr.indexOf(token), this._expr.indexOf(token) + token.length)
-			: new ParserFrame(this._expr, this._start, this._end);
+	locate(token: string) {
+		const index = this._expr.indexOf(token);
+		return new ParserFrame(this._expr, index, index + token.length)
 	}
 
 	throwError(message: string): never {

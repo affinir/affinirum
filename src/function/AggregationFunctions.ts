@@ -2,26 +2,25 @@ import { Constant } from '../Constant.js';
 import { Value } from '../Value.js';
 import { Type } from '../Type.js';
 
-const MAX_DEPTH = 16384;
 const typeNumberOrArray = new Type('number', 'array');
 const typeArrayOrObject = new Type('array', 'object');
 const typeAggregator = Type.functionType(Type.Number, [typeNumberOrArray], { variadic: true });
 
 export const funcSum = new Constant(
 	(...values: (number | number[])[])=>
-		values.flat(MAX_DEPTH).reduce((acc, val)=> acc + val, 0),
+		values.flat().reduce((acc, val)=> acc + val, 0),
 	typeAggregator,
 );
 
 export const funcMin = new Constant(
 	(...values: (number | number[])[])=>
-		Math.min(Number.POSITIVE_INFINITY, ...values.flat(MAX_DEPTH)),
+		Math.min(Number.POSITIVE_INFINITY, ...values.flat()),
 	typeAggregator,
 );
 
 export const funcMax = new Constant(
 	(...values: (number | number[])[])=>
-		Math.max(Number.NEGATIVE_INFINITY, ...values.flat(MAX_DEPTH)),
+		Math.max(Number.NEGATIVE_INFINITY, ...values.flat()),
 	typeAggregator,
 );
 
@@ -35,12 +34,12 @@ export const funcRange = new Constant(
 
 export const funcChain = new Constant(
 	(...values: (Value[] | Value[][])[])=>
-		(values as []).flat(MAX_DEPTH).reduce((acc, val)=> [...acc, val], []),
+		(values as []).flat(2).reduce((acc, val)=> [...acc, val], []),
 	Type.functionType(Type.Array, [Type.Array], { variadic: true }),
 );
 
 export const funcMerge = new Constant(
 	(...values: ({ [ key: string ]: Value } | { [ key: string ]: Value }[])[])=>
-		values.flat(MAX_DEPTH).reduce((acc, val)=> Object.assign(acc, val), {}),
+		values.flat().reduce((acc, val)=> Object.assign(acc, val), {}),
 	Type.functionType(Type.Object, [typeArrayOrObject], { variadic: true }),
 );

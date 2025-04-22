@@ -4,9 +4,8 @@ import { Constant } from '../Constant.js';
 import { ConstantNode } from './ConstantNode.js';
 import { Value } from '../Value.js';
 import { Type } from '../Type.js';
-import { FunctionType } from '../FunctionType.js';
 
-export class CallNode extends Node {
+export class InvocationNode extends Node {
 
 	protected _type: Type;
 
@@ -36,7 +35,7 @@ export class CallNode extends Node {
 				this.throwError(`function requires ${ftype.maxArity} arguments not ${this._subnodes.length}`);
 			}
 		}
-		let constant = ftype?.isPure ?? true;
+		let constant = this._fnode.constant && (ftype?.isPure ?? true);
 		for (let i = 0; i < this._subnodes.length; ++i) {
 			const atype = ftype?.argType(i, this.type) ?? Type.Unknown;
 			if (!atype) {
@@ -45,7 +44,7 @@ export class CallNode extends Node {
 			this._subnodes[i] = this._subnodes[i].compile(atype);
 			constant &&= this._subnodes[i].constant;
 		}
-		return constant && this._fnode.constant
+		return constant
 			? new ConstantNode(this, new Constant(this.evaluate(), this.type))
 			: this;
 	}

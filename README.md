@@ -198,19 +198,19 @@ Parameterless subroutine definition can be shorthanded as **->...**.
 * Get local time weekday index from milliseconds since 1970: **array number|string.ToLocalTimeWeekdayIndex()**
 * Get ISO time string from milliseconds since 1970: **string number|string.ToTimeString()**
 * Get milliseconds since 1970 from ISO time string: **number string.FromTimeString()**
-* Encode number: **buffer number.ToNumberBuffer(string encoding)**
-* Decode number: **number buffer.FromNumberBuffer(string encoding, number? offset)**
-* Encode string: **buffer string.ToStringBuffer(string? encoding)**
-* Decode string: **string buffer.FromStringBuffer(string? encoding, number? offset, number? length)**
-* Create string from boolean: **string? boolean?.ToBooleanString()**
-* Parse boolean from string: **boolean? string?.FromBooleanString()**
-* Create decimal string from number: **string? number?.ToNumberString()**
-* Parse number from decimal string: **number? string?.FromNumberString()**
-* Create hexadecimal string from buffer: **string? buffer?.ToBufferString()**
-* Parse buffer from hexadecimal string: **buffer? string?.FromBufferString()**
-* Parse object from JSON-formatted string: **boolean?|number?|string?|array?|object? string?.FromJSON()**
-* Create JSON-formatted string from object: **string? boolean?|number?|string?|array?|object?.ToJSON(string? whitespace)**
-* Notate any value: **string ??.ToAN(string? whitespace)**
+* Encode number: **buffer number.EncodeNumber(string encoding)**
+* Decode number: **number buffer.DecodeNumber(string encoding, number? offset)**
+* Encode string: **buffer string.EncodeString(string? encoding)**
+* Decode string: **string buffer.DecodeString(string? encoding, number? offset, number? length)**
+* Create string from boolean: **string? boolean?.FormatBoolean()**
+* Parse boolean from string: **boolean? string?.ParseBoolean()**
+* Create decimal string from number: **string? number?.FormatNumber()**
+* Parse number from decimal string: **number? string?.ParseNumber()**
+* Create hexadecimal string from buffer: **string? buffer?.FormatBuffer()**
+* Parse buffer from hexadecimal string: **buffer? string?.ParseBuffer()**
+* Parse object from JSON-formatted string: **boolean?|number?|string?|array?|object? string?.ParseJSON()**
+* Create JSON-formatted string from object: **string? boolean?|number?|string?|array?|object?.FormatJSON(string? whitespace)**
+* Notate any value: **string ??.FormatAN(string? whitespace)**
 #### Constants
 * Not-a-number **NAN**
 * Positive infinity **POSINF**
@@ -222,10 +222,8 @@ Parameterless subroutine definition can be shorthanded as **->...**.
 
 The expression parsing is performed using the following grammar:
 
-	<program> = <unit>{ ","<unit> }
-	<unit> = <loop>
-	<loop> = <condition>{ "@" <condition> }
-	<condition> = <disjunction>{ "$" <unit> ":" <unit> }
+	<block> = <unit>{ ","<unit> }
+	<unit> = <disjunction>
 	<disjunction> = <conjunction>{ "|"<conjunction> }
 	<conjunction> = <comparison>{ "&"<comparison> }
 	<comparison> = { "!" }<aggregate>{ ( ">" | ">=" | "<" | "<=" | "==" | "!=" )<aggregate> }
@@ -235,7 +233,7 @@ The expression parsing is performed using the following grammar:
 	<coalescence> = <accessor>{ "?:"<accessor> }
 	<accessor> = <term>{ ( "." ( <property> | <function-name> ) | <function> | "["<unit>"]" ) }
 	<term> = <literal> | <constant-name> | <variable> | <function> | <subroutine> |
-		"{"<program>"}" | "("<unit>")" | <array> | <object>
+		"{"<block>"}" | "("<unit>")" | <array> | <object> | <loop> | <switch>
 	<literal> = <decimal-number> | #<hexadecimal-number> | #<hexadecimal-binary># | "'"<text-string>"'"
 	<array> = "["{ <unit> }{ ","<unit> }"]"
 	<object> = "["{ <unit>:<unit> }{ "," <unit>:<unit> }"]"
@@ -244,6 +242,8 @@ The expression parsing is performed using the following grammar:
 	<subroutine> = { <type>"("{ <type> <argument-name> }{ ","<type> <argument-name> }")" }"->"<unit>
 	<type> = ( "void" | "boolean" | "number" | "buffer" | "string" |
 		"array" | "object" | "function" ){ "?" } | "??"
+	<loop> = while <unit> "{" <block> "}"
+	<switch> = if <unit> "{" <unit> "}:{" <unit> "}"
 
 ## Reference
 

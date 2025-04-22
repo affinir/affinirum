@@ -1,7 +1,7 @@
 import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
-export const funcToNumberBuffer = new Constant(
+export const funcEncodeNumber = new Constant(
 	(value: number, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
 			| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
 			| 'float32' | 'float32le' | 'float64' | 'float64le')=> {
@@ -38,7 +38,7 @@ export const funcToNumberBuffer = new Constant(
 	Type.functionType(Type.Buffer, [Type.Number, Type.String]),
 );
 
-export const funcFromNumberBuffer = new Constant(
+export const funcDecodeNumber = new Constant(
 	(value: ArrayBuffer, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
 			| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
 			| 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: number)=> {
@@ -67,7 +67,7 @@ export const funcFromNumberBuffer = new Constant(
 	Type.functionType(Type.Number, [Type.Buffer, Type.String, Type.OptionalNumber]),
 );
 
-export const funcToStringBuffer = new Constant(
+export const funcEncodeString = new Constant(
 	(value: string, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8')=> {
 		if (value == null) {
 			return undefined;
@@ -87,7 +87,7 @@ export const funcToStringBuffer = new Constant(
 	Type.functionType(Type.Buffer, [Type.String, Type.OptionalString]),
 );
 
-export const funcFromStringBuffer = new Constant(
+export const funcDecodeString = new Constant(
 	(value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: number, byteLength?: number)=> {
 		if (value == null) {
 			return undefined;

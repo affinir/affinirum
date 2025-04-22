@@ -9,6 +9,12 @@ const typeEquator = Type.functionType(Type.Boolean, [Type.Unknown, Type.Unknown]
 const typeStringEquator = Type.functionType(Type.Boolean, [Type.String, Type.String]);
 const typeStringComparator = Type.functionType(Type.Boolean, [Type.String, Type.String, Type.OptionalNumber, Type.OptionalBoolean]);
 
+export const funcCoalesce = new Constant(
+	(value: Value, valueOtherwise: Value)=>
+		value ?? valueOtherwise,
+	Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown], { inference: 0 }),
+);
+
 export const funcGreaterThan = new Constant(
 	(value1: number, value2: number)=>
 		value1 > value2,

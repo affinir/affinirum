@@ -2,7 +2,7 @@ import { Expression, Type } from '../src/index.js';
 
 describe('Expression Evaluation Result test', ()=> {
 	it('parses and evaluates multiple times', ()=> {
-		const expression = new Expression('arr0.Any(boolean(number a) -> (a > 0) )');
+		const expression = new Expression('arr0.Any(boolean(number a) { a > 0 } )');
 		expect(expression.evaluate({ arr0: [1, -2, -3, -4] })).toBeTrue();
 		expect(expression.evaluate({ arr0: [-1, -2, -3, -4] })).toBeFalse();
 	});
@@ -35,11 +35,11 @@ describe('Expression Evaluation Result test', ()=> {
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses and evaluates null value conversion to text', ()=> {
-		const expression = new Expression('obj.ToAN()');
+		const expression = new Expression('obj.FormatAN()');
 		expect(expression.evaluate({ obj: undefined }) as string).toBe('null');
 	});
 	it('parses and evaluates value conversion to text', ()=> {
-		const expression = new Expression('obj.ToAN()');
+		const expression = new Expression('obj.FormatAN()');
 		expect(expression.evaluate({ obj: {
 			bool: true,
 			num: -50,

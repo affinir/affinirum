@@ -157,6 +157,6 @@ export class Type {
 			case 'object': return 0x10000;
 			default: return 0x100000000 + mask.retType._concreteTypes.reduce((acc, i)=> acc + Type._order(i), 0);
 		}
-	};
+	}
 
 }
