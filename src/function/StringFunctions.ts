@@ -59,18 +59,6 @@ export const funcSplit = new Constant(
 	Type.functionType(Type.Array, [Type.String, Type.OptionalString]),
 );
 
-export const funcFormatBoolean = new Constant(
-	(value: boolean | undefined)=>
-		value?.toString(),
-	Type.functionType(Type.OptionalString, [Type.OptionalBoolean]),
-);
-
-export const funcParseBoolean = new Constant(
-	(value: string | undefined)=>
-		value ? value.toLowerCase() === 'true' : undefined,
-	Type.functionType(Type.OptionalBoolean, [Type.OptionalString]),
-);
-
 export const funcFormatNumber = new Constant(
 	(value: number | undefined, radix?: number)=>
 		value?.toString(radix),
@@ -81,6 +69,18 @@ export const funcParseNumber = new Constant(
 	(value: string | undefined)=>
 		value ? Number.parseFloat(value) : undefined,
 	Type.functionType(Type.OptionalNumber, [Type.OptionalString]),
+);
+
+export const funcFormatBoolean = new Constant(
+	(value: boolean | undefined)=>
+		value?.toString(),
+	Type.functionType(Type.OptionalString, [Type.OptionalBoolean]),
+);
+
+export const funcParseBoolean = new Constant(
+	(value: string | undefined)=>
+		value ? value.toLowerCase() === 'true' : undefined,
+	Type.functionType(Type.OptionalBoolean, [Type.OptionalString]),
 );
 
 export const funcFormatBuffer = new Constant(

@@ -8,11 +8,14 @@ export const equate = (value1: Value, value2: Value)=> {
 	if (typeof value1 !== typeof value2) {
 		return false;
 	}
+	if (typeof value1 === 'number') {
+		return isNaN(value1) && isNaN(value2 as number) ? true : value1 === value2;
+	}
 	if (typeof value1 === 'boolean' || typeof value1 === 'string' || typeof value1 === 'function') {
 		return value1 === value2;
 	}
-	if (typeof value1 === 'number') {
-		return isNaN(value1) && isNaN(value2 as number) ? true : value1 === value2;
+	if (value1 instanceof Date && value2 instanceof Date) {
+		return value1.getTime() === value2.getTime();
 	}
 	if (value1 instanceof ArrayBuffer && value2 instanceof ArrayBuffer) {
 		return equateBuffers(value1, value2);
@@ -41,11 +44,17 @@ export const notate = (value: Value, whitespace?: string): string=> {
 	if (value == null) {
 		return 'null';
 	}
-	if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'bigint') {
+	if (typeof value === 'number' || typeof value === 'boolean') {
 		return value.toString();
 	}
+	/*if (typeof value === 'bigint') {
+		return `0${value.toString()}`;
+	}*/
+	if (value instanceof Date) {
+		return `@${value.toISOString()}`;
+	}
 	if (value instanceof ArrayBuffer) {
-		return `#${formatBuffer(value)}#`;
+		return `#${formatBuffer(value)}`;
 	}
 	if (typeof value === 'string') {
 		return `"${value}"`;

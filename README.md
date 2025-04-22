@@ -196,8 +196,8 @@ Parameterless subroutine definition can be shorthanded as **->...**.
 * Get local time month index from milliseconds since 1970: **array number|string.ToLocalTimeMonthIndex()**
 * Get UTC time weekday index from milliseconds since 1970: **array number|string.ToUniversalTimeWeekdayIndex()**
 * Get local time weekday index from milliseconds since 1970: **array number|string.ToLocalTimeWeekdayIndex()**
-* Get ISO time string from milliseconds since 1970: **string number|string.ToTimeString()**
-* Get milliseconds since 1970 from ISO time string: **number string.FromTimeString()**
+* Get ISO time string from milliseconds since 1970: **string number|string.FormatTimestamp()**
+* Get milliseconds since 1970 from ISO time string: **number string.ParseTimestamp()**
 * Encode number: **buffer number.EncodeNumber(string encoding)**
 * Decode number: **number buffer.DecodeNumber(string encoding, number? offset)**
 * Encode string: **buffer string.EncodeString(string? encoding)**
@@ -213,10 +213,9 @@ Parameterless subroutine definition can be shorthanded as **->...**.
 * Notate any value: **string ??.FormatAN(string? whitespace)**
 #### Constants
 * Not-a-number **NAN**
-* Positive infinity **POSINF**
-* Negative infinity **NEGINF**
-* Epsilon **E**
-* Pi **PI**
+* Positive infinity **PositiveInfinity**
+* Negative infinity **NegativeInfinity**
+* Epsilon **Epsilon**
 
 ## Language Grammar
 

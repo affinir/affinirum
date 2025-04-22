@@ -1,7 +1,7 @@
 import { Value } from './Value.js';
 import { IFunctionTypeOptions, FunctionType } from './FunctionType.js';
 
-export type PrimitiveType = 'void' | 'boolean' | 'number' | 'buffer' | 'string' | 'array' | 'object';
+export type PrimitiveType = 'void' | 'number' | 'boolean' | 'timestamp' | 'buffer' | 'string' | 'array' | 'object';
 export type ConcreteType = PrimitiveType | FunctionType;
 
 export class Type {
@@ -34,12 +34,16 @@ export class Type {
 		return this.isConcrete && this._concreteTypes[0] === 'void';
 	}
 
+	get isNumber() {
+		return this.isConcrete && this._concreteTypes[0] === 'number';
+	}
+
 	get isBoolean() {
 		return this.isConcrete && this._concreteTypes[0] === 'boolean';
 	}
 
-	get isNumber() {
-		return this.isConcrete && this._concreteTypes[0] === 'number';
+	get isTimestamp() {
+		return this.isConcrete && this._concreteTypes[0] === 'timestamp';
 	}
 
 	get isBuffer() {
@@ -101,19 +105,21 @@ export class Type {
 	static of(value: Value) {
 		return new Type(value == null
 			? 'void'
-			: typeof value === 'boolean'
-				? 'boolean'
-				: typeof value === 'number'
-					? 'number'
-					: value instanceof ArrayBuffer
-						? 'buffer'
-						: typeof value === 'string'
-							? 'string'
-							: Array.isArray(value)
-								? 'array'
-								: typeof value === 'object'
-									? 'object'
-									: Type.DefaultFunctionType
+			: typeof value === 'number'
+				? 'number'
+				: typeof value === 'boolean'
+					? 'boolean'
+					: value instanceof Date
+						? 'timestamp'
+						: value instanceof ArrayBuffer
+							? 'buffer'
+							: typeof value === 'string'
+								? 'string'
+								: Array.isArray(value)
+									? 'array'
+									: typeof value === 'object'
+										? 'object'
+										: Type.DefaultFunctionType
 		);
 	}
 
@@ -127,10 +133,12 @@ export class Type {
 
 	static Unknown = new Type();
 	static Void = new Type('void');
-	static Boolean = new Type('boolean');
-	static OptionalBoolean = new Type('void', 'boolean');
 	static Number = new Type('number');
 	static OptionalNumber = new Type('void', 'number');
+	static Boolean = new Type('boolean');
+	static OptionalBoolean = new Type('void', 'boolean');
+	static Timestamp = new Type('timestamp');
+	static OptionalTimestamp = new Type('void', 'timestamp');
 	static Buffer = new Type('buffer');
 	static OptionalBuffer = new Type('void', 'buffer');
 	static String = new Type('string');
@@ -148,8 +156,9 @@ export class Type {
 	private static _order(mask: ConcreteType): number {
 		switch (mask) {
 			case 'void': return 0;
-			case 'boolean': return 1;
-			case 'number': return 2;
+			case 'number': return 1;
+			case 'boolean': return 2;
+			case 'timestamp': return 3;
 			//case 'integer': return 4;
 			case 'buffer': return 8;
 			case 'string': return 9;

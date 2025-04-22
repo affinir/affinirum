@@ -1,4 +1,5 @@
-import { isSign, isAlpha, isNumeric, isAlphanumeric, isHexadecimal, isQuotation } from './base/String.js';
+import { isSign, isAlpha, isNumeric, isAlphanumeric, isHexadecimal, isQuotation,
+	isDateSymbol, isTimeSymbol, isDateTimeSeparator } from './base/String.js';
 import { parseBuffer } from './base/Buffer.js';
 import { Constant } from './Constant.js';
 import { funcOr, funcAnd, funcNot } from './function/BooleanFunctions.js';
@@ -32,6 +33,8 @@ const symbolBracesClose = Symbol();
 const symbolColonSeparator = Symbol();
 const symbolCommaSeparator = Symbol();
 const symbolOptionalType = Symbol();
+const symbolVariableDefinition = Symbol();
+const symbolConstantDefinition = Symbol();
 const symbolLoop = Symbol();
 const symbolSwitch = Symbol();
 
@@ -119,6 +122,14 @@ export class ParserState extends ParserFrame {
 
 	get isOptionalType(): boolean {
 		return this._fragment === symbolOptionalType;
+	}
+
+	get isVariableDefinition(): boolean {
+		return this._fragment === symbolVariableDefinition;
+	}
+
+	get isConstantDefinition(): boolean {
+		return this._fragment === symbolConstantDefinition;
 	}
 
 	get isLoop(): boolean {
@@ -282,14 +293,32 @@ export class ParserState extends ParserFrame {
 				case '$': this._fragment = funcAppend; break;
 				case '^': this._fragment = funcPower; break;
 				case '.': this._fragment = funcAt; break;
+				case '@':
+					while (isDateSymbol(this._expr.charAt(this._end))) {
+						++this._end;
+					}
+					if (isDateTimeSeparator(this._expr.charAt(this._end))) {
+						++this._end;
+						while (isTimeSymbol(this._expr.charAt(this._end))) {
+							++this._end;
+						}
+						if (this._expr.charAt(this._end) === '.') {
+							++this._end;
+							while (isNumeric(this._expr.charAt(this._end))) {
+								++this._end;
+							}
+							if (this._expr.charAt(this._end) === 'Z') {
+								++this._end;
+							}
+						}
+					}
+					this._fragment = new Literal(new Date(this._expr.substring(this._start + 1, this._end)));
+					break;
 				case '#':
 					while (isHexadecimal(this._expr.charAt(this._end))) {
 						++this._end;
 					}
-					this._fragment = new Literal(this._expr.charAt(this._end) === '#'
-						? parseBuffer(this._expr.substring(this._start + 1, this._end++))
-						: parseInt(this._expr.substring(this._start + 1, this._end), 16)
-					);
+					this._fragment = new Literal(parseBuffer(this._expr.substring(this._start + 1, this._end)));
 					break;
 				default:
 					if (isAlpha(c)) {
@@ -309,6 +338,8 @@ export class ParserState extends ParserFrame {
 							case 'array': this._fragment = Type.Array; break;
 							case 'object': this._fragment = Type.Object; break;
 							case 'function': this._fragment = Type.Function; break;
+							case 'var': this._fragment = symbolVariableDefinition; break;
+							case 'const': this._fragment = symbolConstantDefinition; break;
 							case 'while': this._fragment = symbolLoop; break;
 							case 'if': this._fragment = symbolSwitch; break;
 							default: this._fragment = token; break;

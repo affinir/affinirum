@@ -12,7 +12,7 @@ export class Constant {
 		return this._value;
 	}
 
-	get type(): Type {
+	get type() {
 		return this._type;
 	}
 

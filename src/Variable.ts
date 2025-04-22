@@ -6,23 +6,28 @@ export class Variable {
 	protected _value?: Value;
 
 	constructor(
-		protected _type: Type = Type.Unknown,
+		protected _type = Type.Unknown,
+		protected _constant = false,
 	) {}
 
-	get value(): Value | undefined {
-		return this._value!;
+	get value() {
+		return this._value;
 	}
 
 	set value(value: Value | undefined) {
 		this._value = value;
 	}
 
-	get type(): Type {
+	get type() {
 		return this._type;
 	}
 
 	set type(type: Type) {
 		this._type = type;
+	}
+
+	get constant() {
+		return this._constant;
 	}
 
 }

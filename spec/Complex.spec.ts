@@ -1,8 +1,8 @@
 import { Expression, Type } from '../src/index.js';
 
-describe('Expression Evaluation Result test', ()=> {
+describe('Expression Complex test', ()=> {
 	it('parses and evaluates multiple times', ()=> {
-		const expression = new Expression('arr0.Any(boolean(number a) { a > 0 } )');
+		const expression = new Expression('arr0.Any(boolean(a:number) { a > 0 } )');
 		expect(expression.evaluate({ arr0: [1, -2, -3, -4] })).toBeTrue();
 		expect(expression.evaluate({ arr0: [-1, -2, -3, -4] })).toBeFalse();
 	});
@@ -27,11 +27,11 @@ describe('Expression Evaluation Result test', ()=> {
 		}
 	});
 	it('parses random number function and evaluates multiple times', ()=> {
-		const expression = new Expression('RandomNumber(1000000)');
+		const expression = new Expression('Random.Number(1000000)');
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses random string function and evaluates multiple times', ()=> {
-		const expression = new Expression('RandomString(20)');
+		const expression = new Expression('Random.String(20)');
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses and evaluates null value conversion to text', ()=> {
@@ -47,6 +47,6 @@ describe('Expression Evaluation Result test', ()=> {
 			str: 'string value', func: ()=> '1234',
 			arr: [1, 2, 3],
 			obj: { a: 1, b: 2 },
-		} }) as string).toBe('["bool":true,"num":-50,"buf":#0a141e0004430c0bc8dc0032#,"str":"string value","func":function,"arr":[1,2,3],"obj":["a":1,"b":2]]');
+		} }) as string).toBe('["bool":true,"num":-50,"buf":#0a141e0004430c0bc8dc0032,"str":"string value","func":function,"arr":[1,2,3],"obj":["a":1,"b":2]]');
 	});
 });

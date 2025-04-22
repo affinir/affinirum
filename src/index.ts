@@ -13,14 +13,13 @@ import { funcUnique, funcIntersection, funcDifference, funcAppend, funcLength, f
 import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcRemainder, funcModulo, funcExponent, funcLogarithm,
 	funcPower, funcRoot, funcAbs, funcCeil, funcFloor, funcRound } from './function/MathematicalFunctions.js';
 import { funcParseJSON, funcFormatJSON, funcFormatAN } from './function/NotationFunctions.js';
-import { funcRandomNumber, funcRandomInteger, funcRandomBuffer, funcRandomString } from './function/RandomizationFunctions.js';
+import { constRandom } from './constant/Random.js';
 import { funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin, funcSplit,
 	funcFormatBoolean, funcParseBoolean, funcFormatNumber, funcParseNumber,
 	funcFormatBuffer, funcParseBuffer } from './function/StringFunctions.js';
 import { funcEncodeNumber, funcDecodeNumber, funcEncodeString, funcDecodeString } from './function/BufferFunctions.js';
-import { funcNow, funcToUniversalTime, funcToLocalTime, funcFromUniversalTime, funcFromLocalTime,
-	funcToUniversalTimeMonthIndex, funcToLocalTimeMonthIndex, funcToUniversalTimeWeekdayIndex, funcToLocalTimeWeekdayIndex,
-	funcToTimeString, funcFromTimeString } from './function/TimeFunctions.js';
+import { constTimestamp, funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay,
+	funcHour, funcMinute, funcSecond, funcMillisecond, funcFormatTimestamp } from './constant/Timestamp.js';
 import { StaticScope } from './StaticScope.js';
 import { Constant } from './Constant.js';
 import { Variable } from './Variable.js';
@@ -42,12 +41,11 @@ const keywords = ['void', 'boolean', 'bool', 'number', 'num', 'buffer', 'buf', '
 	'variant', 'var', 'if', 'then', 'else',
 ];
 const constants: [string, Constant][] = [
-	['Number', constNumber],
+	['Number', constNumber], ['Random', constRandom], ['Timestamp', constTimestamp ],
 ];
 const gfunctions: [string, Constant][] = [
 	['Or', funcOr], ['And', funcAnd], ['Not', funcNot], ['Sum', funcSum], ['Min', funcMin], ['Max', funcMax],
-	['Range', funcRange], ['Chain', funcChain], ['Merge', funcMerge], ['Now', funcNow],
-	['RandomNumber', funcRandomNumber], ['RandomInteger', funcRandomInteger], ['RandomBuffer', funcRandomBuffer], ['RandomString', funcRandomString],
+	['Range', funcRange], ['Chain', funcChain], ['Merge', funcMerge],
 ];
 const mfunctions: [string, Constant][] = [
 	['GreaterThan', funcGreaterThan], ['LessThan', funcLessThan], ['GreaterOrEqual', funcGreaterOrEqual], ['LessOrEqual', funcLessOrEqual],
@@ -68,17 +66,16 @@ const mfunctions: [string, Constant][] = [
 	['Exponent', funcExponent], ['Logarithm', funcLogarithm], ['Power', funcPower], ['Root', funcRoot], ['Abs', funcAbs],
 	['Ceil', funcCeil], ['Floor', funcFloor], ['Round', funcRound],
 
-	['ToUniversalTime', funcToUniversalTime], ['FromUniversalTime', funcFromUniversalTime],
-	['ToLocalTime', funcToLocalTime], ['FromLocalTime', funcFromLocalTime],
-	['ToUniversalTimeMonthIndex', funcToUniversalTimeMonthIndex], ['ToLocalTimeMonthIndex', funcToLocalTimeMonthIndex],
-	['ToUniversalTimeWeekdayIndex', funcToUniversalTimeWeekdayIndex], ['ToLocalTimeWeekdayIndex', funcToLocalTimeWeekdayIndex],
-	['ToTimeString', funcToTimeString], ['FromTimeString', funcFromTimeString],
 	['EncodeNumber', funcEncodeNumber], ['DecodeNumber', funcDecodeNumber],
 	['EncodeString', funcEncodeString], ['DecodeString', funcDecodeString],
-	['FormatBoolean', funcFormatBoolean], ['ParseBoolean', funcParseBoolean],
 	['FormatNumber', funcFormatNumber], ['ParseNumber', funcParseNumber],
+	['FormatBoolean', funcFormatBoolean], ['ParseBoolean', funcParseBoolean],
+	['FormatTimestamp', funcFormatTimestamp],
 	['FormatBuffer', funcFormatBuffer], ['ParseBuffer', funcParseBuffer],
 	['FormatJSON', funcFormatJSON], ['ParseJSON', funcParseJSON], ['FormatAN', funcFormatAN],
+
+	['Year', funcYear], ['Month', funcMonth], ['MonthIndex', funcMonthIndex], ['WeekdayIndex', funcWeekdayIndex], ['Day', funcDay],
+	['Hour', funcHour], ['Minute', funcMinute], ['Second', funcSecond], ['Millisecond', funcMillisecond],
 ];
 
 export class Expression {
@@ -332,33 +329,44 @@ export class Expression {
 			return new ConstantNode(frame, constant);
 		}
 		else if (state.isToken) {
+			const frame = state.starts();
 			const constant = this._constants.get(state.token);
 			if (constant != null) {
-				const frame = state.starts();
 				state.next();
 				return new ConstantNode(frame, constant);
 			}
 			const gfunction = this._gfunctions.get(state.token);
 			if (gfunction != null) {
-				const frame = state.starts();
 				state.next();
 				return new ConstantNode(frame, gfunction);
 			}
-			return this.variable(state, scope);
-		}
-		else if (state.isType) {
-			let type = state.type;
-			if (state.next().isOptionalType) {
-				type = type.toOptional();
-				state.next();
+			let variable = scope.get(state.token);
+			if (variable == null) {
+				variable = this._variables.get(state.token);
+				if (variable == null) {
+					if (this._strict) {
+						state.throwError(`undefined variable ${state.token} in strict mode`);
+					}
+					else {
+						variable = new Variable();
+					}
+				}
+				scope.global(state.token, variable);
 			}
-			else {
-				// TODO typesets
+			if (state.next().isAssignment) {
+				if (variable.constant) {
+					state.throwError('illegal constant assignment');
+				}
+				if (state.assignmentOperator) {
+					const operator = state.assignmentOperator;
+					const subnodes = [new VariableNode(frame, variable), this.unit(state.next(), scope)];
+					return new VariableNode(frame, variable, this.invoke(frame, operator, subnodes));
+				}
+				else {
+					return new VariableNode(frame, variable, this.unit(state.next(), scope));
+				}
 			}
-			if (state.isToken) {
-				return this.variable(state, scope, type);
-			}
-			return this.subroutine(state, scope, type);
+			return new VariableNode(frame, variable);
 		}
 		else if (state.isBracesOpen) {
 			const node = this.block(state.next(), scope);
@@ -369,10 +377,7 @@ export class Expression {
 			state.throwError('unexpected closing braces');
 		}
 		else if (state.isParenthesesOpen) {
-			if (state.next().isParenthesesClose) {
-				return this.subroutine(state, scope);
-			}
-			const node = this.unit(state, scope);
+			const node = this.unit(state.next(), scope);
 			state.closeParentheses().next();
 			return node;
 		}
@@ -381,19 +386,17 @@ export class Expression {
 		}
 		else if (state.isBracketsOpen) {
 			const frame = state.starts();
-			const checkEmptyState = state.clone();
-			checkEmptyState.next();
-			if (checkEmptyState.isBracketsClose) {
-				return new ConstantNode(frame.ends(state.next().next()), Constant.EmptyArray);
-			}
-			else if (checkEmptyState.isColonSeparator && checkEmptyState.next().isBracketsClose) {
-				return new ConstantNode(frame.ends(state.next().next().next()), Constant.EmptyObject);
-			}
 			const subnodes: [ Node | number, Node ][] = [];
-			let index = 0;
+			let index = 0, colon = false;
 			while (!state.next().isBracketsClose) {
+				if (state.isColonSeparator) {
+					colon = true;
+					state.next();
+					break;
+				}
 				const node = this.unit(state, scope);
 				if (state.isColonSeparator) {
+					colon = true;
 					subnodes.push([node, this.unit(state.next(), scope)]);
 				}
 				else {
@@ -405,15 +408,46 @@ export class Expression {
 			}
 			frame.ends(state);
 			state.closeBrackets().next();
-			if (subnodes.every(([k,])=> typeof k === 'number')) {
-				return new ArrayNode(frame, subnodes.map(([, v])=> v));
-			}
-			return new ObjectNode(frame, subnodes.map(([k, v])=>
-				[typeof k === 'number' ? new ConstantNode(v, new Constant(String(k))) : k, v] as const
-			));
+			return colon
+				? new ObjectNode(frame, subnodes.map(([k, v])=> [typeof k === 'number' ? new ConstantNode(v, new Constant(String(k))) : k, v] as const))
+				: new ArrayNode(frame, subnodes.map(([, v])=> v));
 		}
 		else if (state.isBracketsClose) {
 			state.throwError('unexpected closing brackets');
+		}
+		else if (state.isVariableDefinition || state.isConstantDefinition) {
+			const constant = state.isConstantDefinition;
+			if (!state.next().isToken) {
+				state.throwError(`missing ${constant ? 'constant' : 'variable'} name`);
+			}
+			const token = state.token;
+			if (scope.has(token)) {
+				state.throwError(`illegal redefinition of ${constant ? 'constant' : 'variable'} ${token}`);
+			}
+			const frame = state.starts();
+			let type: Type | undefined;
+			if (state.next().isColonSeparator) {
+				if (!state.next().isType) {
+					state.throwError(`missing ${constant ? 'constant' : 'variable'} type`);
+				}
+				type = state.type;
+				if (state.next().isOptionalType) {
+					type = type.toOptional();
+					state.next();
+				} // extend else clause to support type disjunctions	
+			}
+			const variable = new Variable(type, constant);
+			scope.local(token, variable);
+			if (state.isAssignment) {
+				if (state.assignmentOperator) {
+					state.throwError(`illegal assignment to ${constant ? 'constant' : 'variable'} ${token}`);
+				}
+				return new VariableNode(frame, variable, this.unit(state.next(), scope));
+			}
+			return new VariableNode(frame, variable);
+		}
+		else if (state.isType) {
+			return this.subroutine(state, scope);
 		}
 		else if (state.isLoop) {
 			return this.loop(state, scope);
@@ -427,73 +461,37 @@ export class Expression {
 		state.throwError('unexpected expression token');
 	}
 
-	protected variable(state: ParserState, scope: StaticScope, type?: Type): Node {
-		let variable: Variable | undefined = undefined;
-		if (type) {
-			if (scope.has(state.token)) {
-				state.throwError(`variable ${state.token} redefinition`);
-			}
-			variable = new Variable(type);
-			scope.local(state.token, variable);
-		}
-		else {
-			variable = scope.get(state.token);
-			if (variable == null) {
-				variable = this._variables.get(state.token);
-				if (variable == null) {
-					if (this._strict) {
-						state.throwError(`undefined variable ${state.token} in strict mode`);
-					}
-					else {
-						variable = new Variable();
-					}
-				}
-				scope.global(state.token, variable);
-			}
-		}
+	protected subroutine(state: ParserState, scope: StaticScope): Node {
 		const frame = state.starts();
-		if (state.next().isAssignment) {
-			if (state.assignmentOperator) {
-				return new VariableNode(frame.ends(state), variable, this.invoke(frame, state.assignmentOperator, [
-					new VariableNode(frame, variable),
-					this.unit(state.next(), scope)
-				]));
-			}
-			else {
-				return new VariableNode(frame, variable, this.unit(state.next(), scope));
-			}
+		let type = state.type;
+		if (state.next().isOptionalType) {
+			type = type.toOptional();
+			state.next();
 		}
-		return new VariableNode(frame, variable);
-	}
-
-	protected subroutine(state: ParserState, scope: StaticScope, type?: Type): Node {
-		const frame = state.starts();
 		const variables = new Map<string, Variable>();
-		if (type) {
-			state.openParentheses();
-			while (!state.next().isParenthesesClose) {
-				if (!state.isType) {
-					state.throwError('missing function argument type');
-				}
-				let argType = state.type;
+		state.openParentheses();
+		while (!state.next().isParenthesesClose) {
+			if (!state.isToken) {
+				state.throwError('missing function argument name');
+			}
+			const token = state.token;
+			if (scope.get(token)) {
+				state.throwError('variable redefinition');
+			}
+			let argType = Type.Unknown;
+			if (state.next().isColonSeparator) {
+				argType = state.next().type;
 				if (state.next().isOptionalType) {
 					argType = argType.toOptional();
 					state.next();
 				}
-				if (!state.isToken) {
-					state.throwError('missing function argument name');
-				}
-				const token = state.token;
-				if (scope.get(token)) {
-					state.throwError('variable redefinition');
-				}
-				variables.set(token, new Variable(argType));
-				if (!state.next().isCommaSeparator) {
-					break;
-				}
 			}
-			state.closeParentheses();
+			variables.set(token, new Variable(argType));
+			if (!state.isCommaSeparator) {
+				break;
+			}
 		}
+		state.closeParentheses();
 		frame.ends(state);
 		state.next().openBraces().next();
 		const subnode = this.block(state, scope.subscope(variables));
