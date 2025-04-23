@@ -5,7 +5,7 @@ import { equate } from '../base/Unknown.js';
 import { concatBuffers } from '../base/Buffer.js';
 
 const typeNumberOrString = new Type('number', 'string');
-const typeArrayOrObject = new Type('array', 'object');
+const typeArrayOrObject = new Type('array', Type.DefaultObjectType);
 const typeArrayOperator = Type.functionType(Type.Array, [Type.Array, Type.Array]);
 const typeTransform = Type.functionType(Type.Unknown, [Type.Unknown, Type.OptionalNumber, Type.OptionalArray]);
 const typePredicate = Type.functionType(Type.Boolean, [Type.Unknown, Type.OptionalNumber, Type.OptionalArray]);
@@ -47,7 +47,7 @@ export const funcAppend = new Constant(
 			: typeof values[0] === 'string'
 				? (values as string[]).reduce((acc, val)=> acc + val, '')
 				: (values as Value[][]).reduce((acc, val)=> [...acc, ...val], []),
-	Type.functionType(Type.Enumerable, [Type.Enumerable], { inference: 0, variadic: true }),
+	Type.functionType(Type.Enumerable, [Type.Enumerable], { inference: true, variadic: true }),
 );
 
 export const funcLength = new Constant(
@@ -67,7 +67,7 @@ export const funcSlice = new Constant(
 		value == null
 			? undefined
 			: value.slice(start, end) as Value,
-	Type.functionType(Type.Enumerable, [Type.Enumerable, Type.OptionalNumber, Type.OptionalNumber], { inference: 0 }),
+	Type.functionType(Type.Enumerable, [Type.Enumerable, Type.OptionalNumber, Type.OptionalNumber], { inference: true }),
 );
 
 export const funcByte = new Constant(

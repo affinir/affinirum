@@ -3,7 +3,7 @@ import { Value } from '../Value.js';
 import { Type } from '../Type.js';
 import { notate } from '../base/Unknown.js'
 
-export const typeJson = new Type('void', 'boolean', 'number', 'string', 'array', 'object');
+export const typeJson = new Type('void', 'boolean', 'number', 'string', 'array', Type.DefaultObjectType);
 
 export const funcFormatJSON = new Constant(
 	(value: undefined | boolean | number | string | [] | { [ key: string ]: Value }, whitespace?: string)=>

@@ -35,7 +35,7 @@ import { LoopNode } from './node/LoopNode.js';
 import { SwitchNode } from './node/SwitchNode.js';
 import { ArrayNode } from './node/ArrayNode.js';
 import { ObjectNode } from './node/ObjectNode.js';
-import { ProgramNode } from './node/ProgramNode.js';
+import { BlockNode } from './node/BlockNode.js';
 
 const keywords = ['void', 'boolean', 'bool', 'number', 'num', 'buffer', 'buf', 'string', 'str', 'array', 'arr', 'object', 'obj', 'function', 'func',
 	'variant', 'var', 'if', 'then', 'else',
@@ -180,7 +180,7 @@ export class Expression {
 		while (state.isCommaSeparator) {
 			nodes.push(this.unit(state.next(), scope));
 		}
-		return new ProgramNode(frame.ends(state), nodes);
+		return new BlockNode(frame.ends(state), nodes);
 	}
 
 	protected unit(state: ParserState, scope: StaticScope): Node {

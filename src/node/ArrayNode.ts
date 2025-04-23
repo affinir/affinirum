@@ -33,8 +33,8 @@ export class ArrayNode extends Node {
 	}
 
 	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} array node`
-			+ `, subnodes:\n${this._subnodes.map((s)=> s.toString(ident + 1)).join('\n')}`;
+		const subnodes = this._subnodes.map((s)=> s.toString(ident + 1)).join('\n');
+		return `${super.toString(ident)} array node subnodes:\n${subnodes}`;
 	}
 
 }

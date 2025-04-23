@@ -39,8 +39,8 @@ export class ObjectNode extends Node {
 	}
 
 	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} object node`
-			+ `, subnodes:\n${this._subnodes.map(([k, v])=> `${k.toString(ident + 1)}:\n${v.toString(ident + 1)}`).join('\n')}`;
+		const subnodes = this._subnodes.map(([k, v])=> `${k.toString(ident + 1)}:\n${v.toString(ident + 1)}`).join('\n');
+		return `${super.toString(ident)} object node subnodes:\n${subnodes}`;
 	}
 
 }

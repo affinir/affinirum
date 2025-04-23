@@ -29,12 +29,13 @@ export class ConstantNode extends Node {
 	}
 
 	override get constant(): boolean {
-		return !this._subnode;
+		return !this._subnode && this._constant.type.isPure;
 	}
 
 	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} constant node`
-			+ (this._subnode ? `, subnode:\n${this._subnode.toString(ident + 1)}` : '');
+		return this._subnode
+			? `${super.toString(ident)} constant node subnode:\n${this._subnode.toString(ident + 1)}`
+			: `${super.toString(ident)} constant node`;
 	}
 
 }

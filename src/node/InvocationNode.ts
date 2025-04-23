@@ -54,9 +54,9 @@ export class InvocationNode extends Node {
 	}
 
 	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} call node`
-			+ `, fnode:\n${this._fnode.toString(ident + 1)}`
-			+ `, subnodes:\n${this._subnodes.map((s)=> s.toString(ident + 1)).join('\n')}`;
+		const subnodes = this._subnodes.map((s)=> s.toString(ident + 1)).join('\n');
+		return `${super.toString(ident)} invocation node fnode:\n${this._fnode.toString(ident + 1)}\n`
+			+ `${super.toString(ident)} invocation node subnodes:\n${subnodes}`;
 	}
 
 }

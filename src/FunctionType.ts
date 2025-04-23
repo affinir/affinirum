@@ -1,7 +1,7 @@
 import { Type } from './Type.js';
 
 export interface IFunctionTypeOptions {
-	inference?: number,
+	inference?: boolean,
 	impure?: boolean,
 	variadic?: boolean,
 }
@@ -37,6 +37,10 @@ export class FunctionType {
 		return !this._options?.impure;
 	}
 
+	get types() {
+		return [this._retType, ...this._argTypes];
+	}
+
 	isCompatible(ftype: FunctionType) {
 		if (!this._retType.reduce(ftype._retType) || this.minArity > ftype.maxArity || this.maxArity < ftype.minArity) {
 			return false;
@@ -51,9 +55,7 @@ export class FunctionType {
 
 	argType(index: number, type?: Type) {
 		const argType = this._argTypes[index] ?? this._argTypes[this._argTypes.length - 1];
-		return type && this._options?.inference != null && this._options.inference <= index
-			? argType.reduce(type)
-			: argType;
+		return type && this._options?.inference ? argType.reduce(type) : argType;
 	}
 
 	toString(): string {

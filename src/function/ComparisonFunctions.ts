@@ -12,7 +12,7 @@ const typeStringComparator = Type.functionType(Type.Boolean, [Type.String, Type.
 export const funcCoalesce = new Constant(
 	(value: Value, valueOtherwise: Value)=>
 		value ?? valueOtherwise,
-	Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown], { inference: 0 }),
+	Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown], { inference: true }),
 );
 
 export const funcGreaterThan = new Constant(

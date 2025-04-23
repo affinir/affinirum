@@ -23,8 +23,8 @@ describe('Expression Value Type test', ()=> {
 		['[0]', 'array'],
 		['[0,1,2,3]', 'array'],
 		['["0",1,2,"3"]', 'array'],
-		['[:]', 'object'],
-		['[`a`:100,`b`:"100"]', 'object'],
+		['[:]', '[:]'],
+		['[`a`:100,`b`:"100"]', '[:]'],
 		['void (){null}', 'function void()'],
 		['boolean (i:number){i==0}', 'function boolean(number)'],
 	] as [string, string][]).forEach(([expr, expected])=> {

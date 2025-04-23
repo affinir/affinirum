@@ -14,7 +14,8 @@ describe('Expression Complex test', ()=> {
 		expect(variables.d.isString).toBeTrue();
 	});
 	it('defines variables in strict mode and evaluates', ()=> {
-		const expression = new Expression('predefined1*2 + predefined2', { strict: true, variables: { predefined1: Type.Number, predefined2: Type.Number, myvar: Type.String } });
+		const expression = new Expression('predefined1*2 + predefined2',
+			{ strict: true, variables: { predefined1: Type.Number, predefined2: Type.Number, myvar: Type.String } });
 		expect(expression.evaluate({ predefined1: 10, predefined2: 20 }) as number).toBe(40);
 	});
 	it('errors on undefines variables in strict mode', ()=> {
@@ -37,6 +38,10 @@ describe('Expression Complex test', ()=> {
 	it('parses and evaluates null value conversion to text', ()=> {
 		const expression = new Expression('obj.FormatAN()');
 		expect(expression.evaluate({ obj: undefined }) as string).toBe('null');
+	});
+	it('parses pure constant expression and compiles to a constant node', ()=> {
+		const expression = new Expression('("ABC" $ Timestamp.Parse("2000-01-01")).Length');
+		expect(expression.type.toString()).toBe('number');
 	});
 	it('parses and evaluates value conversion to text', ()=> {
 		const expression = new Expression('obj.FormatAN()');

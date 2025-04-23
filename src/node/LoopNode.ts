@@ -32,9 +32,8 @@ export class LoopNode extends Node {
 	}
 
 	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} loop node`
-			+ `, cnode:\n${this._cnode.toString(ident + 1)}`
-			+ `, subnode:\n${this._subnode.toString(ident + 1)}`;
+		return `${super.toString(ident)} loop node cnode:\n${this._cnode.toString(ident + 1)}\n`
+			+ `${super.toString(ident)} subnode:\n${this._subnode.toString(ident + 1)}`;
 	}
 
 }

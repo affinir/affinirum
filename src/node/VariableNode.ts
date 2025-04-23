@@ -29,8 +29,9 @@ export class VariableNode extends Node {
 	}
 
 	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} variable node`
-			+ (this._subnode ? `, subnode:\n${this._subnode?.toString(ident + 1) ?? ''}` : '');
+		return this._subnode
+			? `${super.toString(ident)} variable node subnode:\n${this._subnode.toString(ident + 1)}`
+			: `${super.toString(ident)} variable node`;
 	}
 
 }

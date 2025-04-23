@@ -5,7 +5,7 @@ import { ConstantNode } from './ConstantNode.js';
 import { Value } from '../Value.js';
 import { Type } from '../Type.js';
 
-export class ProgramNode extends Node {
+export class BlockNode extends Node {
 
 	constructor(
 		frame: ParserFrame,
@@ -32,8 +32,8 @@ export class ProgramNode extends Node {
 	}
 
 	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} program node`
-			+ `, subnodes:\n${this._subnodes.map((s)=> s.toString(ident + 1)).join('\n')}`;
+		const subnodes = this._subnodes.map((s)=> s.toString(ident + 1)).join('\n');
+		return `${super.toString(ident)} block node subnodes:\n${subnodes}`;
 	}
 
 }

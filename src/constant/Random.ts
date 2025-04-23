@@ -38,4 +38,9 @@ export const constRandom = new Constant({
 	Integer: funcRandomInteger.value,
 	Buffer: funcRandomBuffer.value,
 	String: funcRandomString.value,
-});
+}, Type.objectType({
+	Number: funcRandomNumber.type,
+	Integer: funcRandomInteger.type,
+	Buffer: funcRandomBuffer.type,
+	String: funcRandomString.type,
+}));

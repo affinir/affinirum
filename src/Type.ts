@@ -1,8 +1,9 @@
 import { Value } from './Value.js';
+import { ObjectType } from './ObjectType.js';
 import { IFunctionTypeOptions, FunctionType } from './FunctionType.js';
 
-export type PrimitiveType = 'void' | 'number' | 'boolean' | 'timestamp' | 'buffer' | 'string' | 'array' | 'object';
-export type ConcreteType = PrimitiveType | FunctionType;
+export type PrimitiveType = 'void' | 'number' | 'boolean' | 'timestamp' | 'buffer' | 'string' | 'array';
+export type ConcreteType = PrimitiveType | ObjectType | FunctionType;
 
 export class Type {
 
@@ -59,20 +60,29 @@ export class Type {
 	}
 
 	get isObject() {
-		return this.isConcrete && this._concreteTypes[0] === 'object';
+		return this.isConcrete && this._concreteTypes[0] instanceof ObjectType;
 	}
 
 	get isFunction() {
 		return this.isConcrete && this._concreteTypes[0] instanceof FunctionType;
 	}
 
+	get objectType() {
+		return this.isObject ? this._concreteTypes[0] as ObjectType : undefined;
+	}
+
 	get functionType() {
 		return this.isFunction ? this._concreteTypes[0] as FunctionType : undefined;
+	}
+
+	get isPure(): boolean {
+		return this._concreteTypes.every((i)=> !(i instanceof ObjectType || i instanceof FunctionType) || i.isPure);
 	}
 
 	includes(mask: ConcreteType) {
 		return this._concreteTypes.some((i)=>
 			i === mask
+				|| i instanceof ObjectType && mask instanceof ObjectType && i.isCompatible(mask)
 				|| i instanceof FunctionType && mask instanceof FunctionType && i.isCompatible(mask)
 		);
 	}
@@ -118,17 +128,17 @@ export class Type {
 								: Array.isArray(value)
 									? 'array'
 									: typeof value === 'object'
-										? 'object'
+										? Type.DefaultObjectType
 										: Type.DefaultFunctionType
 		);
 	}
 
-	static functionType(
-		type: Type,
-		argTypes: Type[],
-		options?: IFunctionTypeOptions,
-	) {
-		return new Type(new FunctionType(type, argTypes, options));
+	static objectType(propTypes: Record<string, Type>) {
+		return new Type(new ObjectType(propTypes));
+	}
+
+	static functionType(retType: Type, argTypes: Type[], options?: IFunctionTypeOptions) {
+		return new Type(new FunctionType(retType, argTypes, options));
 	}
 
 	static Unknown = new Type();
@@ -145,13 +155,14 @@ export class Type {
 	static OptionalString = new Type('void', 'string');
 	static Array = new Type('array');
 	static OptionalArray = new Type('void', 'array');
-	static Object = new Type('object');
-	static OptionalObject = new Type('void', 'object');
+	static DefaultObjectType = new ObjectType({});
+	static Object = new Type(Type.DefaultObjectType);
+	static OptionalObject = new Type('void', Type.DefaultObjectType);
 	static DefaultFunctionType = new FunctionType(Type.Unknown, [Type.Unknown], { variadic: true });
 	static Function = new Type(Type.DefaultFunctionType);
 	static OptionalFunction = new Type('void', Type.DefaultFunctionType);
 	static Enumerable = new Type('buffer', 'string', 'array');
-	static Iterable = new Type('buffer', 'string', 'array', 'object');
+	static Iterable = new Type('buffer', 'string', 'array', Type.DefaultObjectType);
 
 	private static _order(mask: ConcreteType): number {
 		switch (mask) {
@@ -163,8 +174,11 @@ export class Type {
 			case 'buffer': return 8;
 			case 'string': return 9;
 			case 'array': return 0x100;
-			case 'object': return 0x10000;
-			default: return 0x100000000 + mask.retType._concreteTypes.reduce((acc, i)=> acc + Type._order(i), 0);
+			default:
+				if (mask instanceof ObjectType) {
+					return 0x10000 + mask.types.map((i)=> i._concreteTypes).flat().reduce((acc, i)=> acc + Type._order(i), 0);
+				}
+				return 0x100000000 + mask.types.map((i)=> i._concreteTypes).flat().reduce((acc, i)=> acc + Type._order(i), 0);
 		}
 	}
 

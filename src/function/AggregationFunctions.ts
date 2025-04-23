@@ -3,7 +3,7 @@ import { Value } from '../Value.js';
 import { Type } from '../Type.js';
 
 const typeNumberOrArray = new Type('number', 'array');
-const typeArrayOrObject = new Type('array', 'object');
+const typeArrayOrObject = new Type('array', Type.DefaultObjectType);
 const typeAggregator = Type.functionType(Type.Number, [typeNumberOrArray], { variadic: true });
 
 export const funcSum = new Constant(
