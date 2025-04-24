@@ -1,12 +1,13 @@
+import { funcAt } from './constant/Iterable.js';
+import { funcOr, funcAnd, funcNot } from './constant/Boolean.js';
+import { parseBuffer } from './constant/Buffer.js';
+import { funcAppend } from './constant/Enumerable.js';
+import { funcGreaterThan, funcLessThan,
+	funcGreaterOrEqual, funcLessOrEqual, funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './constant/Number.js';
 import { isSign, isAlpha, isNumeric, isAlphanumeric, isHexadecimal, isQuotation,
-	isDateSymbol, isTimeSymbol, isDateTimeSeparator } from './base/String.js';
-import { parseBuffer } from './base/Buffer.js';
+	isDateSymbol, isTimeSymbol, isDateTimeSeparator } from './constant/String.js';
 import { Constant } from './Constant.js';
-import { funcOr, funcAnd, funcNot } from './function/BooleanFunctions.js';
-import { funcCoalesce, funcGreaterThan, funcLessThan,
-	funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual } from './function/ComparisonFunctions.js';
-import { funcAppend, funcAt } from './function/IterationFunctions.js';
-import { funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './function/MathematicalFunctions.js';
+import { funcCoalesce, funcEqual, funcNotEqual } from './constant/Unknown.js';
 import { Value } from './Value.js';
 import { Type } from './Type.js';
 import { ParserFrame } from './ParserFrame.js';
@@ -290,9 +291,32 @@ export class ParserState extends ParserFrame {
 						default: this._fragment = funcRemainder; break;
 					}
 					break;
-				case '$': this._fragment = funcAppend; break;
+				case '$':
+					switch (this._expr.charAt(this._end)) {
+						case '$':
+							while (this._expr.charAt(this._end) !== '' && this._expr.charAt(this._end) !== '\n') {
+								++this._end;
+							}
+							break;
+						default:
+							while (this._expr.charAt(this._end) !== '' && this._expr.charAt(this._end) !== c) {
+								++this._end;
+							}
+							if (this._end >= this._expr.length) {
+								this._start = this._expr.length;
+								throw new Error(`missing closing comment mark ${c}`);
+							}
+							++this._end;
+							break;
+					}
+					break;
 				case '^': this._fragment = funcPower; break;
-				case '.': this._fragment = funcAt; break;
+				case '.':
+					switch (this._expr.charAt(this._end)) {
+						case '.': ++this._end; this._fragment = funcAppend; break;
+						default: this._fragment = funcAt; break;
+					}
+					break;
 				case '@':
 					while (isDateSymbol(this._expr.charAt(this._end))) {
 						++this._end;
@@ -380,7 +404,8 @@ export class ParserState extends ParserFrame {
 							this._start = this._expr.length;
 							throw new Error(`missing closing quotation mark ${c}`);
 						}
-						this._fragment = new Literal(this._expr.substring(this._start + 1, this._end++));
+						this._fragment = new Literal(this._expr.substring(this._start + 1, this._end));
+						++this._end;
 					}
 					else {
 						throw new Error(`unknown symbol ${c}`);

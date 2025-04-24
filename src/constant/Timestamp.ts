@@ -1,7 +1,7 @@
 import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
-export const typeTimestampPart = Type.functionType(Type.Number, [Type.Timestamp, Type.OptionalBoolean]);
+const typeTimestampPart = Type.functionType(Type.Number, [Type.Timestamp, Type.OptionalBoolean]);
 
 const parseTimestamp = (value?: number | string)=> {
 	if (value == null) {
@@ -14,7 +14,7 @@ const parseTimestamp = (value?: number | string)=> {
 const funcNow = new Constant(
 	()=>
 		new Date(),
-	Type.functionType(Type.Timestamp, [], { impure: true }),
+	Type.functionType(Type.Timestamp, [], { unstable: true }),
 );
 
 export const funcYear = new Constant(
@@ -62,8 +62,13 @@ export const funcMillisecond = new Constant(
 	typeTimestampPart,
 );
 
-export const funcFormatTimestamp = new Constant(
-	(value: number | string)=> parseTimestamp(value)?.toISOString(),
+export const funcEpochTime = new Constant(
+	(value: Date, epoch = new Date(0))=> value.getTime() - epoch.getTime(),
+	Type.functionType(Type.Number, [Type.Timestamp, Type.OptionalTimestamp]),
+);
+
+const funcFormatTimestamp = new Constant(
+	(value: Date)=> value?.toISOString(),
 	Type.functionType(Type.String, [Type.Timestamp]),
 );
 
@@ -74,5 +79,10 @@ const funcParseTimestamp = new Constant(
 
 export const constTimestamp = new Constant({
 	Now: funcNow.value,
+	Format: funcFormatTimestamp.value,
 	Parse: funcParseTimestamp.value,
-});
+}, Type.objectType({
+	Now: funcNow.type,
+	Format: funcFormatTimestamp.type,
+	Parse: funcParseTimestamp.type,
+}));

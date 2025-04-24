@@ -28,23 +28,23 @@ describe('Expression Complex test', ()=> {
 		}
 	});
 	it('parses random number function and evaluates multiple times', ()=> {
-		const expression = new Expression('Random.Number(1000000)');
+		const expression = new Expression('Number.Random(1000000) $$, 10 ');
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses random string function and evaluates multiple times', ()=> {
-		const expression = new Expression('Random.String(20)');
+		const expression = new Expression('String.Random(20) $, 20$');
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses and evaluates null value conversion to text', ()=> {
-		const expression = new Expression('obj.FormatAN()');
+		const expression = new Expression('AVN.Format(obj)');
 		expect(expression.evaluate({ obj: undefined }) as string).toBe('null');
 	});
 	it('parses pure constant expression and compiles to a constant node', ()=> {
-		const expression = new Expression('("ABC" $ Timestamp.Parse("2000-01-01")).Length');
+		const expression = new Expression('("ABC" .. Timestamp.Format(Timestamp.Parse("2000-01-01"))).Length');
 		expect(expression.type.toString()).toBe('number');
 	});
 	it('parses and evaluates value conversion to text', ()=> {
-		const expression = new Expression('obj.FormatAN()');
+		const expression = new Expression('AVN.Format(obj)');
 		expect(expression.evaluate({ obj: {
 			bool: true,
 			num: -50,

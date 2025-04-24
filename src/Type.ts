@@ -1,89 +1,105 @@
 import { Value } from './Value.js';
-import { ObjectType } from './ObjectType.js';
-import { IFunctionTypeOptions, FunctionType } from './FunctionType.js';
+import { Primitive, PrimitiveSubtype } from './subtype/PrimitiveSubtype.js';
+import { ObjectSubtype } from './subtype/ObjectSubtype.js';
+import { IFunctionSubtypeOptions, FunctionSubtype } from './subtype/FunctionSubype.js';
 
-export type PrimitiveType = 'void' | 'number' | 'boolean' | 'timestamp' | 'buffer' | 'string' | 'array';
-export type ConcreteType = PrimitiveType | ObjectType | FunctionType;
+type Subtype = PrimitiveSubtype | ObjectSubtype | FunctionSubtype;
+
+export interface ISubtype {
+	stable(): boolean;
+	match(subtype: ISubtype): boolean;
+	order(): number;
+	toString(): string;
+}
 
 export class Type {
 
-	protected _concreteTypes: ConcreteType[] = [];
+	protected _subtypes: Subtype[] = [];
 
 	constructor(
-		...types: ConcreteType[] | Type[]
+		...types: (Subtype | Type)[]
 	) {
-		types.map((i)=> i instanceof Type ? i._concreteTypes : [i]).flat().forEach((i)=> {
-			if (!this._concreteTypes.includes(i)) {
-				this._concreteTypes.push(i);
+		types.map((i)=> i instanceof Type ? i._subtypes : [i]).flat().forEach((i)=> {
+			if (!this._subtypes.includes(i)) {
+				this._subtypes.push(i);
 			}
 		});
 	}
 
 	get isUnknown() {
-		return this._concreteTypes.length === 0;
+		return this._subtypes.length === 0;
 	}
 
-	get isConcrete() {
-		return this._concreteTypes.length === 1;
+	get isSubtype() {
+		return this._subtypes.length === 1;
 	}
 
 	get isOptional() {
-		return this.isUnknown || this._concreteTypes.length > 1 && this._concreteTypes.some((i)=> i === 'void');
+		return this.isUnknown || this._subtypes.length > 1 && this._subtypes.some((i)=> i.match(Type.Void._subtypes[0]));
 	}
 
 	get isVoid() {
-		return this.isConcrete && this._concreteTypes[0] === 'void';
+		return this.isSubtype && this._subtypes[0].match(Type.Void._subtypes[0]);
 	}
 
 	get isNumber() {
-		return this.isConcrete && this._concreteTypes[0] === 'number';
+		return this.isSubtype && this._subtypes[0].match(Type.Number._subtypes[0]);
 	}
 
 	get isBoolean() {
-		return this.isConcrete && this._concreteTypes[0] === 'boolean';
+		return this.isSubtype && this._subtypes[0].match(Type.Boolean._subtypes[0]);
 	}
 
 	get isTimestamp() {
-		return this.isConcrete && this._concreteTypes[0] === 'timestamp';
+		return this.isSubtype && this._subtypes[0].match(Type.Timestamp._subtypes[0]);
 	}
 
 	get isBuffer() {
-		return this.isConcrete && this._concreteTypes[0] === 'buffer';
+		return this.isSubtype && this._subtypes[0].match(Type.Buffer._subtypes[0]);
 	}
 
 	get isString() {
-		return this.isConcrete && this._concreteTypes[0] === 'string';
+		return this.isSubtype && this._subtypes[0].match(Type.String._subtypes[0]);
 	}
 
 	get isArray() {
-		return this.isConcrete && this._concreteTypes[0] === 'array';
+		return this.isSubtype && this._subtypes[0].match(Type.Array._subtypes[0]);
 	}
 
 	get isObject() {
-		return this.isConcrete && this._concreteTypes[0] instanceof ObjectType;
+		return this._subtypes.every((i)=> i instanceof ObjectSubtype);
 	}
 
 	get isFunction() {
-		return this.isConcrete && this._concreteTypes[0] instanceof FunctionType;
+		return this._subtypes.every((i)=> i instanceof FunctionSubtype);
 	}
 
-	get objectType() {
-		return this.isObject ? this._concreteTypes[0] as ObjectType : undefined;
+	functionSubtype(type: Type, argc: number) {
+		const subtypes = this._subtypes.filter((i)=>
+			i instanceof FunctionSubtype && i.minArity <= argc && i.maxArity >= argc && i.retType.reduce(type)
+		) as FunctionSubtype[];
+		if (!subtypes.length) {
+			return undefined;
+		}
+		return new FunctionSubtype(
+			new Type(...subtypes.map((i)=> i.retType)),
+			Array.from({ length: argc }).map((_, ix)=> new Type(...subtypes.map((i)=> i.argType(ix)))),
+			{
+				unstable: subtypes.some((i)=> i.unstable),
+				variadic: subtypes.some((i)=> i.variadic),
+			},
+		);
 	}
 
-	get functionType() {
-		return this.isFunction ? this._concreteTypes[0] as FunctionType : undefined;
+	get stable(): boolean {
+		return this._subtypes.every((i)=> !(i instanceof ObjectSubtype || i instanceof FunctionSubtype) || i.stable());
 	}
 
-	get isPure(): boolean {
-		return this._concreteTypes.every((i)=> !(i instanceof ObjectType || i instanceof FunctionType) || i.isPure);
-	}
-
-	includes(mask: ConcreteType) {
-		return this._concreteTypes.some((i)=>
+	includes(mask: Subtype) {
+		return this._subtypes.some((i)=>
 			i === mask
-				|| i instanceof ObjectType && mask instanceof ObjectType && i.isCompatible(mask)
-				|| i instanceof FunctionType && mask instanceof FunctionType && i.isCompatible(mask)
+				|| i instanceof ObjectSubtype && mask instanceof ObjectSubtype && i.match(mask)
+				|| i instanceof FunctionSubtype && mask instanceof FunctionSubtype && i.match(mask)
 		);
 	}
 
@@ -94,92 +110,87 @@ export class Type {
 		if (this.isUnknown) {
 			return mask;
 		}
-		const list = this._concreteTypes.filter((i)=> mask.includes(i));
+		const list = this._subtypes.filter((i)=> mask.includes(i));
 		return list.length === 0
 			? undefined
-			: list.length === this._concreteTypes.length
+			: list.length === this._subtypes.length
 				? this
 				: new Type(...list);
 	}
 
 	toOptional() {
-		return this._concreteTypes.length ? new Type('void', ...this._concreteTypes) : this;
+		return this._subtypes.length ? new Type(Type.Void, ...this._subtypes) : this;
+	}
+
+	order() {
+		return this._subtypes.reduce((acc, i)=> acc + i.order(), 0);
 	}
 
 	toString() {
-		return this._concreteTypes.length
-			? this._concreteTypes.sort((a, b)=> Type._order(a) - Type._order(b)).map((i)=> i.toString()).join('|')
+		return this._subtypes.length
+			? this._subtypes.sort((a, b)=> a.order() - b.order()).map((i)=> i.toString()).join('|')
 			: '??';
 	}
 
 	static of(value: Value) {
-		return new Type(value == null
-			? 'void'
+		return value == null
+			? Type.Void
 			: typeof value === 'number'
-				? 'number'
+				? Type.Number
 				: typeof value === 'boolean'
-					? 'boolean'
+					? Type.Boolean
 					: value instanceof Date
-						? 'timestamp'
+						? Type.Timestamp
 						: value instanceof ArrayBuffer
-							? 'buffer'
+							? Type.Buffer
 							: typeof value === 'string'
-								? 'string'
+								? Type.String
 								: Array.isArray(value)
-									? 'array'
+									? Type.Array
 									: typeof value === 'object'
-										? Type.DefaultObjectType
-										: Type.DefaultFunctionType
-		);
+										? Type.Object
+										: Type.Function;
+	}
+
+	static primitiveType(primitive: Primitive) {
+		return new Type(new PrimitiveSubtype(primitive));
 	}
 
 	static objectType(propTypes: Record<string, Type>) {
-		return new Type(new ObjectType(propTypes));
+		return new Type(new ObjectSubtype(propTypes));
 	}
 
-	static functionType(retType: Type, argTypes: Type[], options?: IFunctionTypeOptions) {
-		return new Type(new FunctionType(retType, argTypes, options));
+	static functionType(retType: Type, argTypes: Type[], options?: IFunctionSubtypeOptions) {
+		return new Type(new FunctionSubtype(retType, argTypes, options));
+	}
+
+	static functionTypeInference(argNum: number, retType: Type, argTypes: Type[], options?: IFunctionSubtypeOptions) {
+		return new Type(...retType._subtypes.map((i)=> {
+			const rtype = new Type(i);
+			const atypes = argTypes.map((t, ix)=> ix < argNum ? rtype : t);
+			return new FunctionSubtype(rtype, atypes, options);
+		}));
 	}
 
 	static Unknown = new Type();
-	static Void = new Type('void');
-	static Number = new Type('number');
-	static OptionalNumber = new Type('void', 'number');
-	static Boolean = new Type('boolean');
-	static OptionalBoolean = new Type('void', 'boolean');
-	static Timestamp = new Type('timestamp');
-	static OptionalTimestamp = new Type('void', 'timestamp');
-	static Buffer = new Type('buffer');
-	static OptionalBuffer = new Type('void', 'buffer');
-	static String = new Type('string');
-	static OptionalString = new Type('void', 'string');
-	static Array = new Type('array');
-	static OptionalArray = new Type('void', 'array');
-	static DefaultObjectType = new ObjectType({});
-	static Object = new Type(Type.DefaultObjectType);
-	static OptionalObject = new Type('void', Type.DefaultObjectType);
-	static DefaultFunctionType = new FunctionType(Type.Unknown, [Type.Unknown], { variadic: true });
-	static Function = new Type(Type.DefaultFunctionType);
-	static OptionalFunction = new Type('void', Type.DefaultFunctionType);
-	static Enumerable = new Type('buffer', 'string', 'array');
-	static Iterable = new Type('buffer', 'string', 'array', Type.DefaultObjectType);
-
-	private static _order(mask: ConcreteType): number {
-		switch (mask) {
-			case 'void': return 0;
-			case 'number': return 1;
-			case 'boolean': return 2;
-			case 'timestamp': return 3;
-			//case 'integer': return 4;
-			case 'buffer': return 8;
-			case 'string': return 9;
-			case 'array': return 0x100;
-			default:
-				if (mask instanceof ObjectType) {
-					return 0x10000 + mask.types.map((i)=> i._concreteTypes).flat().reduce((acc, i)=> acc + Type._order(i), 0);
-				}
-				return 0x100000000 + mask.types.map((i)=> i._concreteTypes).flat().reduce((acc, i)=> acc + Type._order(i), 0);
-		}
-	}
+	static Void = Type.primitiveType('void');
+	static Number = Type.primitiveType('number');
+	static OptionalNumber = new Type(Type.Void, Type.Number);
+	static Boolean = Type.primitiveType('boolean');
+	static OptionalBoolean = new Type(Type.Void, Type.Boolean);
+	static Timestamp = Type.primitiveType('timestamp');
+	static OptionalTimestamp = new Type(Type.Void, Type.Timestamp);
+	static Buffer = Type.primitiveType('buffer');
+	static OptionalBuffer = new Type(Type.Void, Type.Buffer);
+	static String = Type.primitiveType('string');
+	static OptionalString = new Type(Type.Void, Type.String);
+	static Array = Type.primitiveType('array');
+	static OptionalArray = new Type(Type.Void, Type.Array);
+	static Object = new Type(new ObjectSubtype({}));
+	static OptionalObject = new Type(Type.Void, Type.Object);
+	static Function = new Type(new FunctionSubtype(Type.Unknown, [Type.Unknown], { variadic: true }));
+	static OptionalFunction = new Type(Type.Void, Type.Function);
+	static Enumerable = new Type(Type.Buffer, Type.String, Type.Array);
+	static Iterable = new Type(Type.Buffer, Type.String, Type.Array, Type.Object);
 
 }

@@ -1,25 +1,25 @@
 export * from './Value.js';
 export * from './Type.js';
-export * from './FunctionType.js';
-import { constNumber } from './constant/Number.js';
-import { funcSum, funcMax, funcMin, funcRange, funcMerge, funcChain } from './function/AggregationFunctions.js';
-import { funcOr, funcAnd, funcNot } from './function/BooleanFunctions.js';
-import { funcCoalesce, funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcEqual, funcNotEqual,
-	funcLike, funcUnlike, funcContains, funcStartsWith, funcEndsWith } from './function/ComparisonFunctions.js';
-import { funcUnique, funcIntersection, funcDifference, funcAppend, funcLength, funcSlice,
-	funcByte, funcChar, funcCharCode, funcEntries, funcKeys, funcValues, funcAt,
-	funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny, funcFlatten, funcReverse,
-	funcTransform, funcFilter, funcReduce, funcCompose } from './function/IterationFunctions.js';
-import { funcAdd, funcSubtract, funcNegate, funcMultiply, funcDivide, funcRemainder, funcModulo, funcExponent, funcLogarithm,
-	funcPower, funcRoot, funcAbs, funcCeil, funcFloor, funcRound } from './function/MathematicalFunctions.js';
-import { funcParseJSON, funcFormatJSON, funcFormatAN } from './function/NotationFunctions.js';
-import { constRandom } from './constant/Random.js';
-import { funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcJoin, funcSplit,
-	funcFormatBoolean, funcParseBoolean, funcFormatNumber, funcParseNumber,
-	funcFormatBuffer, funcParseBuffer } from './function/StringFunctions.js';
-import { funcEncodeNumber, funcDecodeNumber, funcEncodeString, funcDecodeString } from './function/BufferFunctions.js';
+export * from './subtype/FunctionSubype.js';
+import { constArray, funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
+	funcFlatten, funcReverse, funcTransform, funcFilter, funcReduce, funcCompose } from './constant/Array.js';
+import { constBoolean, funcOr, funcAnd, funcNot } from './constant/Boolean.js';
+import { constBuffer, funcByte } from './constant/Buffer.js';
+import { funcAppend, funcSlice } from './constant/Enumerable.js';
+import { constInteger } from './constant/Integer.js';
+import { funcLength, funcAt } from './constant/Iterable.js';
+import { constNumber, funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
+	funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
+	funcPower, funcRoot, funcNegate } from './constant/Number.js';
+import { constObject, funcEntries, funcKeys, funcValues } from './constant/Object.js';
+import { constString, funcLike, funcUnlike, funcContains, funcStartsWith, funcEndsWith,
+	funcChar, funcCharCode, funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
+	funcJoin, funcSplit } from './constant/String.js';
 import { constTimestamp, funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay,
-	funcHour, funcMinute, funcSecond, funcMillisecond, funcFormatTimestamp } from './constant/Timestamp.js';
+	funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime } from './constant/Timestamp.js';
+import { funcCoalesce, funcEqual, funcNotEqual } from './constant/Unknown.js';
+import { constAVN } from './constant/notation/AVN.js';
+import { constJSON } from './constant/notation/JSON.js';
 import { StaticScope } from './StaticScope.js';
 import { Constant } from './Constant.js';
 import { Variable } from './Variable.js';
@@ -37,57 +37,53 @@ import { ArrayNode } from './node/ArrayNode.js';
 import { ObjectNode } from './node/ObjectNode.js';
 import { BlockNode } from './node/BlockNode.js';
 
-const keywords = ['void', 'boolean', 'bool', 'number', 'num', 'buffer', 'buf', 'string', 'str', 'array', 'arr', 'object', 'obj', 'function', 'func',
-	'variant', 'var', 'if', 'then', 'else',
+const keywords = [
+	'void', 'boolean', 'bool', 'number', 'num', 'timestamp', 'time', 'integer', 'int', 'buffer', 'buf', 'string', 'str',
+	'array', 'arr', 'object', 'obj', 'function', 'func', 'unknown', 'var', 'const', 'if', 'while', 'for',
 ];
 const constants: [string, Constant][] = [
-	['Number', constNumber], ['Random', constRandom], ['Timestamp', constTimestamp ],
+	['Array', constArray], ['Boolean', constBoolean], ['Buffer', constBuffer], ['Integer', constInteger], ['Number', constNumber],
+	['Object', constObject], ['String', constString], ['Timestamp', constTimestamp ],
+	['AVN', constAVN], ['JSON', constJSON],
 ];
-const gfunctions: [string, Constant][] = [
-	['Or', funcOr], ['And', funcAnd], ['Not', funcNot], ['Sum', funcSum], ['Min', funcMin], ['Max', funcMax],
-	['Range', funcRange], ['Chain', funcChain], ['Merge', funcMerge],
-];
-const mfunctions: [string, Constant][] = [
-	['GreaterThan', funcGreaterThan], ['LessThan', funcLessThan], ['GreaterOrEqual', funcGreaterOrEqual], ['LessOrEqual', funcLessOrEqual],
-	['Equal', funcEqual], ['Unequal', funcNotEqual], ['Like', funcLike], ['Unlike', funcUnlike], ['Coalesce', funcCoalesce],
-	['Contains', funcContains], ['StartsWith', funcStartsWith], ['EndsWith', funcEndsWith], ['Alphanum', funcAlphanum],
-	['Trim', funcTrim], ['TrimStart', funcTrimStart], ['TrimEnd', funcTrimEnd],
-	['LowerCase', funcLowerCase], ['UpperCase', funcUpperCase], ['Join', funcJoin], ['Split', funcSplit],
-	['Unique', funcUnique], ['Intersection', funcIntersection], ['Difference', funcDifference],
-
-	['Append', funcAppend], ['Length', funcLength], ['Slice', funcSlice], ['Byte', funcByte], ['Char', funcChar], ['CharCode', funcCharCode],
-	['Entries', funcEntries], ['Keys', funcKeys], ['Values', funcValues], ['At', funcAt],
+const functions: [string, Constant][] = [
+	// Array
 	['First', funcFirst], ['Last', funcLast], ['FirstIndex', funcFirstIndex], ['LastIndex', funcLastIndex],
 	['Any', funcAny], ['Every', funcEvery], ['Flatten', funcFlatten], ['Reverse', funcReverse],
 	['Transform', funcTransform], ['Filter', funcFilter], ['Reduce', funcReduce], ['Compose', funcCompose],
-
-	['Add', funcAdd], ['Subtract', funcSubtract], ['Negate', funcNegate],
-	['Multiply', funcMultiply], ['Divide', funcDivide], ['Remainder', funcRemainder], ['Modulo', funcModulo],
-	['Exponent', funcExponent], ['Logarithm', funcLogarithm], ['Power', funcPower], ['Root', funcRoot], ['Abs', funcAbs],
-	['Ceil', funcCeil], ['Floor', funcFloor], ['Round', funcRound],
-
-	['EncodeNumber', funcEncodeNumber], ['DecodeNumber', funcDecodeNumber],
-	['EncodeString', funcEncodeString], ['DecodeString', funcDecodeString],
-	['FormatNumber', funcFormatNumber], ['ParseNumber', funcParseNumber],
-	['FormatBoolean', funcFormatBoolean], ['ParseBoolean', funcParseBoolean],
-	['FormatTimestamp', funcFormatTimestamp],
-	['FormatBuffer', funcFormatBuffer], ['ParseBuffer', funcParseBuffer],
-	['FormatJSON', funcFormatJSON], ['ParseJSON', funcParseJSON], ['FormatAN', funcFormatAN],
-
+	// Buffer
+	['Byte', funcByte],
+	// Enumerable
+	['Append', funcAppend], ['Slice', funcSlice],
+	// Iterable
+	['Length', funcLength], ['At', funcAt],
+	// Number
+	['GreaterThan', funcGreaterThan], ['LessThan', funcLessThan], ['GreaterOrEqual', funcGreaterOrEqual], ['LessOrEqual', funcLessOrEqual],
+	['Add', funcAdd], ['Subtract', funcSubtract], ['Multiply', funcMultiply], ['Divide', funcDivide],
+	['Remainder', funcRemainder], ['Modulo', funcModulo], ['Power', funcPower], ['Root', funcRoot],
+	// Object
+	['Entries', funcEntries], ['Keys', funcKeys], ['Values', funcValues],
+	// String
+	['Like', funcLike], ['Unlike', funcUnlike], ['Contains', funcContains], ['StartsWith', funcStartsWith], ['EndsWith', funcEndsWith],
+	['Char', funcChar], ['CharCode', funcCharCode], ['Alphanum', funcAlphanum],
+	['Trim', funcTrim], ['TrimStart', funcTrimStart], ['TrimEnd', funcTrimEnd],
+	['LowerCase', funcLowerCase], ['UpperCase', funcUpperCase], ['Join', funcJoin], ['Split', funcSplit],
+	// Timestamp
 	['Year', funcYear], ['Month', funcMonth], ['MonthIndex', funcMonthIndex], ['WeekdayIndex', funcWeekdayIndex], ['Day', funcDay],
-	['Hour', funcHour], ['Minute', funcMinute], ['Second', funcSecond], ['Millisecond', funcMillisecond],
+	['Hour', funcHour], ['Minute', funcMinute], ['Second', funcSecond], ['Millisecond', funcMillisecond], ['EpochTime', funcEpochTime],
+	// Unknown
+	['Coalesce', funcCoalesce], ['Equal', funcEqual], ['Unequal', funcNotEqual],
 ];
 
 export class Expression {
 
-	static readonly keywords = [...keywords, ...constants.map((c)=> c[0]), ...gfunctions.map((f)=> f[0])];
+	static readonly keywords = [...keywords, ...constants.map((c)=> c[0])];
 	protected readonly _expression: string;
 	protected readonly _strict: boolean;
 	protected readonly _root: Node;
 	protected readonly _variables = new Map<string, Variable>();
 	protected readonly _constants = new Map<string, Constant>(constants);
-	protected readonly _gfunctions = new Map<string, Constant>(gfunctions);
-	protected readonly _mfunctions = new Map<string, Constant>(mfunctions);
+	protected readonly _functions = new Map<string, Constant>(functions);
 	protected readonly _scope = new StaticScope();
 
 	/**
@@ -276,7 +272,7 @@ export class Expression {
 				}
 				else if (state.isToken) {
 					frame.ends(state);
-					const mfunction = this._mfunctions.get(state.token) ?? this._gfunctions.get(state.token);
+					const mfunction = this._functions.get(state.token);
 					if (mfunction) {
 						if (state.next().isParenthesesOpen) {
 							const subnodes: Node[] = [node];
@@ -334,11 +330,6 @@ export class Expression {
 			if (constant != null) {
 				state.next();
 				return new ConstantNode(frame, constant);
-			}
-			const gfunction = this._gfunctions.get(state.token);
-			if (gfunction != null) {
-				state.next();
-				return new ConstantNode(frame, gfunction);
 			}
 			let variable = scope.get(state.token);
 			if (variable == null) {

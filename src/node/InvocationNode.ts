@@ -15,7 +15,7 @@ export class InvocationNode extends Node {
 		protected _subnodes: Node[],
 	) {
 		super(frame);
-		this._type = this._fnode.type.functionType?.retType ?? Type.Unknown;
+		this._type = Type.Unknown;
 	}
 
 	override get type(): Type {
@@ -24,23 +24,19 @@ export class InvocationNode extends Node {
 
 	override compile(type: Type): Node {
 		this._fnode = this._fnode.compile(this._fnode.type);
-		this._type = this._fnode.type.functionType?.retType ?? Type.Unknown;
-		this._type = this.reduceType(type);
-		const ftype = this._fnode.type.functionType;
-		if (ftype) {
-			if (this._subnodes.length < ftype.minArity) {
-				this.throwError(`function requires ${ftype.minArity} arguments not ${this._subnodes.length}`);
+		const subtype = this._fnode.type.functionSubtype(type, this._subnodes.length);
+		if (subtype) {
+			this._type = subtype.retType;
+			if (this._subnodes.length < subtype.minArity) {
+				this.throwError(`function requires ${subtype.minArity} arguments not ${this._subnodes.length}`);
 			}
-			if (this._subnodes.length > ftype.maxArity) {
-				this.throwError(`function requires ${ftype.maxArity} arguments not ${this._subnodes.length}`);
+			if (this._subnodes.length > subtype.maxArity) {
+				this.throwError(`function requires ${subtype.maxArity} arguments not ${this._subnodes.length}`);
 			}
 		}
-		let constant = this._fnode.constant && (ftype?.isPure ?? true);
+		let constant = this._fnode.constant && (subtype?.stable() ?? true);
 		for (let i = 0; i < this._subnodes.length; ++i) {
-			const atype = ftype?.argType(i, this.type) ?? Type.Unknown;
-			if (!atype) {
-				this.throwTypeError(type);
-			}
+			const atype = subtype?.argType(i) ?? Type.Unknown;
 			this._subnodes[i] = this._subnodes[i].compile(atype);
 			constant &&= this._subnodes[i].constant;
 		}
@@ -50,7 +46,11 @@ export class InvocationNode extends Node {
 	}
 
 	override evaluate(): Value {
-		return (this._fnode.evaluate() as (...values: any[])=> Value)(...this._subnodes.map((node)=> node.evaluate()));
+		const func = (this._fnode.evaluate() as (...values: any[])=> Value);
+		if (typeof func !== 'function') {
+			this.throwError(`function expected not ${Type.of(func)}`);
+		}
+		return func(...this._subnodes.map((node)=> node.evaluate()));
 	}
 
 	override toString(ident: number = 0): string {

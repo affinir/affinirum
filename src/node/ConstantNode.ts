@@ -20,7 +20,7 @@ export class ConstantNode extends Node {
 
 	override compile(type: Type): Node {
 		this._constant.type = this.reduceType(type);
-		this._subnode = this._subnode?.compile(this._constant.type.functionType?.retType ?? Type.Unknown);
+		this._subnode = this._subnode?.compile(Type.Unknown);
 		return this;
 	}
 
@@ -29,7 +29,7 @@ export class ConstantNode extends Node {
 	}
 
 	override get constant(): boolean {
-		return !this._subnode && this._constant.type.isPure;
+		return !this._subnode && this._constant.type.stable;
 	}
 
 	override toString(ident: number = 0): string {
