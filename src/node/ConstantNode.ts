@@ -20,7 +20,7 @@ export class ConstantNode extends Node {
 
 	override compile(type: Type): Node {
 		this._constant.type = this.reduceType(type);
-		this._subnode = this._subnode?.compile(Type.Unknown);
+		this._subnode = this._subnode?.compile(this._constant.type.mergeFunctionRetType(type));
 		return this;
 	}
 

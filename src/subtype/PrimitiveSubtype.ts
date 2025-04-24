@@ -36,4 +36,12 @@ export class PrimitiveSubtype implements ISubtype {
 		return this._primitive;
 	}
 
+	static readonly Void = new PrimitiveSubtype('void');
+	static readonly Number = new PrimitiveSubtype('number');
+	static readonly Boolean = new PrimitiveSubtype('boolean');
+	static readonly Timestamp = new PrimitiveSubtype('timestamp');
+	static readonly Buffer = new PrimitiveSubtype('buffer');
+	static readonly String = new PrimitiveSubtype('string');
+	static readonly Array = new PrimitiveSubtype('array');
+
 }

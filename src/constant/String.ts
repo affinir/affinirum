@@ -109,6 +109,7 @@ export const endsWithString = (value: string, search: string, endPos?: number, i
 
 const typeStringEquator = Type.functionType(Type.Boolean, [Type.String, Type.String]);
 const typeStringComparator = Type.functionType(Type.Boolean, [Type.String, Type.String, Type.OptionalNumber, Type.OptionalBoolean]);
+const typeStringMutator = Type.functionType(Type.String, [Type.String]);
 
 export const funcLike = new Constant(
 	(value1: string, value2: string)=>
@@ -167,37 +168,37 @@ export const funcAlphanum = new Constant(
 		}
 		return result;
 	},
-	Type.functionType(Type.String, [Type.String]),
+	typeStringMutator,
 );
 
 export const funcTrim = new Constant(
 	(value: string)=>
 		value.trim(),
-	Type.functionType(Type.String, [Type.String]),
+	typeStringMutator,
 );
 
 export const funcTrimStart = new Constant(
 	(value: string)=>
 		value.trimStart(),
-	Type.functionType(Type.String, [Type.String]),
+	typeStringMutator,
 );
 
 export const funcTrimEnd = new Constant(
 	(value: string)=>
 		value.trimEnd(),
-	Type.functionType(Type.String, [Type.String]),
+	typeStringMutator,
 );
 
 export const funcLowerCase = new Constant(
 	(value: string)=>
 		value.toLowerCase(),
-	Type.functionType(Type.String, [Type.String]),
+	typeStringMutator,
 );
 
 export const funcUpperCase = new Constant(
 	(value: string)=>
 		value.toUpperCase(),
-	Type.functionType(Type.String, [Type.String]),
+	typeStringMutator,
 );
 
 export const funcJoin = new Constant(

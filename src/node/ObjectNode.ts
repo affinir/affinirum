@@ -7,19 +7,22 @@ import { Type } from '../Type.js';
 
 export class ObjectNode extends Node {
 
+	protected _type: Type;
+
 	constructor(
 		frame: ParserFrame,
 		protected _subnodes: [Node, Node][],
 	) {
 		super(frame);
+		this._type = Type.Object;
 	}
 
 	override get type(): Type {
-		return Type.Object;
+		return this._type;
 	}
 
 	override compile(type: Type): Node {
-		this.reduceType(type);
+		this._type = this.reduceType(type);
 		let constant = true;
 		for (let i = 0; i < this._subnodes.length; ++i) {
 			this._subnodes[i][0] = this._subnodes[i][0].compile(Type.String);

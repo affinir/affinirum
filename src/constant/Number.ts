@@ -1,7 +1,7 @@
 import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
-const typeNumberOrArray = new Type(Type.Number, Type.Array);
+const typeNumberOrArray = Type.union(Type.Number, Type.Array);
 const typeAggregator = Type.functionType(Type.Number, [typeNumberOrArray], { variadic: true });
 const typeComparator = Type.functionType(Type.Boolean, [Type.Number, Type.Number]);
 const typeNumberTransform = Type.functionType(Type.Number, [Type.Number]);

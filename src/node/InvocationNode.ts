@@ -4,7 +4,6 @@ import { Constant } from '../Constant.js';
 import { ConstantNode } from './ConstantNode.js';
 import { Value } from '../Value.js';
 import { Type } from '../Type.js';
-
 export class InvocationNode extends Node {
 
 	protected _type: Type;
@@ -15,7 +14,7 @@ export class InvocationNode extends Node {
 		protected _subnodes: Node[],
 	) {
 		super(frame);
-		this._type = Type.Unknown;
+		this._type = this._fnode.type.mergeFunctionSubtype(Type.Unknown, _subnodes.length)?.retType ?? Type.Unknown;
 	}
 
 	override get type(): Type {
@@ -24,25 +23,23 @@ export class InvocationNode extends Node {
 
 	override compile(type: Type): Node {
 		this._fnode = this._fnode.compile(this._fnode.type);
-		const subtype = this._fnode.type.functionSubtype(type, this._subnodes.length);
-		if (subtype) {
-			this._type = subtype.retType;
-			if (this._subnodes.length < subtype.minArity) {
-				this.throwError(`function requires ${subtype.minArity} arguments not ${this._subnodes.length}`);
-			}
-			if (this._subnodes.length > subtype.maxArity) {
-				this.throwError(`function requires ${subtype.maxArity} arguments not ${this._subnodes.length}`);
-			}
+		const mergedFunctionSubtype = this._fnode.type.mergeFunctionSubtype(type, this._subnodes.length);
+		if (!mergedFunctionSubtype) {
+			this.throwError(`function type ${this._fnode.type} mismatch with expected return type ${type} and ${this._subnodes.length} arguments`);
 		}
-		let constant = this._fnode.constant && (subtype?.stable() ?? true);
+		this._type = mergedFunctionSubtype.retType;
+		if (this._subnodes.length < mergedFunctionSubtype.minArity) {
+			this.throwError(`function requires ${mergedFunctionSubtype.minArity} arguments not ${this._subnodes.length}`);
+		}
+		if (this._subnodes.length > mergedFunctionSubtype.maxArity) {
+			this.throwError(`function requires ${mergedFunctionSubtype.maxArity} arguments not ${this._subnodes.length}`);
+		}
+		let constant = this._fnode.constant && (mergedFunctionSubtype?.stable() ?? true);
 		for (let i = 0; i < this._subnodes.length; ++i) {
-			const atype = subtype?.argType(i) ?? Type.Unknown;
-			this._subnodes[i] = this._subnodes[i].compile(atype);
+			this._subnodes[i] = this._subnodes[i].compile(mergedFunctionSubtype.argType(i));
 			constant &&= this._subnodes[i].constant;
 		}
-		return constant
-			? new ConstantNode(this, new Constant(this.evaluate(), this.type))
-			: this;
+		return constant ? new ConstantNode(this, new Constant(this.evaluate(), this.type)) : this;
 	}
 
 	override evaluate(): Value {

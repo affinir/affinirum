@@ -11,7 +11,7 @@ export class ObjectSubtype implements ISubtype {
 	}
 
 	propType(property: string) {
-		return this._propTypes[property] ?? Type.Unknown;
+		return this._propTypes[property];
 	}
 
 	stable(): boolean {
@@ -20,8 +20,19 @@ export class ObjectSubtype implements ISubtype {
 
 	match(subtype: ISubtype): boolean {
 		if (subtype instanceof ObjectSubtype) {
+			if (this.types().length === 0 || subtype.types().length === 0) {
+				return true;
+			}
 			for (const prop in this._propTypes) {
+				if (!subtype.propType(prop)) {
+					return false;
+				}
 				if (!this._propTypes[prop].reduce(subtype._propTypes[prop])) {
+					return false;
+				}
+			}
+			for(const prop in subtype._propTypes) {
+				if (!this.propType(prop)) {
 					return false;
 				}
 			}

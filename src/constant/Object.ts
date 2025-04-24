@@ -2,7 +2,7 @@ import { Constant } from '../Constant.js';
 import { Value } from '../Value.js';
 import { Type } from '../Type.js';
 
-const typeArrayOrObject = new Type(Type.Array, Type.Object);
+const typeArrayOrObject = Type.union(Type.Array, Type.Object);
 const typeAccessor = Type.functionType(Type.Array, [Type.Object]);
 
 export const funcEntries = new Constant(

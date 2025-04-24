@@ -18,11 +18,11 @@ export class SwitchNode extends Node {
 		if (_subnodes.length !== 2) {
 			this.throwError(`switch requires 2 subnodes not ${_subnodes.length}`);
 		}
-		this._type = new Type(...this._subnodes.map((i)=> i.type));
+		this._type = Type.union(...this._subnodes.map((i)=> i.type));
 	}
 
 	override get type(): Type {
-		return new Type(...this._subnodes.map((i)=> i.type));
+		return Type.union(...this._subnodes.map((i)=> i.type));
 	}
 
 	override compile(type: Type): Node {

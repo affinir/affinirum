@@ -1,7 +1,7 @@
 import { Constant } from '../../Constant.js';
 import { Type } from '../../Type.js';
 
-const typeJson = new Type(Type.Void, Type.Boolean, Type.Number, Type.String, Type.Array, Type.Object);
+const typeJson = Type.union(Type.Void, Type.Boolean, Type.Number, Type.String, Type.Array, Type.Object);
 
 const funcFormatJSON = new Constant(
 	(value: undefined | null | boolean | number | string | [] | { [ key: string ]: any }, whitespace?: string)=>

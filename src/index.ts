@@ -100,7 +100,6 @@ export class Expression {
 		constants?: Record<string, [Value, Type?]>,
 	}) {
 		this._expression = expr;
-		const type = config?.type ?? Type.Unknown;
 		this._strict = config?.strict ?? false;
 		if (config?.variables) {
 			for (const v in config.variables) {
@@ -118,7 +117,14 @@ export class Expression {
 		if (!state.isVoid) {
 			state.throwError('unexpected expression token or expression end');
 		}
-		this._root = this._root.compile(type);
+		this._root = this._root.compile(config?.type ?? Type.Unknown);
+	}
+
+	/**
+		Returns compiled expression return value type.
+	*/
+	get expression(): String {
+		return this._expression;
 	}
 
 	/**
@@ -186,7 +192,7 @@ export class Expression {
 	protected disjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this.conjunction(state, scope);
 		while (state.operator === funcOr) {
-			node = this.invoke(state, state.operator, [node, this.conjunction(state.next(), scope)]);
+			node = this.invoke(state.starts(), state.operator, [node, this.conjunction(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -194,7 +200,7 @@ export class Expression {
 	protected conjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this.comparison(state, scope);
 		while (state.operator === funcAnd) {
-			node = this.invoke(state, state.operator, [node, this.comparison(state.next(), scope)]);
+			node = this.invoke(state.starts(), state.operator, [node, this.comparison(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -211,7 +217,7 @@ export class Expression {
 		while (state.operator === funcGreaterThan || state.operator === funcLessThan
 			|| state.operator === funcGreaterOrEqual || state.operator === funcLessOrEqual
 			|| state.operator === funcEqual || state.operator === funcNotEqual) {
-			node = this.invoke(state, state.operator, [node, this.aggregate(state.next(), scope)]);
+			node = this.invoke(state.starts(), state.operator, [node, this.aggregate(state.next(), scope)]);
 		}
 		if (not) {
 			node = this.invoke(frame.ends(state), funcNot, [node]);
@@ -222,7 +228,7 @@ export class Expression {
 	protected aggregate(state: ParserState, scope: StaticScope): Node {
 		let node = this.product(state, scope);
 		while (state.operator === funcAppend || state.operator === funcAdd || state.operator === funcSubtract) {
-			node = this.invoke(state, state.operator, [node, this.product(state.next(), scope)]);
+			node = this.invoke(state.starts(), state.operator, [node, this.product(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -230,7 +236,7 @@ export class Expression {
 	protected product(state: ParserState, scope: StaticScope): Node {
 		let node = this.factor(state, scope);
 		while (state.operator === funcMultiply || state.operator === funcDivide || state.operator === funcRemainder) {
-			node = this.invoke(state, state.operator, [node, this.factor(state.next(), scope)]);
+			node = this.invoke(state.starts(), state.operator, [node, this.factor(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -245,7 +251,7 @@ export class Expression {
 		}
 		let node = this.coalescence(state, scope);
 		while (state.operator === funcPower) {
-			node = this.invoke(state, state.operator, [node, this.coalescence(state.next(), scope)]);
+			node = this.invoke(state.starts(), state.operator, [node, this.coalescence(state.next(), scope)]);
 		}
 		if (neg) {
 			node = this.invoke(frame.ends(state), funcNegate, [node]);
@@ -256,7 +262,7 @@ export class Expression {
 	protected coalescence(state: ParserState, scope: StaticScope): Node {
 		let node = this.accessor(state, scope);
 		while (state.operator === funcCoalesce) {
-			node = this.invoke(state, state.operator, [node, this.accessor(state.next(), scope)]);
+			node = this.invoke(state.starts(), state.operator, [node, this.accessor(state.next(), scope)]);
 		}
 		return node;
 	}

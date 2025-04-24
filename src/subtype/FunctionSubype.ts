@@ -58,7 +58,7 @@ export class FunctionSubtype implements ISubtype {
 				return false;
 			}
 			for (let i = 0, argc = Math.max(this.minArity, subtype.minArity); i < argc; ++i) {
-				if (!this._argTypes[i].reduce(subtype._argTypes[i])) {
+				if (!this.argType(i).reduce(subtype.argType(i))) {
 					return false;
 				}
 			}
