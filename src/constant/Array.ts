@@ -19,8 +19,17 @@ export const funcFirst = new Constant(
 );
 
 export const funcLast = new Constant(
-	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
-		value?.reverse().find((v, i, a)=> predicate(v, i, a)),
+	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=> {
+		if (value == null) {
+			return undefined;
+		}
+		for (let i = value.length - 1; i >= 0; --i) {
+			if (predicate(value[i], i, value)) {
+				return value[i];
+			}
+		}
+		return undefined;
+	},
 	typeItemFinder,
 );
 
@@ -40,8 +49,12 @@ export const funcLastIndex = new Constant(
 		if (value == null) {
 			return undefined;
 		}
-		const ix = [...value].reverse().findIndex((v, i, a)=> predicate(v, i, a));
-		return ix < 0 ? Number.NaN : ix;
+		for (let i = value.length - 1; i >= 0; i--) {
+			if (predicate(value[i], i, value)) {
+				return i;
+			}
+		}
+		return Number.NaN;
 	},
 	typeIndexFinder,
 );

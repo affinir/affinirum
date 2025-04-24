@@ -3,105 +3,24 @@ import { Type } from '../Type.js';
 
 const typeNumberOrArray = Type.union(Type.Number, Type.Array);
 const typeAggregator = Type.functionType(Type.Number, [typeNumberOrArray], { variadic: true });
-const typeComparator = Type.functionType(Type.Boolean, [Type.Number, Type.Number]);
 const typeNumberTransform = Type.functionType(Type.Number, [Type.Number]);
-const typeNumberOperator = Type.functionType(Type.Number, [Type.Number, Type.Number]);
-const typeVariadicNumberOperator = Type.functionType(Type.Number, [Type.Number, Type.Number], { variadic: true });
 
-export const funcSum = new Constant(
+const funcSum = new Constant(
 	(...values: (number | number[])[])=>
 		values.flat().reduce((acc, val)=> acc + val, 0),
 	typeAggregator,
 );
 
-export const funcMin = new Constant(
+const funcMin = new Constant(
 	(...values: (number | number[])[])=>
 		Math.min(Number.POSITIVE_INFINITY, ...values.flat()),
 	typeAggregator,
 );
 
-export const funcMax = new Constant(
+const funcMax = new Constant(
 	(...values: (number | number[])[])=>
 		Math.max(Number.NEGATIVE_INFINITY, ...values.flat()),
 	typeAggregator,
-);
-
-export const funcGreaterThan = new Constant(
-	(value1: number, value2: number)=>
-		value1 > value2,
-	typeComparator,
-);
-
-export const funcLessThan = new Constant(
-	(value1: number, value2: number)=>
-		value1 < value2,
-	typeComparator,
-);
-
-export const funcGreaterOrEqual = new Constant(
-	(value1: number, value2: number)=>
-		value1 >= value2,
-	typeComparator,
-);
-
-export const funcLessOrEqual = new Constant(
-	(value1: number, value2: number)=>
-		value1 <= value2,
-	typeComparator,
-);
-
-export const funcAdd = new Constant(
-	(...values: number[])=>
-		values.reduce((acc, val)=> acc + val),
-	typeVariadicNumberOperator,
-);
-
-export const funcSubtract = new Constant(
-	(value: number, subtrahend: number)=>
-		value - subtrahend,
-	typeNumberOperator,
-);
-
-export const funcMultiply = new Constant(
-	(...values: number[])=>
-		values.reduce((acc: any, val: any)=> acc *= val),
-	typeVariadicNumberOperator,
-);
-
-export const funcDivide = new Constant(
-	(value: number, divisor: number)=>
-		value / divisor,
-	typeNumberOperator,
-);
-
-export const funcRemainder = new Constant(
-	(value: number, divisor: number)=>
-		value % divisor,
-	typeNumberOperator,
-);
-
-export const funcModulo = new Constant(
-	(value: number, divisor: number)=>
-		(value % divisor + divisor) % divisor,
-	typeNumberOperator,
-);
-
-export const funcPower = new Constant(
-	(value: number, exponent: number)=>
-		Math.pow(value, exponent),
-	typeNumberOperator,
-);
-
-export const funcRoot = new Constant(
-	(value: number, exponent: number)=>
-		Math.pow(value, 1 / exponent),
-	typeNumberOperator,
-);
-
-export const funcNegate = new Constant(
-	(value: number)=>
-		-value,
-	typeNumberTransform,
 );
 
 const funcExponent = new Constant(
@@ -232,7 +151,6 @@ export const constNumber = new Constant({
 	Sum: funcSum.value,
 	Min: funcMin.value,
 	Max: funcMax.value,
-	Negate: funcNegate.value,
 	Exponent: funcExponent.value,
 	Logarithm: funcLogarithm.value,
 	Abs: funcAbs.value,
@@ -252,7 +170,6 @@ export const constNumber = new Constant({
 	Sum: funcSum.type,
 	Min: funcMin.type,
 	Max: funcMax.type,
-	Negate: funcNegate.type,
 	Exponent: funcExponent.type,
 	Logarithm: funcLogarithm.type,
 	Abs: funcAbs.type,

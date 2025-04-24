@@ -5,19 +5,19 @@ import { constArray, funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEve
 	funcFlatten, funcReverse, funcTransform, funcFilter, funcReduce, funcCompose } from './constant/Array.js';
 import { constBoolean, funcOr, funcAnd, funcNot } from './constant/Boolean.js';
 import { constBuffer, funcByte } from './constant/Buffer.js';
-import { funcAppend, funcSlice } from './constant/Enumerable.js';
+import { funcSlice } from './constant/Enumerable.js';
 import { constInteger } from './constant/Integer.js';
 import { funcLength, funcAt } from './constant/Iterable.js';
-import { constNumber, funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
-	funcPower, funcRoot, funcNegate } from './constant/Number.js';
+import { constNumber } from './constant/Number.js';
 import { constObject, funcEntries, funcKeys, funcValues } from './constant/Object.js';
 import { constString, funcLike, funcUnlike, funcContains, funcStartsWith, funcEndsWith,
 	funcChar, funcCharCode, funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
 	funcJoin, funcSplit } from './constant/String.js';
 import { constTimestamp, funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay,
 	funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime } from './constant/Timestamp.js';
-import { funcCoalesce, funcEqual, funcNotEqual } from './constant/Unknown.js';
+import { funcCoalesce, funcEqual, funcNotEqual, funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
+	funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
+	funcPower, funcRoot, funcNegate } from './constant/Unknown.js';
 import { constAVN } from './constant/notation/AVN.js';
 import { constJSON } from './constant/notation/JSON.js';
 import { StaticScope } from './StaticScope.js';
@@ -54,13 +54,13 @@ const functions: [string, Constant][] = [
 	// Buffer
 	['Byte', funcByte],
 	// Enumerable
-	['Append', funcAppend], ['Slice', funcSlice],
+	['Add', funcAdd], ['Slice', funcSlice],
 	// Iterable
 	['Length', funcLength], ['At', funcAt],
 	// Number
 	['GreaterThan', funcGreaterThan], ['LessThan', funcLessThan], ['GreaterOrEqual', funcGreaterOrEqual], ['LessOrEqual', funcLessOrEqual],
-	['Add', funcAdd], ['Subtract', funcSubtract], ['Multiply', funcMultiply], ['Divide', funcDivide],
-	['Remainder', funcRemainder], ['Modulo', funcModulo], ['Power', funcPower], ['Root', funcRoot],
+	['Subtract', funcSubtract], ['Multiply', funcMultiply], ['Divide', funcDivide], ['Remainder', funcRemainder], ['Modulo', funcModulo],
+	['Power', funcPower], ['Root', funcRoot], ['Negate', funcNegate],
 	// Object
 	['Entries', funcEntries], ['Keys', funcKeys], ['Values', funcValues],
 	// String
@@ -227,7 +227,7 @@ export class Expression {
 
 	protected aggregate(state: ParserState, scope: StaticScope): Node {
 		let node = this.product(state, scope);
-		while (state.operator === funcAppend || state.operator === funcAdd || state.operator === funcSubtract) {
+		while (state.operator === funcAdd || state.operator === funcSubtract) {
 			node = this.invoke(state.starts(), state.operator, [node, this.product(state.next(), scope)]);
 		}
 		return node;

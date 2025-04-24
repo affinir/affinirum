@@ -1,6 +1,6 @@
 import { ISubtype } from '../Type.js';
 
-export type Primitive = 'void' | 'number' | 'boolean' | 'timestamp' | 'buffer' | 'string' | 'array';
+export type Primitive = 'void' | 'number' | 'boolean' | 'timestamp' | 'integer' | 'buffer' | 'string' | 'array';
 
 export class PrimitiveSubtype implements ISubtype {
 
@@ -25,7 +25,7 @@ export class PrimitiveSubtype implements ISubtype {
 			case 'number': return 1;
 			case 'boolean': return 2;
 			case 'timestamp': return 3;
-			//case 'integer': return 7;
+			case 'integer': return 7;
 			case 'buffer': return 8;
 			case 'string': return 9;
 			case 'array': return 0x100;
@@ -40,6 +40,7 @@ export class PrimitiveSubtype implements ISubtype {
 	static readonly Number = new PrimitiveSubtype('number');
 	static readonly Boolean = new PrimitiveSubtype('boolean');
 	static readonly Timestamp = new PrimitiveSubtype('timestamp');
+	static readonly Integer = new PrimitiveSubtype('integer');
 	static readonly Buffer = new PrimitiveSubtype('buffer');
 	static readonly String = new PrimitiveSubtype('string');
 	static readonly Array = new PrimitiveSubtype('array');

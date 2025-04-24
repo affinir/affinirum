@@ -10,9 +10,9 @@ export const notate = (value: Value, whitespace?: string): string=> {
 	if (typeof value === 'number' || typeof value === 'boolean') {
 		return value.toString();
 	}
-	/*if (typeof value === 'bigint') {
-		return `0${value.toString()}`;
-	}*/
+	if (typeof value === 'bigint') {
+		return value < 0n ? `-0${(-value).toString()}` : `0${value.toString()}`;
+	}
 	if (value instanceof Date) {
 		return `@${value.toISOString()}`;
 	}

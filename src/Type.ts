@@ -54,6 +54,15 @@ export class Type {
 		return this.isSubtype && this._subtypes[0].match(Type.Timestamp._subtypes[0]);
 	}
 
+	get isInteger() {
+		return this.isSubtype && this._subtypes[0].match(Type.Integer._subtypes[0]);
+	}
+
+	get isNumeric() {
+		return this._subtypes.length === 2
+			&& (this._subtypes[0].match(Type.Number._subtypes[0]) || this._subtypes[0].match(Type.Integer._subtypes[0]));
+	}
+
 	get isBuffer() {
 		return this.isSubtype && this._subtypes[0].match(Type.Buffer._subtypes[0]);
 	}
@@ -149,15 +158,28 @@ export class Type {
 					? Type.Boolean
 					: value instanceof Date
 						? Type.Timestamp
-						: value instanceof ArrayBuffer
-							? Type.Buffer
-							: typeof value === 'string'
-								? Type.String
-								: Array.isArray(value)
-									? Type.Array
-									: typeof value === 'object'
-										? Type.Object
-										: Type.Function;
+						: typeof value === 'bigint'
+							? Type.Integer
+							: value instanceof ArrayBuffer
+								? Type.Buffer
+								: typeof value === 'string'
+									? Type.String
+									: Array.isArray(value)
+										? Type.Array
+										: typeof value === 'object'
+											? Type.Object
+											: Type.Function;
+	}
+
+	static isPrimitive(value: Value) {
+		return value == null
+			|| typeof value === 'number'
+			|| typeof value === 'boolean'
+			|| value instanceof Date
+			|| typeof value === 'bigint'
+			|| value instanceof ArrayBuffer
+			|| typeof value === 'string'
+			|| Array.isArray(value);
 	}
 
 	static primitiveType(primitive: Primitive) {
@@ -188,6 +210,8 @@ export class Type {
 	static readonly OptionalBoolean = Type.union(Type.Void, Type.Boolean);
 	static readonly Timestamp = new Type(PrimitiveSubtype.Timestamp);
 	static readonly OptionalTimestamp = Type.union(Type.Void, Type.Timestamp);
+	static readonly Integer = new Type(PrimitiveSubtype.Integer);
+	static readonly OptionalInteger = Type.union(Type.Void, Type.Integer);
 	static readonly Buffer = new Type(PrimitiveSubtype.Buffer);
 	static readonly OptionalBuffer = Type.union(Type.Void, Type.Buffer);
 	static readonly String = new Type(PrimitiveSubtype.String);

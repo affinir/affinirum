@@ -9,8 +9,8 @@ describe('Expression Complex test', ()=> {
 	it('parses and returns undefined variables', ()=> {
 		const expression = new Expression('(a-b)*c.prop/d.UpperCase.Length-100');
 		const variables = expression.variables();
-		expect(variables.a.isNumber).toBeTrue();
-		expect(variables.b.isNumber).toBeTrue();
+		expect(variables.a.isNumeric).toBeTrue();
+		expect(variables.b.isNumeric).toBeTrue();
 		expect(variables.d.isString).toBeTrue();
 	});
 	it('defines variables in strict mode and evaluates', ()=> {
@@ -40,7 +40,7 @@ describe('Expression Complex test', ()=> {
 		expect(expression.evaluate({ obj: undefined }) as string).toBe('null');
 	});
 	it('parses pure constant expression and compiles to a constant node', ()=> {
-		const expression = new Expression('("ABC" .. Timestamp.Format(Timestamp.Parse("2000-01-01"))).Length');
+		const expression = new Expression('("ABC" + Timestamp.Format(Timestamp.Parse("2000-01-01"))).Length');
 		expect(expression.type.toString()).toBe('number');
 	});
 	it('parses and evaluates value conversion to text', ()=> {

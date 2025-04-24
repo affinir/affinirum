@@ -1,4 +1,5 @@
 import { Expression } from '../src/index.js';
+import { replacerJSON } from '../src/constant/notation/JSON.js';
 
 describe('Expression Evaluation Result test', ()=> {
 	([
@@ -16,6 +17,8 @@ describe('Expression Evaluation Result test', ()=> {
 		['0.434e000002', [{ result: 43.4 }]],
 		['4.1e-1', [{ result: 0.41 }]],
 		['4.1e-01', [{ result: 0.41 }]],
+		['00', [{ result: 0n }]],
+		['0123', [{ result: 123n }]],
 		['Buffer.Format(#0)', [{ result: '00' }]],
 		['Buffer.Format(#ffff)', [{ result: 'ffff' }]],
 		['Buffer.Format(#AAAA)', [{ result: 'aaaa' }]],
@@ -45,11 +48,11 @@ describe('Expression Evaluation Result test', ()=> {
 		['100+(if c*2 > 10 { a*10 } : {b*20})-100', [{ c: 10, a: 1, b: 2, result: 10 }, { c: 1, a: 1, b: 2, result: 40 }]],
 		['a?:b', [{ a: 1, b: 2, result: 1 }, { a: undefined, b: 0, result: 0 }, { a: undefined, b: undefined, result: undefined }]],
 		['(a+b)*(c+d)-(e-f)/(g+h)', [{ a: 1, b: 2, c: 3, d: 4, e: 1, f: 0, g: 0.5, h: 0.5, result: 20 }]],
-		['a..b..(c..d)', [{ a: '1', b: 'b', c: 'c', d: '3', result: '1bc3' }]],
-		['"0".."1"..`2`', [{ result: '012' }]],
+		['a+b+(c+d)', [{ a: '1', b: 'b', c: 'c', d: '3', result: '1bc3' }]],
+		['"0"+"1"+`2`', [{ result: '012' }]],
 		['(x + 10 + 0) * (y - 10)>0', [{ x: 10, y: 10, result: false }, { x: 100, y: 100, result: true }]],
 		['(a + b + c + d) * ( a -b-c + 1 ) / b + 1*(if (a<23){10}:{20})', [{ a: 20, b: 10, c: 1, d: 2, result: 43 }]],
-		['[a, b, c].Append([ 1, 2, 3, 4 ]).Reduce(number(acc:number,val){acc+val})', [{ a: 1, b: 2, c: 3, result: 16 }]],
+		['[a, b, c].Add([ 1, 2, 3, 4 ]).Reduce(number(acc:number,val){acc+val})', [{ a: 1, b: 2, c: 3, result: 16 }]],
 		['100.Add(10, 10, 13)', [{ result: 133 }]],
 		['-a^2 == b', [{ a: 2, b: -4, result: true }]],
 		['_1.Power(2)+40 % 25', [{ _1: 10, result: 115 }]],
@@ -66,13 +69,13 @@ describe('Expression Evaluation Result test', ()=> {
 		['[a, b, c].Length() + [ 1, 2, 3, 4 ].Length()', [{ a: 1, b: 2, c: 3, result: 7 }]],
 		['a.Length() % 3', [{ a: 'abcd', result: 1 }, { a: 'abcdef', result: 0 }]],
 		['a.Alphanum()', [{ a: '---abcd===', result: 'abcd' }, { a: '+abc-def!', result: 'abcdef' }]],
-		['str1.Trim() .. str2.TrimStart() .. str3.TrimEnd()', [{ str1: ' abcd ', str2: '  a', str3: '0  ', result: 'abcda0' }]],
+		['str1.Trim() + str2.TrimStart() + str3.TrimEnd()', [{ str1: ' abcd ', str2: '  a', str3: '0  ', result: 'abcda0' }]],
 		['x.Trim.LowerCase()', [{ x: '  ABC  ', result: 'abc' }, { x: 'ABCD  ', result: 'abcd' }]],
 		['a.Slice(3,4).UpperCase()', [{ a: 'abcdef', result: 'D' }, { a: 'abcDef---', result: 'D' }]],
 		['s.Char(p)', [{ s: 'my long string', p: 1, result: 'y' }, { s: 'my+', p: 0, result: 'm' }, { s: '1', p: 1, result: '' }]],
 		['str0.Char(2) == `a`', [{ str0: 'bca', result: true }, { str0: 'bce', result: false }]],
 		['Array.Chain([[10]], [4], [12])[0]', [{ result: 10 }]],
-		['Number.Sum([1, 2, 3, 4].Append([5]))', [{ result: 15 }]],
+		['Number.Sum([1, 2, 3, 4].Add([5]))', [{ result: 15 }]],
 		['[[[10]]][0][0][0]', [{ result: 10 }]],
 		['[0,1][i]==null', [{ i: 2, result: true }, { i: 1, result: false }]],
 		['[0,1][2]?:n', [{ n: 5, result: 5 }, { n: undefined, result: undefined }]],
@@ -83,11 +86,11 @@ describe('Expression Evaluation Result test', ()=> {
 		['v.Split(s)[i]', [{ v: 'The quick brown fox', s: ' ', i: 2, result: 'brown' }, { v: 'The~quick~brown~~fox', s: '~', i: 1, result: 'quick' }]],
 		['var a=[0,10,200,3000,40000], a[1] + a.At(2)', [{ result: 210 }]],
 		['[100,200,300][1]+[1,2,3][0]', [{ result: 201 }]],
-		['[0,1,2,3].Append([10,20,30,40])[5]', [{ result: 20 }]],
+		['[0,1,2,3].Add([10,20,30,40])[5]', [{ result: 20 }]],
 		['[1,2,3,4].Reduce(\nnumber (a:number, b : number){a.Subtract(b)}\n)', [{ result: -8 }]],
 		['Object.Merge([:], [:], ["a":x], [`b`:x]).Length', [{ x: 1, result: 2 }, { x: undefined, result: 2 }]],
 		['Array.Unique(a).Reduce(?? (acc,val){acc+val})', [{ a: [1, 2, 3, 3, 2, 1], result: 6 }, { a: ['a', 'b', 'c', 'a', 'b', 'c'], result: 'abc' }]],
-		['Number.Sum([0,1,2,3]..[10,20,30,40],100)', [{ result: 206 }]],
+		['Number.Sum([0,1,2,3]+[10,20,30,40],100)', [{ result: 206 }]],
 		['arr0[3] == 50', [{ arr0: [10, 20, 30, 50], result: true }, { arr0: [], result: false }]],
 		['arr0[i]', [{ arr0: [10, 20, 30, 50], i: 0, result: 10 }, { arr0: [], i: 5, result: undefined }]],
 		['arr0[1] + obj0[1]', [{ arr0: [undefined, 10, 20], obj0: { a: undefined, '1': 100 }, result: 110 }, { arr0: [1, 2], obj0: { a: 1, '1': 1 }, result: 3 }]],
@@ -122,7 +125,7 @@ describe('Expression Evaluation Result test', ()=> {
 		['test[0].prop1==test[1]["prop2"]', [{ test: [{ prop1: 1, prop2: 2 }, { prop1: 2, prop2: 1 }], result: true }]],
 		['JSON.Parse(str1).prop1+JSON.Parse(str2).prop2', [{ str1: '{"prop1":1}', str2: '{"prop2":20}', result: 21 }]],
 		['JSON.Parse(str1)+JSON.Parse(str2)', [{ str1: '"p1"', str2: '"p2"', result: 'p1p2' }]],
-		['JSON.Format(obj1)..JSON.Format(obj2)', [{ obj1: { p1: 'a' }, obj2: { p2: 'b' }, result: '{"p1":"a"}{"p2":"b"}' }]],
+		['JSON.Format(obj1)+JSON.Format(obj2)', [{ obj1: { p1: 'a' }, obj2: { p2: 'b' }, result: '{"p1":"a"}{"p2":"b"}' }]],
 		['JSON.Format(obj1)', [{ obj1: { p1: 'a' }, result: '{"p1":"a"}' }]],
 		['Number.Sum(Array.Intersection(a, b))', [{ a: [-1, 2, 1, -2], b: [1, 2], result: 3 }]],
 		['Number.Sum(Array.Difference(a, b))', [{ a: [-1, -2, 1, 2], b: [1, 2], result: -3 }]],
@@ -168,14 +171,14 @@ describe('Expression Evaluation Result test', ()=> {
 		['a+=10 + b-=10 + c*=2 + d/=2 + e %= 2', [{ a: 10, b: 2, c: 3, d: 4, e: 6, result: 0 }]],
 	] as [string, Record<string, any>][]).forEach(([expr, args])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
-			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v)}`, ()=> {
+			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v, replacerJSON)}`, ()=> {
 				try {
 					const expression = new Expression(expr);
 					expect(expression).toBeDefined();
 					try {
 						const value = expression.evaluate(v);
 						if (value !== v.result) {
-							fail(`value ${JSON.stringify(value)} not matching expectation ${v.result}`);
+							fail(`value ${value} not matching expectation ${v.result}`);
 						}
 					}
 					catch (err) {

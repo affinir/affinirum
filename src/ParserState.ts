@@ -1,13 +1,11 @@
 import { funcAt } from './constant/Iterable.js';
 import { funcOr, funcAnd, funcNot } from './constant/Boolean.js';
 import { parseBuffer } from './constant/Buffer.js';
-import { funcAppend } from './constant/Enumerable.js';
-import { funcGreaterThan, funcLessThan,
-	funcGreaterOrEqual, funcLessOrEqual, funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './constant/Number.js';
 import { isSign, isAlpha, isNumeric, isAlphanumeric, isHexadecimal, isQuotation,
 	isDateSymbol, isTimeSymbol, isDateTimeSeparator } from './constant/String.js';
 import { Constant } from './Constant.js';
-import { funcCoalesce, funcEqual, funcNotEqual } from './constant/Unknown.js';
+import { funcCoalesce, funcEqual, funcNotEqual, funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
+	funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './constant/Unknown.js';
 import { Value } from './Value.js';
 import { Type } from './Type.js';
 import { ParserFrame } from './ParserFrame.js';
@@ -311,12 +309,7 @@ export class ParserState extends ParserFrame {
 					}
 					break;
 				case '^': this._fragment = funcPower; break;
-				case '.':
-					switch (this._expr.charAt(this._end)) {
-						case '.': ++this._end; this._fragment = funcAppend; break;
-						default: this._fragment = funcAt; break;
-					}
-					break;
+				case '.': this._fragment = funcAt; break;
 				case '@':
 					while (isDateSymbol(this._expr.charAt(this._end))) {
 						++this._end;
@@ -370,6 +363,7 @@ export class ParserState extends ParserFrame {
 						}
 					}
 					else if (isNumeric(c)) {
+						const cn = this._expr.charAt(this._end);
 						while (isNumeric(this._expr.charAt(this._end))) {
 							++this._end;
 						}
@@ -394,7 +388,9 @@ export class ParserState extends ParserFrame {
 								}
 							}
 						}
-						this._fragment = new Literal(parseFloat(this._expr.substring(this._start, this._end)));
+						this._fragment = (c === '0' && cn !== '.' && this._end - this.start > 1)
+							? new Literal(BigInt(this._expr.substring(this._start, this._end)))
+							: new Literal(parseFloat(this._expr.substring(this._start, this._end)));
 					}
 					else if (isQuotation(c)) {
 						while (this._expr.charAt(this._end) !== '' && this._expr.charAt(this._end) !== c) {
