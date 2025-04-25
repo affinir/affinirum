@@ -1,9 +1,10 @@
 import { Value } from './Value.js';
 import { Primitive, PrimitiveSubtype } from './subtype/PrimitiveSubtype.js';
+import { ArraySubtype } from './subtype/ArraySubtype.js';
 import { ObjectSubtype } from './subtype/ObjectSubtype.js';
 import { IFunctionSubtypeOptions, FunctionSubtype } from './subtype/FunctionSubype.js';
 
-type Subtype = PrimitiveSubtype | ObjectSubtype | FunctionSubtype;
+type Subtype = PrimitiveSubtype | ArraySubtype | ObjectSubtype | FunctionSubtype;
 
 export interface ISubtype {
 	stable(): boolean;
@@ -72,7 +73,7 @@ export class Type {
 	}
 
 	get isArray() {
-		return this.isSubtype && this._subtypes[0].match(Type.Array._subtypes[0]);
+		return this._subtypes.every((i)=> i instanceof ArraySubtype);
 	}
 
 	get isObject() {
@@ -146,7 +147,7 @@ export class Type {
 	}
 
 	static union(...types: Type[]) {
-		return (types.some((i)=> i.isUnknown)) ? Type.Unknown : new Type(...types.map((i)=> i._subtypes).flat());
+		return types.some((i)=> i.isUnknown) ? Type.Unknown : new Type(...types.map((i)=> i._subtypes).flat());
 	}
 
 	static of(value: Value) {
@@ -178,8 +179,7 @@ export class Type {
 			|| value instanceof Date
 			|| typeof value === 'bigint'
 			|| value instanceof ArrayBuffer
-			|| typeof value === 'string'
-			|| Array.isArray(value);
+			|| typeof value === 'string';
 	}
 
 	static primitiveType(primitive: Primitive) {
@@ -216,7 +216,7 @@ export class Type {
 	static readonly OptionalBuffer = Type.union(Type.Void, Type.Buffer);
 	static readonly String = new Type(PrimitiveSubtype.String);
 	static readonly OptionalString = Type.union(Type.Void, Type.String);
-	static readonly Array = new Type(PrimitiveSubtype.Array);
+	static readonly Array = new Type(new ArraySubtype([]));
 	static readonly OptionalArray = Type.union(Type.Void, Type.Array);
 	static readonly Object = new Type(new ObjectSubtype({}));
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);

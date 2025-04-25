@@ -3,7 +3,7 @@ import { Type } from '../../Type.js';
 
 const typeJson = Type.union(Type.Void, Type.Boolean, Type.Number, Type.String, Type.Array, Type.Object);
 
-export const replacerJSON = (_key: string, value: any) =>
+export const replacerJSON = (_key: string, value: any)=>
 	typeof value === 'bigint' ? value.toString() : value;
 
 const funcFormatJSON = new Constant(

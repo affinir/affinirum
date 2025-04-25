@@ -1,26 +1,26 @@
-import { Expression, Type } from '../src/index.js';
+import { Affinirum, Type } from '../src/index.js';
 
 describe('Expression Complex test', ()=> {
 	it('parses and evaluates multiple times', ()=> {
-		const expression = new Expression('arr0.Any(boolean(a:number) { a > 0 } )');
+		const expression = new Affinirum('arr0.Any(boolean(a:number) { a > 0 } )');
 		expect(expression.evaluate({ arr0: [1, -2, -3, -4] })).toBeTrue();
 		expect(expression.evaluate({ arr0: [-1, -2, -3, -4] })).toBeFalse();
 	});
 	it('parses and returns undefined variables', ()=> {
-		const expression = new Expression('(a-b)*c.prop/d.UpperCase.Length-100');
+		const expression = new Affinirum('(a-b)*c.prop/d.UpperCase.Length-100');
 		const variables = expression.variables();
 		expect(variables.a.isNumeric).toBeTrue();
 		expect(variables.b.isNumeric).toBeTrue();
 		expect(variables.d.isString).toBeTrue();
 	});
 	it('defines variables in strict mode and evaluates', ()=> {
-		const expression = new Expression('predefined1*2 + predefined2',
+		const expression = new Affinirum('predefined1*2 + predefined2',
 			{ strict: true, variables: { predefined1: Type.Number, predefined2: Type.Number, myvar: Type.String } });
 		expect(expression.evaluate({ predefined1: 10, predefined2: 20 }) as number).toBe(40);
 	});
 	it('errors on undefines variables in strict mode', ()=> {
 		try {
-			new Expression('undefined1*2 + undefined2', { strict: true, variables: { defined: Type.Number } });
+			new Affinirum('undefined1*2 + undefined2', { strict: true, variables: { defined: Type.Number } });
 		}
 		catch (err: any) {
 			expect(err.message).toContain('error');
@@ -28,23 +28,23 @@ describe('Expression Complex test', ()=> {
 		}
 	});
 	it('parses random number function and evaluates multiple times', ()=> {
-		const expression = new Expression('Number.Random(1000000) $$, 10 ');
+		const expression = new Affinirum('Number.Random(1000000) $$, 10 ');
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses random string function and evaluates multiple times', ()=> {
-		const expression = new Expression('String.Random(20) $, 20$');
+		const expression = new Affinirum('String.Random(20) $, 20$');
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses and evaluates null value conversion to text', ()=> {
-		const expression = new Expression('AVN.Format(obj)');
+		const expression = new Affinirum('AVN.Format(obj)');
 		expect(expression.evaluate({ obj: undefined }) as string).toBe('null');
 	});
 	it('parses pure constant expression and compiles to a constant node', ()=> {
-		const expression = new Expression('("ABC" + Timestamp.Format(Timestamp.Parse("2000-01-01"))).Length');
+		const expression = new Affinirum('("ABC" + Timestamp.Format(Timestamp.Parse("2000-01-01"))).Length');
 		expect(expression.type.toString()).toBe('number');
 	});
 	it('parses and evaluates value conversion to text', ()=> {
-		const expression = new Expression('AVN.Format(obj)');
+		const expression = new Affinirum('AVN.Format(obj)');
 		expect(expression.evaluate({ obj: {
 			bool: true,
 			num: -50,

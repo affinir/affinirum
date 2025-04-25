@@ -20,6 +20,7 @@ export class Constant {
 		this._type = type;
 	}
 
+	static Null = new Constant(undefined);
 	static EmptyArray = new Constant([]);
 	static EmptyObject = new Constant({});
 

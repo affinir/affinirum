@@ -4,7 +4,7 @@ import { Type } from '../Type.js';
 import { equate } from './Unknown.js';
 
 const typeArrayOperator = Type.functionType(Type.Array, [Type.Array, Type.Array]);
-const typeTransform = Type.functionType(Type.Unknown, [Type.Unknown, Type.OptionalNumber, Type.OptionalArray]);
+const typeMutator = Type.functionType(Type.Unknown, [Type.Unknown, Type.OptionalNumber, Type.OptionalArray]);
 const typePredicate = Type.functionType(Type.Boolean, [Type.Unknown, Type.OptionalNumber, Type.OptionalArray]);
 const typeReducer = Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown, Type.OptionalNumber, Type.OptionalArray]);
 const typeComposer = Type.functionType(Type.Unknown, [Type.Object, Type.String, Type.OptionalNumber, Type.OptionalArray]);
@@ -83,10 +83,10 @@ export const funcReverse = new Constant(
 	Type.functionType(Type.Array, [Type.Array]),
 );
 
-export const funcTransform = new Constant(
+export const funcMutate = new Constant(
 	(value: Value[], transform: (v: Value, i: number, a: Value[])=> Value)=>
 		value?.map(transform),
-	Type.functionType(Type.Array, [Type.Array, typeTransform]),
+	Type.functionType(Type.Array, [Type.Array, typeMutator]),
 );
 
 export const funcFilter = new Constant(

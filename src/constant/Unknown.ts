@@ -13,7 +13,7 @@ export const equate = (value1: Value, value2: Value)=> {
 	if (typeof value1 === 'number') {
 		return isNaN(value1) && isNaN(value2 as number) ? true : value1 === value2;
 	}
-	if (typeof value1 === 'boolean'|| typeof value1 === 'bigint' || typeof value1 === 'string' || typeof value1 === 'function') {
+	if (typeof value1 === 'boolean' || typeof value1 === 'bigint' || typeof value1 === 'string' || typeof value1 === 'function') {
 		return value1 === value2;
 	}
 	if (value1 instanceof Date && value2 instanceof Date) {

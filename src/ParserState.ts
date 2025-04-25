@@ -34,8 +34,9 @@ const symbolCommaSeparator = Symbol();
 const symbolOptionalType = Symbol();
 const symbolVariableDefinition = Symbol();
 const symbolConstantDefinition = Symbol();
-const symbolLoop = Symbol();
-const symbolSwitch = Symbol();
+const symbolWhile = Symbol();
+const symbolIf = Symbol();
+const symbolElse = Symbol();
 
 export class ParserState extends ParserFrame {
 
@@ -131,12 +132,16 @@ export class ParserState extends ParserFrame {
 		return this._fragment === symbolConstantDefinition;
 	}
 
-	get isLoop(): boolean {
-		return this._fragment === symbolLoop;
+	get isWhile(): boolean {
+		return this._fragment === symbolWhile;
 	}
 
-	get isSwitch(): boolean {
-		return this._fragment === symbolSwitch;
+	get isIf(): boolean {
+		return this._fragment === symbolIf;
+	}
+
+	get isElse(): boolean {
+		return this._fragment === symbolElse;
 	}
 
 	get isVoid(): boolean {
@@ -348,8 +353,10 @@ export class ParserState extends ParserFrame {
 							case 'false': this._fragment = valueFalse; break;
 							case 'null': this._fragment = valueNull; break;
 							case 'void': this._fragment = Type.Void; break;
-							case 'boolean': this._fragment = Type.Boolean; break;
 							case 'number': this._fragment = Type.Number; break;
+							case 'boolean': this._fragment = Type.Boolean; break;
+							case 'timestamp': this._fragment = Type.Timestamp; break;
+							case 'integer': this._fragment = Type.Integer; break;
 							case 'buffer': this._fragment = Type.Buffer; break;
 							case 'string': this._fragment = Type.String; break;
 							case 'array': this._fragment = Type.Array; break;
@@ -357,8 +364,9 @@ export class ParserState extends ParserFrame {
 							case 'function': this._fragment = Type.Function; break;
 							case 'var': this._fragment = symbolVariableDefinition; break;
 							case 'const': this._fragment = symbolConstantDefinition; break;
-							case 'while': this._fragment = symbolLoop; break;
-							case 'if': this._fragment = symbolSwitch; break;
+							case 'while': this._fragment = symbolWhile; break;
+							case 'if': this._fragment = symbolIf; break;
+							case 'else': this._fragment = symbolElse; break;
 							default: this._fragment = token; break;
 						}
 					}
@@ -388,7 +396,7 @@ export class ParserState extends ParserFrame {
 								}
 							}
 						}
-						this._fragment = (c === '0' && cn !== '.' && this._end - this.start > 1)
+						this._fragment = c === '0' && cn !== '.' && this._end - this.start > 1
 							? new Literal(BigInt(this._expr.substring(this._start, this._end)))
 							: new Literal(parseFloat(this._expr.substring(this._start, this._end)));
 					}

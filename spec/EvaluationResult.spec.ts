@@ -1,4 +1,4 @@
-import { Expression } from '../src/index.js';
+import { Affinirum } from '../src/index.js';
 import { replacerJSON } from '../src/constant/notation/JSON.js';
 
 describe('Expression Evaluation Result test', ()=> {
@@ -42,16 +42,16 @@ describe('Expression Evaluation Result test', ()=> {
 		['v.Contains(str0, pos, true)', [{ v: '', str0: '', pos: null, result: true }, { v: '', str0: '123', pos: 0, result: false }, { v: '  ab CD  0123   ', str0: ' A Bcd ', pos: null, result: true }, { v: '  ab C-D  0123   ', str0: ' A+Bcd ', pos: null, result: true }]],
 		['v.StartsWith(str0, pos, true)', [{ v: '', str0: '', pos: undefined, result: true }, { v: '', str0: '123', pos: 0, result: false }, { v: '  ab CD  0123   ', str0: ' A++Bcd ', pos: undefined, result: true }, { v: 'ab CD  0123   ', str0: 'abcd', pos: 2, result: false }]],
 		['v.EndsWith(str0, pos, true,) & true', [{ v: '', str0: '', pos: undefined, result: true }, { v: '', str0: '123', pos: 0, result: false }, { v: ' ab CD  01+2+ 3 ', str0: ' 0123 ', pos: undefined, result: true }, { v: ' abcdeeeeeef 123', str0: '123', pos: 7, result: false }]],
-		['if v {a}:{b}', [{ v: true, a: 1, b: 2, result: 1 }, { v: false, a: 'f', b: undefined, result: undefined }]],
-		['100+ if c*2 > 10 { a*10 }: {b*20}', [{ c: 10, a: 1, b: 2, result: 110 }, { c: 1, a: 1, b: 2, result: 140 }]],
-		['100+(if (c*2 > 10) { a*10 } : {b*20-100})', [{ c: 10, a: 1, b: 2, result: 110 }, { c: 1, a: 1, b: 2, result: 40 }]],
-		['100+(if c*2 > 10 { a*10 } : {b*20})-100', [{ c: 10, a: 1, b: 2, result: 10 }, { c: 1, a: 1, b: 2, result: 40 }]],
+		['if v {a}else{b}', [{ v: true, a: 1, b: 2, result: 1 }, { v: false, a: 'f', b: undefined, result: undefined }]],
+		['100+ if c*2 > 10 { a*10 }else {b*20}', [{ c: 10, a: 1, b: 2, result: 110 }, { c: 1, a: 1, b: 2, result: 140 }]],
+		['100+(if (c*2 > 10) { a*10 } else {b*20-100})', [{ c: 10, a: 1, b: 2, result: 110 }, { c: 1, a: 1, b: 2, result: 40 }]],
+		['100+(if c*2 > 10 { a*10 } else {b*20})-100', [{ c: 10, a: 1, b: 2, result: 10 }, { c: 1, a: 1, b: 2, result: 40 }]],
 		['a?:b', [{ a: 1, b: 2, result: 1 }, { a: undefined, b: 0, result: 0 }, { a: undefined, b: undefined, result: undefined }]],
 		['(a+b)*(c+d)-(e-f)/(g+h)', [{ a: 1, b: 2, c: 3, d: 4, e: 1, f: 0, g: 0.5, h: 0.5, result: 20 }]],
 		['a+b+(c+d)', [{ a: '1', b: 'b', c: 'c', d: '3', result: '1bc3' }]],
 		['"0"+"1"+`2`', [{ result: '012' }]],
 		['(x + 10 + 0) * (y - 10)>0', [{ x: 10, y: 10, result: false }, { x: 100, y: 100, result: true }]],
-		['(a + b + c + d) * ( a -b-c + 1 ) / b + 1*(if (a<23){10}:{20})', [{ a: 20, b: 10, c: 1, d: 2, result: 43 }]],
+		['(a + b + c + d) * ( a -b-c + 1 ) / b + 1*(if (a<23){10}else{20})', [{ a: 20, b: 10, c: 1, d: 2, result: 43 }]],
 		['[a, b, c].Add([ 1, 2, 3, 4 ]).Reduce(number(acc:number,val){acc+val})', [{ a: 1, b: 2, c: 3, result: 16 }]],
 		['100.Add(10, 10, 13)', [{ result: 133 }]],
 		['-a^2 == b', [{ a: 2, b: -4, result: true }]],
@@ -95,16 +95,16 @@ describe('Expression Evaluation Result test', ()=> {
 		['arr0[i]', [{ arr0: [10, 20, 30, 50], i: 0, result: 10 }, { arr0: [], i: 5, result: undefined }]],
 		['arr0[1] + obj0[1]', [{ arr0: [undefined, 10, 20], obj0: { a: undefined, '1': 100 }, result: 110 }, { arr0: [1, 2], obj0: { a: 1, '1': 1 }, result: 3 }]],
 		['Array.Range(start, end)[0] + Array.Range(start, end)[1]', [{ start: 5, end: 10, result: 11 }, { start: -5, end: -10, result: -19 }]],
-		['var s:number=0,Array.Range(start, end).Transform(void(x:number){s=s+x}),s', [{ start: 1, end: 11, result: 55 }, { start: -1, end: -11, result: -65 }]],
-		['[p,11].Transform( number?(a:number) {const t=10, if (a>10){t}:{null} } )[i]', [{ i: 1, p: 10, result: 10 }, { i: 0, p: 1, result: undefined }]],
-		['[p,p,1, 2, 3].Transform(number?(a:number?){a?:10})[1]', [{ p: undefined, result: 10 }, { p: 0, result: 0 }]],
+		['var s:number=0,Array.Range(start, end).Mutate(void(x:number){s=s+x}),s', [{ start: 1, end: 11, result: 55 }, { start: -1, end: -11, result: -65 }]],
+		['[p,11].Mutate( number?(a:number) {const t=10, if (a>10){t}else{null} } )[i]', [{ i: 1, p: 10, result: 10 }, { i: 0, p: 1, result: undefined }]],
+		['[p,p,1, 2, 3].Mutate(number?(a:number?){a?:10})[1]', [{ p: undefined, result: 10 }, { p: 0, result: 0 }]],
 		['arr1.First(boolean(v:number, i:number){v==2})', [{ arr1: [1, 2, 3], result: 2 }, { arr1: [2, 2, 3], result: 2 }]],
 		['arr1.Last(boolean(v:number, i:number){(i==1)})', [{ arr1: [1, 2, 3], result: 2 }, { arr1: [10, 20, 30], result: 20 }]],
 		['arr1.FirstIndex(boolean(v:number, i:number){(v==2)})', [{ arr1: [1, 2, 3], result: 1 }]],
 		['arr1.LastIndex(boolean(v:number, i:number){i==1})', [{ arr1: [1, 2, 3], result: 1 }]],
 		['arr1.Filter(boolean(v:number, i:number, a:array){(a[i]*i>2)})[1]', [{ arr1: [1, 1, 5, 4, 1], result: 4 }]],
-		['arr0.Transform(number(val:number){val*2*t}).Filter(boolean(val:number){val>5})[1]+[9].Length()', [{ arr0: [1, 2, 3], t: 2, result: 13 }]],
-		['Number.Sum(arr0.Transform( array(a:array){ a.Transform(number(b:number){b+12})} ).Flatten())', [{ arr0: [[1], [1, 2], [2, 3, 4]], result: 85 }]],
+		['arr0.Mutate(number(val:number){val*2*t}).Filter(boolean(val:number){val>5})[1]+[9].Length()', [{ arr0: [1, 2, 3], t: 2, result: 13 }]],
+		['Number.Sum(arr0.Mutate( array(a:array){ a.Mutate(number(b:number){b+12})} ).Flatten())', [{ arr0: [[1], [1, 2], [2, 3, 4]], result: 85 }]],
 		['arr0.Any(boolean(a:object){a.i>0 & a.d>0})', [{ arr0: [{ i: -1, d: -1 }, { i: -1, d: 5 }, { i: 1, d: 1 }], result: true }]],
 		['arr0.Any(boolean(a:number) { a > 0 } )', [{ arr0: [1, -2, -3, -4], result: true }, { arr0: [-1, -2, -3, -4], result: false }]],
 		['arr0.Every(boolean(a:number) { a > 0 } )', [{ arr0: [1, 2, 3, 4], result: true }, { arr0: [1, -2, 3, 4], result: false }]],
@@ -138,7 +138,7 @@ describe('Expression Evaluation Result test', ()=> {
 		['const f=??(){b = b + 1000, true}, Number.Sum(a.Filter(f)) + b', [{ a: [10, 20, 1, 2], b: 0, result: 4033 }]],
 		['var a=??(){b = b + 10}, a(), b', [{ b: 0, result: 10 }, { b: -10, result: 0 }]],
 		['(??(){??(){b = b + 10}})()()', [{ b: 0, result: 10 }]],
-		['if a {b}:{if c{d}:{e}}', [{ a: true, b: false, c: false, d: 10, e: 20, result: false }, { a: false, b: true, c: false, d: 10, e: 20, result: 20 }]],
+		['if a {b}else{if c{d}else{e}}', [{ a: true, b: false, c: false, d: 10, e: 20, result: false }, { a: false, b: true, c: false, d: 10, e: 20, result: 20 }]],
 		['while a<10{a= while a+1<20{a=a+1}}', [{ a: 1, result: 19 }]],
 		['while while a<10{a=a+1}<20{a=a+1}', [{ a: 1, result: 11 }]],
 		['@2020-01-02T16:10:10.120.Year', [{ result: 2020 }]],
@@ -157,7 +157,8 @@ describe('Expression Evaluation Result test', ()=> {
 		['Timestamp.Now().Year > 2000', [{ result: true }]],
 		['Timestamp.Now().Year(true) > 2000', [{ result: true }]],
 		['[a:1, b:2,][c]', [{ a: 'abc', b: 'def', c: 'abc', result: 1 }, { a: 'abc', b: 'def', c: 'def', result: 2 }]],
-		['[if (x == `a`) { x } : { `a` } :1].a', [{ x: 'a', result: 1 }, { x: 'b', result: 1 }]],
+		['[if (x == `a`) { x } else { `a` } :1].a', [{ x: 'a', result: 1 }, { x: 'b', result: 1 }]],
+		['if x > 0 { x }', [{ x: 1, result: 1 }, { x: -1, result: undefined }]],
 		['["entity":[d.id:["a1", "a2"]]].entity.abc[0]', [{ d: { id: 'abc' }, result: 'a1' }, { d: { id: 'a' }, result: undefined }]],
 		['Buffer.Random(c).Length + String.Random(c).Length', [{ c: 0, result: 0 }, { c: 64, result: 128 }]],
 		['a|=b', [{ a: true, b: false, result: true }, { a: false, b: true, result: true }, { a: false, b: false, result: false }, { a: true, b: true, result: true }]],
@@ -173,12 +174,12 @@ describe('Expression Evaluation Result test', ()=> {
 		(args as Record<string, any>[]).forEach((v)=> {
 			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v, replacerJSON)}`, ()=> {
 				try {
-					const expression = new Expression(expr);
+					const expression = new Affinirum(expr);
 					expect(expression).toBeDefined();
 					try {
 						const value = expression.evaluate(v);
 						if (value !== v.result) {
-							fail(`value ${value} not matching expectation ${v.result}`);
+							fail(`value ${JSON.stringify(value, replacerJSON)} not matching expectation ${v.result}`);
 						}
 					}
 					catch (err) {

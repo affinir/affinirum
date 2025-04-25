@@ -73,7 +73,7 @@ export class FunctionSubtype implements ISubtype {
 
 	toString(): string {
 		const argTypes = this._argTypes.map((i)=> i.toString()).join(', ');
-		return `{${this._options?.unstable ? '!!' : ''}${this._retType.toString()}(${argTypes}${this._options?.variadic ? ',...' : ''})}`;
+		return `{${this._retType.toString()}(${argTypes}${this._options?.variadic ? ',...' : ''})${this._options?.unstable ? '!!' : ''}}`;
 	}
 
 }

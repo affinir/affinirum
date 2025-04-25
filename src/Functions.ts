@@ -1,0 +1,87 @@
+import { Constant } from './Constant.js';
+import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
+	funcFlatten, funcReverse, funcMutate, funcFilter, funcReduce, funcCompose } from './constant/Array.js';
+import { funcByte } from './constant/Buffer.js';
+import { funcSlice } from './constant/Enumerable.js';
+import { funcLength, funcAt } from './constant/Iterable.js';
+import { funcEntries, funcKeys, funcValues } from './constant/Object.js';
+import { funcLike, funcUnlike, funcContains, funcStartsWith, funcEndsWith,
+	funcChar, funcCharCode, funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
+	funcJoin, funcSplit } from './constant/String.js';
+import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay,
+	funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime } from './constant/Timestamp.js';
+import { funcCoalesce, funcEqual, funcNotEqual, funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
+	funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
+	funcPower, funcRoot, funcNegate } from './constant/Unknown.js';
+
+export const Functions: [string, Constant][] = [
+	// Array
+	['First', funcFirst],
+	['Last', funcLast],
+	['FirstIndex', funcFirstIndex],
+	['LastIndex', funcLastIndex],
+	['Any', funcAny],
+	['Every', funcEvery],
+	['Flatten', funcFlatten],
+	['Reverse', funcReverse],
+	['Mutate', funcMutate],
+	['Filter', funcFilter],
+	['Reduce', funcReduce],
+	['Compose', funcCompose],
+	// Buffer
+	['Byte', funcByte],
+	// Enumerable
+	['Add', funcAdd],
+	['Slice', funcSlice],
+	// Iterable
+	['Length', funcLength],
+	['At', funcAt],
+	// Number
+	['GreaterThan', funcGreaterThan],
+	['LessThan', funcLessThan],
+	['GreaterOrEqual', funcGreaterOrEqual],
+	['LessOrEqual', funcLessOrEqual],
+	['Subtract', funcSubtract],
+	['Multiply', funcMultiply],
+	['Divide', funcDivide],
+	['Remainder', funcRemainder],
+	['Modulo', funcModulo],
+	['Power', funcPower],
+	['Root', funcRoot],
+	['Negate', funcNegate],
+	// Object
+	['Entries', funcEntries],
+	['Keys', funcKeys],
+	['Values', funcValues],
+	// String
+	['Like', funcLike],
+	['Unlike', funcUnlike],
+	['Contains', funcContains],
+	['StartsWith', funcStartsWith],
+	['EndsWith', funcEndsWith],
+	['Char', funcChar],
+	['CharCode', funcCharCode],
+	['Alphanum', funcAlphanum],
+	['Trim', funcTrim],
+	['TrimStart', funcTrimStart],
+	['TrimEnd', funcTrimEnd],
+	['LowerCase', funcLowerCase],
+	['UpperCase', funcUpperCase],
+	['Join', funcJoin],
+	['Split', funcSplit],
+	// Timestamp
+	['Year', funcYear],
+	['Month', funcMonth],
+	['MonthIndex', funcMonthIndex],
+	['WeekdayIndex', funcWeekdayIndex],
+	['Day', funcDay],
+	['Hour', funcHour],
+	['Minute', funcMinute],
+	['Second', funcSecond],
+	['Millisecond', funcMillisecond],
+	['EpochTime', funcEpochTime],
+	// Unknown
+	['Coalesce', funcCoalesce],
+	['Equal', funcEqual],
+	['Unequal', funcNotEqual],
+];

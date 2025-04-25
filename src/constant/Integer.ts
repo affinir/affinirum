@@ -1,14 +1,41 @@
 import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
+const typeIntegerOrArray = Type.union(Type.Integer, Type.Array);
+const typeAggregator = Type.functionType(Type.Integer, [typeIntegerOrArray], { variadic: true });
+
+const funcSum = new Constant(
+	(...values: (bigint | bigint[])[])=>
+		values.flat().reduce((acc, val)=> acc + val, 0n),
+	typeAggregator,
+);
+
+const funcMin = new Constant(
+	(...values: (bigint | bigint[])[])=>
+		values.flat().reduce((max, val)=> val > max ? val : max),
+	typeAggregator,
+);
+
+const funcMax = new Constant(
+	(...values: (bigint | bigint[])[])=>
+		values.flat().reduce((min, val)=> val < min ? val : min),
+	typeAggregator,
+);
+
 const funcRandomInteger = new Constant(
-	(value: number)=>
-		value == null ? undefined : Math.floor(Math.random() * value),
-	Type.functionType(Type.Number, [Type.Number], { unstable: true }),
+	(value: bigint)=>
+		value == null ? undefined : BigInt(Math.floor(Math.random() * Number(value))),
+	Type.functionType(Type.Integer, [Type.Integer], { unstable: true }),
 );
 
 export const constInteger = new Constant({
+	Sum: funcSum.value,
+	Min: funcMin.value,
+	Max: funcMax.value,
 	Random: funcRandomInteger.value,
 }, Type.objectType({
+	Sum: funcSum.type,
+	Min: funcMin.type,
+	Max: funcMax.type,
 	Random: funcRandomInteger.type,
 }));

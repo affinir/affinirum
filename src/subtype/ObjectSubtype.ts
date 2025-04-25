@@ -31,7 +31,7 @@ export class ObjectSubtype implements ISubtype {
 					return false;
 				}
 			}
-			for(const prop in subtype._propTypes) {
+			for (const prop in subtype._propTypes) {
 				if (!this.propType(prop)) {
 					return false;
 				}
@@ -47,7 +47,7 @@ export class ObjectSubtype implements ISubtype {
 
 	toString(): string {
 		const entries = Object.entries(this._propTypes);
-		return entries.length ? `[${entries.map((i)=> i[0] + ': ' + i[1]).join(', ')}]` : '[:]';
+		return entries.length ? `[${entries.map((i)=> i[0] + ': ' + i[1].toString()).join(', ')}]` : '[:]';
 	}
 
 }

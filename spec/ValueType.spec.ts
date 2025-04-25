@@ -1,4 +1,4 @@
-import { Expression } from '../src/index.js';
+import { Affinirum } from '../src/index.js';
 
 describe('Expression Value Type test', ()=> {
 	([
@@ -23,10 +23,10 @@ describe('Expression Value Type test', ()=> {
 		['``', 'string'],
 		['" "', 'string'],
 		['"	"', 'string'],
-		['[]', 'array'],
-		['[0]', 'array'],
-		['[0,1,2,3]', 'array'],
-		['["0",1,2,"3"]', 'array'],
+		['[]', '[]'],
+		['[0]', '[]'],
+		['[0,1,2,3]', '[]'],
+		['["0",1,2,"3"]', '[]'],
 		['[:]', '[:]'],
 		['[`a`:100,`b`:"100"]', '[:]'],
 		['void (){null}', '{void()}'],
@@ -34,7 +34,7 @@ describe('Expression Value Type test', ()=> {
 	] as [string, string][]).forEach(([expr, expected])=> {
 		it(`parses expression ${expr} and determines value type`, ()=> {
 			try {
-				const expression = new Expression(expr);
+				const expression = new Affinirum(expr);
 				expect(expression).toBeDefined();
 				expression.evaluate({});
 				if (expression.type.toString() !== expected) {
