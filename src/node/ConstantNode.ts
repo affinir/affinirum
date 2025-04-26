@@ -29,7 +29,7 @@ export class ConstantNode extends Node {
 	}
 
 	override get constant(): boolean {
-		return !this._subnode && this._constant.type.stable();
+		return !this._subnode;
 	}
 
 	override toString(ident: number = 0): string {

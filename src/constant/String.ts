@@ -204,7 +204,7 @@ export const funcUpperCase = new Constant(
 export const funcSplit = new Constant(
 	(value: string, separator: string = ' ')=>
 		value.split(separator),
-	Type.functionType(Type.Array, [Type.String, Type.OptionalString]),
+	Type.functionType(Type.arrayType([Type.String]), [Type.String, Type.OptionalString]),
 );
 
 const funcRandomString = new Constant(
@@ -218,7 +218,7 @@ const funcRandomString = new Constant(
 		}
 		return str.slice(0, value);
 	},
-	Type.functionType(Type.String, [Type.Number], false, true),
+	Type.functionType(Type.String, [Type.Number], false, false),
 );
 
 const funcEncodeString = new Constant(

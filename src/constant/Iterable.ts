@@ -1,7 +1,6 @@
 import { Constant } from '../Constant.js';
 import { Value } from '../Value.js';
 import { Type } from '../Type.js';
-import { FunctionSubtype } from '../subtype/FunctionSubype.js';
 
 export const funcLength = new Constant(
 	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value })=>

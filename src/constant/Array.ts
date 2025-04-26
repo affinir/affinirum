@@ -3,12 +3,12 @@ import { Value } from '../Value.js';
 import { Type } from '../Type.js';
 import { equate } from './Unknown.js';
 
-const typeArrayOperator = Type.functionType(Type.Array, [Type.Array, Type.Array]);
 const typePredicate = Type.functionType(Type.Boolean, [Type.Unknown, Type.OptionalNumber, Type.OptionalArray]);
 const typeItemFinder = Type.functionType(Type.Unknown, [Type.Array, typePredicate]);
 const typeIndexFinder = Type.functionType(Type.Number, [Type.Array, typePredicate]);
 const typeConditionFinder = Type.functionType(Type.Boolean, [Type.Array, typePredicate]);
 const typeVariadicInsert = Type.functionType(Type.Array, [Type.Array, Type.Unknown], true);
+const typeArrayOperator = Type.functionType(Type.Array, [Type.Array, Type.Array]);
 
 export const funcFirst = new Constant(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>

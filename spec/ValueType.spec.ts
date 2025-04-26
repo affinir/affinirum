@@ -1,6 +1,6 @@
 import { Affinirum } from '../src/index.js';
 
-describe('Expression Value Type test', ()=> {
+describe('Value Type test', ()=> {
 	([
 		['null', 'void'],
 		['true', 'boolean'],

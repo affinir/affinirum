@@ -1,7 +1,7 @@
 import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
-const typeNumberOrArray = Type.union(Type.Number, Type.Array);
+const typeNumberOrArray = Type.union(Type.Number, Type.arrayType([Type.Number]));
 const typeAggregator = Type.functionType(Type.Number, [typeNumberOrArray], true);
 const typeNumberTransform = Type.functionType(Type.Number, [Type.Number]);
 
@@ -62,7 +62,7 @@ const funcRound = new Constant(
 const funcRandomNumber = new Constant(
 	(value: number)=>
 		value == null ? undefined : Math.random() * value,
-	Type.functionType(Type.Number, [Type.Number], false, true),
+	Type.functionType(Type.Number, [Type.Number], false, false),
 );
 
 const funcEncodeNumber = new Constant(

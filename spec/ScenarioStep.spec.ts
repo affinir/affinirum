@@ -1,6 +1,6 @@
 import { Affinirum, Type } from '../src/index.js';
 
-describe('Expression Complex test', ()=> {
+describe('Scenario Step test', ()=> {
 	it('parses and evaluates multiple times', ()=> {
 		const expression = new Affinirum('arr0.Any(boolean(a:number) { a > 0 } )');
 		expect(expression.evaluate({ arr0: [1, -2, -3, -4] })).toBeTrue();
@@ -14,9 +14,9 @@ describe('Expression Complex test', ()=> {
 		expect(variables.d.isString).toBeTrue();
 	});
 	it('defines variables in strict mode and evaluates', ()=> {
-		const expression = new Affinirum('predefined1*2 + predefined2',
+		const expression = new Affinirum('predefined1*2 + predefined2 + 26 * 13',
 			{ strict: true, variables: { predefined1: Type.Number, predefined2: Type.Number, myvar: Type.String } });
-		expect(expression.evaluate({ predefined1: 10, predefined2: 20 }) as number).toBe(40);
+		expect(expression.evaluate({ predefined1: 10, predefined2: 20 }) as number).toBe(378);
 	});
 	it('errors on undefines variables in strict mode', ()=> {
 		try {
@@ -28,11 +28,11 @@ describe('Expression Complex test', ()=> {
 		}
 	});
 	it('parses random number function and evaluates multiple times', ()=> {
-		const expression = new Affinirum('Number.Random(1000000) $$, 10 ');
+		const expression = new Affinirum('Number.Random(1000000)');
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses random string function and evaluates multiple times', ()=> {
-		const expression = new Affinirum('String.Random(20) $, 20$');
+		const expression = new Affinirum('String.Random(20)');
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses and evaluates null value conversion to text', ()=> {

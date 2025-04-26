@@ -4,6 +4,7 @@ import { Constant } from '../Constant.js';
 import { ConstantNode } from './ConstantNode.js';
 import { Value } from '../Value.js';
 import { Type } from '../Type.js';
+
 export class InvocationNode extends Node {
 
 	protected _type: Type;
@@ -14,7 +15,7 @@ export class InvocationNode extends Node {
 		protected _subnodes: Node[],
 	) {
 		super(frame);
-		this._type = this._fnode.type.mergeFunctionSubtype(Type.Unknown, _subnodes.length)?.retType ?? Type.Unknown;
+		this._type = this._fnode.type.mergeFunctionAtom(Type.Unknown, _subnodes.length)?.retType as Type ?? Type.Unknown;
 	}
 
 	override get type(): Type {
@@ -23,20 +24,20 @@ export class InvocationNode extends Node {
 
 	override compile(type: Type): Node {
 		this._fnode = this._fnode.compile(this._fnode.type);
-		const mergedFunctionSubtype = this._fnode.type.mergeFunctionSubtype(type, this._subnodes.length);
-		if (!mergedFunctionSubtype) {
+		const mergedFunctionAtom = this._fnode.type.mergeFunctionAtom(type, this._subnodes.length);
+		if (!mergedFunctionAtom) {
 			this.throwError(`function type ${this._fnode.type} mismatch with expected return type ${type} and ${this._subnodes.length} arguments`);
 		}
-		this._type = mergedFunctionSubtype.retType;
-		if (this._subnodes.length < mergedFunctionSubtype.minArity) {
-			this.throwError(`function requires ${mergedFunctionSubtype.minArity} arguments not ${this._subnodes.length}`);
+		this._type = mergedFunctionAtom.retType as Type;
+		if (this._subnodes.length < mergedFunctionAtom.minArity) {
+			this.throwError(`function requires ${mergedFunctionAtom.minArity} arguments not ${this._subnodes.length}`);
 		}
-		if (this._subnodes.length > mergedFunctionSubtype.maxArity) {
-			this.throwError(`function requires ${mergedFunctionSubtype.maxArity} arguments not ${this._subnodes.length}`);
+		if (this._subnodes.length > mergedFunctionAtom.maxArity) {
+			this.throwError(`function requires ${mergedFunctionAtom.maxArity} arguments not ${this._subnodes.length}`);
 		}
-		let constant = this._fnode.constant && (mergedFunctionSubtype?.stable() ?? true);
+		let constant = this._fnode.constant && !mergedFunctionAtom.isNondeterministic;
 		for (let i = 0; i < this._subnodes.length; ++i) {
-			this._subnodes[i] = this._subnodes[i].compile(mergedFunctionSubtype.argType(i));
+			this._subnodes[i] = this._subnodes[i].compile(mergedFunctionAtom.argType(i) as Type);
 			constant &&= this._subnodes[i].constant;
 		}
 		return constant ? new ConstantNode(this, new Constant(this.evaluate(), this.type)) : this;

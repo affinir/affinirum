@@ -1,13 +1,14 @@
 import { Value } from './Value.js';
-import { Primitive, PrimitiveSubtype } from './subtype/PrimitiveSubtype.js';
-import { ArraySubtype } from './subtype/ArraySubtype.js';
-import { ObjectSubtype } from './subtype/ObjectSubtype.js';
-import { FunctionSubtype } from './subtype/FunctionSubype.js';
+import { PrimitiveAtom } from './atom/PrimitiveAtom.js';
+import { ArrayAtom } from './atom/ArrayAtom.js';
+import { ObjectAtom } from './atom/ObjectAtom.js';
+import { FunctionAtom } from './atom/FunctionAtom.js';
 
-type Subtype = PrimitiveSubtype | ArraySubtype | ObjectSubtype | FunctionSubtype;
+export type Primitive = 'void' | 'number' | 'boolean' | 'timestamp' | 'integer' | 'buffer' | 'string';
+
+type Atom = PrimitiveAtom | ArrayAtom | ObjectAtom | FunctionAtom;
 
 export interface IType {
-	stable(): boolean;
 	match(subtype: IType): boolean;
 	weight(): number;
 	toString(): string;
@@ -15,106 +16,92 @@ export interface IType {
 
 export class Type implements IType {
 
-	protected readonly _subtypes: Subtype[] = [];
-
 	private constructor(
-		...subtypes: Subtype[]
-	) {
-		subtypes.forEach((i)=> {
-			if (!this.match(i)) {
-				this._subtypes.push(i);
-			}
-		});
-	}
+		protected readonly _atoms: Atom[] = [],
+	) {}
 
 	get isUnknown() {
-		return this._subtypes.length === 0;
+		return this._atoms.length === 0;
 	}
 
-	get isSubtype() {
-		return this._subtypes.length === 1;
+	get isAtom() {
+		return this._atoms.length === 1;
 	}
 
 	get isOptional() {
-		return this.isUnknown || this._subtypes.length > 1 && this._subtypes.some((i)=> i.match(Type.Void._subtypes[0]));
+		return this.isUnknown || this._atoms.length > 1 && this._atoms.some((i)=> i.match(Type.Void._atoms[0]));
 	}
 
 	get isVoid() {
-		return this.isSubtype && this._subtypes[0].match(Type.Void._subtypes[0]);
+		return this.isAtom && this._atoms[0].match(Type.Void._atoms[0]);
 	}
 
 	get isNumber() {
-		return this.isSubtype && this._subtypes[0].match(Type.Number._subtypes[0]);
+		return this.isAtom && this._atoms[0].match(Type.Number._atoms[0]);
 	}
 
 	get isBoolean() {
-		return this.isSubtype && this._subtypes[0].match(Type.Boolean._subtypes[0]);
+		return this.isAtom && this._atoms[0].match(Type.Boolean._atoms[0]);
 	}
 
 	get isTimestamp() {
-		return this.isSubtype && this._subtypes[0].match(Type.Timestamp._subtypes[0]);
+		return this.isAtom && this._atoms[0].match(Type.Timestamp._atoms[0]);
 	}
 
 	get isInteger() {
-		return this.isSubtype && this._subtypes[0].match(Type.Integer._subtypes[0]);
-	}
-
-	get isNumeric() {
-		return this._subtypes.length === 2
-			&& (this._subtypes[0].match(Type.Number._subtypes[0]) || this._subtypes[0].match(Type.Integer._subtypes[0]));
+		return this.isAtom && this._atoms[0].match(Type.Integer._atoms[0]);
 	}
 
 	get isBuffer() {
-		return this.isSubtype && this._subtypes[0].match(Type.Buffer._subtypes[0]);
+		return this.isAtom && this._atoms[0].match(Type.Buffer._atoms[0]);
 	}
 
 	get isString() {
-		return this.isSubtype && this._subtypes[0].match(Type.String._subtypes[0]);
+		return this.isAtom && this._atoms[0].match(Type.String._atoms[0]);
 	}
 
 	get isArray() {
-		return this._subtypes.every((i)=> i instanceof ArraySubtype);
+		return this._atoms.every((i)=> i instanceof ArrayAtom);
 	}
 
 	get isObject() {
-		return this._subtypes.every((i)=> i instanceof ObjectSubtype);
+		return this._atoms.every((i)=> i instanceof ObjectAtom);
 	}
 
 	get isFunction() {
-		return this._subtypes.every((i)=> i instanceof FunctionSubtype);
+		return this._atoms.every((i)=> i instanceof FunctionAtom);
+	}
+
+	get isNumeric() {
+		return this._atoms.length === 2
+			&& (this._atoms[0].match(Type.Number._atoms[0]) || this._atoms[0].match(Type.Integer._atoms[0]));
+	}
+
+	toOptional() {
+		return this._atoms.length ? Type.union(Type.Void, this) : this;
 	}
 
 	mergeFunctionRetType(type: Type) {
-		const subtypes = this._subtypes.filter((i)=>
-			i instanceof FunctionSubtype
-			&& i.retType.reduce(type)
-		) as FunctionSubtype[];
-		return Type.union(...subtypes.map((i)=> i.retType));
+		const atoms = this._atoms.filter((i)=> i instanceof FunctionAtom && i.retType.match(type)) as FunctionAtom[];
+		return Type.union(...atoms.map((i)=> i.retType as Type));
 	}
 
-	mergeFunctionSubtype(type: Type, argc: number) {
+	mergeFunctionAtom(type: Type, argc: number) {
 		if (this.isUnknown || type.isVoid) {
-			return new FunctionSubtype(type,
-				Array.from({ length: argc }).map(()=> Type.Unknown),
-				false, true);
+			return Type._functionAtom(type, Array.from({ length: argc }).map(()=> Type.Unknown), false, true);
 		}
-		const subtypes = this._subtypes.filter((i)=>
-			i instanceof FunctionSubtype && i.minArity <= argc && i.maxArity >= argc && i.retType.reduce(type)
-		) as FunctionSubtype[];
-		if (!subtypes.length) {
+		const atoms = this._atoms.filter((i)=>
+			i instanceof FunctionAtom && i.minArity <= argc && i.maxArity >= argc && i.retType.match(type)
+		) as FunctionAtom[];
+		if (!atoms.length) {
 			return undefined;
 		}
-		return new FunctionSubtype(Type.union(...subtypes.map((i)=> i.retType)),
-			Array.from({ length: argc }).map((_, ix)=> Type.union(...subtypes.map((i)=> i.argType(ix)))),
-			subtypes.some((i)=> i.variadic), subtypes.some((i)=> i.unstable));
-	}
-
-	stable(): boolean {
-		return this._subtypes.every((i)=> i.stable());
-	}
-
-	match(mask: Subtype) {
-		return this._subtypes.some((i)=> i.match(mask));
+		return Type._functionAtom(
+			Type.union(...atoms.map((i)=> i.retType as Type)),
+			Array.from({ length: argc }).map((_, ix)=> Type.union(...atoms.map((i)=> i.argType(ix) as Type))),
+			atoms.some((i)=> i.isVariadic),
+			atoms.some((i)=> i.isNondeterministic),
+		);
 	}
 
 	reduce(mask: Type) {
@@ -124,30 +111,44 @@ export class Type implements IType {
 		if (this.isUnknown) {
 			return mask;
 		}
-		const list = this._subtypes.filter((i)=> mask.match(i));
+		const list = this._atoms.filter((i)=> mask.match(i));
 		return list.length === 0
 			? undefined
-			: list.length === this._subtypes.length
+			: list.length === this._atoms.length
 				? this
-				: new Type(...list);
+				: new Type(list);
 	}
 
-	toOptional() {
-		return this._subtypes.length ? new Type(PrimitiveSubtype.Void, ...this._subtypes) : this;
+	match(type: IType): boolean {
+		if (type instanceof Type) {
+			return this.isUnknown || type.isUnknown || type.isVoid || this._atoms.some((i)=> type._atoms.some((j)=> i.match(j)));
+		}
+		else {
+			return this._atoms.some((i)=> i.match(type));
+		}
 	}
 
-	weight() {
-		return this._subtypes.reduce((acc, i)=> acc + i.weight(), 0);
+	weight(): number {
+		return this._atoms.reduce((acc, i)=> acc + i.weight(), 0);
 	}
 
-	toString() {
-		return this._subtypes.length
-			? this._subtypes.sort((a, b)=> a.weight() - b.weight()).map((i)=> i.toString()).join('|')
+	toString(): string {
+		return this._atoms.length
+			? this._atoms.sort((a, b)=> a.weight() - b.weight()).map((i)=> i.toString()).join('|')
 			: '??';
 	}
 
 	static union(...types: Type[]) {
-		return types.some((i)=> i.isUnknown) ? Type.Unknown : new Type(...types.map((i)=> i._subtypes).flat());
+		if (types.some((i)=> i.isUnknown)) {
+			return Type.Unknown;
+		}
+		const type = new Type([]);
+		types.map((i)=> i._atoms).flat().forEach((i)=> {
+			if (!type.match(i)) {
+				type._atoms.push(i);
+			}
+		});
+		return type;
 	}
 
 	static of(value: Value) {
@@ -182,47 +183,68 @@ export class Type implements IType {
 			|| typeof value === 'string';
 	}
 
-	static primitiveType(primitive: Primitive) {
-		return new Type(new PrimitiveSubtype(primitive));
+	static arrayType(itemTypes: Type[]) {
+		return new Type([new ArrayAtom(itemTypes)]);
 	}
 
 	static objectType(propTypes: Record<string, Type>) {
-		return new Type(new ObjectSubtype(propTypes));
+		return new Type([new ObjectAtom(propTypes)]);
 	}
 
-	static functionType(retType: Type, argTypes: Type[], variadic?: boolean, unstable?: boolean) {
-		return new Type(new FunctionSubtype(retType, argTypes, variadic, unstable));
+	static functionType(retType: Type, argTypes: Type[], isVariadic?: boolean, isNondeterministic?: boolean) {
+		return new Type([Type._functionAtom(retType, argTypes, isVariadic, isNondeterministic)]);
 	}
 
-	static functionTypeInference(argNum: number, retType: Type, argTypes: Type[], variadic?: boolean, unstable?: boolean) {
-		return new Type(...retType._subtypes.map((i)=> {
-			const rtype = new Type(i);
+	static functionTypeInference(argNum: number, retType: Type, argTypes: Type[], isVariadic?: boolean, isNondeterministic?: boolean) {
+		return new Type(retType._atoms.map((i)=> {
+			const rtype = new Type([i]);
 			const atypes = argTypes.map((t, ix)=> ix < argNum ? rtype : t);
-			return new FunctionSubtype(rtype, atypes, variadic, unstable);
+			return Type._functionAtom(rtype, atypes, isVariadic, isNondeterministic);
 		}));
 	}
 
 	static readonly Unknown = new Type();
-	static readonly Void = new Type(PrimitiveSubtype.Void);
-	static readonly Number = new Type(PrimitiveSubtype.Number);
+	static readonly Void = Type._primitiveType('void');
+	static readonly Number = Type._primitiveType('number');
 	static readonly OptionalNumber = Type.union(Type.Void, Type.Number);
-	static readonly Boolean = new Type(PrimitiveSubtype.Boolean);
+	static readonly Boolean = Type._primitiveType('boolean');
 	static readonly OptionalBoolean = Type.union(Type.Void, Type.Boolean);
-	static readonly Timestamp = new Type(PrimitiveSubtype.Timestamp);
+	static readonly Timestamp = Type._primitiveType('timestamp');
 	static readonly OptionalTimestamp = Type.union(Type.Void, Type.Timestamp);
-	static readonly Integer = new Type(PrimitiveSubtype.Integer);
+	static readonly Integer = Type._primitiveType('integer');
 	static readonly OptionalInteger = Type.union(Type.Void, Type.Integer);
-	static readonly Buffer = new Type(PrimitiveSubtype.Buffer);
+	static readonly Buffer = Type._primitiveType('buffer');
 	static readonly OptionalBuffer = Type.union(Type.Void, Type.Buffer);
-	static readonly String = new Type(PrimitiveSubtype.String);
+	static readonly String = Type._primitiveType('string');
 	static readonly OptionalString = Type.union(Type.Void, Type.String);
-	static readonly Array = new Type(new ArraySubtype([]));
+	static readonly Array = Type.arrayType([]);
 	static readonly OptionalArray = Type.union(Type.Void, Type.Array);
-	static readonly Object = new Type(new ObjectSubtype({}));
+	static readonly Object = Type.objectType({});
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
-	static readonly Function = new Type(new FunctionSubtype(Type.Unknown, [Type.Unknown], true));
+	static readonly Function = Type.functionType(Type.Unknown, [Type.Unknown], true);
 	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
 	static readonly Enumerable = Type.union(Type.Buffer, Type.String, Type.Array);
 	static readonly Iterable = Type.union(Type.Buffer, Type.String, Type.Array, Type.Object);
+
+	private static _primitiveType(primitive: Primitive) {
+		return new Type([new PrimitiveAtom(primitive)]);
+	}
+
+	private static _functionAtom(retType: Type, argTypes: Type[], isVariadic?: boolean, isNondeterministic?: boolean) {
+		let ix = 0;
+		while (ix < argTypes.length && !argTypes[ix].isOptional) {
+			++ix;
+		}
+		const minArity = ix;
+		if (ix < argTypes.length) {
+			while (ix < argTypes.length && argTypes[ix].isOptional) {
+				++ix;
+			}
+			if (ix < argTypes.length) {
+				throw new Error('a required parameter illegally follows an optional one');
+			}
+		}
+		return new FunctionAtom(retType, argTypes, minArity, isVariadic, isNondeterministic);
+	}
 
 }

@@ -1,7 +1,7 @@
 import { Affinirum } from '../src/index.js';
 import { replacerJSON } from '../src/constant/notation/JSON.js';
 
-describe('Expression Evaluation Result test', ()=> {
+describe('Evaluation Result test', ()=> {
 	([
 		['$ $null', [{ result: undefined }]],
 		['null', [{ result: undefined }]],

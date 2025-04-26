@@ -115,7 +115,7 @@ export class Affinirum {
 			}
 			const variable = variables[name];
 			const value = values?.[name] ?? undefined;
-			if (!variable.type.reduce(Type.of(value))) {
+			if (!variable.type.match(Type.of(value))) {
 				this._root.locate(name).throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
 			}
 			variable.value = value;
