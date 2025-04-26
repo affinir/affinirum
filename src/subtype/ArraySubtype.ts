@@ -1,6 +1,6 @@
-import { ISubtype, Type } from '../Type.js';
+import { IType, Type } from '../Type.js';
 
-export class ArraySubtype implements ISubtype {
+export class ArraySubtype implements IType {
 
 	constructor(
 		protected readonly _itemTypes: Type[],
@@ -15,10 +15,10 @@ export class ArraySubtype implements ISubtype {
 	}
 
 	stable(): boolean {
-		return this.types().every((i)=> i.stable);
+		return this.types().every((i)=> i.stable());
 	}
 
-	match(subtype: ISubtype): boolean {
+	match(subtype: IType): boolean {
 		if (subtype instanceof ArraySubtype) {
 			if (this.types().length === 0 || subtype.types().length === 0) {
 				return true;
@@ -36,12 +36,12 @@ export class ArraySubtype implements ISubtype {
 		return false
 	}
 
-	order(): number {
-		return 0x100 + this.types().reduce((acc, i)=> acc + i.order(), 0);
+	weight(): number {
+		return 0x100 + this.types().reduce((acc, i)=> acc + i.weight(), 0);
 	}
 
 	toString(): string {
-		return `[${this._itemTypes.join(', ')}]`;
+		return `[${this._itemTypes.join(',')}]`;
 	}
 
 }

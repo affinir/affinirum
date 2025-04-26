@@ -28,8 +28,8 @@ export const funcAt = new Constant(
 			return value[String(index)];
 		}
 	},
-	new Type(
-		new FunctionSubtype(Type.Unknown, [Type.Array, Type.Number]),
-		new FunctionSubtype(Type.Unknown, [Type.Object, Type.String])
+	Type.union(
+		Type.functionType(Type.Unknown, [Type.Array, Type.Number]),
+		Type.functionType(Type.Unknown, [Type.Object, Type.String])
 	),
 );

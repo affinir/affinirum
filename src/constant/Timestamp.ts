@@ -14,7 +14,7 @@ const parseTimestamp = (value?: number | string)=> {
 const funcNow = new Constant(
 	()=>
 		new Date(),
-	Type.functionType(Type.Timestamp, [], { unstable: true }),
+	Type.functionType(Type.Timestamp, [], false, true),
 );
 
 export const funcYear = new Constant(

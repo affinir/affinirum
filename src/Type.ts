@@ -2,22 +2,22 @@ import { Value } from './Value.js';
 import { Primitive, PrimitiveSubtype } from './subtype/PrimitiveSubtype.js';
 import { ArraySubtype } from './subtype/ArraySubtype.js';
 import { ObjectSubtype } from './subtype/ObjectSubtype.js';
-import { IFunctionSubtypeOptions, FunctionSubtype } from './subtype/FunctionSubype.js';
+import { FunctionSubtype } from './subtype/FunctionSubype.js';
 
 type Subtype = PrimitiveSubtype | ArraySubtype | ObjectSubtype | FunctionSubtype;
 
-export interface ISubtype {
+export interface IType {
 	stable(): boolean;
-	match(subtype: ISubtype): boolean;
-	order(): number;
+	match(subtype: IType): boolean;
+	weight(): number;
 	toString(): string;
 }
 
-export class Type {
+export class Type implements IType {
 
 	protected readonly _subtypes: Subtype[] = [];
 
-	constructor(
+	private constructor(
 		...subtypes: Subtype[]
 	) {
 		subtypes.forEach((i)=> {
@@ -96,7 +96,7 @@ export class Type {
 		if (this.isUnknown || type.isVoid) {
 			return new FunctionSubtype(type,
 				Array.from({ length: argc }).map(()=> Type.Unknown),
-				{ unstable: true, variadic: false });
+				false, true);
 		}
 		const subtypes = this._subtypes.filter((i)=>
 			i instanceof FunctionSubtype && i.minArity <= argc && i.maxArity >= argc && i.retType.reduce(type)
@@ -106,10 +106,10 @@ export class Type {
 		}
 		return new FunctionSubtype(Type.union(...subtypes.map((i)=> i.retType)),
 			Array.from({ length: argc }).map((_, ix)=> Type.union(...subtypes.map((i)=> i.argType(ix)))),
-			{ unstable: subtypes.some((i)=> i.unstable), variadic: subtypes.some((i)=> i.variadic) });
+			subtypes.some((i)=> i.variadic), subtypes.some((i)=> i.unstable));
 	}
 
-	get stable(): boolean {
+	stable(): boolean {
 		return this._subtypes.every((i)=> i.stable());
 	}
 
@@ -136,13 +136,13 @@ export class Type {
 		return this._subtypes.length ? new Type(PrimitiveSubtype.Void, ...this._subtypes) : this;
 	}
 
-	order() {
-		return this._subtypes.reduce((acc, i)=> acc + i.order(), 0);
+	weight() {
+		return this._subtypes.reduce((acc, i)=> acc + i.weight(), 0);
 	}
 
 	toString() {
 		return this._subtypes.length
-			? this._subtypes.sort((a, b)=> a.order() - b.order()).map((i)=> i.toString()).join('|')
+			? this._subtypes.sort((a, b)=> a.weight() - b.weight()).map((i)=> i.toString()).join('|')
 			: '??';
 	}
 
@@ -172,7 +172,7 @@ export class Type {
 											: Type.Function;
 	}
 
-	static isPrimitive(value: Value) {
+	static isPrimitiveType(value: Value) {
 		return value == null
 			|| typeof value === 'number'
 			|| typeof value === 'boolean'
@@ -190,15 +190,15 @@ export class Type {
 		return new Type(new ObjectSubtype(propTypes));
 	}
 
-	static functionType(retType: Type, argTypes: Type[], options?: IFunctionSubtypeOptions) {
-		return new Type(new FunctionSubtype(retType, argTypes, options));
+	static functionType(retType: Type, argTypes: Type[], variadic?: boolean, unstable?: boolean) {
+		return new Type(new FunctionSubtype(retType, argTypes, variadic, unstable));
 	}
 
-	static functionTypeInference(argNum: number, retType: Type, argTypes: Type[], options?: IFunctionSubtypeOptions) {
+	static functionTypeInference(argNum: number, retType: Type, argTypes: Type[], variadic?: boolean, unstable?: boolean) {
 		return new Type(...retType._subtypes.map((i)=> {
 			const rtype = new Type(i);
 			const atypes = argTypes.map((t, ix)=> ix < argNum ? rtype : t);
-			return new FunctionSubtype(rtype, atypes, options);
+			return new FunctionSubtype(rtype, atypes, variadic, unstable);
 		}));
 	}
 
@@ -220,7 +220,7 @@ export class Type {
 	static readonly OptionalArray = Type.union(Type.Void, Type.Array);
 	static readonly Object = new Type(new ObjectSubtype({}));
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
-	static readonly Function = new Type(new FunctionSubtype(Type.Unknown, [Type.Unknown], { variadic: true }));
+	static readonly Function = new Type(new FunctionSubtype(Type.Unknown, [Type.Unknown], true));
 	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
 	static readonly Enumerable = Type.union(Type.Buffer, Type.String, Type.Array);
 	static readonly Iterable = Type.union(Type.Buffer, Type.String, Type.Array, Type.Object);

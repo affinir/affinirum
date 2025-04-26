@@ -13,7 +13,7 @@ export class Constant {
 	}
 
 	get type() {
-		return Type.isPrimitive(this._value) ? Type.of(this._value) : this._type;
+		return Type.isPrimitiveType(this._value) ? Type.of(this._value) : this._type;
 	}
 
 	set type(type: Type) {

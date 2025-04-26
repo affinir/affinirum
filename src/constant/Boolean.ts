@@ -2,7 +2,7 @@ import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
 const typeBooleanOrArray = Type.union(Type.Boolean, Type.Array);
-const typeBooleanLogic = Type.functionType(Type.Boolean, [typeBooleanOrArray], { variadic: true });
+const typeBooleanLogic = Type.functionType(Type.Boolean, [typeBooleanOrArray], true);
 
 export const funcOr = new Constant(
 	(...values: (boolean | boolean[])[])=>

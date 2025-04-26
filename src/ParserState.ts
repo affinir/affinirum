@@ -32,6 +32,7 @@ const symbolBracesClose = Symbol();
 const symbolColonSeparator = Symbol();
 const symbolCommaSeparator = Symbol();
 const symbolOptionalType = Symbol();
+const symbolVariadicFunction = Symbol();
 const symbolVariableDefinition = Symbol();
 const symbolConstantDefinition = Symbol();
 const symbolWhile = Symbol();
@@ -122,6 +123,10 @@ export class ParserState extends ParserFrame {
 
 	get isOptionalType(): boolean {
 		return this._fragment === symbolOptionalType;
+	}
+
+	get isVariadicFunction(): boolean {
+		return this._fragment === symbolVariadicFunction;
 	}
 
 	get isVariableDefinition(): boolean {
@@ -314,7 +319,22 @@ export class ParserState extends ParserFrame {
 					}
 					break;
 				case '^': this._fragment = funcPower; break;
-				case '.': this._fragment = funcAt; break;
+				case '.':
+					switch (this._expr.charAt(this._end)) {
+						case '.':
+							if (this._expr.charAt(++this._end) === '.') {
+								++this._end;
+								this._fragment = symbolVariadicFunction;
+							}
+							else {
+								throw new Error(`incomplete ellipsis ...`);
+							}
+							break;
+						default:
+							this._fragment = funcAt;
+							break;
+					}
+					break;
 				case '@':
 					while (isDateSymbol(this._expr.charAt(this._end))) {
 						++this._end;

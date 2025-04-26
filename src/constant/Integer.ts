@@ -2,7 +2,7 @@ import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
 const typeIntegerOrArray = Type.union(Type.Integer, Type.Array);
-const typeAggregator = Type.functionType(Type.Integer, [typeIntegerOrArray], { variadic: true });
+const typeAggregator = Type.functionType(Type.Integer, [typeIntegerOrArray], true);
 
 const funcSum = new Constant(
 	(...values: (bigint | bigint[])[])=>
@@ -25,7 +25,7 @@ const funcMax = new Constant(
 const funcRandomInteger = new Constant(
 	(value: bigint)=>
 		value == null ? undefined : BigInt(Math.floor(Math.random() * Number(value))),
-	Type.functionType(Type.Integer, [Type.Integer], { unstable: true }),
+	Type.functionType(Type.Integer, [Type.Integer], false, true),
 );
 
 export const constInteger = new Constant({

@@ -60,7 +60,7 @@ export class Affinirum {
 			}
 		}
 		const state = new ParserState(this._script);
-		this._root = this.block(state.next(), this._scope);
+		this._root = this._block(state.next(), this._scope);
 		if (!state.isVoid) {
 			state.throwError('unexpected expression token or expression end');
 		}
@@ -123,36 +123,36 @@ export class Affinirum {
 		return this._root.evaluate();
 	}
 
-	protected block(state: ParserState, scope: StaticScope): Node {
+	protected _block(state: ParserState, scope: StaticScope): Node {
 		const frame = state.starts();
-		const nodes: Node[] = [this.unit(state, scope)];
+		const nodes: Node[] = [this._unit(state, scope)];
 		while (state.isCommaSeparator) {
-			nodes.push(this.unit(state.next(), scope));
+			nodes.push(this._unit(state.next(), scope));
 		}
 		return new BlockNode(frame.ends(state), nodes);
 	}
 
-	protected unit(state: ParserState, scope: StaticScope): Node {
-		return this.disjunction(state, scope);
+	protected _unit(state: ParserState, scope: StaticScope): Node {
+		return this._disjunction(state, scope);
 	}
 
-	protected disjunction(state: ParserState, scope: StaticScope): Node {
-		let node = this.conjunction(state, scope);
+	protected _disjunction(state: ParserState, scope: StaticScope): Node {
+		let node = this._conjunction(state, scope);
 		while (state.operator === funcOr) {
-			node = this.invoke(state.starts(), state.operator, [node, this.conjunction(state.next(), scope)]);
+			node = this._invoke(state.starts(), state.operator, [node, this._conjunction(state.next(), scope)]);
 		}
 		return node;
 	}
 
-	protected conjunction(state: ParserState, scope: StaticScope): Node {
-		let node = this.comparison(state, scope);
+	protected _conjunction(state: ParserState, scope: StaticScope): Node {
+		let node = this._comparison(state, scope);
 		while (state.operator === funcAnd) {
-			node = this.invoke(state.starts(), state.operator, [node, this.comparison(state.next(), scope)]);
+			node = this._invoke(state.starts(), state.operator, [node, this._comparison(state.next(), scope)]);
 		}
 		return node;
 	}
 
-	protected comparison(state: ParserState, scope: StaticScope): Node {
+	protected _comparison(state: ParserState, scope: StaticScope): Node {
 		const frame = state.starts();
 		let not = false;
 		while (state.operator === funcNot) {
@@ -160,35 +160,35 @@ export class Affinirum {
 			frame.starts(state);
 			state.next();
 		}
-		let node = this.aggregate(state, scope);
+		let node = this._aggregate(state, scope);
 		while (state.operator === funcGreaterThan || state.operator === funcLessThan
 			|| state.operator === funcGreaterOrEqual || state.operator === funcLessOrEqual
 			|| state.operator === funcEqual || state.operator === funcNotEqual) {
-			node = this.invoke(state.starts(), state.operator, [node, this.aggregate(state.next(), scope)]);
+			node = this._invoke(state.starts(), state.operator, [node, this._aggregate(state.next(), scope)]);
 		}
 		if (not) {
-			node = this.invoke(frame.ends(state), funcNot, [node]);
+			node = this._invoke(frame.ends(state), funcNot, [node]);
 		}
 		return node;
 	}
 
-	protected aggregate(state: ParserState, scope: StaticScope): Node {
-		let node = this.product(state, scope);
+	protected _aggregate(state: ParserState, scope: StaticScope): Node {
+		let node = this._product(state, scope);
 		while (state.operator === funcAdd || state.operator === funcSubtract) {
-			node = this.invoke(state.starts(), state.operator, [node, this.product(state.next(), scope)]);
+			node = this._invoke(state.starts(), state.operator, [node, this._product(state.next(), scope)]);
 		}
 		return node;
 	}
 
-	protected product(state: ParserState, scope: StaticScope): Node {
-		let node = this.factor(state, scope);
+	protected _product(state: ParserState, scope: StaticScope): Node {
+		let node = this._factor(state, scope);
 		while (state.operator === funcMultiply || state.operator === funcDivide || state.operator === funcRemainder) {
-			node = this.invoke(state.starts(), state.operator, [node, this.factor(state.next(), scope)]);
+			node = this._invoke(state.starts(), state.operator, [node, this._factor(state.next(), scope)]);
 		}
 		return node;
 	}
 
-	protected factor(state: ParserState, scope: StaticScope): Node {
+	protected _factor(state: ParserState, scope: StaticScope): Node {
 		const frame = state.starts();
 		let neg = false;
 		while (state.operator === funcSubtract) {
@@ -196,31 +196,31 @@ export class Affinirum {
 			frame.starts(state);
 			state.next();
 		}
-		let node = this.coalescence(state, scope);
+		let node = this._coalescence(state, scope);
 		while (state.operator === funcPower) {
-			node = this.invoke(state.starts(), state.operator, [node, this.coalescence(state.next(), scope)]);
+			node = this._invoke(state.starts(), state.operator, [node, this._coalescence(state.next(), scope)]);
 		}
 		if (neg) {
-			node = this.invoke(frame.ends(state), funcNegate, [node]);
+			node = this._invoke(frame.ends(state), funcNegate, [node]);
 		}
 		return node;
 	}
 
-	protected coalescence(state: ParserState, scope: StaticScope): Node {
-		let node = this.accessor(state, scope);
+	protected _coalescence(state: ParserState, scope: StaticScope): Node {
+		let node = this._accessor(state, scope);
 		while (state.operator === funcCoalesce) {
-			node = this.invoke(state.starts(), state.operator, [node, this.accessor(state.next(), scope)]);
+			node = this._invoke(state.starts(), state.operator, [node, this._accessor(state.next(), scope)]);
 		}
 		return node;
 	}
 
-	protected accessor(state: ParserState, scope: StaticScope): Node {
-		let node = this.term(state, scope);
+	protected _accessor(state: ParserState, scope: StaticScope): Node {
+		let node = this._term(state, scope);
 		while (state.operator === funcAt || state.isParenthesesOpen || state.isBracketsOpen) {
 			const frame = state.starts();
 			if (state.operator === funcAt) {
 				if (state.next().isLiteral && (typeof state.literalValue === 'string' || typeof state.literalValue === 'number')) {
-					node = this.invoke(frame.ends(state), funcAt, [node, new ConstantNode(state, new Constant(state.literalValue))]);
+					node = this._invoke(frame.ends(state), funcAt, [node, new ConstantNode(state, new Constant(state.literalValue))]);
 					state.next();
 				}
 				else if (state.isToken) {
@@ -230,20 +230,20 @@ export class Affinirum {
 						if (state.next().isParenthesesOpen) {
 							const subnodes: Node[] = [node];
 							while (!state.next().isParenthesesClose) {
-								subnodes.push(this.unit(state, scope));
+								subnodes.push(this._unit(state, scope));
 								if (!state.isCommaSeparator) {
 									break;
 								}
 							}
-							node = this.invoke(frame.ends(state), mfunction, subnodes);
+							node = this._invoke(frame.ends(state), mfunction, subnodes);
 							state.closeParentheses().next();
 						}
 						else {
-							node = this.invoke(frame, mfunction, [node]);
+							node = this._invoke(frame, mfunction, [node]);
 						}
 					}
 					else {
-						node = this.invoke(frame, funcAt, [node, new ConstantNode(state, new Constant(state.token))]);
+						node = this._invoke(frame, funcAt, [node, new ConstantNode(state, new Constant(state.token))]);
 						state.next();
 					}
 				}
@@ -254,7 +254,7 @@ export class Affinirum {
 			else if (state.isParenthesesOpen) {
 				const subnodes: Node[] = [];
 				while (!state.next().isParenthesesClose) {
-					subnodes.push(this.unit(state, scope));
+					subnodes.push(this._unit(state, scope));
 					if (!state.isCommaSeparator) {
 						break;
 					}
@@ -263,14 +263,14 @@ export class Affinirum {
 				state.closeParentheses().next();
 			}
 			else if (state.isBracketsOpen) {
-				node = this.invoke(frame, funcAt, [node, this.unit(state.next(), scope)]);
+				node = this._invoke(frame, funcAt, [node, this._unit(state.next(), scope)]);
 				state.closeBrackets().next();
 			}
 		}
 		return node;
 	}
 
-	protected term(state: ParserState, scope: StaticScope): Node {
+	protected _term(state: ParserState, scope: StaticScope): Node {
 		if (state.isLiteral) {
 			const frame = state.starts();
 			const constant = new Constant(state.literalValue);
@@ -303,17 +303,17 @@ export class Affinirum {
 				}
 				if (state.assignmentOperator) {
 					const operator = state.assignmentOperator;
-					const subnodes = [new VariableNode(frame, variable), this.unit(state.next(), scope)];
-					return new VariableNode(frame, variable, this.invoke(frame, operator, subnodes));
+					const subnodes = [new VariableNode(frame, variable), this._unit(state.next(), scope)];
+					return new VariableNode(frame, variable, this._invoke(frame, operator, subnodes));
 				}
 				else {
-					return new VariableNode(frame, variable, this.unit(state.next(), scope));
+					return new VariableNode(frame, variable, this._unit(state.next(), scope));
 				}
 			}
 			return new VariableNode(frame, variable);
 		}
 		else if (state.isBracesOpen) {
-			const node = this.block(state.next(), scope);
+			const node = this._block(state.next(), scope);
 			state.closeBraces().next();
 			return node;
 		}
@@ -321,7 +321,7 @@ export class Affinirum {
 			state.throwError('unexpected closing braces');
 		}
 		else if (state.isParenthesesOpen) {
-			const node = this.unit(state.next(), scope);
+			const node = this._unit(state.next(), scope);
 			state.closeParentheses().next();
 			return node;
 		}
@@ -338,10 +338,10 @@ export class Affinirum {
 					state.next();
 					break;
 				}
-				const node = this.unit(state, scope);
+				const node = this._unit(state, scope);
 				if (state.isColonSeparator) {
 					colon = true;
-					subnodes.push([node, this.unit(state.next(), scope)]);
+					subnodes.push([node, this._unit(state.next(), scope)]);
 				}
 				else {
 					subnodes.push([index++, node]);
@@ -386,18 +386,18 @@ export class Affinirum {
 				if (state.assignmentOperator) {
 					state.throwError(`illegal assignment to ${constant ? 'constant' : 'variable'} ${token}`);
 				}
-				return new VariableNode(frame, variable, this.unit(state.next(), scope));
+				return new VariableNode(frame, variable, this._unit(state.next(), scope));
 			}
 			return new VariableNode(frame, variable);
 		}
 		else if (state.isType) {
-			return this.subroutine(state, scope);
+			return this._function(state, scope);
 		}
 		else if (state.isWhile) {
-			return this.loop(state, scope);
+			return this._loop(state, scope);
 		}
 		else if (state.isIf) {
-			return this.switch(state, scope);
+			return this._switch(state, scope);
 		}
 		else if (state.isVoid) {
 			state.throwError('unexpected end of expression');
@@ -405,13 +405,14 @@ export class Affinirum {
 		state.throwError('unexpected expression token');
 	}
 
-	protected subroutine(state: ParserState, scope: StaticScope): Node {
+	protected _function(state: ParserState, scope: StaticScope): Node {
 		const frame = state.starts();
 		let type = state.type;
 		if (state.next().isOptionalType) {
 			type = type.toOptional();
 			state.next();
 		}
+		let variadic = false;
 		const variables = new Map<string, Variable>();
 		state.openParentheses();
 		while (!state.next().isParenthesesClose) {
@@ -431,6 +432,11 @@ export class Affinirum {
 				}
 			}
 			variables.set(token, new Variable(argType));
+			if (argType.isArray && state.isVariadicFunction) {
+				variadic = true;
+				state.next();
+				break;
+			}
 			if (!state.isCommaSeparator) {
 				break;
 			}
@@ -438,38 +444,38 @@ export class Affinirum {
 		state.closeParentheses();
 		frame.ends(state);
 		state.next().openBraces().next();
-		const subnode = this.block(state, scope.subscope(variables));
+		const subnode = this._block(state, scope.subscope(variables));
 		state.closeBraces().next();
 		const args = Array.from(variables.values());
 		const value = (...values: Value[])=> {
 			args.forEach((arg, ix)=> arg.value = values[ix]);
 			return subnode.evaluate();
 		};
-		const constant = new Constant(value, type ? Type.functionType(type, args.map((v)=> v.type)) : undefined);
+		const constant = new Constant(value, Type.functionType(type, args.map((v)=> v.type), variadic));
 		return new ConstantNode(frame, constant, subnode);
 	}
 
-	protected loop(state: ParserState, scope: StaticScope) {
+	protected _loop(state: ParserState, scope: StaticScope) {
 		const frame = state.starts();
-		const cnode = this.unit(state.next(), scope);
+		const cnode = this._unit(state.next(), scope);
 		frame.ends(state);
 		state.openBraces().next();
-		const subnode = this.block(state, scope);
+		const subnode = this._block(state, scope);
 		state.closeBraces().next();
 		return new LoopNode(frame, cnode, subnode);
 	}
 
-	protected switch(state: ParserState, scope: StaticScope) {
+	protected _switch(state: ParserState, scope: StaticScope) {
 		const frame = state.starts();
-		const cnode = this.unit(state.next(), scope);
+		const cnode = this._unit(state.next(), scope);
 		frame.ends(state);
 		const subnodes: Node[] = [];
 		state.openBraces().next();
-		subnodes.push(this.block(state, scope));
+		subnodes.push(this._block(state, scope));
 		state.closeBraces().next();
 		if (state.isElse) {
 			state.next().openBraces().next();
-			subnodes.push(this.block(state, scope));
+			subnodes.push(this._block(state, scope));
 			state.closeBraces().next();
 		}
 		else {
@@ -478,7 +484,7 @@ export class Affinirum {
 		return new SwitchNode(frame, cnode, subnodes);
 	}
 
-	protected invoke(frame: ParserFrame, func: Constant, subnodes: Node[]): Node {
+	protected _invoke(frame: ParserFrame, func: Constant, subnodes: Node[]): Node {
 		return new InvocationNode(frame, new ConstantNode(frame, func), subnodes);
 	}
 

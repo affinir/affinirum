@@ -1,16 +1,13 @@
-import { ISubtype, Type } from '../Type.js';
+import { IType, Type } from '../Type.js';
+import { PrimitiveSubtype } from './PrimitiveSubtype.js';
 
-export interface IFunctionSubtypeOptions {
-	unstable?: boolean,
-	variadic?: boolean,
-}
-
-export class FunctionSubtype implements ISubtype {
+export class FunctionSubtype implements IType {
 
 	constructor(
 		protected readonly _retType: Type,
 		protected readonly _argTypes: Type[],
-		protected readonly _options?: IFunctionSubtypeOptions,
+		protected readonly _variadic?: boolean,
+		protected readonly _unstable?: boolean,
 	) {
 		let i = _argTypes.length - 1;
 		while (i > 1) {
@@ -29,7 +26,7 @@ export class FunctionSubtype implements ISubtype {
 	}
 
 	get maxArity() {
-		return this._options?.variadic ? Number.POSITIVE_INFINITY : this._argTypes.length;
+		return this._variadic ? Number.POSITIVE_INFINITY : this._argTypes.length;
 	}
 
 	types() {
@@ -41,18 +38,18 @@ export class FunctionSubtype implements ISubtype {
 	}
 
 	get unstable() {
-		return this._options?.unstable ?? false;
+		return this._unstable ?? false;
 	}
 
 	get variadic() {
-		return this._options?.variadic ?? false;
+		return this._variadic ?? false;
 	}
 
 	stable(): boolean {
-		return !this._options?.unstable && this.types().every((i)=> i.stable);
+		return !this._unstable && this.types().every((i)=> i.stable());
 	}
 
-	match(subtype: ISubtype): boolean {
+	match(subtype: IType): boolean {
 		if (subtype instanceof FunctionSubtype) {
 			if (!this._retType.reduce(subtype._retType) || this.minArity > subtype.maxArity || this.maxArity < subtype.minArity) {
 				return false;
@@ -67,13 +64,13 @@ export class FunctionSubtype implements ISubtype {
 		return false;
 	}
 
-	order(): number {
-		return 0x100000000 + this.types().reduce((acc, i)=> acc + i.order(), 0);
+	weight(): number {
+		return 0x100000000 + this.types().reduce((acc, i)=> acc + i.weight(), 0);
 	}
 
 	toString(): string {
-		const argTypes = this._argTypes.map((i)=> i.toString()).join(', ');
-		return `{${this._retType.toString()}(${argTypes}${this._options?.variadic ? ',...' : ''})${this._options?.unstable ? '!!' : ''}}`;
+		const argTypes = this._argTypes.map((i)=> i.toString()).join(',');
+		return `{${this._retType.toString()}}(${argTypes}${this._variadic ? '...' : ''})${this._unstable ? '!!' : ''}`;
 	}
 
 }

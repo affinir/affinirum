@@ -4,13 +4,11 @@ import { Type } from '../Type.js';
 import { equate } from './Unknown.js';
 
 const typeArrayOperator = Type.functionType(Type.Array, [Type.Array, Type.Array]);
-const typeMutator = Type.functionType(Type.Unknown, [Type.Unknown, Type.OptionalNumber, Type.OptionalArray]);
 const typePredicate = Type.functionType(Type.Boolean, [Type.Unknown, Type.OptionalNumber, Type.OptionalArray]);
-const typeReducer = Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown, Type.OptionalNumber, Type.OptionalArray]);
-const typeComposer = Type.functionType(Type.Unknown, [Type.Object, Type.String, Type.OptionalNumber, Type.OptionalArray]);
 const typeItemFinder = Type.functionType(Type.Unknown, [Type.Array, typePredicate]);
 const typeIndexFinder = Type.functionType(Type.Number, [Type.Array, typePredicate]);
 const typeConditionFinder = Type.functionType(Type.Boolean, [Type.Array, typePredicate]);
+const typeVariadicInsert = Type.functionType(Type.Array, [Type.Array, Type.Unknown], true);
 
 export const funcFirst = new Constant(
 	(value: Value[], predicate: (v: Value, i: number, a: Value[])=> boolean)=>
@@ -86,7 +84,7 @@ export const funcReverse = new Constant(
 export const funcMutate = new Constant(
 	(value: Value[], transform: (v: Value, i: number, a: Value[])=> Value)=>
 		value?.map(transform),
-	Type.functionType(Type.Array, [Type.Array, typeMutator]),
+	Type.functionType(Type.Array, [Type.Array, Type.functionType(Type.Unknown, [Type.Unknown, Type.OptionalNumber, Type.OptionalArray])]),
 );
 
 export const funcFilter = new Constant(
@@ -98,7 +96,7 @@ export const funcFilter = new Constant(
 export const funcReduce = new Constant(
 	(value: Value[], reducer: (acc: Value, v: Value, i: number, arr: Value[])=> Value, initial?: Value)=>
 		initial != null ? value?.reduce(reducer, initial) : value?.reduce(reducer),
-	Type.functionType(Type.Unknown, [Type.Array, typeReducer, Type.Unknown]),
+	Type.functionType(Type.Unknown, [Type.Array, Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown, Type.OptionalNumber, Type.OptionalArray])]),
 );
 
 export const funcCompose = new Constant(
@@ -113,7 +111,29 @@ export const funcCompose = new Constant(
 		}
 		return obj;
 	},
-	Type.functionType(Type.Object, [Type.Array, typeComposer]),
+	Type.functionType(Type.Object, [Type.Array, Type.functionType(Type.Unknown, [Type.Object, Type.String, Type.OptionalNumber, Type.OptionalArray])]),
+);
+
+export const funcPrepend = new Constant(
+	(value: Value[], ...items: Value[])=> {
+		value.unshift(items);
+		return value;
+	},
+	typeVariadicInsert,
+);
+
+export const funcAppend = new Constant(
+	(value: Value[], ...items: Value[])=> {
+		value.push(items);
+		return value;
+	},
+	typeVariadicInsert,
+);
+
+export const funcJoin = new Constant(
+	(value: string[], separator: string = ' ')=>
+		value.join(separator),
+	Type.functionType(Type.String, [Type.Array, Type.OptionalString]),
 );
 
 const funcRange = new Constant(
@@ -127,7 +147,7 @@ const funcRange = new Constant(
 const funcChain = new Constant(
 	(...values: (Value[] | Value[][])[])=>
 		(values as []).flat(2).reduce((acc, val)=> [...acc, val], []),
-	Type.functionType(Type.Array, [Type.Array], { variadic: true }),
+	Type.functionType(Type.Array, [Type.Array], true),
 );
 
 const funcUnique = new Constant(

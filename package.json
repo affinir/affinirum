@@ -41,7 +41,7 @@
 		"lint-fix": "eslint ./src ./spec --fix",
 		"prepare": "npm run build && copyfiles ./cjs/package.json ./dst"
 	},
-	"license": "MIT",
+	"license": "AGPLv3.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/rbaghbanli/affinirum.git"

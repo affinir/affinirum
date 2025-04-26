@@ -116,7 +116,7 @@ export const funcAdd = new Constant(
 			return acc;
 		}, []);
 	},
-	Type.functionTypeInference(1, typeAggregatable, [typeAggregatable, typeAggregatable], { variadic: true }),
+	Type.functionTypeInference(1, typeAggregatable, [typeAggregatable, typeAggregatable], true),
 );
 
 export const funcSubtract = new Constant(
@@ -130,7 +130,7 @@ export const funcSubtract = new Constant(
 export const funcMultiply = new Constant(
 	(...values: number[] | bigint[])=>
 		values.reduce((acc: any, val: any)=> acc *= val),
-	Type.functionTypeInference(1, typeNumeric, [typeNumeric, typeNumeric], { variadic: true }),
+	Type.functionTypeInference(1, typeNumeric, [typeNumeric, typeNumeric], true),
 );
 
 export const funcDivide = new Constant(

@@ -1,13 +1,13 @@
 import { Constant } from './Constant.js';
 import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
-	funcFlatten, funcReverse, funcMutate, funcFilter, funcReduce, funcCompose } from './constant/Array.js';
+	funcFlatten, funcReverse, funcMutate, funcFilter, funcReduce, funcCompose, funcPrepend, funcAppend, funcJoin } from './constant/Array.js';
 import { funcByte } from './constant/Buffer.js';
 import { funcSlice } from './constant/Enumerable.js';
 import { funcLength, funcAt } from './constant/Iterable.js';
 import { funcEntries, funcKeys, funcValues } from './constant/Object.js';
 import { funcLike, funcUnlike, funcContains, funcStartsWith, funcEndsWith,
 	funcChar, funcCharCode, funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
-	funcJoin, funcSplit } from './constant/String.js';
+	funcSplit } from './constant/String.js';
 import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay,
 	funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime } from './constant/Timestamp.js';
 import { funcCoalesce, funcEqual, funcNotEqual, funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
@@ -28,6 +28,9 @@ export const Functions: [string, Constant][] = [
 	['Filter', funcFilter],
 	['Reduce', funcReduce],
 	['Compose', funcCompose],
+	['Prepend', funcPrepend],
+	['Append', funcAppend],
+	['Join', funcJoin],
 	// Buffer
 	['Byte', funcByte],
 	// Enumerable
@@ -67,7 +70,6 @@ export const Functions: [string, Constant][] = [
 	['TrimEnd', funcTrimEnd],
 	['LowerCase', funcLowerCase],
 	['UpperCase', funcUpperCase],
-	['Join', funcJoin],
 	['Split', funcSplit],
 	// Timestamp
 	['Year', funcYear],

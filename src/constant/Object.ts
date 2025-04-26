@@ -23,7 +23,7 @@ export const funcValues = new Constant(
 const funcMerge = new Constant(
 	(...values: ({ [ key: string ]: Value } | { [ key: string ]: Value }[])[])=>
 		values.flat().reduce((acc, val)=> Object.assign(acc, val), {}),
-	Type.functionType(Type.Object, [typeArrayOrObject], { variadic: true }),
+	Type.functionType(Type.Object, [typeArrayOrObject], true),
 );
 
 export const constObject = new Constant({

@@ -1,6 +1,6 @@
-import { ISubtype, Type } from '../Type.js';
+import { IType, Type } from '../Type.js';
 
-export class ObjectSubtype implements ISubtype {
+export class ObjectSubtype implements IType {
 
 	constructor(
 		protected readonly _propTypes: Record<string, Type>,
@@ -15,10 +15,10 @@ export class ObjectSubtype implements ISubtype {
 	}
 
 	stable(): boolean {
-		return this.types().every((i)=> i.stable);
+		return this.types().every((i)=> i.stable());
 	}
 
-	match(subtype: ISubtype): boolean {
+	match(subtype: IType): boolean {
 		if (subtype instanceof ObjectSubtype) {
 			if (this.types().length === 0 || subtype.types().length === 0) {
 				return true;
@@ -41,13 +41,13 @@ export class ObjectSubtype implements ISubtype {
 		return false
 	}
 
-	order(): number {
-		return 0x10000 + this.types().reduce((acc, i)=> acc + i.order(), 0);
+	weight(): number {
+		return 0x10000 + this.types().reduce((acc, i)=> acc + i.weight(), 0);
 	}
 
 	toString(): string {
 		const entries = Object.entries(this._propTypes);
-		return entries.length ? `[${entries.map((i)=> i[0] + ': ' + i[1].toString()).join(', ')}]` : '[:]';
+		return entries.length ? `[${entries.map((i)=> i[0] + ': ' + i[1].toString()).join(',')}]` : '[:]';
 	}
 
 }

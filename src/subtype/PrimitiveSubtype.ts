@@ -1,25 +1,29 @@
-import { ISubtype } from '../Type.js';
+import { IType } from '../Type.js';
 
 export type Primitive = 'void' | 'number' | 'boolean' | 'timestamp' | 'integer' | 'buffer' | 'string';
 
-export class PrimitiveSubtype implements ISubtype {
+export class PrimitiveSubtype implements IType {
 
 	constructor(
 		protected readonly _primitive: Primitive,
 	) {}
 
+	void(): boolean {
+		return false;//this._primitive === 'void';
+	}
+
 	stable(): boolean {
 		return true;
 	}
 
-	match(subtype: ISubtype): boolean {
-		if (subtype instanceof PrimitiveSubtype) {
-			return this._primitive === subtype._primitive;
+	match(type: IType): boolean {
+		if (type instanceof PrimitiveSubtype) {
+			return type._primitive === this._primitive;
 		}
 		return false;
 	}
 
-	order(): number {
+	weight(): number {
 		switch (this._primitive) {
 			case 'void': return 0;
 			case 'number': return 1;
