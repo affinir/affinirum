@@ -3,12 +3,11 @@ import { IType } from '../Type.js';
 export class FunctionAtom implements IType {
 
 	constructor(
-		protected readonly _retType: IType,
-		protected readonly _argTypes: IType[],
+		protected readonly _retType?: IType,
+		protected readonly _argTypes: IType[] = [],
 		protected readonly _minArity: number = _argTypes.length,
-		protected readonly _isVariadic?: boolean,
-	) {
-	}
+		protected readonly _isVariadic: boolean = false,
+	) {}
 
 	get retType() {
 		return this._retType;
@@ -27,7 +26,7 @@ export class FunctionAtom implements IType {
 	}
 
 	subtypes() {
-		return [this._retType, ...this._argTypes];
+		return this._retType ? [this._retType, ...this._argTypes] : [];
 	}
 
 	argType(index: number) {
@@ -36,6 +35,9 @@ export class FunctionAtom implements IType {
 
 	match(type: IType): boolean {
 		if (type instanceof FunctionAtom) {
+			if (!this._retType || !type._retType) {
+				return true;
+			}
 			if (!this._retType.match(type._retType) || this.minArity > type.maxArity || this.maxArity < type.minArity) {
 				return false;
 			}
@@ -55,7 +57,7 @@ export class FunctionAtom implements IType {
 
 	toString(): string {
 		const argTypes = this._argTypes.map((i)=> i.toString()).join(',');
-		return `:${this._retType.toString()}(${argTypes}${this.isVariadic ? '...' : ''})`;
+		return this._retType ? `~${this._retType.toString()}(${argTypes}${this.isVariadic ? '...' : ''})` : '~()';
 	}
 
 }

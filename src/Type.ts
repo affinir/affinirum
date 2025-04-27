@@ -81,9 +81,9 @@ export class Type implements IType {
 		return this._atoms.length ? Type.union(Type.Void, this) : this;
 	}
 
-	mergeFunctionRetType(type: Type) {
-		const atoms = this._atoms.filter((i)=> i instanceof FunctionAtom && i.retType.match(type)) as FunctionAtom[];
-		return Type.union(...atoms.map((i)=> i.retType as Type));
+	mergeFunctionAtomRetType(type: Type) {
+		const atoms = this._atoms.filter((i)=> i instanceof FunctionAtom && (!i.retType || i.retType.match(type))) as FunctionAtom[];
+		return Type.union(...atoms.map((i)=> i.retType as Type ?? Type.Unknown));
 	}
 
 	mergeFunctionAtom(type: Type, argc: number) {
@@ -91,13 +91,13 @@ export class Type implements IType {
 			return Type._functionAtom(type, Array.from({ length: argc }).map(()=> Type.Unknown), false);
 		}
 		const atoms = this._atoms.filter((i)=>
-			i instanceof FunctionAtom && i.minArity <= argc && i.maxArity >= argc && i.retType.match(type)
+			i instanceof FunctionAtom && i.minArity <= argc && i.maxArity >= argc && (!i.retType || i.retType.match(type))
 		) as FunctionAtom[];
 		if (!atoms.length) {
 			return undefined;
 		}
 		return Type._functionAtom(
-			Type.union(...atoms.map((i)=> i.retType as Type)),
+			Type.union(...atoms.map((i)=> i.retType as Type ?? Type.Unknown)),
 			Array.from({ length: argc }).map((_, ix)=> Type.union(...atoms.map((i)=> i.argType(ix) as Type))),
 			atoms.some((i)=> i.isVariadic),
 		);
@@ -182,19 +182,19 @@ export class Type implements IType {
 			|| typeof value === 'string';
 	}
 
-	static arrayType(itemTypes: Type[]) {
+	static arrayType(itemTypes: Type[] = []) {
 		return new Type([new ArrayAtom(itemTypes)]);
 	}
 
-	static objectType(propTypes: Record<string, Type>) {
+	static objectType(propTypes: Record<string, Type> = {}) {
 		return new Type([new ObjectAtom(propTypes)]);
 	}
 
-	static functionType(retType: Type, argTypes: Type[], isVariadic?: boolean) {
+	static functionType(retType?: Type, argTypes: Type[] = [], isVariadic: boolean = false) {
 		return new Type([Type._functionAtom(retType, argTypes, isVariadic)]);
 	}
 
-	static functionTypeInference(argNum: number, retType: Type, argTypes: Type[], isVariadic?: boolean) {
+	static functionTypeInference(argNum: number, retType: Type, argTypes: Type[], isVariadic: boolean = false) {
 		return new Type(retType._atoms.map((i)=> {
 			const rtype = new Type([i]);
 			const atypes = argTypes.map((t, ix)=> ix < argNum ? rtype : t);
@@ -216,11 +216,11 @@ export class Type implements IType {
 	static readonly OptionalBuffer = Type.union(Type.Void, Type.Buffer);
 	static readonly String = Type._primitiveType('string');
 	static readonly OptionalString = Type.union(Type.Void, Type.String);
-	static readonly Array = Type.arrayType([]);
+	static readonly Array = Type.arrayType();
 	static readonly OptionalArray = Type.union(Type.Void, Type.Array);
-	static readonly Object = Type.objectType({});
+	static readonly Object = Type.objectType();
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
-	static readonly Function = Type.functionType(Type.Unknown, [Type.Unknown], true);
+	static readonly Function = Type.functionType();
 	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
 	static readonly Enumerable = Type.union(Type.Buffer, Type.String, Type.Array);
 	static readonly Iterable = Type.union(Type.Buffer, Type.String, Type.Array, Type.Object);
@@ -229,7 +229,7 @@ export class Type implements IType {
 		return new Type([new PrimitiveAtom(primitive)]);
 	}
 
-	private static _functionAtom(retType: Type, argTypes: Type[], isVariadic?: boolean) {
+	private static _functionAtom(retType?: Type, argTypes: Type[] = [], isVariadic: boolean = false) {
 		let ix = 0;
 		while (ix < argTypes.length && !argTypes[ix].isOptional) {
 			++ix;

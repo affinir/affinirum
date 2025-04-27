@@ -5,7 +5,7 @@ import { ConstantNode } from './ConstantNode.js';
 import { Value } from '../Value.js';
 import { Type } from '../Type.js';
 
-export class InvocationNode extends Node {
+export class CallNode extends Node {
 
 	protected _type: Type;
 

@@ -31,6 +31,7 @@ const symbolBracesOpen = Symbol();
 const symbolBracesClose = Symbol();
 const symbolColonSeparator = Symbol();
 const symbolCommaSeparator = Symbol();
+const symbolTildaMark = Symbol();
 const symbolOptionalType = Symbol();
 const symbolVariadicFunction = Symbol();
 const symbolVariableDefinition = Symbol();
@@ -119,6 +120,10 @@ export class ParserState extends ParserFrame {
 
 	get isCommaSeparator(): boolean {
 		return this._fragment === symbolCommaSeparator;
+	}
+
+	get isTildaMark(): boolean {
+		return this._fragment === symbolTildaMark;
 	}
 
 	get isOptionalType(): boolean {
@@ -226,6 +231,7 @@ export class ParserState extends ParserFrame {
 				case '}': this._fragment = symbolBracesClose; break;
 				case ':': this._fragment = symbolColonSeparator; break;
 				case ',': this._fragment = symbolCommaSeparator; break;
+				case '~': this._fragment = symbolTildaMark; break;
 				case '?':
 					switch (this._expr.charAt(this._end)) {
 						case '?': ++this._end; this._fragment = Type.Unknown; break;

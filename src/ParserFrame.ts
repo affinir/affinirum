@@ -51,6 +51,10 @@ export class ParserFrame {
 			`${' '.repeat(expr.substring(offset, this._start).length)}^${'\''.repeat(length)}`);
 	}
 
+	toString() {
+		return `[${this._start}:${this._end}]`;
+	}
+
 }
 
 const SPACE_SYMBOLS = [

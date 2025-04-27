@@ -29,10 +29,10 @@ describe('Value Type test', ()=> {
 		['["0",1,2,"3"]', '[]'],
 		['[:]', '[:]'],
 		['[`a`:100,`b`:"100"]', '[:]'],
-		['void (){null}', ':void()'],
-		['boolean (i:number){i==0}', ':boolean(number)'],
-		['string (x:string, y:array...){y.Append(x), y.Join()}', ':string(string,[]...)'],
-		['number (x:integer, y:array...){y.Prepend(x), y.Length}', ':number(integer,[]...)'],
+		['~ void (){null}', '~void()'],
+		['~boolean (i:number){i==0}', '~boolean(number)'],
+		['~string (x:string, y:array...){y.Append(x), y.Join()}', '~string(string,[]...)'],
+		['~number (x:integer, y:array...){y.Prepend(x), y.Length}', '~number(integer,[]...)'],
 	] as [string, string][]).forEach(([expr, expected])=> {
 		it(`parses expression ${expr} and determines value type`, ()=> {
 			try {

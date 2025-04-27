@@ -2,7 +2,7 @@ import { Affinirum, Type } from '../src/index.js';
 
 describe('Scenario Step test', ()=> {
 	it('parses and evaluates multiple times', ()=> {
-		const expression = new Affinirum('arr0.Any(boolean(a:number) { a > 0 } )');
+		const expression = new Affinirum('arr0.Any(~boolean(a:number) { a > 0 } )');
 		expect(expression.evaluate({ arr0: [1, -2, -3, -4] })).toBeTrue();
 		expect(expression.evaluate({ arr0: [-1, -2, -3, -4] })).toBeFalse();
 	});

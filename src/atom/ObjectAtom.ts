@@ -3,8 +3,12 @@ import { IType } from '../Type.js';
 export class ObjectAtom implements IType {
 
 	constructor(
-		protected readonly _propTypes: Record<string, IType>,
+		protected readonly _propTypes: Record<string, IType> = {},
 	) {}
+
+	get empty(): boolean {
+		return Object.keys(this._propTypes).length === 0;
+	}
 
 	subtypes(): IType[] {
 		return Object.values(this._propTypes);
@@ -16,7 +20,7 @@ export class ObjectAtom implements IType {
 
 	match(type: IType): boolean {
 		if (type instanceof ObjectAtom) {
-			if (this.subtypes().length === 0 || type.subtypes().length === 0) {
+			if (this.empty || type.empty) {
 				return true;
 			}
 			for (const prop in this._propTypes) {

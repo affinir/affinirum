@@ -3,8 +3,12 @@ import { IType } from '../Type.js';
 export class ArrayAtom implements IType {
 
 	constructor(
-		protected readonly _itemTypes: IType[],
+		protected readonly _itemTypes: IType[] = [],
 	) {}
+
+	get empty(): boolean {
+		return this._itemTypes.length === 0;
+	}
 
 	subtypes(): IType[] {
 		return this._itemTypes;
@@ -16,7 +20,7 @@ export class ArrayAtom implements IType {
 
 	match(type: IType): boolean {
 		if (type instanceof ArrayAtom) {
-			if (this.subtypes().length === 0 || type.subtypes().length === 0) {
+			if (this.empty || type.empty) {
 				return true;
 			}
 			if (this.subtypes().length !== type.subtypes().length) {

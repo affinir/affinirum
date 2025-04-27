@@ -3,7 +3,7 @@ import { IType, Primitive } from '../Type.js';
 export class PrimitiveAtom implements IType {
 
 	constructor(
-		protected readonly _primitive: Primitive,
+		protected readonly _primitive: Primitive = 'void',
 	) {}
 
 	match(type: IType): boolean {
