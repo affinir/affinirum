@@ -218,7 +218,8 @@ const funcRandomString = new Constant(
 		}
 		return str.slice(0, value);
 	},
-	Type.functionType(Type.String, [Type.Number], false, false),
+	Type.functionType(Type.String, [Type.Number]),
+	false,
 );
 
 const funcEncodeString = new Constant(
@@ -262,12 +263,8 @@ const funcDecodeString = new Constant(
 	Type.functionType(Type.String, [Type.Buffer, Type.OptionalString, Type.OptionalNumber, Type.OptionalNumber]),
 );
 
-export const constString = new Constant({
-	Random: funcRandomString.value,
-	Encode: funcEncodeString.value,
-	Decode: funcDecodeString.value,
-}, Type.objectType({
-	Random: funcRandomString.type,
-	Encode: funcEncodeString.type,
-	Decode: funcDecodeString.type,
-}));
+export const constString = {
+	Random: funcRandomString,
+	Encode: funcEncodeString,
+	Decode: funcDecodeString,
+};

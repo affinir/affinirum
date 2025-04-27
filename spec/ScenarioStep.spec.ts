@@ -36,16 +36,16 @@ describe('Scenario Step test', ()=> {
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses and evaluates null value conversion to text', ()=> {
-		const expression = new Affinirum('AVN.Format(obj)');
-		expect(expression.evaluate({ obj: undefined }) as string).toBe('null');
+		const expression = new Affinirum('AVN.Format(obj0)');
+		expect(expression.evaluate({ obj0: undefined }) as string).toBe('null');
 	});
 	it('parses pure constant expression and compiles to a constant node', ()=> {
 		const expression = new Affinirum('("ABC" + Timestamp.Format(Timestamp.Parse("2000-01-01"))).Length');
 		expect(expression.type.toString()).toBe('number');
 	});
 	it('parses and evaluates value conversion to text', ()=> {
-		const expression = new Affinirum('AVN.Format(obj)');
-		expect(expression.evaluate({ obj: {
+		const expression = new Affinirum('AVN.Format(obj1)');
+		expect(expression.evaluate({ obj1: {
 			bool: true,
 			num: -50,
 			buf: new Uint8Array([10, 20, 30, 0, 4, 67, 12, 11, 200, 220, 0, 50]).buffer,

@@ -25,17 +25,13 @@ const funcMax = new Constant(
 const funcRandomInteger = new Constant(
 	(value: bigint)=>
 		value == null ? undefined : BigInt(Math.floor(Math.random() * Number(value))),
-	Type.functionType(Type.Integer, [Type.Integer], false, false),
+	Type.functionType(Type.Integer, [Type.Integer]),
+	false,
 );
 
-export const constInteger = new Constant({
-	Sum: funcSum.value,
-	Min: funcMin.value,
-	Max: funcMax.value,
-	Random: funcRandomInteger.value,
-}, Type.objectType({
-	Sum: funcSum.type,
-	Min: funcMin.type,
-	Max: funcMax.type,
-	Random: funcRandomInteger.type,
-}));
+export const constInteger = {
+	Sum: funcSum,
+	Min: funcMin,
+	Max: funcMax,
+	Random: funcRandomInteger,
+};

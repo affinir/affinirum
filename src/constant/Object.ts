@@ -25,8 +25,6 @@ const funcMerge = new Constant(
 	Type.functionType(Type.Object, [Type.union(Type.arrayType([Type.Object]), Type.Object)], true),
 );
 
-export const constObject = new Constant({
-	Merge: funcMerge.value,
-}, Type.objectType({
-	Merge: funcMerge.type,
-}));
+export const constObject = {
+	Merge: funcMerge,
+};

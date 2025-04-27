@@ -88,7 +88,7 @@ export class Type implements IType {
 
 	mergeFunctionAtom(type: Type, argc: number) {
 		if (this.isUnknown || type.isVoid) {
-			return Type._functionAtom(type, Array.from({ length: argc }).map(()=> Type.Unknown), false, true);
+			return Type._functionAtom(type, Array.from({ length: argc }).map(()=> Type.Unknown), false);
 		}
 		const atoms = this._atoms.filter((i)=>
 			i instanceof FunctionAtom && i.minArity <= argc && i.maxArity >= argc && i.retType.match(type)
@@ -100,7 +100,6 @@ export class Type implements IType {
 			Type.union(...atoms.map((i)=> i.retType as Type)),
 			Array.from({ length: argc }).map((_, ix)=> Type.union(...atoms.map((i)=> i.argType(ix) as Type))),
 			atoms.some((i)=> i.isVariadic),
-			atoms.some((i)=> i.isNondeterministic),
 		);
 	}
 
@@ -191,15 +190,15 @@ export class Type implements IType {
 		return new Type([new ObjectAtom(propTypes)]);
 	}
 
-	static functionType(retType: Type, argTypes: Type[], isVariadic?: boolean, isNondeterministic?: boolean) {
-		return new Type([Type._functionAtom(retType, argTypes, isVariadic, isNondeterministic)]);
+	static functionType(retType: Type, argTypes: Type[], isVariadic?: boolean) {
+		return new Type([Type._functionAtom(retType, argTypes, isVariadic)]);
 	}
 
-	static functionTypeInference(argNum: number, retType: Type, argTypes: Type[], isVariadic?: boolean, isNondeterministic?: boolean) {
+	static functionTypeInference(argNum: number, retType: Type, argTypes: Type[], isVariadic?: boolean) {
 		return new Type(retType._atoms.map((i)=> {
 			const rtype = new Type([i]);
 			const atypes = argTypes.map((t, ix)=> ix < argNum ? rtype : t);
-			return Type._functionAtom(rtype, atypes, isVariadic, isNondeterministic);
+			return Type._functionAtom(rtype, atypes, isVariadic);
 		}));
 	}
 
@@ -230,7 +229,7 @@ export class Type implements IType {
 		return new Type([new PrimitiveAtom(primitive)]);
 	}
 
-	private static _functionAtom(retType: Type, argTypes: Type[], isVariadic?: boolean, isNondeterministic?: boolean) {
+	private static _functionAtom(retType: Type, argTypes: Type[], isVariadic?: boolean) {
 		let ix = 0;
 		while (ix < argTypes.length && !argTypes[ix].isOptional) {
 			++ix;
@@ -244,7 +243,7 @@ export class Type implements IType {
 				throw new Error('a required parameter illegally follows an optional one');
 			}
 		}
-		return new FunctionAtom(retType, argTypes, minArity, isVariadic, isNondeterministic);
+		return new FunctionAtom(retType, argTypes, minArity, isVariadic);
 	}
 
 }

@@ -175,16 +175,10 @@ const funcDifference = new Constant(
 	typeArrayOperator,
 );
 
-export const constArray = new Constant({
-	Range: funcRange.value,
-	Chain: funcChain.value,
-	Unique: funcUnique.value,
-	Intersection: funcIntersection.value,
-	Difference: funcDifference.value,
-}, Type.objectType({
-	Range: funcRange.type,
-	Chain: funcChain.type,
-	Unique: funcUnique.type,
-	Intersection: funcIntersection.type,
-	Difference: funcDifference.type,
-}));
+export const constArray = {
+	Range: funcRange,
+	Chain: funcChain,
+	Unique: funcUnique,
+	Intersection: funcIntersection,
+	Difference: funcDifference,
+};

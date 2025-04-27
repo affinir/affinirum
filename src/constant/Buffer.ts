@@ -59,7 +59,8 @@ export const funcByte = new Constant(
 const funcRandomBuffer = new Constant(
 	(value: number)=>
 		value == null || value < 0 ? undefined : crypto.getRandomValues(new Uint8Array(value)),
-	Type.functionType(Type.Buffer, [Type.Number], false, false),
+	Type.functionType(Type.Buffer, [Type.Number]),
+	false,
 );
 
 const funcFormatBuffer = new Constant(
@@ -74,12 +75,8 @@ const funcParseBuffer = new Constant(
 	Type.functionType(Type.OptionalBuffer, [Type.OptionalString]),
 );
 
-export const constBuffer = new Constant({
-	Random: funcRandomBuffer.value,
-	Format: funcFormatBuffer.value,
-	Parse: funcParseBuffer.value,
-}, Type.objectType({
-	Random: funcRandomBuffer.type,
-	Format: funcFormatBuffer.type,
-	Parse: funcParseBuffer.type,
-}))
+export const constBuffer = {
+	Random: funcRandomBuffer,
+	Format: funcFormatBuffer,
+	Parse: funcParseBuffer,
+};

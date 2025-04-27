@@ -62,7 +62,8 @@ const funcRound = new Constant(
 const funcRandomNumber = new Constant(
 	(value: number)=>
 		value == null ? undefined : Math.random() * value,
-	Type.functionType(Type.Number, [Type.Number], false, false),
+	Type.functionType(Type.Number, [Type.Number]),
+	false,
 );
 
 const funcEncodeNumber = new Constant(
@@ -143,42 +144,23 @@ const funcParseNumber = new Constant(
 	Type.functionType(Type.OptionalNumber, [Type.OptionalString]),
 );
 
-export const constNumber = new Constant({
-	NAN: Number.NaN,
-	PositiveInfinity: Number.POSITIVE_INFINITY,
-	NegativeInfinity: Number.NEGATIVE_INFINITY,
-	Epsilon: Number.EPSILON,
-	Sum: funcSum.value,
-	Min: funcMin.value,
-	Max: funcMax.value,
-	Exponent: funcExponent.value,
-	Logarithm: funcLogarithm.value,
-	Abs: funcAbs.value,
-	Ceil: funcCeil.value,
-	Floor: funcFloor.value,
-	Round: funcRound.value,
-	Random: funcRandomNumber.value,
-	Encode: funcEncodeNumber.value,
-	Decode: funcDecodeNumber.value,
-	Format: funcFormatNumber.value,
-	Parse: funcParseNumber.value,
-}, Type.objectType({
-	NAN: Type.Number,
-	PositiveInfinity: Type.Number,
-	NegativeInfinity: Type.Number,
-	Epsilon: Type.Number,
-	Sum: funcSum.type,
-	Min: funcMin.type,
-	Max: funcMax.type,
-	Exponent: funcExponent.type,
-	Logarithm: funcLogarithm.type,
-	Abs: funcAbs.type,
-	Ceil: funcCeil.type,
-	Floor: funcFloor.type,
-	Round: funcRound.type,
-	Random: funcRandomNumber.type,
-	Encode: funcEncodeNumber.type,
-	Decode: funcDecodeNumber.type,
-	Format: funcFormatNumber.type,
-	Parse: funcParseNumber.type,
-}));
+export const constNumber = {
+	NAN: new Constant(Number.NaN),
+	PositiveInfinity: new Constant(Number.POSITIVE_INFINITY),
+	NegativeInfinity: new Constant(Number.NEGATIVE_INFINITY),
+	Epsilon: new Constant(Number.EPSILON),
+	Sum: funcSum,
+	Min: funcMin,
+	Max: funcMax,
+	Exponent: funcExponent,
+	Logarithm: funcLogarithm,
+	Abs: funcAbs,
+	Ceil: funcCeil,
+	Floor: funcFloor,
+	Round: funcRound,
+	Random: funcRandomNumber,
+	Encode: funcEncodeNumber,
+	Decode: funcDecodeNumber,
+	Format: funcFormatNumber,
+	Parse: funcParseNumber,
+};

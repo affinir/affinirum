@@ -14,7 +14,8 @@ const parseTimestamp = (value?: number | string)=> {
 const funcNow = new Constant(
 	()=>
 		new Date(),
-	Type.functionType(Type.Timestamp, [], false, false),
+	Type.functionType(Type.Timestamp, []),
+	false,
 );
 
 export const funcYear = new Constant(
@@ -77,12 +78,8 @@ const funcParseTimestamp = new Constant(
 	Type.functionType(Type.Timestamp, [Type.String]),
 );
 
-export const constTimestamp = new Constant({
-	Now: funcNow.value,
-	Format: funcFormatTimestamp.value,
-	Parse: funcParseTimestamp.value,
-}, Type.objectType({
-	Now: funcNow.type,
-	Format: funcFormatTimestamp.type,
-	Parse: funcParseTimestamp.type,
-}));
+export const constTimestamp = {
+	Now: funcNow,
+	Format: funcFormatTimestamp,
+	Parse: funcParseTimestamp,
+};

@@ -18,10 +18,7 @@ const funcParseJSON = new Constant(
 	Type.functionType(typeJson, [Type.OptionalString]),
 )
 
-export const constJSON = new Constant({
-	Format: funcFormatJSON.value,
-	Parse: funcParseJSON.value,
-}, Type.objectType({
-	Format: funcFormatJSON.type,
-	Parse: funcParseJSON.type,
-}));
+export const constJSON = {
+	Format: funcFormatJSON,
+	Parse: funcParseJSON,
+};

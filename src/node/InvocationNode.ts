@@ -35,7 +35,7 @@ export class InvocationNode extends Node {
 		if (this._subnodes.length > mergedFunctionAtom.maxArity) {
 			this.throwError(`function requires ${mergedFunctionAtom.maxArity} arguments not ${this._subnodes.length}`);
 		}
-		let constant = this._fnode.constant && !mergedFunctionAtom.isNondeterministic;
+		let constant = this._fnode.constant;
 		for (let i = 0; i < this._subnodes.length; ++i) {
 			this._subnodes[i] = this._subnodes[i].compile(mergedFunctionAtom.argType(i) as Type);
 			constant &&= this._subnodes[i].constant;

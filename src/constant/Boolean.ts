@@ -34,16 +34,10 @@ const funcParseBoolean = new Constant(
 	Type.functionType(Type.OptionalBoolean, [Type.OptionalString]),
 );
 
-export const constBoolean = new Constant({
-	Or: funcOr.value,
-	And: funcAnd.value,
-	Not: funcNot.value,
-	Format: funcFormatBoolean.value,
-	Parse: funcParseBoolean.value,
-}, Type.objectType({
-	Or: funcOr.type,
-	And: funcAnd.type,
-	Not: funcNot.type,
-	Format: funcFormatBoolean.type,
-	Parse: funcParseBoolean.type,
-}));
+export const constBoolean = {
+	Or: funcOr,
+	And: funcAnd,
+	Not: funcNot,
+	Format: funcFormatBoolean,
+	Parse: funcParseBoolean,
+};

@@ -7,7 +7,6 @@ export class FunctionAtom implements IType {
 		protected readonly _argTypes: IType[],
 		protected readonly _minArity: number = _argTypes.length,
 		protected readonly _isVariadic?: boolean,
-		protected readonly _isNondeterministic?: boolean,
 	) {
 	}
 
@@ -25,10 +24,6 @@ export class FunctionAtom implements IType {
 
 	get isVariadic() {
 		return this._isVariadic;
-	}
-
-	get isNondeterministic() {
-		return this._isNondeterministic;
 	}
 
 	subtypes() {
@@ -60,7 +55,7 @@ export class FunctionAtom implements IType {
 
 	toString(): string {
 		const argTypes = this._argTypes.map((i)=> i.toString()).join(',');
-		return `{${this._retType.toString()}}(${argTypes}${this.isVariadic ? '...' : ''})`;
+		return `:${this._retType.toString()}(${argTypes}${this.isVariadic ? '...' : ''})`;
 	}
 
 }

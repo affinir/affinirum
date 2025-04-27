@@ -10,7 +10,7 @@ import { constTimestamp } from './constant/Timestamp.js';
 import { constAVN } from './constant/notation/AVN.js';
 import { constJSON } from './constant/notation/JSON.js';
 
-export const Constants: [string, Constant][] = [
+export const Constants: [string, Record<string, Constant>][] = [
 	['Array', constArray],
 	['Boolean', constBoolean],
 	['Buffer', constBuffer],

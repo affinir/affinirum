@@ -29,7 +29,7 @@ export class Affinirum {
 	protected readonly _strict: boolean;
 	protected readonly _root: Node;
 	protected readonly _variables = new Map<string, Variable>();
-	protected readonly _constants = new Map<string, Constant>(Constants);
+	protected readonly _constants = new Map<string, Record<string, Constant>>(Constants);
 	protected readonly _functions = new Map<string, Constant>(Functions);
 	protected readonly _scope = new StaticScope();
 
@@ -44,19 +44,12 @@ export class Affinirum {
 		type?: Type,
 		strict?: boolean,
 		variables?: Record<string, Type>,
-		constants?: Record<string, [Value, Type?]>,
 	}) {
 		this._script = script;
 		this._strict = config?.strict ?? false;
 		if (config?.variables) {
 			for (const v in config.variables) {
 				this._variables.set(v, new Variable(config.variables[v]));
-			}
-		}
-		if (config?.constants) {
-			for (const c in config.constants) {
-				const [value, type] = config.constants[c];
-				this._constants.set(c, new Constant(value, type));
 			}
 		}
 		const state = new ParserState(this._script);
@@ -225,8 +218,8 @@ export class Affinirum {
 				}
 				else if (state.isToken) {
 					frame.ends(state);
-					const mfunction = this._functions.get(state.token);
-					if (mfunction) {
+					const func = this._functions.get(state.token);
+					if (func) {
 						if (state.next().isParenthesesOpen) {
 							const subnodes: Node[] = [node];
 							while (!state.next().isParenthesesClose) {
@@ -235,11 +228,11 @@ export class Affinirum {
 									break;
 								}
 							}
-							node = this._invoke(frame.ends(state), mfunction, subnodes);
+							node = this._invoke(frame.ends(state), func, subnodes);
 							state.closeParentheses().next();
 						}
 						else {
-							node = this._invoke(frame, mfunction, [node]);
+							node = this._invoke(frame, func, [node]);
 						}
 					}
 					else {
@@ -279,8 +272,18 @@ export class Affinirum {
 		}
 		else if (state.isToken) {
 			const frame = state.starts();
-			const constant = this._constants.get(state.token);
-			if (constant != null) {
+			const constants = this._constants.get(state.token);
+			if (constants != null) {
+				if (state.next().operator !== funcAt) {
+					state.throwError('missing constant accessor operator');
+				}
+				if (!state.next().isToken) {
+					state.throwError('missing constant name');
+				}
+				const constant = constants[state.token];
+				if (!constant) {
+					state.throwError(`unknown constant ${state.token}`);
+				}
 				state.next();
 				return new ConstantNode(frame, constant);
 			}
@@ -330,7 +333,7 @@ export class Affinirum {
 		}
 		else if (state.isBracketsOpen) {
 			const frame = state.starts();
-			const subnodes: [ Node | number, Node ][] = [];
+			const subnodes: [number | Node, Node][] = [];
 			let index = 0, colon = false;
 			while (!state.next().isBracketsClose) {
 				if (state.isColonSeparator) {
@@ -403,6 +406,70 @@ export class Affinirum {
 			state.throwError('unexpected end of expression');
 		}
 		state.throwError('unexpected expression token');
+	}
+
+	protected _type(state: ParserState, scope: StaticScope): Type {
+		if (state.isType) {
+			let type = state.type;
+			if (state.next().isOptionalType) {
+				type = type.toOptional();
+				state.next();
+			}
+			if (state.operator === funcOr) {
+				return Type.union(type, this._type(state.next(), scope));
+			}
+			else if (state.isParenthesesOpen) {
+				const argTypes: Type[] = [];
+				let variadic = false;
+				while (!state.next().isParenthesesClose) {
+					const argType = this._type(state, scope);
+					argTypes.push(argType);
+					if (argType.isArray && state.isVariadicFunction) {
+						variadic = true;
+						state.next();
+						break;
+					}
+					if (!state.isCommaSeparator) {
+						break;
+					}
+				}
+				state.closeParentheses().next();
+				return Type.functionType(type, argTypes, variadic);
+			}
+			return type;
+		}
+		else if (state.isBracketsOpen) {
+			const itemPropTypes: [number | string, Type][] = [];
+			let index = 0, colon = false;
+			while (!state.next().isBracketsClose) {
+				if (state.isColonSeparator) {
+					colon = true;
+					state.next();
+					break;
+				}
+				if (state.isType) {
+					itemPropTypes.push([index++, this._type(state, scope)]);
+				}
+				else if (state.isToken) {
+					const token = state.token;
+					state.next().separateByColon().next();
+					itemPropTypes.push([token, this._type(state, scope)]);
+				}
+				else {
+					state.throwError('missing type or property name');
+				}
+				if (!state.isCommaSeparator) {
+					break;
+				}
+			}
+			state.closeBrackets().next();
+			return colon
+				? Type.objectType(Object.fromEntries(itemPropTypes.map(([prop, type]) => [prop as string, type])))
+				: Type.arrayType(itemPropTypes.map(([, v])=> v));
+		}
+		else {
+			state.throwError('missing type name');
+		}
 	}
 
 	protected _function(state: ParserState, scope: StaticScope): Node {

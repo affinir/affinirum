@@ -41,8 +41,6 @@ const funcFormatAVN = new Constant(
 	Type.functionType(Type.String, [Type.Unknown, Type.OptionalString]),
 );
 
-export const constAVN = new Constant({
-	Format: funcFormatAVN.value,
-}, Type.objectType({
-	Format: funcFormatAVN.type,
-}));
+export const constAVN = {
+	Format: funcFormatAVN,
+};
