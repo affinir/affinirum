@@ -34,11 +34,6 @@ export class ParserFrame {
 		return new ParserFrame(this._expr, this._start, this._end);
 	}
 
-	locate(token: string) {
-		const index = this._expr.indexOf(token);
-		return new ParserFrame(this._expr, index, index + token.length)
-	}
-
 	throwError(message: string): never {
 		const offset = this._start < 32 ? 0 : this._start - 32;
 		const length = this._end < this._start ? 0 : this._end - this._start - 1;

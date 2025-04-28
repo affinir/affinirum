@@ -93,10 +93,10 @@ export const funcLessOrEqual = new Constant(
 export const funcAdd = new Constant(
 	(...values: number[] | bigint[] | ArrayBuffer[] | string[] | Value[][])=> {
 		if (typeof values[0] === 'number') {
-			return (values as number[]).reduce((acc, val)=> acc + val, 0);
+			return (values as number[]).reduce((acc, val)=> acc + Number(val), 0);
 		}
 		if (typeof values[0] === 'bigint') {
-			return (values as bigint[]).reduce((acc, val)=> acc + val, 0n);
+			return (values as bigint[]).reduce((acc, val)=> acc + BigInt(val), 0n);
 		}
 		if (values[0] instanceof ArrayBuffer) {
 			const length = (values as ArrayBuffer[]).reduce((acc, val)=> acc + val.byteLength, 0);

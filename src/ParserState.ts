@@ -29,6 +29,7 @@ const symbolBracketsOpen = Symbol();
 const symbolBracketsClose = Symbol();
 const symbolBracesOpen = Symbol();
 const symbolBracesClose = Symbol();
+const symbolSemicolonSeparator = Symbol();
 const symbolColonSeparator = Symbol();
 const symbolCommaSeparator = Symbol();
 const symbolTildaMark = Symbol();
@@ -112,6 +113,10 @@ export class ParserState extends ParserFrame {
 
 	get isBracesClose(): boolean {
 		return this._fragment === symbolBracesClose;
+	}
+
+	get isSemicolonSeparator(): boolean {
+		return this._fragment === symbolSemicolonSeparator;
 	}
 
 	get isColonSeparator(): boolean {
@@ -229,6 +234,7 @@ export class ParserState extends ParserFrame {
 				case ']': this._fragment = symbolBracketsClose; break;
 				case '{': this._fragment = symbolBracesOpen; break;
 				case '}': this._fragment = symbolBracesClose; break;
+				case ';': this._fragment = symbolSemicolonSeparator; break;
 				case ':': this._fragment = symbolColonSeparator; break;
 				case ',': this._fragment = symbolCommaSeparator; break;
 				case '~': this._fragment = symbolTildaMark; break;

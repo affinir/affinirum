@@ -84,7 +84,7 @@ describe('Evaluation Result test', ()=> {
 		['[0,1,2,3,4].Join(":")', [{ result: '0:1:2:3:4' }]],
 		['v.Split()[i]', [{ v: 'The quick brown fox', i: 2, result: 'brown' }, { v: 'The quick brown fox', i: 0, result: 'The' }]],
 		['v.Split(s)[i]', [{ v: 'The quick brown fox', s: ' ', i: 2, result: 'brown' }, { v: 'The~quick~brown~~fox', s: '~', i: 1, result: 'quick' }]],
-		['var a=[0,10,200,3000,40000], a[1] + a.At(2)', [{ result: 210 }]],
+		['var a=[0,10,200,3000,40000]; a[1] + a.At(2)', [{ result: 210 }]],
 		['[100,200,300][1]+[1,2,3][0]', [{ result: 201 }]],
 		['[0,1,2,3].Add([10,20,30,40])[5]', [{ result: 20 }]],
 		['[1,2,3,4].Reduce(\n~number (a:number, b : number){a.Subtract(b)}\n)', [{ result: -8 }]],
@@ -95,8 +95,8 @@ describe('Evaluation Result test', ()=> {
 		['arr0[i]', [{ arr0: [10, 20, 30, 50], i: 0, result: 10 }, { arr0: [], i: 5, result: undefined }]],
 		['arr0[1] + obj0[1]', [{ arr0: [undefined, 10, 20], obj0: { a: undefined, '1': 100 }, result: 110 }, { arr0: [1, 2], obj0: { a: 1, '1': 1 }, result: 3 }]],
 		['Array.Range(start, end)[0] + Array.Range(start, end)[1]', [{ start: 5, end: 10, result: 11 }, { start: -5, end: -10, result: -19 }]],
-		['var s:number=0,Array.Range(start, end).Mutate(~void(x:number){s=s+x}),s', [{ start: 1, end: 11, result: 55 }, { start: -1, end: -11, result: -65 }]],
-		['[p,11].Mutate(~ number?(a:number) {const t=10, if (a>10){t}else{null} } )[i]', [{ i: 1, p: 10, result: 10 }, { i: 0, p: 1, result: undefined }]],
+		['var s:number=0;Array.Range(start, end).Mutate(~void(x:number){s=s+x});s', [{ start: 1, end: 11, result: 55 }, { start: -1, end: -11, result: -65 }]],
+		['[p,11].Mutate(~ number?(a:number) {const t=10; if (a>10){t}else{null} } )[i]', [{ i: 1, p: 10, result: 10 }, { i: 0, p: 1, result: undefined }]],
 		['[p,p,1, 2, 3].Mutate(~number?(a:number?){a?:10})[1]', [{ p: undefined, result: 10 }, { p: 0, result: 0 }]],
 		['arr1.First(~boolean(v:number, i:number){v==2})', [{ arr1: [1, 2, 3], result: 2 }, { arr1: [2, 2, 3], result: 2 }]],
 		['arr1.Last(~boolean(v:number, i:number){(i==1)})', [{ arr1: [1, 2, 3], result: 2 }, { arr1: [10, 20, 30], result: 20 }]],
@@ -108,7 +108,7 @@ describe('Evaluation Result test', ()=> {
 		['arr0.Any(~boolean(a:object){a.i>0 & a.d>0})', [{ arr0: [{ i: -1, d: -1 }, { i: -1, d: 5 }, { i: 1, d: 1 }], result: true }]],
 		['arr0.Any(~boolean(a:number) { a > 0 } )', [{ arr0: [1, -2, -3, -4], result: true }, { arr0: [-1, -2, -3, -4], result: false }]],
 		['arr0.Every(~boolean(a:number) { a > 0 } )', [{ arr0: [1, 2, 3, 4], result: true }, { arr0: [1, -2, 3, 4], result: false }]],
-		['const x=arr0.Any(~boolean(a:number){a<0}),var b:boolean=c,x&b', [{ arr0: [0, -1], c: true, result: true }]],
+		['const x=arr0.Any(~boolean(a:number){a<0});var b:boolean=c;x&b', [{ arr0: [0, -1], c: true, result: true }]],
 		['[`a`:a1+a2, "b": b1, "c": "10", `d`: a1*a2, "p": 10][p]', [{ a1: 1, a2: 2, b1: 'b', p: 'd', result: 2 }, { a1: -2, a2: 18, b1: 'bb', p: 'a', result: 16 }]],
 		['[`n`:50,"a" : 10,"b":`my string`,][p]', [{ p: 'n', result: 50 }, { p: 'a', result: 10 }, { p: 'b', result: 'my string' }]],
 		['(Object.Merge(a,b)).i == 0', [{ a: { f: 0, d: 0 }, b: { i: 0 }, result: true }, { a: { i: 50, d: 0 }, b: { i: 0 }, result: true }]],
@@ -117,7 +117,7 @@ describe('Evaluation Result test', ()=> {
 		['ooo.Entries()[0]."1"', [{ ooo: { a: 0, b: 1 }, result: 0 }, { ooo: { b: 'b', a: 'a' }, result: 'b' }]],
 		['o1.Keys()[i]', [{ o1: { a: 0, b: 1 }, i: 0, result: 'a' }, { o1: { b: 'baa', c: 'caa' }, i: 1, result: 'c' }]],
 		['o1.Values()[i]', [{ o1: { a: 0, b: 1 }, i: 0, result: 0 }, { o1: { b: 'baa', c: 'caa' }, i: 1, result: 'caa' }]],
-		['const a:number=myvar/3,var b=mv*2,a/b', [{ myvar: 6, mv: 1, result: 1 }, { myvar: 30, mv: 5, result: 1 }]],
+		['const a:number=myvar/3;var b=mv*2;a/b', [{ myvar: 6, mv: 1, result: 1 }, { myvar: 30, mv: 5, result: 1 }]],
 		['obj1.`a0`', [{ obj1: { a0: 10 }, result: 10 }, { obj1: { a0: '10' }, result: '10' }]],
 		['obj2["prop"].a', [{ obj2: { prop: { a: 10 } }, result: 10 }, { obj2: { prop: { a: '10' } }, result: '10' }]],
 		['val*myobj[a["prop"]]+1', [{ val: 1, myobj: { test: 10 }, a: { prop: 'test' }, result: 11 }]],
@@ -133,10 +133,10 @@ describe('Evaluation Result test', ()=> {
 		['a[4][0][0] ?: 10', [{ a: [0], result: 10 }, { a: [[0]], result: 10 }]],
 		['a.1', [{ a: [0, 1], result: 1 }, { a: ['-1', '-2'], result: '-2' }]],
 		['a[x]', [{ a: { b: 1 }, x: 'a', result: undefined }, { a: { b: 1 }, x: '1', result: undefined }], [{ a: [0,  1], x: 5, result: undefined }, { a: [0], x: -5, result: undefined }]],
-		['1000 + {while a < b { a = a + 1 }, {b, a+100}}', [{ a: 1, b: 10, result: 1110 }, { a: -5, b: -1, result: 1099 }]],
-		['var f=~boolean(a:number){a=a*100, a>0},Number.Sum(a.Filter(f))', [{ a: [-10, -20, 1, 2], result: 3 }]],
-		['const f=~??(){b = b + 1000, true}, Number.Sum(a.Filter(f)) + b', [{ a: [10, 20, 1, 2], b: 0, result: 4033 }]],
-		['var a=~(){b = b + 10}, a(), b', [{ b: 0, result: 10 }, { b: -10, result: 0 }]],
+		['1000 + {while a < b { a = a + 1 }; {b; a+100}}', [{ a: 1, b: 10, result: 1110 }, { a: -5, b: -1, result: 1099 }]],
+		['var f=~boolean(a:number){a=a*100; a>0};Number.Sum(a.Filter(f))', [{ a: [-10, -20, 1, 2], result: 3 }]],
+		['const f=~??(){b = b + 1000; true}; Number.Sum(a.Filter(f)) + b', [{ a: [10, 20, 1, 2], b: 0, result: 4033 }]],
+		['var a=~(){b = b + 10}; a(); b', [{ b: 0, result: 10 }, { b: -10, result: 0 }]],
 		['(~(){~??(){b = b + 10}})()()', [{ b: 0, result: 10 }]],
 		['if a {b}else{if c{d}else{e}}', [{ a: true, b: false, c: false, d: 10, e: 20, result: false }, { a: false, b: true, c: false, d: 10, e: 20, result: 20 }]],
 		['while a<10{a= while a+1<20{a=a+1}}', [{ a: 1, result: 19 }]],
@@ -187,7 +187,7 @@ describe('Evaluation Result test', ()=> {
 					}
 				}
 				catch (err) {
-					fail(`parsing error\n${(err as Error).message} ${(err as Error).stack}`);
+					fail(`parsing error\n${(err as Error).message}`);
 				}
 			});
 		});

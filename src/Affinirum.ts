@@ -28,6 +28,7 @@ export class Affinirum {
 	protected readonly _script: string;
 	protected readonly _strict: boolean;
 	protected readonly _root: Node;
+	protected readonly _vframes = new Map<string, ParserFrame>();
 	protected readonly _variables = new Map<string, Variable>();
 	protected readonly _constants = new Map<string, Record<string, Constant>>(Constants);
 	protected readonly _functions = new Map<string, Constant>(Functions);
@@ -104,12 +105,12 @@ export class Affinirum {
 		const variables = this._scope.variables();
 		for (const name in variables) {
 			if (!Object.prototype.hasOwnProperty.call(values, name)) {
-				this._root.locate(name).throwError(`undefined variable ${name}:\n`);
+				this._vframes.get(name)?.throwError(`undefined variable ${name}:\n`);
 			}
 			const variable = variables[name];
 			const value = values?.[name] ?? undefined;
 			if (!variable.type.match(Type.of(value))) {
-				this._root.locate(name).throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
+				this._vframes.get(name)?.throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
 			}
 			variable.value = value;
 		}
@@ -119,7 +120,7 @@ export class Affinirum {
 	protected _block(state: ParserState, scope: StaticScope): Node {
 		const frame = state.starts();
 		const nodes: Node[] = [this._unit(state, scope)];
-		while (state.isCommaSeparator) {
+		while (state.isSemicolonSeparator) {
 			nodes.push(this._unit(state.next(), scope));
 		}
 		return new BlockNode(frame.ends(state), nodes);
@@ -300,6 +301,9 @@ export class Affinirum {
 				}
 				scope.global(state.token, variable);
 			}
+			if (!this._vframes.has(state.token)) {
+				this._vframes.set(state.token, state.starts());
+			}
 			if (state.next().isAssignment) {
 				if (variable.constant) {
 					state.throwError('illegal constant assignment');
@@ -374,14 +378,7 @@ export class Affinirum {
 			const frame = state.starts();
 			let type: Type | undefined;
 			if (state.next().isColonSeparator) {
-				if (!state.next().isType) {
-					state.throwError(`missing ${constant ? 'constant' : 'variable'} type`);
-				}
-				type = state.type;
-				if (state.next().isOptionalType) {
-					type = type.toOptional();
-					state.next();
-				} // extend else clause to support type disjunctions
+				type = this._type(state.next(), scope);
 			}
 			const variable = new Variable(type, constant);
 			scope.local(token, variable);
@@ -410,16 +407,9 @@ export class Affinirum {
 
 	protected _function(state: ParserState, scope: StaticScope): Node {
 		const frame = state.starts();
-		let type: Type | undefined = undefined;
+		let retType: Type | undefined = undefined;
 		if (!state.next().isParenthesesOpen) {
-			if (!state.isType) {
-				state.throwError('missing function return type');
-			}
-			type = state.type;
-			if (state.next().isOptionalType) {
-				type = type.toOptional();
-				state.next();
-			}
+			retType = this._type(state, scope);
 			state.openParentheses();
 		}
 		let variadic = false;
@@ -434,11 +424,7 @@ export class Affinirum {
 			}
 			let argType = Type.Unknown;
 			if (state.next().isColonSeparator) {
-				argType = state.next().type;
-				if (state.next().isOptionalType) {
-					argType = argType.toOptional();
-					state.next();
-				}
+				argType = this._type(state.next(), scope);
 			}
 			variables.set(token, new Variable(argType));
 			if (argType.isArray && state.isVariadicFunction) {
@@ -460,10 +446,10 @@ export class Affinirum {
 			args.forEach((arg, ix)=> arg.value = values[ix]);
 			return subnode.evaluate();
 		};
-		if (!type && args.length) {
-			type = Type.Unknown;
+		if (!retType && args.length) {
+			retType = Type.Unknown;
 		}
-		const constant = new Constant(value, Type.functionType(type, args.map((v)=> v.type), variadic));
+		const constant = new Constant(value, Type.functionType(retType, args.map((v)=> v.type), variadic));
 		return new ConstantNode(frame, constant, subnode);
 	}
 
@@ -542,14 +528,13 @@ export class Affinirum {
 				: Type.arrayType(itemPropTypes.map(([, v])=> v));
 		}
 		else if (state.isTildaMark) { // function type
-			if (state.next().isParenthesesOpen) { // default function type
-				state.next().closeParentheses().next();
-				return Type.Function;
+			let retType: Type | undefined = undefined;
+			if (!state.next().isParenthesesOpen) {
+				retType = this._type(state, scope);
+				state.openParentheses();
 			}
-			const retType = this._type(state, scope);
-			state.openParentheses().next();
-			const argTypes: Type[] = [];
 			let variadic = false;
+			const argTypes: Type[] = [];
 			while (!state.next().isParenthesesClose) {
 				const argType = this._type(state, scope);
 				argTypes.push(argType);
@@ -568,6 +553,9 @@ export class Affinirum {
 				}
 			}
 			state.closeParentheses().next();
+			if (!retType && argTypes.length) {
+				retType = Type.Unknown;
+			}
 			return Type.functionType(retType, argTypes, variadic);
 		}
 		else {
