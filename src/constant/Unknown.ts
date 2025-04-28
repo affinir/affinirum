@@ -8,6 +8,12 @@ export const equate = (value1: Value, value2: Value)=> {
 		return value1 == value2;
 	}
 	if (typeof value1 !== typeof value2) {
+		if (typeof value1 === 'number' && typeof value2 === 'bigint') {
+			return value1 === Number(value2);
+		}
+		if (typeof value1 === 'bigint' && typeof value2 === 'number') {
+			return Number.isInteger(value2) && value1 === BigInt(value2);
+		}
 		return false;
 	}
 	if (typeof value1 === 'number') {
@@ -42,11 +48,10 @@ export const equate = (value1: Value, value2: Value)=> {
 	return true;
 };
 
-const typeNumeric = Type.union(Type.Number, Type.Integer);
-const typeAggregatable = Type.union(Type.Number, Type.Integer, Type.Enumerable);
+const typeAggregatable = Type.union(Type.Numeric, Type.Enumerable);
 const typeEquator = Type.functionType(Type.Boolean, [Type.Unknown, Type.Unknown]);
-const typeComparator = Type.functionType(Type.Boolean, [typeNumeric, typeNumeric]);
-const typeOperator = Type.functionTypeInference(2, typeNumeric, [typeNumeric, typeNumeric]);
+const typeComparator = Type.functionType(Type.Boolean, [Type.Numeric, Type.Numeric]);
+const typeOperator = Type.functionTypeInference(2, Type.Numeric, [Type.Numeric, Type.Numeric]);
 
 export const funcCoalesce = new Constant(
 	(value: Value, valueOtherwise: Value)=>
@@ -67,25 +72,25 @@ export const funcNotEqual = new Constant(
 );
 
 export const funcGreaterThan = new Constant(
-	(value1: number, value2: number)=>
+	(value1: number | bigint, value2: number | bigint)=>
 		value1 > value2,
 	typeComparator,
 );
 
 export const funcLessThan = new Constant(
-	(value1: number, value2: number)=>
+	(value1: number | bigint, value2: number | bigint)=>
 		value1 < value2,
 	typeComparator,
 );
 
 export const funcGreaterOrEqual = new Constant(
-	(value1: number, value2: number)=>
+	(value1: number | bigint, value2: number | bigint)=>
 		value1 >= value2,
 	typeComparator,
 );
 
 export const funcLessOrEqual = new Constant(
-	(value1: number, value2: number)=>
+	(value1: number | bigint, value2: number | bigint)=>
 		value1 <= value2,
 	typeComparator,
 );
@@ -129,8 +134,10 @@ export const funcSubtract = new Constant(
 
 export const funcMultiply = new Constant(
 	(...values: number[] | bigint[])=>
-		values.reduce((acc: any, val: any)=> acc *= val),
-	Type.functionTypeInference(1, typeNumeric, [typeNumeric, typeNumeric], true),
+		typeof values[0] === 'number'
+			? values.map((i)=> Number(i)).reduce((acc, val)=> acc *= val)
+			: values.map((i)=> BigInt(i)).reduce((acc, val)=> acc *= val),
+	Type.functionTypeInference(1, Type.Numeric, [Type.Numeric, Type.Numeric], true),
 );
 
 export const funcDivide = new Constant(
@@ -200,5 +207,5 @@ export const funcRoot = new Constant(
 export const funcNegate = new Constant(
 	(value: number | bigint)=>
 		-value,
-	Type.functionTypeInference(1, typeNumeric, [typeNumeric]),
+	Type.functionTypeInference(1, Type.Numeric, [Type.Numeric]),
 );

@@ -403,7 +403,7 @@ export class ParserState extends ParserFrame {
 						}
 					}
 					else if (isNumeric(c)) {
-						const cn = this._expr.charAt(this._end);
+						let integer = true;
 						while (isNumeric(this._expr.charAt(this._end))) {
 							++this._end;
 						}
@@ -418,6 +418,7 @@ export class ParserState extends ParserFrame {
 							else {
 								--this._end;
 							}
+							integer = false;
 						}
 						if (this._expr.charAt(this._end) === 'e') {
 							++this._end;
@@ -427,8 +428,9 @@ export class ParserState extends ParserFrame {
 									++this._end;
 								}
 							}
+							integer = false;
 						}
-						this._fragment = c === '0' && cn !== '.' && this._end - this.start > 1
+						this._fragment = integer
 							? new Literal(BigInt(this._expr.substring(this._start, this._end)))
 							: new Literal(parseFloat(this._expr.substring(this._start, this._end)));
 					}

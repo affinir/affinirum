@@ -108,7 +108,7 @@ export const endsWithString = (value: string, search: string, endPos?: number, i
 };
 
 const typeStringEquator = Type.functionType(Type.Boolean, [Type.String, Type.String]);
-const typeStringComparator = Type.functionType(Type.Boolean, [Type.String, Type.String, Type.OptionalNumber, Type.OptionalBoolean]);
+const typeStringComparator = Type.functionType(Type.Boolean, [Type.String, Type.String, Type.OptionalInteger, Type.OptionalBoolean]);
 const typeStringMutator = Type.functionType(Type.String, [Type.String]);
 
 export const funcLike = new Constant(
@@ -124,37 +124,37 @@ export const funcUnlike = new Constant(
 );
 
 export const funcContains = new Constant(
-	(value: string, search: string, start?: number, ignoreCaseSpaceEtc?: boolean)=>
-		containsString(value, search, start, ignoreCaseSpaceEtc),
+	(value: string, search: string, start?: bigint, ignoreCaseSpaceEtc?: boolean)=>
+		containsString(value, search, Number(start), ignoreCaseSpaceEtc),
 	typeStringComparator,
 );
 
 export const funcStartsWith = new Constant(
-	(value: string, search: string, start?: number, ignoreCaseSpaceEtc?: boolean)=>
-		startsWithString(value, search, start, ignoreCaseSpaceEtc),
+	(value: string, search: string, start?: bigint, ignoreCaseSpaceEtc?: boolean)=>
+		startsWithString(value, search, Number(start), ignoreCaseSpaceEtc),
 	typeStringComparator,
 );
 
 export const funcEndsWith = new Constant(
-	(value: string, search: string, end?: number, ignoreCaseSpaceEtc?: boolean)=>
-		endsWithString(value, search, end, ignoreCaseSpaceEtc),
+	(value: string, search: string, end?: bigint, ignoreCaseSpaceEtc?: boolean)=>
+		endsWithString(value, search, Number(end), ignoreCaseSpaceEtc),
 	typeStringComparator,
 );
 
 export const funcChar = new Constant(
-	(value: string, pos: number)=>
+	(value: string, pos: bigint)=>
 		value == null
 			? undefined
-			: value.charAt(pos < 0 ? value.length + pos : pos),
-	Type.functionType(Type.String, [Type.String, Type.Number]),
+			: value.charAt(pos < 0 ? value.length + Number(pos) : Number(pos)),
+	Type.functionType(Type.OptionalString, [Type.String, Type.Integer]),
 );
 
 export const funcCharCode = new Constant(
-	(value: string, pos: number)=>
+	(value: string, pos: bigint)=>
 		value == null
 			? undefined
-			: value.charCodeAt(pos < 0 ? value.length + pos : pos),
-	Type.functionType(Type.Number, [Type.String, Type.Number]),
+			: value.charCodeAt(pos < 0 ? value.length + Number(pos) : Number(pos)),
+	Type.functionType(Type.OptionalInteger, [Type.String, Type.Number]),
 );
 
 export const funcAlphanum = new Constant(
@@ -208,24 +208,21 @@ export const funcSplit = new Constant(
 );
 
 const funcRandomString = new Constant(
-	(value: number)=> {
-		if (value == null || value < 0) {
-			return undefined;
-		}
+	(value: bigint)=> {
 		let str = '';
 		while (str.length < value) {
 			str += Math.random().toString(36).slice(2);
 		}
-		return str.slice(0, value);
+		return str.slice(0, Number(value));
 	},
-	Type.functionType(Type.String, [Type.Number]),
+	Type.functionType(Type.String, [Type.Integer]),
 	false,
 );
 
 const funcEncodeString = new Constant(
 	(value: string, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8')=> {
 		if (value == null) {
-			return undefined;
+			return new Uint8Array(0).buffer;
 		}
 		if (encoding === 'utf8') {
 			return new TextEncoder().encode(value).buffer;
@@ -243,15 +240,17 @@ const funcEncodeString = new Constant(
 );
 
 const funcDecodeString = new Constant(
-	(value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: number, byteLength?: number)=> {
+	(value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: bigint, byteLength?: bigint)=> {
 		if (value == null) {
 			return undefined;
 		}
+		const offset = byteOffset == null ? undefined : Number(byteOffset);
+		const length = byteLength == null ? undefined : Number(byteLength);
 		if (encoding === 'utf8') {
-			return new TextDecoder().decode(new DataView(value, byteOffset, byteLength));
+			return new TextDecoder().decode(new DataView(value, offset, length));
 		}
 		else {
-			const dv = new DataView(value, byteOffset, byteLength);
+			const dv = new DataView(value, offset, length);
 			const lessOrEqual = encoding.endsWith('le');
 			let str = '';
 			for (let i = 0; i < dv.byteLength; i += 2) {
@@ -260,7 +259,7 @@ const funcDecodeString = new Constant(
 			return str;
 		}
 	},
-	Type.functionType(Type.String, [Type.Buffer, Type.OptionalString, Type.OptionalNumber, Type.OptionalNumber]),
+	Type.functionType(Type.OptionalString, [Type.Buffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]),
 );
 
 export const constString = {

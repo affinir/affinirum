@@ -7,14 +7,17 @@ export const notate = (value: Value, whitespace?: string): string=> {
 	if (value == null) {
 		return 'null';
 	}
-	if (typeof value === 'number' || typeof value === 'boolean') {
-		return value.toString();
+	if (typeof value === 'number') {
+		return value.toString() + (Number.isInteger(value) ? '.0' : '');
 	}
-	if (typeof value === 'bigint') {
-		return value < 0n ? `-0${(-value).toString()}` : `0${value.toString()}`;
+	if (typeof value === 'boolean') {
+		return value.toString();
 	}
 	if (value instanceof Date) {
 		return `@${value.toISOString()}`;
+	}
+	if (typeof value === 'bigint') {
+		return value.toString();
 	}
 	if (value instanceof ArrayBuffer) {
 		return `#${formatBuffer(value)}`;

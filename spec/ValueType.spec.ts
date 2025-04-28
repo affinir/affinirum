@@ -5,8 +5,8 @@ describe('Value Type test', ()=> {
 		['null', 'void'],
 		['true', 'boolean'],
 		['false', 'boolean'],
-		['0', 'number'],
-		['-0', 'number'],
+		['0', 'integer'],
+		['-0', 'integer'],
 		['142.4', 'number'],
 		['-0.4', 'number'],
 		['@2020-01-02 11:10:10.200Z', 'timestamp'],
@@ -34,7 +34,7 @@ describe('Value Type test', ()=> {
 		['~ void|[number|string] (arg: [number|string]){null}', '~void|[number|string]([number|string])'],
 		['~boolean (i:number){i==0}', '~boolean(number)'],
 		['~string (x:string, y:array...){y.Append(x); y.Join()}', '~string(string,[]...)'],
-		['~number (x:integer, y:array...){y.Prepend(x); y.Length}', '~number(integer,[]...)'],
+		['~integer (x:integer, y:array...){y.Prepend(x); y.Length}', '~integer(integer,[]...)'],
 	] as [string, string][]).forEach(([expr, expected])=> {
 		it(`parses expression ${expr} and determines value type`, ()=> {
 			try {

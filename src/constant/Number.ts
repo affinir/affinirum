@@ -71,7 +71,7 @@ const funcEncodeNumber = new Constant(
 			| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
 			| 'float32' | 'float32le' | 'float64' | 'float64le')=> {
 		if (value == null) {
-			return undefined;
+			return new Uint8Array(0).buffer;
 		}
 		let bits = '';
 		for (let i = 0; i < encoding.length; ++i) {
@@ -106,11 +106,11 @@ const funcEncodeNumber = new Constant(
 const funcDecodeNumber = new Constant(
 	(value: ArrayBuffer, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
 			| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
-			| 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: number)=> {
+			| 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: bigint)=> {
 		if (value == null) {
 			return undefined;
 		}
-		const dv = new DataView(value, byteOffset);
+		const dv = new DataView(value, byteOffset == null ? undefined : Number(byteOffset));
 		switch (encoding) {
 			case 'int8': return dv.getInt8(0);
 			case 'int16': return dv.getInt16(0);
@@ -129,19 +129,19 @@ const funcDecodeNumber = new Constant(
 			default: throw new Error(`${encoding} encoding not supported`);
 		}
 	},
-	Type.functionType(Type.Number, [Type.Buffer, Type.String, Type.OptionalNumber]),
+	Type.functionType(Type.OptionalNumber, [Type.Buffer, Type.String, Type.OptionalInteger]),
 );
 
 const funcFormatNumber = new Constant(
-	(value: number | undefined, radix?: number)=>
-		value?.toString(radix),
-	Type.functionType(Type.OptionalString, [Type.OptionalNumber]),
+	(value: number, radix?: bigint)=>
+		value?.toString(radix ? Number(radix) : undefined) ?? '',
+	Type.functionType(Type.String, [Type.Number, Type.OptionalInteger]),
 );
 
 const funcParseNumber = new Constant(
-	(value: string | undefined)=>
+	(value: string)=>
 		value ? Number.parseFloat(value) : undefined,
-	Type.functionType(Type.OptionalNumber, [Type.OptionalString]),
+	Type.functionType(Type.OptionalNumber, [Type.String]),
 );
 
 export const constNumber = {

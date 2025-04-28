@@ -23,15 +23,20 @@ export const funcNot = new Constant(
 );
 
 const funcFormatBoolean = new Constant(
-	(value: boolean | undefined)=>
-		value?.toString(),
-	Type.functionType(Type.OptionalString, [Type.OptionalBoolean]),
+	(value: boolean)=>
+		value?.toString() ?? '',
+	Type.functionType(Type.String, [Type.Boolean]),
 );
 
 const funcParseBoolean = new Constant(
-	(value: string | undefined)=>
-		value ? value.toLowerCase() === 'true' : undefined,
-	Type.functionType(Type.OptionalBoolean, [Type.OptionalString]),
+	(value: string)=> {
+		if (value == null) {
+			return undefined;
+		}
+		const v = value.toLowerCase();
+		return v === 'true' ? true : v === 'false' ? false : undefined;
+	},
+	Type.functionType(Type.OptionalBoolean, [Type.String]),
 );
 
 export const constBoolean = {

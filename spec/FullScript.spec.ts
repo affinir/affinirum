@@ -13,10 +13,10 @@ const carr1 = [1, 2, 3, 4];
 var varr2 = [5, 6, 7, 8] + carr1;
 const cobj = [ "a": 1, "b": 2 ];
 var vobj = Object.Merge([ "x": 3, "abcdef": 4 ], cobj);
-const cfunc = ~string (x: number, y: number, z: number) {
-  Number.Format(x + y + z + cnum + vint)
+const cfunc = ~string (x: integer, y: integer, z: integer) {
+  Integer.Format(x + y + z + cnum + vint)
 };
-var vfunc = ~string (f: ~string(number, number, number)) {
+var vfunc = ~string (f: ~string(integer, integer, integer)) {
   f(1, 2, cobj."a" + vobj."b")
 };
 vfunc(cfunc)

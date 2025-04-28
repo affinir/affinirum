@@ -49,30 +49,30 @@ export const formatBuffer = (value?: ArrayBuffer)=> {
 };
 
 export const funcByte = new Constant(
-	(value: ArrayBuffer, pos: number)=>
+	(value: ArrayBuffer, pos: bigint)=>
 		value == null
 			? undefined
-			: value.slice(pos, pos + 1),
-	Type.functionType(Type.Buffer, [Type.Buffer, Type.Number]),
+			: value.slice(Number(pos), Number(pos) + 1),
+	Type.functionType(Type.OptionalBuffer, [Type.Buffer, Type.Integer]),
 );
 
 const funcRandomBuffer = new Constant(
-	(value: number)=>
-		value == null || value < 0 ? undefined : crypto.getRandomValues(new Uint8Array(value)),
-	Type.functionType(Type.Buffer, [Type.Number]),
+	(value: bigint)=>
+		value == null || value < 0 ? undefined : crypto.getRandomValues(new Uint8Array(Number(value))),
+	Type.functionType(Type.Buffer, [Type.Integer]),
 	false,
 );
 
 const funcFormatBuffer = new Constant(
-	(value: ArrayBuffer | undefined)=>
-		formatBuffer(value),
-	Type.functionType(Type.OptionalString, [Type.OptionalBuffer]),
+	(value: ArrayBuffer)=>
+		formatBuffer(value) ?? '',
+	Type.functionType(Type.String, [Type.Buffer]),
 );
 
 const funcParseBuffer = new Constant(
 	(value: string)=>
 		parseBuffer(value),
-	Type.functionType(Type.OptionalBuffer, [Type.OptionalString]),
+	Type.functionType(Type.OptionalBuffer, [Type.String]),
 );
 
 export const constBuffer = {

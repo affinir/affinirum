@@ -222,8 +222,12 @@ export class Type implements IType {
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
 	static readonly Function = Type.functionType();
 	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
+	static readonly Numeric = Type.union(Type.Number, Type.Integer);
+	static readonly OptionalNumeric = Type.union(Type.Void, Type.Number, Type.Integer);
 	static readonly Enumerable = Type.union(Type.Buffer, Type.String, Type.Array);
+	static readonly OptionalEnumerable = Type.union(Type.Void, Type.Buffer, Type.String, Type.Array);
 	static readonly Iterable = Type.union(Type.Buffer, Type.String, Type.Array, Type.Object);
+	static readonly OptionalIterable = Type.union(Type.Void, Type.Buffer, Type.String, Type.Array, Type.Object);
 
 	private static _primitiveType(primitive: Primitive) {
 		return new Type([new PrimitiveAtom(primitive)]);

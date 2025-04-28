@@ -12,13 +12,13 @@ const funcSum = new Constant(
 
 const funcMin = new Constant(
 	(...values: (bigint | bigint[])[])=>
-		values.flat().reduce((max, val)=> val > max ? val : max),
+		values.flat().reduce((min, val)=> val < min ? val : min),
 	typeAggregator,
 );
 
 const funcMax = new Constant(
 	(...values: (bigint | bigint[])[])=>
-		values.flat().reduce((min, val)=> val < min ? val : min),
+		values.flat().reduce((max, val)=> val > max ? val : max),
 	typeAggregator,
 );
 
@@ -29,9 +29,23 @@ const funcRandomInteger = new Constant(
 	false,
 );
 
+const funcFormatInteger = new Constant(
+	(value: bigint, radix?: bigint)=>
+		value?.toString(radix ? Number(radix) : undefined) ?? '',
+	Type.functionType(Type.String, [Type.Integer, Type.OptionalInteger]),
+);
+
+const funcParseInteger = new Constant(
+	(value: string)=>
+		value ? BigInt(value) : undefined,
+	Type.functionType(Type.OptionalInteger, [Type.String]),
+);
+
 export const constInteger = {
 	Sum: funcSum,
 	Min: funcMin,
 	Max: funcMax,
 	Random: funcRandomInteger,
+	Format: funcFormatInteger,
+	Parse: funcParseInteger,
 };

@@ -15,8 +15,8 @@ describe('Scenario Step test', ()=> {
 	});
 	it('defines variables in strict mode and evaluates', ()=> {
 		const expression = new Affinirum('predefined1*2 + predefined2 + 26 * 13',
-			{ strict: true, variables: { predefined1: Type.Number, predefined2: Type.Number, myvar: Type.String } });
-		expect(expression.evaluate({ predefined1: 10, predefined2: 20 }) as number).toBe(378);
+			{ strict: true, variables: { predefined1: Type.Integer, predefined2: Type.Integer, myvar: Type.String } });
+		expect(expression.evaluate({ predefined1: 10n, predefined2: 20n }) as bigint).toBe(378n);
 	});
 	it('errors on undefines variables in strict mode', ()=> {
 		try {
@@ -28,7 +28,7 @@ describe('Scenario Step test', ()=> {
 		}
 	});
 	it('parses random number function and evaluates multiple times', ()=> {
-		const expression = new Affinirum('Number.Random(1000000)');
+		const expression = new Affinirum('Number.Random(1000000.0)');
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses random string function and evaluates multiple times', ()=> {
@@ -41,7 +41,7 @@ describe('Scenario Step test', ()=> {
 	});
 	it('parses pure constant expression and compiles to a constant node', ()=> {
 		const expression = new Affinirum('("ABC" + Timestamp.Format(Timestamp.Parse("2000-01-01"))).Length');
-		expect(expression.type.toString()).toBe('number');
+		expect(expression.type.toString()).toBe('integer');
 	});
 	it('parses and evaluates value conversion to text', ()=> {
 		const expression = new Affinirum('AVN.Format(obj1)');
@@ -50,8 +50,8 @@ describe('Scenario Step test', ()=> {
 			num: -50,
 			buf: new Uint8Array([10, 20, 30, 0, 4, 67, 12, 11, 200, 220, 0, 50]).buffer,
 			str: 'string value', func: ()=> '1234',
-			arr: [1, 2, 3],
+			arr: [1n, 2n, 3n],
 			obj: { a: 1, b: 2 },
-		} }) as string).toBe('["bool":true,"num":-50,"buf":#0a141e0004430c0bc8dc0032,"str":"string value","func":function,"arr":[1,2,3],"obj":["a":1,"b":2]]');
+		} }) as string).toBe('["bool":true,"num":-50.0,"buf":#0a141e0004430c0bc8dc0032,"str":"string value","func":function,"arr":[1,2,3],"obj":["a":1.0,"b":2.0]]');
 	});
 });

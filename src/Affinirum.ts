@@ -213,7 +213,7 @@ export class Affinirum {
 		while (state.operator === funcAt || state.isParenthesesOpen || state.isBracketsOpen) {
 			const frame = state.starts();
 			if (state.operator === funcAt) {
-				if (state.next().isLiteral && (typeof state.literalValue === 'string' || typeof state.literalValue === 'number')) {
+				if (state.next().isLiteral && (typeof state.literalValue === 'string' || typeof state.literalValue === 'bigint')) {
 					node = this._call(frame.ends(state), funcAt, [node, new ConstantNode(state, new Constant(state.literalValue))]);
 					state.next();
 				}

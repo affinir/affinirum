@@ -1,7 +1,7 @@
 import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
-const typeTimestampPart = Type.functionType(Type.Number, [Type.Timestamp, Type.OptionalBoolean]);
+const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
 
 const parseTimestamp = (value?: number | string)=> {
 	if (value == null) {
@@ -19,63 +19,63 @@ const funcNow = new Constant(
 );
 
 export const funcYear = new Constant(
-	(value: Date, utc = false)=> utc ? value.getUTCFullYear() : value.getFullYear(),
+	(value: Date, utc = false)=> BigInt(utc ? value.getUTCFullYear() : value.getFullYear()),
 	typeTimestampPart,
 );
 
 export const funcMonth = new Constant(
-	(value: Date, utc = false)=> 1 + (utc ? value.getUTCMonth() : value.getMonth()),
+	(value: Date, utc = false)=> BigInt(1 + (utc ? value.getUTCMonth() : value.getMonth())),
 	typeTimestampPart,
 );
 
 export const funcMonthIndex = new Constant(
-	(value: Date, utc = false)=> utc ? value.getUTCMonth() : value.getMonth(),
+	(value: Date, utc = false)=> BigInt(utc ? value.getUTCMonth() : value.getMonth()),
 	typeTimestampPart,
 );
 
 export const funcWeekdayIndex = new Constant(
-	(value: Date, utc = false)=> utc ? value.getUTCDay() : value.getDay(),
+	(value: Date, utc = false)=> BigInt(utc ? value.getUTCDay() : value.getDay()),
 	typeTimestampPart,
 );
 
 export const funcDay = new Constant(
-	(value: Date, utc = false)=> utc ? value.getUTCDate() : value.getDate(),
+	(value: Date, utc = false)=> BigInt(utc ? value.getUTCDate() : value.getDate()),
 	typeTimestampPart,
 );
 
 export const funcHour = new Constant(
-	(value: Date, utc = false)=> utc ? value.getUTCHours() : value.getHours(),
+	(value: Date, utc = false)=> BigInt(utc ? value.getUTCHours() : value.getHours()),
 	typeTimestampPart,
 );
 
 export const funcMinute = new Constant(
-	(value: Date, utc = false)=> utc ? value.getUTCMinutes() : value.getMinutes(),
+	(value: Date, utc = false)=> BigInt(utc ? value.getUTCMinutes() : value.getMinutes()),
 	typeTimestampPart,
 );
 
 export const funcSecond = new Constant(
-	(value: Date, utc = false)=> utc ? value.getUTCSeconds() : value.getSeconds(),
+	(value: Date, utc = false)=> BigInt(utc ? value.getUTCSeconds() : value.getSeconds()),
 	typeTimestampPart,
 );
 
 export const funcMillisecond = new Constant(
-	(value: Date, utc = false)=> utc ? value.getUTCMilliseconds() : value.getMilliseconds(),
+	(value: Date, utc = false)=> BigInt(utc ? value.getUTCMilliseconds() : value.getMilliseconds()),
 	typeTimestampPart,
 );
 
 export const funcEpochTime = new Constant(
-	(value: Date, epoch = new Date(0))=> value.getTime() - epoch.getTime(),
-	Type.functionType(Type.Number, [Type.Timestamp, Type.OptionalTimestamp]),
+	(value: Date, epoch = new Date(0))=> BigInt(value.getTime() - epoch.getTime()),
+	Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalTimestamp]),
 );
 
 const funcFormatTimestamp = new Constant(
-	(value: Date)=> value?.toISOString(),
+	(value: Date)=> value?.toISOString() ?? '',
 	Type.functionType(Type.String, [Type.Timestamp]),
 );
 
 const funcParseTimestamp = new Constant(
 	(value: string)=> parseTimestamp(value),
-	Type.functionType(Type.Timestamp, [Type.String]),
+	Type.functionType(Type.OptionalTimestamp, [Type.String]),
 );
 
 export const constTimestamp = {
