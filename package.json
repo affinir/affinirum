@@ -6,8 +6,8 @@
 	"module": "dst/index.js",
 	"types": "dst/index.d.ts",
 	"type": "module",
-	"hopmepage": "https://github.com/rbaghbanli/affinirum",
-	"bugs": "https://github.com/rbaghbanli/affinirum/issues",
+	"hopmepage": "https://github.com/affinir/affinirum",
+	"bugs": "https://github.com/affinir/affinirum/issues",
 	"author": "Riad Baghbanli <riad@baghbanli.com>",
 	"contributors": [
 		{
@@ -21,7 +21,7 @@
 		"compilation",
 		"evaluation",
 		"void",
-		"number",
+		"float",
 		"boolean",
 		"timestamp",
 		"integer",

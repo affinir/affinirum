@@ -125,19 +125,19 @@ export const funcUnlike = new Constant(
 
 export const funcContains = new Constant(
 	(value: string, search: string, start?: bigint, ignoreCaseSpaceEtc?: boolean)=>
-		containsString(value, search, Number(start), ignoreCaseSpaceEtc),
+		containsString(value, search, start == null ? undefined : Number(start), ignoreCaseSpaceEtc),
 	typeStringComparator,
 );
 
 export const funcStartsWith = new Constant(
 	(value: string, search: string, start?: bigint, ignoreCaseSpaceEtc?: boolean)=>
-		startsWithString(value, search, Number(start), ignoreCaseSpaceEtc),
+		startsWithString(value, search, start == null ? undefined : Number(start), ignoreCaseSpaceEtc),
 	typeStringComparator,
 );
 
 export const funcEndsWith = new Constant(
 	(value: string, search: string, end?: bigint, ignoreCaseSpaceEtc?: boolean)=>
-		endsWithString(value, search, Number(end), ignoreCaseSpaceEtc),
+		endsWithString(value, search, end == null ? undefined : Number(end), ignoreCaseSpaceEtc),
 	typeStringComparator,
 );
 
@@ -154,7 +154,7 @@ export const funcCharCode = new Constant(
 		value == null
 			? undefined
 			: value.charCodeAt(pos < 0 ? value.length + Number(pos) : Number(pos)),
-	Type.functionType(Type.OptionalInteger, [Type.String, Type.Number]),
+	Type.functionType(Type.OptionalInteger, [Type.String, Type.Float]),
 );
 
 export const funcAlphanum = new Constant(

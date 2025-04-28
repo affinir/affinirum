@@ -385,7 +385,7 @@ export class ParserState extends ParserFrame {
 							case 'false': this._fragment = valueFalse; break;
 							case 'null': this._fragment = valueNull; break;
 							case 'void': this._fragment = Type.Void; break;
-							case 'num': case 'number': this._fragment = Type.Number; break;
+							case 'float': this._fragment = Type.Float; break;
 							case 'bool': case 'boolean': this._fragment = Type.Boolean; break;
 							case 'time': case 'timestamp': this._fragment = Type.Timestamp; break;
 							case 'int': case 'integer': this._fragment = Type.Integer; break;

@@ -37,7 +37,7 @@ export const funcFirstIndex = new Constant(
 			return undefined;
 		}
 		const ix = value.findIndex((v, i, a)=> predicate(v, BigInt(i), a));
-		return ix < 0 ? undefined : ix;
+		return ix < 0 ? undefined : BigInt.asIntN(64, BigInt(ix));
 	},
 	typeIndexFinder,
 );
@@ -49,7 +49,7 @@ export const funcLastIndex = new Constant(
 		}
 		for (let i = value.length - 1; i >= 0; i--) {
 			if (predicate(value[i], BigInt(i), value)) {
-				return i;
+				return BigInt.asIntN(64, BigInt(i));
 			}
 		}
 		return undefined;
@@ -70,7 +70,7 @@ export const funcAny = new Constant(
 );
 
 export const funcFlatten = new Constant(
-	(values: Value[], depth?: bigint)=>
+	(values: Value[], depth: bigint = 1n)=>
 		(values as [])?.flat(Number(depth)) as Value,
 	Type.functionType(Type.Array, [Type.Array, Type.OptionalInteger]),
 );
@@ -95,7 +95,8 @@ export const funcFilter = new Constant(
 
 export const funcReduce = new Constant(
 	(value: Value[], reducer: (acc: Value, v: Value, i: bigint, arr: Value[])=> Value, initial?: Value)=>
-		initial != null ? value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a), initial) : value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a)),
+		initial != null
+			? value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a), initial) : value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a)),
 	Type.functionType(Type.Unknown, [Type.Array, Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown, Type.OptionalInteger, Type.OptionalArray])]),
 );
 

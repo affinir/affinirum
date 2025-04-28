@@ -16,9 +16,9 @@ export class PrimitiveAtom implements IType {
 	weight(): number {
 		switch (this._primitive) {
 			case 'void': return 0x0;
-			case 'number': return 0x1;
 			case 'boolean': return 0x2;
 			case 'timestamp': return 0x3;
+			case 'float': return 0x8;
 			case 'integer': return 0x10;
 			case 'buffer': return 0x20;
 			case 'string': return 0x30;

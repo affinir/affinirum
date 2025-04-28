@@ -4,7 +4,7 @@ import { ArrayAtom } from './atom/ArrayAtom.js';
 import { ObjectAtom } from './atom/ObjectAtom.js';
 import { FunctionAtom } from './atom/FunctionAtom.js';
 
-export type Primitive = 'void' | 'number' | 'boolean' | 'timestamp' | 'integer' | 'buffer' | 'string';
+export type Primitive = 'void' | 'boolean' | 'timestamp' | 'float' | 'integer' | 'buffer' | 'string';
 
 type Atom = PrimitiveAtom | ArrayAtom | ObjectAtom | FunctionAtom;
 
@@ -36,16 +36,16 @@ export class Type implements IType {
 		return this.isAtom && this._atoms[0].match(Type.Void._atoms[0]);
 	}
 
-	get isNumber() {
-		return this.isAtom && this._atoms[0].match(Type.Number._atoms[0]);
-	}
-
 	get isBoolean() {
 		return this.isAtom && this._atoms[0].match(Type.Boolean._atoms[0]);
 	}
 
 	get isTimestamp() {
 		return this.isAtom && this._atoms[0].match(Type.Timestamp._atoms[0]);
+	}
+
+	get isFloat() {
+		return this.isAtom && this._atoms[0].match(Type.Float._atoms[0]);
 	}
 
 	get isInteger() {
@@ -74,7 +74,7 @@ export class Type implements IType {
 
 	get isNumeric() {
 		return this._atoms.length === 2
-			&& (this._atoms[0].match(Type.Number._atoms[0]) || this._atoms[0].match(Type.Integer._atoms[0]));
+			&& (this._atoms[0].match(Type.Float._atoms[0]) || this._atoms[0].match(Type.Integer._atoms[0]));
 	}
 
 	toOptional() {
@@ -153,12 +153,12 @@ export class Type implements IType {
 	static of(value: Value) {
 		return value == null
 			? Type.Void
-			: typeof value === 'number'
-				? Type.Number
-				: typeof value === 'boolean'
-					? Type.Boolean
-					: value instanceof Date
-						? Type.Timestamp
+			: typeof value === 'boolean'
+				? Type.Boolean
+				: value instanceof Date
+					? Type.Timestamp
+					: typeof value === 'number'
+						? Type.Float
 						: typeof value === 'bigint'
 							? Type.Integer
 							: value instanceof ArrayBuffer
@@ -174,9 +174,9 @@ export class Type implements IType {
 
 	static isPrimitiveType(value: Value) {
 		return value == null
-			|| typeof value === 'number'
 			|| typeof value === 'boolean'
 			|| value instanceof Date
+			|| typeof value === 'number'
 			|| typeof value === 'bigint'
 			|| value instanceof ArrayBuffer
 			|| typeof value === 'string';
@@ -204,12 +204,12 @@ export class Type implements IType {
 
 	static readonly Unknown = new Type();
 	static readonly Void = Type._primitiveType('void');
-	static readonly Number = Type._primitiveType('number');
-	static readonly OptionalNumber = Type.union(Type.Void, Type.Number);
 	static readonly Boolean = Type._primitiveType('boolean');
 	static readonly OptionalBoolean = Type.union(Type.Void, Type.Boolean);
 	static readonly Timestamp = Type._primitiveType('timestamp');
 	static readonly OptionalTimestamp = Type.union(Type.Void, Type.Timestamp);
+	static readonly Float = Type._primitiveType('float');
+	static readonly OptionalFloat = Type.union(Type.Void, Type.Float);
 	static readonly Integer = Type._primitiveType('integer');
 	static readonly OptionalInteger = Type.union(Type.Void, Type.Integer);
 	static readonly Buffer = Type._primitiveType('buffer');
@@ -222,8 +222,8 @@ export class Type implements IType {
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
 	static readonly Function = Type.functionType();
 	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
-	static readonly Numeric = Type.union(Type.Number, Type.Integer);
-	static readonly OptionalNumeric = Type.union(Type.Void, Type.Number, Type.Integer);
+	static readonly Numeric = Type.union(Type.Float, Type.Integer);
+	static readonly OptionalNumeric = Type.union(Type.Void, Type.Float, Type.Integer);
 	static readonly Enumerable = Type.union(Type.Buffer, Type.String, Type.Array);
 	static readonly OptionalEnumerable = Type.union(Type.Void, Type.Buffer, Type.String, Type.Array);
 	static readonly Iterable = Type.union(Type.Buffer, Type.String, Type.Array, Type.Object);

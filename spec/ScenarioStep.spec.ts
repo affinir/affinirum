@@ -2,7 +2,7 @@ import { Affinirum, Type } from '../src/index.js';
 
 describe('Scenario Step test', ()=> {
 	it('parses and evaluates multiple times', ()=> {
-		const expression = new Affinirum('arr0.Any(~boolean(a:number) { a > 0 } )');
+		const expression = new Affinirum('arr0.Any(~boolean(a:float) { a > 0 } )');
 		expect(expression.evaluate({ arr0: [1, -2, -3, -4] })).toBeTrue();
 		expect(expression.evaluate({ arr0: [-1, -2, -3, -4] })).toBeFalse();
 	});
@@ -20,15 +20,15 @@ describe('Scenario Step test', ()=> {
 	});
 	it('errors on undefines variables in strict mode', ()=> {
 		try {
-			new Affinirum('undefined1*2 + undefined2', { strict: true, variables: { defined: Type.Number } });
+			new Affinirum('undefined1*2 + undefined2', { strict: true, variables: { defined: Type.Float } });
 		}
 		catch (err: any) {
 			expect(err.message).toContain('error');
 			expect(err.message).toContain('undefined1');
 		}
 	});
-	it('parses random number function and evaluates multiple times', ()=> {
-		const expression = new Affinirum('Number.Random(1000000.0)');
+	it('parses random float function and evaluates multiple times', ()=> {
+		const expression = new Affinirum('Float.Random(1000000.0)');
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses random string function and evaluates multiple times', ()=> {
@@ -46,12 +46,13 @@ describe('Scenario Step test', ()=> {
 	it('parses and evaluates value conversion to text', ()=> {
 		const expression = new Affinirum('AVN.Format(obj1)');
 		expect(expression.evaluate({ obj1: {
-			bool: true,
-			num: -50,
-			buf: new Uint8Array([10, 20, 30, 0, 4, 67, 12, 11, 200, 220, 0, 50]).buffer,
-			str: 'string value', func: ()=> '1234',
-			arr: [1n, 2n, 3n],
-			obj: { a: 1, b: 2 },
-		} }) as string).toBe('["bool":true,"num":-50.0,"buf":#0a141e0004430c0bc8dc0032,"str":"string value","func":function,"arr":[1,2,3],"obj":["a":1.0,"b":2.0]]');
+			xbool: true,
+			xfloat: -50,
+			xbuf: new Uint8Array([10, 20, 30, 0, 4, 67, 12, 11, 200, 220, 0, 50]).buffer,
+			xstr: 'string value',
+			xfunc: ()=> '1234',
+			xarr: [1n, 2n, 3n],
+			xobj: { a: 1, b: 2 },
+		} }) as string).toBe('["xbool":true,"xfloat":-50.0,"xbuf":#0a141e0004430c0bc8dc0032,"xstr":"string value","xfunc":function,"xarr":[1,2,3],"xobj":["a":1.0,"b":2.0]]');
 	});
 });

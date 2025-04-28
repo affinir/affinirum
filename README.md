@@ -60,10 +60,10 @@ Whitespace characters are ignored.
 
 ### Types
 * **void** for value **null**
-* **number** IEEE 754 double-precision binary floating-point format: binary64
 * **boolean** for values **true** and **false**
 * **timestamp** for date-time values, millisecons since Unix epoch
-* **integer** for variable sized integer values
+* **float** IEEE 754 double-precision binary floating-point format: binary64
+* **integer** for 64-bit integer values
 * **buffer** for ordered sequences of bytes
 * **string** for ordered sequences of characters, text strings
 * **array** for ordered sequences of valuese
@@ -71,7 +71,7 @@ Whitespace characters are ignored.
 * **function** for built-in, injected or script-defined subroutines
 
 Type modifier **?** can be used to make any type optional (nullable).
-<br>Examples: *number? optNumVar*, *array? optArrayVar*
+<br>Examples: *float? optNumVar*, *array? optArrayVar*
 
 Unknown or variant type is declared as **??**.
 
@@ -117,7 +117,7 @@ Unknown or variant type is declared as **??**.
 ### Constants
 
 #### Array
-* **array Array.Range(inclusiveFrom:number, exclusiveTo:number)** - New array filled with integers in between given two numbers
+* **array Array.Range(inclusiveFrom:integer, exclusiveTo:integer)** - New array filled with integers in between given two numbers
 * **array Array.Chain(...values:array)** - Chain array of any depths into single array
 * **array Array.Unique()** - Array of unique values
 * **array Array.Intersection(a1:array, a2:array)** - Intersection of values of two arrays
@@ -131,9 +131,29 @@ Unknown or variant type is declared as **??**.
 * **boolean Boolean.ParseBoolean()** - Parse boolean from string
 
 #### Buffer
-* **buffer Bufer.Random(length:number)** - Buffer of given length filled with random bytes
+* **buffer Bufer.Random(length:integer)** - Buffer of given length filled with random bytes
 * **string Buffer.FormatBuffer(value:buffer)** - Create hexadecimal string from buffer
 * **buffer Buffer.ParseBuffer(value:string)** Parse buffer from hexadecimal string
+
+#### Float
+* **Float.NAN** - Not-a-number
+* **Float.PositiveInfinity** - Positive infinity
+* **Float.NegativeInfinity** - Negative infinity
+* **Float.Epsilon** - Epsilon
+* **float Float.Sum(...values:float|array)** - Numeric sum
+* **float Float.Min(...values:float|array)** - Numeric minimum
+* **float Float.Max(...values:float|array)** - Numeric maximum
+* **float Float.Exponent()** - Exponent
+* **float Float.Logarithm()** - Logarithm
+* **float Float.Abs()** - Absolute value
+* **float Float.Ceil()** - Ceil
+* **float Float.Floor()** - Floor
+* **float Float.Round()** - Rounded value
+* **float Float.Random(exclusiveTo:float)** - Random number up to given value
+* **buffer Float.Encode(value:float, encoding:string)** - Encode number
+* **float Float.Decode(value:buffer, encoding:string, offset:integer?)** - Decode number
+* **string Float.Format(value:float, radix:integer)** - Format string from number of given radix
+* **float Float.Parse(value:string)** - Parse number from string
 
 #### Integer
 * **integer Integer.Sum(...values:integer|array)** - Numeric sum
@@ -141,33 +161,13 @@ Unknown or variant type is declared as **??**.
 * **integer Integer.Max(...values:integer|array)** - Numeric maximum
 * **integer Integer.Random(exclusiveTo:integer)** - Random integer up to given value
 
-#### Number
-* **Number.NAN** - Not-a-number
-* **Number.PositiveInfinity** - Positive infinity
-* **Number.NegativeInfinity** - Negative infinity
-* **Number.Epsilon** - Epsilon
-* **number Number.Sum(...values:number|array)** - Numeric sum
-* **number Number.Min(...values:number|array)** - Numeric minimum
-* **number Number.Max(...values:number|array)** - Numeric maximum
-* **number Number.Exponent()** - Exponent
-* **number Number.Logarithm()** - Logarithm
-* **number Number.Abs()** - Absolute value
-* **number Number.Ceil()** - Ceil
-* **number Number.Floor()** - Floor
-* **number Number.Round()** - Rounded value
-* **number Number.Random(exclusiveTo:number)** - Random number up to given value
-* **buffer Number.Encode(value:number, encoding:string)** - Encode number
-* **number Number.Decode(value:buffer, encoding:string, offset:number?)** - Decode number
-* **string Number.Format(value:number, radix:number)** - Format string from number of given radix
-* **number Number.Parse(value:string)** - Parse number from string
-
 #### Object
 * **object Object.Merge(...values:array|object)** - Merge objects into single object
 
 #### String
-* **string String.Random(length:number)** - Random alphanumeric string
+* **string String.Random(length:integer)** - Random alphanumeric string
 * **buffer String.Encode(value:string, encoding:string?)** - Encode string
-* **string String.Decode(value:buffer, encoding:string?, offset:number?, length:number?)** - Decode string
+* **string String.Decode(value:buffer, encoding:string?, offset:integer?, length:integer?)** - Decode string
 
 #### Timestamp
 * **timestamp Timestamp.Now()** - Current date time
@@ -178,8 +178,8 @@ Unknown or variant type is declared as **??**.
 * **string AVN.Format(whitespace:string?)** - Create AVN-formatted string
 
 #### JSON
-* **boolean?|number?|string?|array?|object? JSON.Parse(value:string?)** - Parse JSON-formatted string
-* **string? JSON.Format(boolean?|number?|string?|array?|object?, whitespace:string?)** - Create JSON-formatted string
+* **boolean?|float?|string?|array?|object? JSON.Parse(value:string?)** - Parse JSON-formatted string
+* **string? JSON.Format(boolean?|float?|string?|array?|object?, whitespace:string?)** - Create JSON-formatted string
 
 ### Functions
 
@@ -187,32 +187,32 @@ Unknown or variant type is declared as **??**.
 * Null coalescence: **?? ??.Coalesce(otherwise:??)**
 * Equals to: **boolean ??.Equal(value:??)**
 * Not equals to: **boolean ??.Unequal(value:??)**
-* Greater than: **boolean number|integer.GreaterThan(value:number|integer)**
-* Less than: **boolean number|integer.LessThan(value:number|integer)**
-* Greater than or equals to: **boolean number|integer.GreaterOrEqual(value:number|integer)**
-* Less than or equals to: **boolean number|integer.LessOrEqual(value:number|integer)**
-* Arithmetic addition or concatination of buffers, strings and arrays: **number|buffer|string|array number|buffer|string|array.Add(...values:number|buffer|string|array)**
-* Arithmetic subtraction: **number|integer number|integerSubtract(subtrahend:number|integer)**
-* Arithmetic negation: **number|integer number|integerNegate()**
-* Arithmetic multiplication: **number|integer number|integer.Multiply(...values:number|integer)**
-* Arithmetic division: **number|integer number|integer.Divide(divisor:number|integer)**
-* Arithmetic remainder: **number|integer number|integer.Remainder(divisor:number|integer)**
-* Arithmetic modulo: **number|integer number|integer.Modulo(divisor:number|integer)**
-* Power: **number|integer number|integer.Power(exponent:number|integer)**
-* Root: **number|integer number|integer.Root(index:number|integer)**
-* Length of buffer, string, array or object: **number buffer|string|array|object.Length()**
-* New buffer, string or array slice: **buffer|string|array buffer|string|array.Slice(beginIndex:number?, endIndex:number?)**
-* Array or object value at index: **?? array?|object?.At(number|string index)**
+* Greater than: **boolean float|integer.GreaterThan(value:float|integer)**
+* Less than: **boolean float|integer.LessThan(value:float|integer)**
+* Greater than or equals to: **boolean float|integer.GreaterOrEqual(value:float|integer)**
+* Less than or equals to: **boolean float|integer.LessOrEqual(value:float|integer)**
+* Arithmetic addition or concatination of buffers, strings and arrays: **float|buffer|string|array float|buffer|string|array.Add(...values:float|buffer|string|array)**
+* Arithmetic subtraction: **float|integer float|integerSubtract(subtrahend:float|integer)**
+* Arithmetic negation: **float|integer float|integerNegate()**
+* Arithmetic multiplication: **float|integer float|integer.Multiply(...values:float|integer)**
+* Arithmetic division: **float|integer float|integer.Divide(divisor:float|integer)**
+* Arithmetic remainder: **float|integer float|integer.Remainder(divisor:float|integer)**
+* Arithmetic modulo: **float|integer float|integer.Modulo(divisor:float|integer)**
+* Power: **float|integer float|integer.Power(exponent:float|integer)**
+* Root: **float|integer float|integer.Root(index:float|integer)**
+* Length of buffer, string, array or object: **integer buffer|string|array|object.Length()**
+* New buffer, string or array slice: **buffer|string|array buffer|string|array.Slice(beginIndex:integer?, endIndex:integer?)**
+* Array or object value at index: **?? array?|object?.At(integer|string index)**
 
 #### Array Functions
 * Find first item satisfying condition: **?? array.First(condition:function)**
 * Find last item satisfying condition: **?? array.Last(condition:function)**
-* Find first index of item satisfying condition: **number array.FirstIndex(condition:function)**
-* Find last index of item satisfying condition: **number array.LastIndex(condition:function)**
+* Find first index of item satisfying condition: **integer array.FirstIndex(condition:function)**
+* Find last index of item satisfying condition: **integer array.LastIndex(condition:function)**
 * Check if every item satisfies condition: **boolean array.Every(condition:function)**
 * Check if any item satisfies condition: **boolean array.Any(condition:function)**
 * New array with reverse order of items: **array array.Reverse()**
-* New array flattened to specified depth: **array array.Flatten(number depth)**
+* New array flattened to specified depth: **array array.Flatten(integer depth = 1)**
 * Mutate items: **array array.Mutate(function transformation)**
 * Filter items: **array array.Filter(condition:function)**
 * Reduce array to a single value: **?? array.Reduce(function reducer)**
@@ -220,14 +220,14 @@ Unknown or variant type is declared as **??**.
 * Concatination of array of strings with separator: **string array.Join(string separator = ' ')**
 
 #### Buffer Functions
-* Byte at position: **buffer buffer.Byte(pos:number)**
+* Byte at position: **buffer buffer.Byte(pos:integer)**
 
 #### String Functions
 * String alphanumerically equals to: **boolean string.Like(value:string)**
 * String alphanumerically not equals to: **boolean string.Unlike(value:string)**
-* String contains substring: **boolean string.Contains(search:string, startPos:number?, ignoreCaseSpaceEtc:boolean?)**
-* String starts with substring: **boolean string.StartsWith(search:string, startPos:number?, ignoreCaseSpaceEtc:boolean?)**
-* String ends with substring: **boolean string.EndsWith(search:string, endPos:number?, ignoreCaseSpaceEtc:boolean?)**
+* String contains substring: **boolean string.Contains(search:string, startPos:integer?, ignoreCaseSpaceEtc:boolean?)**
+* String starts with substring: **boolean string.StartsWith(search:string, startPos:integer?, ignoreCaseSpaceEtc:boolean?)**
+* String ends with substring: **boolean string.EndsWith(search:string, endPos:integer?, ignoreCaseSpaceEtc:boolean?)**
 * Get alphanumeric digest of string: **string string.Alphanum()**
 * Trim whitespace: **string string.Trim()**
 * Trim whitespace at start: **string string.TrimStart()**
@@ -235,8 +235,8 @@ Unknown or variant type is declared as **??**.
 * Lower case: **string string.LowerCase()**
 * Upper case: **string string.UpperCase()**
 * Split string into array of strings using separator: **array string.Split(string separator = ' ')**
-* Character at position: **string string.Char(pos:number)**
-* Character code at position: **number string.CharCode(pos:number)**
+* Character at position: **string string.Char(pos:integer)**
+* Character code at position: **integer string.CharCode(pos:integer)**
 
 #### Object Functions
 * Object key-value pairs: **array object.Entries()**
@@ -244,16 +244,16 @@ Unknown or variant type is declared as **??**.
 * Object values: **array object.Values()**
 
 #### Timestamp Functions
-* Get year: **number timestamp.Year(utc:boolean?)**
-* Get month: **number timestamp.Month(utc:boolean?)**
-* Get month index: **number timestamp.MonthIndex(utc:boolean?)**
-* Get weekday index: **number timestamp.WeekdayIndex(utc:boolean?)**
-* Get day of a month: **number timestamp.Day(utc:boolean?)**
-* Get hour: **number timestamp.Hour(utc:boolean?)**
-* Get minute: **number timestamp.Minute(utc:boolean?)**
-* Get second: **number timestamp.Second(utc:boolean?)**
-* Get millisecond: **number timestamp.Millisecond(utc:boolean?)**
-* Get milliseconds since epoch: **number timestamp.EpochTime(epoch:timestamp?)**
+* Get year: **integer timestamp.Year(utc:boolean?)**
+* Get month: **integer timestamp.Month(utc:boolean?)**
+* Get month index: **integer timestamp.MonthIndex(utc:boolean?)**
+* Get weekday index: **integer timestamp.WeekdayIndex(utc:boolean?)**
+* Get day of a month: **integer timestamp.Day(utc:boolean?)**
+* Get hour: **integer timestamp.Hour(utc:boolean?)**
+* Get minute: **integer timestamp.Minute(utc:boolean?)**
+* Get second: **integer timestamp.Second(utc:boolean?)**
+* Get millisecond: **integer timestamp.Millisecond(utc:boolean?)**
+* Get milliseconds since epoch: **integer timestamp.EpochTime(epoch:timestamp?)**
 
 ## Language Grammar
 
@@ -277,7 +277,7 @@ The script parsing is performed using the following grammar:
 	<variable> = { ( "const" | "var" ) } <variable-name> { ":"<type>} { ( "=" | "|=" | "&=" | "+=" | "-=" | "*=" | "/=" | "%=" )<unit> }
 	<function> = <function-name>"("{ <unit> }{ ","<unit> }")"
 	<subroutine> = <type>"("{ <argument-name>":"<type> }{ ","<argument-name>":"<type> }")" "{"<unit>"}"
-	<type> = "??" | ( "void" | "number" | "boolean" | "timestamp" | "integer" | "buffer" | "string" |
+	<type> = "??" | ( "void" | "boolean" | "timestamp" | "float" | "integer" | "buffer" | "string" |
 		"array" | "object" | "function" ){ "?" }
 	<loop> = while <unit> "{" <block> "}"
 	<switch> = if <unit> "{" <unit> "} else {" <unit> "}"
@@ -304,7 +304,7 @@ const objExpr = new Affinirum( '[`prop1`:a,`prop2`:`abc`].prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new Affinirum(
-	'Number.Sum(arr1.Mutate(number(a:number)->a*2).Filter(boolean(a:number)->a>3))'
+	'Float.Sum(arr1.Mutate(float(a:float)->a*2).Filter(boolean(a:float)->a>3))'
 );
 const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
 ...

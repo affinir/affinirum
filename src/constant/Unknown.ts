@@ -101,7 +101,7 @@ export const funcAdd = new Constant(
 			return (values as number[]).reduce((acc, val)=> acc + Number(val), 0);
 		}
 		if (typeof values[0] === 'bigint') {
-			return (values as bigint[]).reduce((acc, val)=> acc + BigInt(val), 0n);
+			return (values as bigint[]).reduce((acc, val)=> BigInt.asIntN(64, acc + BigInt(val)), 0n);
 		}
 		if (values[0] instanceof ArrayBuffer) {
 			const length = (values as ArrayBuffer[]).reduce((acc, val)=> acc + val.byteLength, 0);
@@ -128,7 +128,7 @@ export const funcSubtract = new Constant(
 	(value: number | bigint, subtrahend: number | bigint)=>
 		typeof value === 'number'
 			? value - Number(subtrahend)
-			: value - BigInt(subtrahend),
+			: BigInt.asIntN(64, value - BigInt(subtrahend)),
 	typeOperator,
 );
 
@@ -136,7 +136,7 @@ export const funcMultiply = new Constant(
 	(...values: number[] | bigint[])=>
 		typeof values[0] === 'number'
 			? values.map((i)=> Number(i)).reduce((acc, val)=> acc *= val)
-			: values.map((i)=> BigInt(i)).reduce((acc, val)=> acc *= val),
+			: values.map((i)=> BigInt(i)).reduce((acc, val)=> BigInt.asIntN(64, acc *= val)),
 	Type.functionTypeInference(1, Type.Numeric, [Type.Numeric, Type.Numeric], true),
 );
 
@@ -144,7 +144,7 @@ export const funcDivide = new Constant(
 	(value: number | bigint, divisor: number | bigint)=>
 		typeof value === 'number'
 			? value / Number(divisor)
-			: value / BigInt(divisor),
+			: BigInt.asIntN(64, value / BigInt(divisor)),
 	typeOperator,
 );
 
@@ -152,7 +152,7 @@ export const funcRemainder = new Constant(
 	(value: number | bigint, divisor: number | bigint)=>
 		typeof value === 'number'
 			? value % Number(divisor)
-			: value % BigInt(divisor),
+			: BigInt.asIntN(64, value % BigInt(divisor)),
 	typeOperator,
 );
 
@@ -160,7 +160,7 @@ export const funcModulo = new Constant(
 	(value: number | bigint, divisor: number | bigint)=>
 		typeof value === 'number'
 			? (value % Number(divisor) + Number(divisor)) % Number(divisor)
-			: (value % BigInt(divisor) + BigInt(divisor)) % BigInt(divisor),
+			: BigInt.asIntN(64, (value % BigInt(divisor) + BigInt(divisor)) % BigInt(divisor)),
 	typeOperator,
 );
 
@@ -168,7 +168,7 @@ export const funcPower = new Constant(
 	(value: number | bigint, exponent: number | bigint)=>
 		typeof value === 'number'
 			? value ** Number(exponent)
-			: value ** BigInt(exponent),
+			: BigInt.asIntN(64, value ** BigInt(exponent)),
 	typeOperator,
 );
 
@@ -199,13 +199,13 @@ export const funcRoot = new Constant(
 				high = mid - 1n;
 			}
 		}
-		return result;
+		return BigInt.asIntN(64, result);
 	},
 	typeOperator,
 );
 
 export const funcNegate = new Constant(
 	(value: number | bigint)=>
-		-value,
+		typeof value === 'number' ? -value : BigInt.asIntN(64, -value),
 	Type.functionTypeInference(1, Type.Numeric, [Type.Numeric]),
 );

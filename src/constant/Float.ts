@@ -1,9 +1,9 @@
 import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
-const typeNumberOrArray = Type.union(Type.Number, Type.arrayType([Type.Number]));
-const typeAggregator = Type.functionType(Type.Number, [typeNumberOrArray], true);
-const typeNumberTransform = Type.functionType(Type.Number, [Type.Number]);
+const typeNumberOrArray = Type.union(Type.Float, Type.arrayType([Type.Float]));
+const typeAggregator = Type.functionType(Type.Float, [typeNumberOrArray], true);
+const typeNumberTransform = Type.functionType(Type.Float, [Type.Float]);
 
 const funcSum = new Constant(
 	(...values: (number | number[])[])=>
@@ -59,17 +59,15 @@ const funcRound = new Constant(
 	typeNumberTransform,
 );
 
-const funcRandomNumber = new Constant(
+const funcRandomFloat = new Constant(
 	(value: number)=>
 		value == null ? undefined : Math.random() * value,
-	Type.functionType(Type.Number, [Type.Number]),
+	Type.functionType(Type.Float, [Type.Float]),
 	false,
 );
 
-const funcEncodeNumber = new Constant(
-	(value: number, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
-			| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
-			| 'float32' | 'float32le' | 'float64' | 'float64le')=> {
+const funcEncodeFloat = new Constant(
+	(value: number, encoding: 'float32' | 'float32le' | 'float64' | 'float64le')=> {
 		if (value == null) {
 			return new Uint8Array(0).buffer;
 		}
@@ -82,16 +80,6 @@ const funcEncodeNumber = new Constant(
 		}
 		const dv = new DataView(new Uint8Array(Number.parseInt(bits) / 8).buffer);
 		switch (encoding) {
-			case 'int8': dv.setInt8(0, value); break;
-			case 'int16': dv.setInt16(0, value); break;
-			case 'int16le': dv.setInt16(0, value, true); break;
-			case 'int32': dv.setInt32(0, value); break;
-			case 'int32le': dv.setInt32(0, value, true); break;
-			case 'uint8': dv.setUint8(0, value); break;
-			case 'uint16': dv.setUint16(0, value); break;
-			case 'uint16le': dv.setUint16(0, value, true); break;
-			case 'uint32': dv.setUint32(0, value); break;
-			case 'uint32le': dv.setUint32(0, value, true); break;
 			case 'float32': dv.setFloat32(0, value); break;
 			case 'float32le': dv.setFloat32(0, value, true); break;
 			case 'float64': dv.setFloat64(0, value); break;
@@ -100,28 +88,16 @@ const funcEncodeNumber = new Constant(
 		}
 		return dv.buffer;
 	},
-	Type.functionType(Type.Buffer, [Type.Number, Type.String]),
+	Type.functionType(Type.Buffer, [Type.Float, Type.String]),
 );
 
-const funcDecodeNumber = new Constant(
-	(value: ArrayBuffer, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
-			| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
-			| 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: bigint)=> {
+const funcDecodeFloat = new Constant(
+	(value: ArrayBuffer, encoding: 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: bigint)=> {
 		if (value == null) {
 			return undefined;
 		}
 		const dv = new DataView(value, byteOffset == null ? undefined : Number(byteOffset));
 		switch (encoding) {
-			case 'int8': return dv.getInt8(0);
-			case 'int16': return dv.getInt16(0);
-			case 'int16le': return dv.getInt16(0, true);
-			case 'int32': return dv.getInt32(0);
-			case 'int32le': return dv.getInt32(0, true);
-			case 'uint8': return dv.getUint8(0);
-			case 'uint16': return dv.getUint16(0);
-			case 'uint16le': return dv.getUint16(0, true);
-			case 'uint32': return dv.getUint32(0);
-			case 'uint32le': return dv.getUint32(0, true);
 			case 'float32': return dv.getFloat32(0);
 			case 'float32le': return dv.getFloat32(0, true);
 			case 'float64': return dv.getFloat64(0);
@@ -129,22 +105,22 @@ const funcDecodeNumber = new Constant(
 			default: throw new Error(`${encoding} encoding not supported`);
 		}
 	},
-	Type.functionType(Type.OptionalNumber, [Type.Buffer, Type.String, Type.OptionalInteger]),
+	Type.functionType(Type.OptionalFloat, [Type.Buffer, Type.String, Type.OptionalInteger]),
 );
 
-const funcFormatNumber = new Constant(
+const funcFormatFloat = new Constant(
 	(value: number, radix?: bigint)=>
 		value?.toString(radix ? Number(radix) : undefined) ?? '',
-	Type.functionType(Type.String, [Type.Number, Type.OptionalInteger]),
+	Type.functionType(Type.String, [Type.Float, Type.OptionalInteger]),
 );
 
-const funcParseNumber = new Constant(
+const funcParseFloat = new Constant(
 	(value: string)=>
 		value ? Number.parseFloat(value) : undefined,
-	Type.functionType(Type.OptionalNumber, [Type.String]),
+	Type.functionType(Type.OptionalFloat, [Type.String]),
 );
 
-export const constNumber = {
+export const constFloat = {
 	NAN: new Constant(Number.NaN),
 	PositiveInfinity: new Constant(Number.POSITIVE_INFINITY),
 	NegativeInfinity: new Constant(Number.NEGATIVE_INFINITY),
@@ -158,9 +134,9 @@ export const constNumber = {
 	Ceil: funcCeil,
 	Floor: funcFloor,
 	Round: funcRound,
-	Random: funcRandomNumber,
-	Encode: funcEncodeNumber,
-	Decode: funcDecodeNumber,
-	Format: funcFormatNumber,
-	Parse: funcParseNumber,
+	Random: funcRandomFloat,
+	Encode: funcEncodeFloat,
+	Decode: funcDecodeFloat,
+	Format: funcFormatFloat,
+	Parse: funcParseFloat,
 };

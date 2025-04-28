@@ -64,7 +64,7 @@ export const funcMillisecond = new Constant(
 );
 
 export const funcEpochTime = new Constant(
-	(value: Date, epoch = new Date(0))=> BigInt(value.getTime() - epoch.getTime()),
+	(value: Date, epoch = new Date(0))=> BigInt.asIntN(64, BigInt(value.getTime() - epoch.getTime())),
 	Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalTimestamp]),
 );
 
