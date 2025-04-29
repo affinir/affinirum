@@ -3,6 +3,20 @@ import { Type } from '../Type.js';
 
 const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
 
+export const formatTimestamp = (value: Date, radix?: number)=> {
+	const str = value.toISOString();
+	switch (radix) {
+		case 1: return str.slice(0, 4);
+		case 2: return str.slice(5, 7);
+		case 3: return str.slice(8, 10);
+		case 4: return str.slice(11, 13);
+		case 5: return str.slice(14, 16);
+		case 6: return str.slice(17, 19);
+		case 7: return str.slice(20, 23);
+		default: return str;
+	}
+};
+
 const parseTimestamp = (value?: number | string)=> {
 	if (value == null) {
 		return undefined;

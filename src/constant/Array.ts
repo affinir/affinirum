@@ -131,7 +131,7 @@ export const funcAppend = new Constant(
 	typeVariadicInsert,
 );
 
-const funcChain = new Constant(
+const funcJoin = new Constant(
 	(...values: (Value[] | Value[][])[])=>
 		(values as []).flat(Infinity).reduce((acc, val)=> [...acc, val], []),
 	Type.functionType(Type.Array, [Type.Array], true),
@@ -172,7 +172,7 @@ const funcDifference = new Constant(
 );
 
 export const constArray = {
-	Chain: funcChain,
+	Join: funcJoin,
 	Range: funcRange,
 	Unique: funcUnique,
 	Intersection: funcIntersection,

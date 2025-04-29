@@ -5,6 +5,7 @@ import { encodeFloat, formatFloat } from './Float.js';
 import { encodeInteger } from './Integer.js';
 import { equateBuffers, formatBuffer } from './Buffer.js';
 import { encodeString } from './String.js';
+import { formatTimestamp } from './Timestamp.js';
 
 export const equate = (value1: Value, value2: Value)=> {
 	if (value1 == null || value2 == null) {
@@ -57,7 +58,7 @@ const format = (value: Value, radix?: number, separator: string = ''): string=>
 		: typeof value === 'boolean'
 			? value.toString()
 			: value instanceof Date
-				? value.toISOString()
+				? formatTimestamp(value, radix ? Number(radix) : undefined)
 				: typeof value === 'number'
 					? formatFloat(value, radix ? Number(radix) : undefined)
 					: typeof value === 'bigint'
