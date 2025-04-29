@@ -34,7 +34,7 @@ export const concatBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 
 export const formatBuffer = (value?: ArrayBuffer)=> {
 	if (value == null) {
-		return undefined;
+		return '';
 	}
 	const bytes = new Uint8Array(value);
 	let str = '';
@@ -70,12 +70,6 @@ const funcRandomBuffer = new Constant(
 	false,
 );
 
-const funcFormatBuffer = new Constant(
-	(value: ArrayBuffer)=>
-		formatBuffer(value) ?? '',
-	Type.functionType(Type.String, [Type.Buffer]),
-);
-
 const funcParseBuffer = new Constant(
 	(value: string)=>
 		parseBuffer(value),
@@ -84,6 +78,5 @@ const funcParseBuffer = new Constant(
 
 export const constBuffer = {
 	Random: funcRandomBuffer,
-	Format: funcFormatBuffer,
 	Parse: funcParseBuffer,
 };

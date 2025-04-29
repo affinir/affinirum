@@ -3,7 +3,7 @@ import { Value } from '../../Value.js';
 import { Type } from '../../Type.js';
 import { formatBuffer } from '../Buffer.js';
 
-export const notate = (value: Value, whitespace?: string): string=> {
+export const notate = (value: Value, separator?: string, whitespace?: string): string=> {
 	if (value == null) {
 		return 'null';
 	}
@@ -25,16 +25,15 @@ export const notate = (value: Value, whitespace?: string): string=> {
 	if (typeof value === 'string') {
 		return `"${value}"`;
 	}
-	const prefix = whitespace ? '\n' + whitespace : '';
-	const suffix = whitespace ? '\n' : '';
 	if (Array.isArray(value)) {
-		const lines = (value as []).map((i)=> `${prefix}${notate(i, whitespace).split('\n').join(prefix)}`);
-		return `[${lines.join(',')}${suffix}]`;
+		const [prefix, suffix] = whitespace ? ['\n' + whitespace, '\n'] : ['', ''];
+		const lines = value.map((i)=> `${prefix}${notate(i, whitespace).split('\n').join(prefix)}`);
+		return `[${lines.join(separator)}${suffix}]`;
 	}
 	if (typeof value === 'object') {
-		const separator = whitespace ? ' ' : '';
-		const lines = Object.entries(value).map(([k, v])=> `${prefix}"${k}":${separator}${notate(v, whitespace).split('\n').join(prefix)}`);
-		return `[${lines.join(',')}${suffix}]`;
+		const [prefix, suffix] = whitespace ? ['\n' + whitespace, '\n'] : ['', ''];
+		const lines = Object.entries(value).map(([k, v])=> `${prefix}"${k}":${notate(v, whitespace).split('\n').join(prefix)}`);
+		return `[${lines.join(separator)}${suffix}]`;
 	}
 	return 'function';
 };

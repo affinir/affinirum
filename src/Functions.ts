@@ -1,8 +1,8 @@
 import { Constant } from './Constant.js';
 import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
-	funcFlatten, funcReverse, funcMutate, funcFilter, funcReduce, funcCompose, funcPrepend, funcAppend, funcJoin } from './constant/Array.js';
+	funcFlatten, funcReverse, funcMutate, funcFilter, funcReduce, funcCompose, funcPrepend, funcAppend } from './constant/Array.js';
 import { funcByte } from './constant/Buffer.js';
-import { funcSlice } from './constant/Enumerable.js';
+import { funcAdd, funcSlice, funcSplice, funcInject } from './constant/Enumerable.js';
 import { funcLength, funcAt } from './constant/Iterable.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
 	funcPower, funcRoot, funcNegate, funcCast } from './constant/Number.js';
@@ -12,8 +12,7 @@ import { funcLike, funcUnlike, funcContains, funcStartsWith, funcEndsWith,
 	funcSplit } from './constant/String.js';
 import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay,
 	funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime } from './constant/Timestamp.js';
-import { funcCoalesce, funcEqual, funcNotEqual, 
-	funcAdd } from './constant/Unknown.js';
+import { funcCoalesce, funcEqual, funcNotEqual, funcEncode, funcFormat } from './constant/Unknown.js';
 
 export const Functions: [string, Constant][] = [
 	// Array
@@ -31,11 +30,13 @@ export const Functions: [string, Constant][] = [
 	['Compose', funcCompose],
 	['Prepend', funcPrepend],
 	['Append', funcAppend],
-	['Join', funcJoin],
 	// Buffer
 	['Byte', funcByte],
 	// Enumerable
+	['Add', funcAdd],
 	['Slice', funcSlice],
+	['Splice', funcSplice],
+	['Inject', funcInject],
 	// Iterable
 	['Length', funcLength],
 	['At', funcAt],
@@ -87,5 +88,6 @@ export const Functions: [string, Constant][] = [
 	['Coalesce', funcCoalesce],
 	['Equal', funcEqual],
 	['Unequal', funcNotEqual],
-	['Add', funcAdd],
+	['Encode', funcEncode],
+	['Format', funcFormat],
 ];

@@ -1,6 +1,42 @@
 import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
+export const encodeFloat = (value: number, encoding: 'float32' | 'float32le' | 'float64' | 'float64le')=> {
+	if (value == null) {
+		return new Uint8Array(0).buffer;
+	}
+	let bits = '';
+	for (let i = 0; i < encoding.length; ++i) {
+		const c = encoding[i];
+		if (c >= '0' && c <= '9') {
+			bits += c;
+		}
+	}
+	const dv = new DataView(new Uint8Array(Number.parseInt(bits) / 8).buffer);
+	switch (encoding) {
+		case 'float32': dv.setFloat32(0, value); break;
+		case 'float32le': dv.setFloat32(0, value, true); break;
+		case 'float64': dv.setFloat64(0, value); break;
+		case 'float64le': dv.setFloat64(0, value, true); break;
+		default: throw new Error(`${encoding} encoding not supported`);
+	}
+	return dv.buffer;
+};
+
+const decodeFloat = (value: ArrayBuffer, encoding: 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: bigint)=> {
+	if (value == null) {
+		return undefined;
+	}
+	const dv = new DataView(value, byteOffset == null ? undefined : Number(byteOffset));
+	switch (encoding) {
+		case 'float32': return dv.getFloat32(0);
+		case 'float32le': return dv.getFloat32(0, true);
+		case 'float64': return dv.getFloat64(0);
+		case 'float64le': return dv.getFloat64(0, true);
+		default: throw new Error(`${encoding} encoding not supported`);
+	}
+};
+
 export const formatFloat = (value: number, radix?: number)=>
 	value.toString(radix) + (Number.isInteger(value) ? '.0' : '');
 
@@ -75,52 +111,10 @@ const funcRandomFloat = new Constant(
 	false,
 );
 
-const funcEncodeFloat = new Constant(
-	(value: number, encoding: 'float32' | 'float32le' | 'float64' | 'float64le')=> {
-		if (value == null) {
-			return new Uint8Array(0).buffer;
-		}
-		let bits = '';
-		for (let i = 0; i < encoding.length; ++i) {
-			const c = encoding[i];
-			if (c >= '0' && c <= '9') {
-				bits += c;
-			}
-		}
-		const dv = new DataView(new Uint8Array(Number.parseInt(bits) / 8).buffer);
-		switch (encoding) {
-			case 'float32': dv.setFloat32(0, value); break;
-			case 'float32le': dv.setFloat32(0, value, true); break;
-			case 'float64': dv.setFloat64(0, value); break;
-			case 'float64le': dv.setFloat64(0, value, true); break;
-			default: throw new Error(`${encoding} encoding not supported`);
-		}
-		return dv.buffer;
-	},
-	Type.functionType(Type.Buffer, [Type.Float, Type.String]),
-);
-
 const funcDecodeFloat = new Constant(
-	(value: ArrayBuffer, encoding: 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: bigint)=> {
-		if (value == null) {
-			return undefined;
-		}
-		const dv = new DataView(value, byteOffset == null ? undefined : Number(byteOffset));
-		switch (encoding) {
-			case 'float32': return dv.getFloat32(0);
-			case 'float32le': return dv.getFloat32(0, true);
-			case 'float64': return dv.getFloat64(0);
-			case 'float64le': return dv.getFloat64(0, true);
-			default: throw new Error(`${encoding} encoding not supported`);
-		}
-	},
+	(value: ArrayBuffer, encoding: 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: bigint)=>
+		decodeFloat(value, encoding, byteOffset),
 	Type.functionType(Type.OptionalFloat, [Type.Buffer, Type.String, Type.OptionalInteger]),
-);
-
-const funcFormatFloat = new Constant(
-	(value: number, radix?: bigint)=>
-		value ? formatFloat(value, radix ? Number(radix) : undefined) : '',
-	Type.functionType(Type.String, [Type.Float, Type.OptionalInteger]),
 );
 
 const funcParseFloat = new Constant(
@@ -145,8 +139,6 @@ export const constFloat = {
 	Round: funcRound,
 	Truncate: funcTruncate,
 	Random: funcRandomFloat,
-	Encode: funcEncodeFloat,
 	Decode: funcDecodeFloat,
-	Format: funcFormatFloat,
 	Parse: funcParseFloat,
 };

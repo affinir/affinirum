@@ -131,10 +131,10 @@ export const funcAppend = new Constant(
 	typeVariadicInsert,
 );
 
-export const funcJoin = new Constant(
-	(value: string[], separator: string = ' ')=>
-		value.join(separator),
-	Type.functionType(Type.String, [Type.Array, Type.OptionalString]),
+const funcChain = new Constant(
+	(...values: (Value[] | Value[][])[])=>
+		(values as []).flat(Infinity).reduce((acc, val)=> [...acc, val], []),
+	Type.functionType(Type.Array, [Type.Array], true),
 );
 
 const funcRange = new Constant(
@@ -144,12 +144,6 @@ const funcRange = new Constant(
 		return [...Array(Number(max - min)).keys()].map((i)=> BigInt(i) + min);
 	},
 	Type.functionType(Type.Array, [Type.Integer, Type.Integer]),
-);
-
-const funcChain = new Constant(
-	(...values: (Value[] | Value[][])[])=>
-		(values as []).flat(2).reduce((acc, val)=> [...acc, val], []),
-	Type.functionType(Type.Array, [Type.Array], true),
 );
 
 const funcUnique = new Constant(
@@ -178,8 +172,8 @@ const funcDifference = new Constant(
 );
 
 export const constArray = {
-	Range: funcRange,
 	Chain: funcChain,
+	Range: funcRange,
 	Unique: funcUnique,
 	Intersection: funcIntersection,
 	Difference: funcDifference,

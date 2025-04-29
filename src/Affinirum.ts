@@ -1,9 +1,9 @@
 import { funcOr, funcAnd, funcNot } from './constant/Boolean.js';
+import { funcAdd } from './constant/Enumerable.js';
 import { funcAt } from './constant/Iterable.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from './constant/Number.js';
-import { funcCoalesce, funcEqual, funcNotEqual,
-	funcAdd } from './constant/Unknown.js';
+import { funcCoalesce, funcEqual, funcNotEqual } from './constant/Unknown.js';
 import { Constant } from './Constant.js';
 import { Variable } from './Variable.js';
 import { Value } from './Value.js';

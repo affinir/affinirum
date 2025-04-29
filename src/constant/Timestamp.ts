@@ -84,11 +84,6 @@ const funcEpochTimestamp = new Constant(
 	Type.functionType(Type.Timestamp, [Type.union(Type.Float, Type.Integer), Type.OptionalTimestamp]),
 );
 
-const funcFormatTimestamp = new Constant(
-	(value: Date)=> value?.toISOString() ?? '',
-	Type.functionType(Type.String, [Type.Timestamp]),
-);
-
 const funcParseTimestamp = new Constant(
 	(value: string)=> parseTimestamp(value),
 	Type.functionType(Type.OptionalTimestamp, [Type.String]),
@@ -97,6 +92,5 @@ const funcParseTimestamp = new Constant(
 export const constTimestamp = {
 	Now: funcNow,
 	Epoch: funcEpochTimestamp,
-	Format: funcFormatTimestamp,
 	Parse: funcParseTimestamp,
 };

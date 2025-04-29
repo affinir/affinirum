@@ -1,12 +1,13 @@
 import { funcAt } from './constant/Iterable.js';
 import { funcOr, funcAnd, funcNot } from './constant/Boolean.js';
 import { parseBuffer } from './constant/Buffer.js';
+import { funcAdd } from './constant/Enumerable.js';
 import { isSign, isAlpha, isNumeric, isAlphanumeric, isHexadecimal, isQuotation,
 	isDateSymbol, isTimeSymbol, isDateTimeSeparator } from './constant/String.js';
 import { Constant } from './Constant.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './constant/Number.js';
-import { funcCoalesce, funcEqual, funcNotEqual, funcAdd } from './constant/Unknown.js';
+import { funcCoalesce, funcEqual, funcNotEqual } from './constant/Unknown.js';
 import { Value } from './Value.js';
 import { Type } from './Type.js';
 import { ParserFrame } from './ParserFrame.js';

@@ -40,7 +40,7 @@ describe('Scenario Step test', ()=> {
 		expect(expression.evaluate({ obj0: undefined }) as string).toBe('null');
 	});
 	it('parses pure constant expression and compiles to a constant node', ()=> {
-		const expression = new Affinirum('("ABC" + Timestamp.Format(Timestamp.Parse("2000-01-01"))).Length');
+		const expression = new Affinirum('("ABC" + Timestamp.Parse("2000-01-01").Format).Length');
 		expect(expression.type.toString()).toBe('integer');
 	});
 	it('parses and evaluates value conversion to text', ()=> {

@@ -107,6 +107,43 @@ export const endsWithString = (value: string, search: string, endPos?: number, i
 	return true;
 };
 
+export const encodeString = (value: string, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8')=> {
+	if (value == null) {
+		return new Uint8Array(0).buffer;
+	}
+	if (encoding === 'utf8') {
+		return new TextEncoder().encode(value).buffer;
+	}
+	else {
+		const dv = new DataView(new Uint16Array(value.length).buffer);
+		const lessOrEqual = encoding.endsWith('le');
+		for (let i = 0; i < value.length; ++i) {
+			dv.setUint16(i << 1, value.charCodeAt(i), lessOrEqual);
+		}
+		return dv.buffer;
+	}
+};
+
+const decodeString = (value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: bigint, byteLength?: bigint)=> {
+	if (value == null) {
+		return undefined;
+	}
+	const offset = byteOffset == null ? undefined : Number(byteOffset);
+	const length = byteLength == null ? undefined : Number(byteLength);
+	if (encoding === 'utf8') {
+		return new TextDecoder().decode(new DataView(value, offset, length));
+	}
+	else {
+		const dv = new DataView(value, offset, length);
+		const lessOrEqual = encoding.endsWith('le');
+		let str = '';
+		for (let i = 0; i < dv.byteLength; i += 2) {
+			str += String.fromCharCode(dv.getUint16(i, lessOrEqual));
+		}
+		return str;
+	}
+};
+
 const typeStringEquator = Type.functionType(Type.Boolean, [Type.String, Type.String]);
 const typeStringComparator = Type.functionType(Type.Boolean, [Type.String, Type.String, Type.OptionalInteger, Type.OptionalBoolean]);
 const typeStringMutator = Type.functionType(Type.String, [Type.String]);
@@ -219,51 +256,13 @@ const funcRandomString = new Constant(
 	false,
 );
 
-const funcEncodeString = new Constant(
-	(value: string, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8')=> {
-		if (value == null) {
-			return new Uint8Array(0).buffer;
-		}
-		if (encoding === 'utf8') {
-			return new TextEncoder().encode(value).buffer;
-		}
-		else {
-			const dv = new DataView(new Uint16Array(value.length).buffer);
-			const lessOrEqual = encoding.endsWith('le');
-			for (let i = 0; i < value.length; ++i) {
-				dv.setUint16(i << 1, value.charCodeAt(i), lessOrEqual);
-			}
-			return dv.buffer;
-		}
-	},
-	Type.functionType(Type.Buffer, [Type.String, Type.OptionalString]),
-);
-
 const funcDecodeString = new Constant(
-	(value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: bigint, byteLength?: bigint)=> {
-		if (value == null) {
-			return undefined;
-		}
-		const offset = byteOffset == null ? undefined : Number(byteOffset);
-		const length = byteLength == null ? undefined : Number(byteLength);
-		if (encoding === 'utf8') {
-			return new TextDecoder().decode(new DataView(value, offset, length));
-		}
-		else {
-			const dv = new DataView(value, offset, length);
-			const lessOrEqual = encoding.endsWith('le');
-			let str = '';
-			for (let i = 0; i < dv.byteLength; i += 2) {
-				str += String.fromCharCode(dv.getUint16(i, lessOrEqual));
-			}
-			return str;
-		}
-	},
+	(value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: bigint, byteLength?: bigint)=>
+		decodeString(value, encoding, byteOffset, byteLength),
 	Type.functionType(Type.OptionalString, [Type.Buffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]),
 );
 
 export const constString = {
 	Random: funcRandomString,
-	Encode: funcEncodeString,
 	Decode: funcDecodeString,
 };

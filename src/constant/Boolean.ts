@@ -22,12 +22,6 @@ export const funcNot = new Constant(
 	Type.functionType(Type.Boolean, [Type.Boolean]),
 );
 
-const funcFormatBoolean = new Constant(
-	(value: boolean)=>
-		value?.toString() ?? '',
-	Type.functionType(Type.String, [Type.Boolean]),
-);
-
 const funcParseBoolean = new Constant(
 	(value: string)=> {
 		if (value == null) {
@@ -43,6 +37,5 @@ export const constBoolean = {
 	Or: funcOr,
 	And: funcAnd,
 	Not: funcNot,
-	Format: funcFormatBoolean,
 	Parse: funcParseBoolean,
 };
