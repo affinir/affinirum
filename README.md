@@ -23,11 +23,10 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 
 ## Specifications
 
-Script can contain multiple comma-separated expressions, and blocks of statements.
+Script can contain multiple semicolon-separated expressions, and blocks of statements.
 The value of a block is determined by the value of the last expression.
-* Scientific notation is supported for numbers, like *0.1281e+2*
+* Scientific notation is supported for floating point numbers, like *0.1281e+2*
 * ISO Timestamps prefixed with **@**, like *@2025-05-11T19:09:21.320Z*
-* Variable size integers are supported and prefixed with **0**, like *00*, *-045*
 * Hexadecimal buffer values are prefixed with **#**, like *#10ab0901*
 * String literals are enclosed in single (**'**), double (**"**), or backtick (**`**) quotes, like *'string value'*
 
@@ -81,9 +80,9 @@ Unknown or variant type is declared as **??**.
 * Value and unit separator: **,**
 * Array element at numeric index, or object property by string key: **[]**
 * Object property by string key or method function call: **.**
-* Array definiton: **[element1, ...]**
+* Array definiton: **[item1, ...]**
 * Object definition: **[propery1-key: property1-value, ...]**
-* Subroutine definition: **return-type(argument1-type argument1-name, ...) {...}**
+* Subroutine definition: **~return-type(argument1-name: argument1-type, ...) {...}**
 * Conditional switch definition, returns first or second value if prefix is true or false: **if condition {value1} else {value2}**,
  and if **else** clause is ommited second value deemed null
 * Loop definition, iteratively evaluates suffix while prefix is true, returns last evaluated value: **while condition {...}**
@@ -128,12 +127,12 @@ Unknown or variant type is declared as **??**.
 * **boolean Boolean.And(...values:boolean|array)** - Boolean conjunction
 * **boolean Boolean.Not(value:boolean)** - Boolean negation
 * **string Boolean.FormatBoolean()** - Format string from boolean
-* **boolean Boolean.ParseBoolean()** - Parse boolean from string
+* **boolean? Boolean.ParseBoolean()** - Parse boolean from string
 
 #### Buffer
 * **buffer Bufer.Random(length:integer)** - Buffer of given length filled with random bytes
 * **string Buffer.FormatBuffer(value:buffer)** - Create hexadecimal string from buffer
-* **buffer Buffer.ParseBuffer(value:string)** Parse buffer from hexadecimal string
+* **buffer? Buffer.ParseBuffer(value:string)** Parse buffer from hexadecimal string
 
 #### Float
 * **Float.NAN** - Not-a-number
@@ -151,15 +150,19 @@ Unknown or variant type is declared as **??**.
 * **float Float.Round()** - Rounded value
 * **float Float.Random(exclusiveTo:float)** - Random number up to given value
 * **buffer Float.Encode(value:float, encoding:string)** - Encode number
-* **float Float.Decode(value:buffer, encoding:string, offset:integer?)** - Decode number
+* **float? Float.Decode(value:buffer, encoding:string, offset:integer?)** - Decode number
 * **string Float.Format(value:float, radix:integer)** - Format string from number of given radix
-* **float Float.Parse(value:string)** - Parse number from string
+* **float? Float.Parse(value:string)** - Parse number from string
 
 #### Integer
 * **integer Integer.Sum(...values:integer|array)** - Numeric sum
 * **integer Integer.Min(...values:integer|array)** - Numeric minimum
 * **integer Integer.Max(...values:integer|array)** - Numeric maximum
 * **integer Integer.Random(exclusiveTo:integer)** - Random integer up to given value
+* **buffer Integer.Encode(value:integer, encoding:string)** - Encode number
+* **integer? Integer.Decode(value:buffer, encoding:string, offset:integer?)** - Decode number
+* **string Integer.Format(value:integer, radix:integer)** - Format string from number of given radix
+* **integer? Integer.Parse(value:string)** - Parse number from string
 
 #### Object
 * **object Object.Merge(...values:array|object)** - Merge objects into single object
@@ -167,19 +170,19 @@ Unknown or variant type is declared as **??**.
 #### String
 * **string String.Random(length:integer)** - Random alphanumeric string
 * **buffer String.Encode(value:string, encoding:string?)** - Encode string
-* **string String.Decode(value:buffer, encoding:string?, offset:integer?, length:integer?)** - Decode string
+* **string? String.Decode(value:buffer, encoding:string?, offset:integer?, length:integer?)** - Decode string
 
 #### Timestamp
 * **timestamp Timestamp.Now()** - Current date time
 * **string Timestamp.Format(value:timestamp)** - Format ISO timestamp
-* **timestamp Timestamp.Parse(value:string)** - Parse timestamp from string
+* **timestamp? Timestamp.Parse(value:string)** - Parse timestamp from string
 
 #### AVN
-* **string AVN.Format(whitespace:string?)** - Create AVN-formatted string
+* **string AVN.Format(value:string, whitespace:string?)** - Create AVN-formatted string
 
 #### JSON
-* **boolean?|float?|string?|array?|object? JSON.Parse(value:string?)** - Parse JSON-formatted string
-* **string? JSON.Format(boolean?|float?|string?|array?|object?, whitespace:string?)** - Create JSON-formatted string
+* **string JSON.Format(void|boolean|float|string|array|object, whitespace:string?)** - Create JSON-formatted string
+* **void|boolean|float?|string?|array?|object? JSON.Parse(value:string?)** - Parse JSON-formatted string
 
 ### Functions
 

@@ -4,8 +4,9 @@ import { parseBuffer } from './constant/Buffer.js';
 import { isSign, isAlpha, isNumeric, isAlphanumeric, isHexadecimal, isQuotation,
 	isDateSymbol, isTimeSymbol, isDateTimeSeparator } from './constant/String.js';
 import { Constant } from './Constant.js';
-import { funcCoalesce, funcEqual, funcNotEqual, funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './constant/Unknown.js';
+import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
+	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from './constant/Number.js';
+import { funcCoalesce, funcEqual, funcNotEqual, funcAdd } from './constant/Unknown.js';
 import { Value } from './Value.js';
 import { Type } from './Type.js';
 import { ParserFrame } from './ParserFrame.js';
@@ -414,11 +415,11 @@ export class ParserState extends ParserFrame {
 								while (isNumeric(this._expr.charAt(this._end))) {
 									++this._end;
 								}
+								integer = false;
 							}
 							else {
 								--this._end;
 							}
-							integer = false;
 						}
 						if (this._expr.charAt(this._end) === 'e') {
 							++this._end;

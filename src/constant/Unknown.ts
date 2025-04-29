@@ -1,7 +1,7 @@
 import { Constant } from '../Constant.js';
 import { Value } from '../Value.js';
 import { Type } from '../Type.js';
-import { equateBuffers } from './Buffer.js';
+import { equateBuffers, concatBuffers } from './Buffer.js';
 
 export const equate = (value1: Value, value2: Value)=> {
 	if (value1 == null || value2 == null) {
@@ -48,15 +48,23 @@ export const equate = (value1: Value, value2: Value)=> {
 	return true;
 };
 
-const typeAggregatable = Type.union(Type.Numeric, Type.Enumerable);
 const typeEquator = Type.functionType(Type.Boolean, [Type.Unknown, Type.Unknown]);
-const typeComparator = Type.functionType(Type.Boolean, [Type.Numeric, Type.Numeric]);
-const typeOperator = Type.functionTypeInference(2, Type.Numeric, [Type.Numeric, Type.Numeric]);
 
 export const funcCoalesce = new Constant(
 	(value: Value, valueOtherwise: Value)=>
 		value ?? valueOtherwise,
-	Type.functionTypeInference(2, Type.Unknown, [Type.Unknown, Type.Unknown]),
+	Type.union(
+		Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown]),
+		Type.functionType(Type.OptionalFloat, [Type.OptionalFloat, Type.OptionalFloat]),
+		Type.functionType(Type.OptionalBoolean, [Type.OptionalBoolean, Type.OptionalBoolean]),
+		Type.functionType(Type.OptionalTimestamp, [Type.OptionalTimestamp, Type.OptionalTimestamp]),
+		Type.functionType(Type.OptionalInteger, [Type.OptionalInteger, Type.OptionalInteger]),
+		Type.functionType(Type.OptionalBuffer, [Type.OptionalBuffer, Type.OptionalBuffer]),
+		Type.functionType(Type.OptionalString, [Type.OptionalString, Type.OptionalString]),
+		Type.functionType(Type.OptionalArray, [Type.OptionalArray, Type.OptionalArray]),
+		Type.functionType(Type.OptionalObject, [Type.OptionalObject, Type.OptionalObject]),
+		Type.functionType(Type.OptionalFunction, [Type.OptionalFunction, Type.OptionalFunction]),
+	),
 );
 
 export const funcEqual = new Constant(
@@ -71,141 +79,28 @@ export const funcNotEqual = new Constant(
 	typeEquator,
 );
 
-export const funcGreaterThan = new Constant(
-	(value1: number | bigint, value2: number | bigint)=>
-		value1 > value2,
-	typeComparator,
-);
-
-export const funcLessThan = new Constant(
-	(value1: number | bigint, value2: number | bigint)=>
-		value1 < value2,
-	typeComparator,
-);
-
-export const funcGreaterOrEqual = new Constant(
-	(value1: number | bigint, value2: number | bigint)=>
-		value1 >= value2,
-	typeComparator,
-);
-
-export const funcLessOrEqual = new Constant(
-	(value1: number | bigint, value2: number | bigint)=>
-		value1 <= value2,
-	typeComparator,
-);
-
 export const funcAdd = new Constant(
-	(...values: number[] | bigint[] | ArrayBuffer[] | string[] | Value[][])=> {
-		if (typeof values[0] === 'number') {
-			return (values as number[]).reduce((acc, val)=> acc + Number(val), 0);
+	(value1: number | bigint | ArrayBuffer | string | Value[], value2: number | bigint | ArrayBuffer | string | Value[])=> {
+		if (typeof value1 === 'bigint' && typeof value2 === 'bigint') {
+			return BigInt.asIntN(64, value1 + value2);
 		}
-		if (typeof values[0] === 'bigint') {
-			return (values as bigint[]).reduce((acc, val)=> BigInt.asIntN(64, acc + BigInt(val)), 0n);
+		if (value1 instanceof ArrayBuffer && value2 instanceof ArrayBuffer) {
+			return concatBuffers(value1, value2);
 		}
-		if (values[0] instanceof ArrayBuffer) {
-			const length = (values as ArrayBuffer[]).reduce((acc, val)=> acc + val.byteLength, 0);
-			const bytes = new Uint8Array(length);
-			for (let offset = 0, i = 0; i < values.length; ++i) {
-				const val = values[i] as ArrayBuffer;
-				bytes.set(new Uint8Array(val), offset);
-				offset += val.byteLength;
-			}
-			return bytes.buffer;
+		if (Array.isArray(value1) && Array.isArray(value2)) {
+			return value1.concat(value2);
 		}
-		if (typeof values[0] === 'string') {
-			return (values as string[]).reduce((acc, val)=> acc + val, '');
+		if (typeof value1 === 'number' || typeof value2 === 'number') {
+			return Number(value1) + Number(value2);
 		}
-		return (values as Value[][]).reduce((acc, val)=> {
-			acc.push(...val);
-			return acc;
-		}, []);
+		return String(value1) + String(value2);
 	},
-	Type.functionTypeInference(1, typeAggregatable, [typeAggregatable, typeAggregatable], true),
-);
-
-export const funcSubtract = new Constant(
-	(value: number | bigint, subtrahend: number | bigint)=>
-		typeof value === 'number'
-			? value - Number(subtrahend)
-			: BigInt.asIntN(64, value - BigInt(subtrahend)),
-	typeOperator,
-);
-
-export const funcMultiply = new Constant(
-	(...values: number[] | bigint[])=>
-		typeof values[0] === 'number'
-			? values.map((i)=> Number(i)).reduce((acc, val)=> acc *= val)
-			: values.map((i)=> BigInt(i)).reduce((acc, val)=> BigInt.asIntN(64, acc *= val)),
-	Type.functionTypeInference(1, Type.Numeric, [Type.Numeric, Type.Numeric], true),
-);
-
-export const funcDivide = new Constant(
-	(value: number | bigint, divisor: number | bigint)=>
-		typeof value === 'number'
-			? value / Number(divisor)
-			: BigInt.asIntN(64, value / BigInt(divisor)),
-	typeOperator,
-);
-
-export const funcRemainder = new Constant(
-	(value: number | bigint, divisor: number | bigint)=>
-		typeof value === 'number'
-			? value % Number(divisor)
-			: BigInt.asIntN(64, value % BigInt(divisor)),
-	typeOperator,
-);
-
-export const funcModulo = new Constant(
-	(value: number | bigint, divisor: number | bigint)=>
-		typeof value === 'number'
-			? (value % Number(divisor) + Number(divisor)) % Number(divisor)
-			: BigInt.asIntN(64, (value % BigInt(divisor) + BigInt(divisor)) % BigInt(divisor)),
-	typeOperator,
-);
-
-export const funcPower = new Constant(
-	(value: number | bigint, exponent: number | bigint)=>
-		typeof value === 'number'
-			? value ** Number(exponent)
-			: BigInt.asIntN(64, value ** BigInt(exponent)),
-	typeOperator,
-);
-
-export const funcRoot = new Constant(
-	(value: number | bigint, exponent: number | bigint)=> {
-		if (typeof value === 'number') {
-			return Math.pow(value, 1 / Number(exponent));
-		}
-		const e = BigInt(exponent);
-		if (value < 0n && e % 2n === 0n) {
-			return undefined;
-		}
-		if (value < 2n || e === 1n) {
-			return value;
-		}
-		let low = 0n, high = value, result = 0n;
-		while (low <= high) {
-			const mid = (low + high) >> 1n;
-			const midPow = mid ** e;
-			if (midPow === value) {
-				return mid;
-			}
-			else if (midPow < value) {
-				result = mid;
-				low = mid + 1n;
-			}
-			else {
-				high = mid - 1n;
-			}
-		}
-		return BigInt.asIntN(64, result);
-	},
-	typeOperator,
-);
-
-export const funcNegate = new Constant(
-	(value: number | bigint)=>
-		typeof value === 'number' ? -value : BigInt.asIntN(64, -value),
-	Type.functionTypeInference(1, Type.Numeric, [Type.Numeric]),
+	Type.union(
+		Type.functionType(Type.Float, [Type.Float, Type.Integer]),
+		Type.functionType(Type.Float, [Type.Integer, Type.Float]),
+		Type.functionType(Type.Integer, [Type.Integer, Type.Integer]),
+		Type.functionType(Type.Buffer, [Type.Buffer, Type.Buffer]),
+		Type.functionType(Type.String, [Type.String, Type.String]),
+		Type.functionType(Type.Array, [Type.Array, Type.Array]),
+	),
 );

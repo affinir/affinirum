@@ -194,14 +194,6 @@ export class Type implements IType {
 		return new Type([Type._functionAtom(retType, argTypes, isVariadic)]);
 	}
 
-	static functionTypeInference(argNum: number, retType: Type, argTypes: Type[], isVariadic: boolean = false) {
-		return new Type(retType._atoms.map((i)=> {
-			const rtype = new Type([i]);
-			const atypes = argTypes.map((t, ix)=> ix < argNum ? rtype : t);
-			return Type._functionAtom(rtype, atypes, isVariadic);
-		}));
-	}
-
 	static readonly Unknown = new Type();
 	static readonly Void = Type._primitiveType('void');
 	static readonly Boolean = Type._primitiveType('boolean');
@@ -222,8 +214,8 @@ export class Type implements IType {
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
 	static readonly Function = Type.functionType();
 	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
-	static readonly Numeric = Type.union(Type.Float, Type.Integer);
-	static readonly OptionalNumeric = Type.union(Type.Void, Type.Float, Type.Integer);
+	static readonly Number = Type.union(Type.Float, Type.Integer);
+	static readonly OptionalNumber = Type.union(Type.Void, Type.Float, Type.Integer);
 	static readonly Enumerable = Type.union(Type.Buffer, Type.String, Type.Array);
 	static readonly OptionalEnumerable = Type.union(Type.Void, Type.Buffer, Type.String, Type.Array);
 	static readonly Iterable = Type.union(Type.Buffer, Type.String, Type.Array, Type.Object);

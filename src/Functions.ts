@@ -4,15 +4,16 @@ import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
 import { funcByte } from './constant/Buffer.js';
 import { funcSlice } from './constant/Enumerable.js';
 import { funcLength, funcAt } from './constant/Iterable.js';
+import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
+	funcPower, funcRoot, funcNegate, funcCast } from './constant/Number.js';
 import { funcEntries, funcKeys, funcValues } from './constant/Object.js';
 import { funcLike, funcUnlike, funcContains, funcStartsWith, funcEndsWith,
 	funcChar, funcCharCode, funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
 	funcSplit } from './constant/String.js';
 import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay,
 	funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime } from './constant/Timestamp.js';
-import { funcCoalesce, funcEqual, funcNotEqual, funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
-	funcPower, funcRoot, funcNegate } from './constant/Unknown.js';
+import { funcCoalesce, funcEqual, funcNotEqual, 
+	funcAdd } from './constant/Unknown.js';
 
 export const Functions: [string, Constant][] = [
 	// Array
@@ -34,7 +35,6 @@ export const Functions: [string, Constant][] = [
 	// Buffer
 	['Byte', funcByte],
 	// Enumerable
-	['Add', funcAdd],
 	['Slice', funcSlice],
 	// Iterable
 	['Length', funcLength],
@@ -52,6 +52,7 @@ export const Functions: [string, Constant][] = [
 	['Power', funcPower],
 	['Root', funcRoot],
 	['Negate', funcNegate],
+	['Cast', funcCast],
 	// Object
 	['Entries', funcEntries],
 	['Keys', funcKeys],
@@ -86,4 +87,5 @@ export const Functions: [string, Constant][] = [
 	['Coalesce', funcCoalesce],
 	['Equal', funcEqual],
 	['Unequal', funcNotEqual],
+	['Add', funcAdd],
 ];

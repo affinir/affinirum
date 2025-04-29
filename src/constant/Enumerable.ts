@@ -7,5 +7,9 @@ export const funcSlice = new Constant(
 		value == null
 			? undefined
 			: value.slice(Number(start), end == null ? undefined : Number(end)) as Value,
-	Type.functionTypeInference(1, Type.Enumerable, [Type.Enumerable, Type.OptionalInteger, Type.OptionalInteger]),
+	Type.union(
+		Type.functionType(Type.Buffer, [Type.Buffer, Type.OptionalInteger, Type.OptionalInteger]),
+		Type.functionType(Type.String, [Type.String, Type.OptionalInteger, Type.OptionalInteger]),
+		Type.functionType(Type.Array, [Type.Array, Type.OptionalInteger, Type.OptionalInteger]),
+	),
 );

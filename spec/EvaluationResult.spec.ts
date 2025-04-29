@@ -1,5 +1,5 @@
 import { Affinirum } from '../src/index.js';
-import { replacerJSON } from '../src/constant/notation/JSON.js';
+import { replaceJSON } from '../src/constant/notation/JSON.js';
 
 describe('Evaluation Result test', ()=> {
 	([
@@ -17,8 +17,8 @@ describe('Evaluation Result test', ()=> {
 		['0.434e000002', [{ result: 43.4 }]],
 		['4.1e-1', [{ result: 0.41 }]],
 		['4.1e-01', [{ result: 0.41 }]],
-		['00', [{ result: 0n }]],
-		['0123', [{ result: 123n }]],
+		['0', [{ result: 0n }]],
+		['123', [{ result: 123n }]],
 		['Buffer.Format(#0)', [{ result: '00' }]],
 		['Buffer.Format(#ffff)', [{ result: 'ffff' }]],
 		['Buffer.Format(#AAAA)', [{ result: 'aaaa' }]],
@@ -53,7 +53,8 @@ describe('Evaluation Result test', ()=> {
 		['(x + 10 + 0) * (y - 10)>0', [{ x: 10, y: 10, result: false }, { x: 100, y: 100, result: true }]],
 		['(a + b + c + d) * ( a -b-c + 1 ) / b + 1*(if (a<23){10}else{20})', [{ a: 20, b: 10, c: 1, d: 2, result: 43 }]],
 		['[a, b, c].Add([ 1, 2, 3, 4 ]).Reduce(~float(acc:float,val){acc+val})', [{ a: 1, b: 2, c: 3, result: 16 }]],
-		['100.Add(10, 10, 13)', [{ result: 133 }]],
+		['100.Add(10)', [{ result: 110n }]],
+		['100.Multiply(10)', [{ result: 1000n }]],
 		['-a^2 == b', [{ a: 2, b: -4, result: true }]],
 		['_1.Power(2)+40 % 25', [{ _1: 10, result: 115 }]],
 		['longvariablename.Root(2)-10', [{ longvariablename: 100, result: 0 }]],
@@ -97,7 +98,7 @@ describe('Evaluation Result test', ()=> {
 		['Array.Range(start, end)[0] + Array.Range(start, end)[1]', [{ start: 5n, end: 10n, result: 11n }, { start: -5n, end: -10n, result: -19n }]],
 		['var s:integer=0;Array.Range(start, end).Mutate(~void(x:float){s=s+x});s', [{ start: 1n, end: 11n, result: 55n }, { start: -1n, end: -11n, result: -65n }]],
 		['[p,11].Mutate(~ integer?(a:integer) {const t=10; if (a>10){t}else{null} } )[i]', [{ i: 1n, p: 10n, result: 10n }, { i: 0n, p: 1n, result: undefined }]],
-		['[p,p,1, 2, 3].Mutate(~float?(a:float?){a?:10})[1]', [{ p: undefined, result: 10n }, { p: 0, result: 0 }]],
+		['[p,p,1, 2, 3].Mutate(~integer?(a:integer?){a?:10})[1]', [{ p: undefined, result: 10n }, { p: 0n, result: 0n }]],
 		['arr1.First(~boolean(v:float, i:integer){v==2})', [{ arr1: [1, 2, 3], result: 2 }, { arr1: [2, 2, 3], result: 2 }]],
 		['arr1.Last(~boolean(v:float, i:integer){(i==1)})', [{ arr1: [1, 2, 3], result: 2 }, { arr1: [10, 20, 30], result: 20 }]],
 		['arr1.FirstIndex(~boolean(v:float, i:integer){(v==2)})', [{ arr1: [1, 2, 3], result: 1n }]],
@@ -133,7 +134,7 @@ describe('Evaluation Result test', ()=> {
 		['a[4][0][0] ?: 10', [{ a: [0], result: 10n }, { a: [[0]], result: 10n }]],
 		['a.1', [{ a: [0, 1], result: 1 }, { a: ['-1', '-2'], result: '-2' }]],
 		['a[x]', [{ a: { b: 1 }, x: 'a', result: undefined }, { a: { b: 1 }, x: '1', result: undefined }], [{ a: [0,  1], x: 5, result: undefined }, { a: [0], x: -5, result: undefined }]],
-		['1000 + {while a < b { a = a + 1 }; {b; a+100}}', [{ a: 1, b: 10, result: 1110n }, { a: -5, b: -1, result: 1099n }]],
+		['1000 + {while a < b { a = a + 1 }; {b; a+100}}', [{ a: 1, b: 10, result: 1110 }, { a: -5, b: -1, result: 1099 }]],
 		['var f=~boolean(a:float){a=a*100; a>0};Float.Sum(a.Filter(f))', [{ a: [-10, -20, 1, 2], result: 3 }]],
 		['const f=~??(){b = b + 1000; true}; Float.Sum(a.Filter(f)) + b', [{ a: [10, 20, 1, 2], b: 0, result: 4033 }]],
 		['var a=~(){b = b + 10}; a(); b', [{ b: 0n, result: 10n }, { b: -10n, result: 0n }]],
@@ -172,14 +173,14 @@ describe('Evaluation Result test', ()=> {
 		['a+=10 + b-=10 + c*=2 + d/=2 + e %= 2', [{ a: 10, b: 2, c: 3, d: 4, e: 6, result: 0 }]],
 	] as [string, Record<string, any>][]).forEach(([expr, args])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
-			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v, replacerJSON)}`, ()=> {
+			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v, replaceJSON)}`, ()=> {
 				try {
 					const expression = new Affinirum(expr);
 					expect(expression).toBeDefined();
 					try {
 						const value = expression.evaluate(v);
 						if (value !== v.result) {
-							fail(`value ${JSON.stringify(value, replacerJSON)} not matching expectation ${v.result}`);
+							fail(`value ${JSON.stringify(value, replaceJSON)} not matching expectation ${v.result}`);
 						}
 					}
 					catch (err) {

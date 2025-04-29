@@ -1,7 +1,9 @@
 import { funcOr, funcAnd, funcNot } from './constant/Boolean.js';
 import { funcAt } from './constant/Iterable.js';
-import { funcCoalesce, funcEqual, funcNotEqual, funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcAdd, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from './constant/Unknown.js';
+import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
+	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from './constant/Number.js';
+import { funcCoalesce, funcEqual, funcNotEqual,
+	funcAdd } from './constant/Unknown.js';
 import { Constant } from './Constant.js';
 import { Variable } from './Variable.js';
 import { Value } from './Value.js';
@@ -359,9 +361,12 @@ export class Affinirum {
 			}
 			frame.ends(state);
 			state.closeBrackets().next();
-			return colon
-				? new ObjectNode(frame, subnodes.map(([k, v])=> [typeof k === 'number' ? new ConstantNode(v, new Constant(String(k))) : k, v] as const))
-				: new ArrayNode(frame, subnodes.map(([, v])=> v));
+			if (colon) {
+				return new ObjectNode(frame, subnodes.map(([k, v])=>
+					[typeof k === 'number' ? new ConstantNode(v, new Constant(String(k))) : k, v] as const
+				));
+			}
+			return new ArrayNode(frame, subnodes.map(([, v])=> v));
 		}
 		else if (state.isBracketsClose) {
 			state.throwError('unexpected closing brackets');

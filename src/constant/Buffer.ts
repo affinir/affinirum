@@ -25,16 +25,12 @@ export const equateBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	return true;
 };
 
-export const parseBuffer = (value?: string)=> {
-	if (value == null) {
-		return undefined;
-	}
-	const bytes = new Uint8Array(Math.ceil(value.length / 2));
-	for (let i = 0, c = 0; c < value.length; ++i) {
-		bytes[i] = Number.parseInt(value.slice(c, c += 2), 16);
-	}
-	return bytes.buffer;
-};
+export const concatBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
+  const bytes = new Uint8Array(value1.byteLength + value2.byteLength);
+  bytes.set(new Uint8Array(value1), 0);
+  bytes.set(new Uint8Array(value2), value1.byteLength);
+  return bytes.buffer;
+}
 
 export const formatBuffer = (value?: ArrayBuffer)=> {
 	if (value == null) {
@@ -46,6 +42,17 @@ export const formatBuffer = (value?: ArrayBuffer)=> {
 		str += bytes[i].toString(16).padStart(2, '0');
 	}
 	return str;
+};
+
+export const parseBuffer = (value?: string)=> {
+	if (value == null) {
+		return undefined;
+	}
+	const bytes = new Uint8Array(Math.ceil(value.length / 2));
+	for (let i = 0, c = 0; c < value.length; ++i) {
+		bytes[i] = Number.parseInt(value.slice(c, c += 2), 16);
+	}
+	return bytes.buffer;
 };
 
 export const funcByte = new Constant(

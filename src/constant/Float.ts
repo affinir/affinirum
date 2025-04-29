@@ -1,6 +1,9 @@
 import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
+export const formatFloat = (value: number, radix?: number)=>
+	value.toString(radix) + (Number.isInteger(value) ? '.0' : '');
+
 const typeNumberOrArray = Type.union(Type.Float, Type.arrayType([Type.Float]));
 const typeAggregator = Type.functionType(Type.Float, [typeNumberOrArray], true);
 const typeNumberTransform = Type.functionType(Type.Float, [Type.Float]);
@@ -59,6 +62,12 @@ const funcRound = new Constant(
 	typeNumberTransform,
 );
 
+const funcTruncate = new Constant(
+	(value: number)=>
+		Math.trunc(value),
+	typeNumberTransform,
+);
+
 const funcRandomFloat = new Constant(
 	(value: number)=>
 		value == null ? undefined : Math.random() * value,
@@ -110,7 +119,7 @@ const funcDecodeFloat = new Constant(
 
 const funcFormatFloat = new Constant(
 	(value: number, radix?: bigint)=>
-		value?.toString(radix ? Number(radix) : undefined) ?? '',
+		value ? formatFloat(value, radix ? Number(radix) : undefined) : '',
 	Type.functionType(Type.String, [Type.Float, Type.OptionalInteger]),
 );
 
@@ -134,6 +143,7 @@ export const constFloat = {
 	Ceil: funcCeil,
 	Floor: funcFloor,
 	Round: funcRound,
+	Truncate: funcTruncate,
 	Random: funcRandomFloat,
 	Encode: funcEncodeFloat,
 	Decode: funcDecodeFloat,

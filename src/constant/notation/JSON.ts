@@ -1,21 +1,26 @@
 import { Constant } from '../../Constant.js';
 import { Type } from '../../Type.js';
+import { formatFloat } from '../Float.js';
 
 const typeJson = Type.union(Type.Void, Type.Boolean, Type.Float, Type.String, Type.Array, Type.Object);
 
-export const replacerJSON = (_key: string, value: any)=>
-	typeof value === 'bigint' ? value.toString() : value;
+export const replaceJSON = (_key: string, value: any)=>
+	typeof value === 'number'
+		? formatFloat(value)
+		:	typeof value === 'bigint'
+			? value.toString()
+			: value;
 
 const funcFormatJSON = new Constant(
-	(value: undefined | null | boolean | number | string | [] | { [ key: string ]: any }, whitespace?: string)=>
-		value ? JSON.stringify(value, replacerJSON, whitespace) : undefined,
-	Type.functionType(Type.OptionalString, [typeJson, Type.OptionalString]),
+	(value: null | boolean | number | string | [] | { [ key: string ]: any }, whitespace?: string)=>
+		JSON.stringify(value ?? null, replaceJSON, whitespace),
+	Type.functionType(Type.String, [typeJson, Type.OptionalString]),
 )
 
 const funcParseJSON = new Constant(
-	(value: undefined | string)=>
-		value ? JSON.parse(value) as any : undefined,
-	Type.functionType(typeJson, [Type.OptionalString]),
+	(value: string)=>
+		JSON.parse(value),
+	Type.functionType(typeJson, [Type.String]),
 )
 
 export const constJSON = {
