@@ -3,9 +3,9 @@ import { Value } from '../Value.js';
 import { Type } from '../Type.js';
 import { encodeFloat, formatFloat } from './Float.js';
 import { encodeInteger } from './Integer.js';
-import { equateBuffers, formatBuffer } from './Buffer.js';
+import { concatBuffers, equateBuffers, formatBuffer } from './Buffer.js';
 import { encodeString } from './String.js';
-import { formatTimestamp } from './Timestamp.js';
+import { encodeTimestamp, formatTimestamp } from './Timestamp.js';
 
 export const equate = (value1: Value, value2: Value)=> {
 	if (value1 == null || value2 == null) {
@@ -51,6 +51,33 @@ export const equate = (value1: Value, value2: Value)=> {
 	}
 	return true;
 };
+
+const encode = (value: Value, encoding?: 'float32' | 'float32le' | 'float64' | 'float64le'
+	| 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le' | 'int64' | 'int64le'
+	| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' | 'uint64' | 'uint64le'
+	| 'utf8' | 'ucs2' | 'ucs2le'): ArrayBuffer=>
+	value == null
+		? new Uint8Array(0).buffer
+		: typeof value === 'boolean'
+			? new Uint8Array([value ? 255 : 0]).buffer
+			: value instanceof Date
+				? encodeTimestamp(value, encoding as 'int64' | 'int64le' ?? 'int64')
+				: typeof value === 'number'
+					? encodeFloat(value, encoding as 'float32' | 'float32le' | 'float64' | 'float64le' ?? 'float64')
+					: typeof value === 'bigint'
+						? encodeInteger(value, encoding as 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
+							| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' ?? 'int64')
+						: value instanceof ArrayBuffer
+							? value
+							: typeof value === 'string'
+								? encodeString(value, encoding as 'utf8' | 'ucs2' | 'ucs2le' ?? 'utf8')
+								: Array.isArray(value)
+									? value.map((i)=> encode(i, encoding)).reduce((acc, val)=> concatBuffers(acc, val))
+									: typeof value === 'object'
+										? Object.entries(value).map(([k, v])=>
+											concatBuffers(encode(k, encoding), encode(v, encoding))).reduce((acc, val)=>
+											concatBuffers(acc, val))
+										: new Uint8Array(0).buffer;
 
 const format = (value: Value, radix?: number, separator: string = ''): string=>
 	value == null
@@ -105,32 +132,28 @@ export const funcNotEqual = new Constant(
 );
 
 export const funcEncode = new Constant(
-	(value: number | bigint | string, encoding?: 'float32' | 'float32le' | 'float64' | 'float64le'
+	(value: boolean | Date | number | bigint | string | Value[] | { [ key: string ]: Value }, encoding: 'float32' | 'float32le' | 'float64' | 'float64le'
 		| 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le' | 'int64' | 'int64le'
 		| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' | 'uint64' | 'uint64le'
-		| 'utf8' | 'ucs2' | 'ucs2le')=> {
-		return typeof value === 'number'
-			? encodeFloat(value, encoding as 'float32' | 'float32le' | 'float64' | 'float64le' ?? 'float64')
-			: typeof value === 'bigint'
-				? encodeInteger(value, encoding as 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
-					| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' ?? 'int64')
-				: typeof value === 'string'
-					? encodeString(value, encoding as 'utf8' | 'ucs2' | 'ucs2le' ?? 'utf8')
-					: new Uint8Array(0).buffer;
-	},
+		| 'utf8' | 'ucs2' | 'ucs2le')=>
+		encode(value, encoding),
 	Type.union(
-		Type.functionType(Type.Buffer, [Type.Float, Type.String]),
-		Type.functionType(Type.Buffer, [Type.Integer, Type.String]),
+		Type.functionType(Type.Buffer, [Type.Boolean]),
+		Type.functionType(Type.Buffer, [Type.Timestamp, Type.OptionalString]),
+		Type.functionType(Type.Buffer, [Type.Float, Type.OptionalString]),
+		Type.functionType(Type.Buffer, [Type.Integer, Type.OptionalString]),
 		Type.functionType(Type.Buffer, [Type.String, Type.OptionalString]),
+		Type.functionType(Type.Buffer, [Type.Array, Type.OptionalString]),
+		Type.functionType(Type.Buffer, [Type.Object, Type.OptionalString]),
 	),
 );
 
 export const funcFormat = new Constant(
-	(value: boolean | Date | number | bigint | ArrayBuffer | Value[], radix?: bigint, separator: string = '')=>
+	(value: boolean | Date | number | bigint | ArrayBuffer | Value[] | { [ key: string ]: Value }, radix?: bigint, separator: string = '')=>
 		format(value, radix == null ? undefined : Number(radix), separator),
 	Type.union(
 		Type.functionType(Type.String, [Type.Boolean]),
-		Type.functionType(Type.String, [Type.Timestamp]),
+		Type.functionType(Type.String, [Type.Timestamp, Type.OptionalInteger]),
 		Type.functionType(Type.String, [Type.Float, Type.OptionalInteger]),
 		Type.functionType(Type.String, [Type.Integer, Type.OptionalInteger]),
 		Type.functionType(Type.String, [Type.Buffer]),

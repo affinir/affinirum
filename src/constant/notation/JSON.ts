@@ -9,7 +9,7 @@ export const replaceJSON = (_key: string, value: any)=>
 		? formatFloat(value)
 		:	typeof value === 'bigint'
 			? value.toString()
-			: value;
+			: value as null | boolean | number | string | [] | { [ key: string ]: any };
 
 const funcFormatJSON = new Constant(
 	(value: null | boolean | number | string | [] | { [ key: string ]: any }, whitespace?: string)=>
@@ -19,7 +19,7 @@ const funcFormatJSON = new Constant(
 
 const funcParseJSON = new Constant(
 	(value: string)=>
-		JSON.parse(value),
+		JSON.parse(value) as null | boolean | number | string | [] | { [ key: string ]: any },
 	Type.functionType(typeJson, [Type.String]),
 )
 

@@ -341,7 +341,7 @@ export class ParserState extends ParserFrame {
 								this._fragment = symbolVariadicFunction;
 							}
 							else {
-								throw new Error(`incomplete ellipsis ...`);
+								throw new Error('incomplete ellipsis ...');
 							}
 							break;
 						default:
@@ -387,9 +387,9 @@ export class ParserState extends ParserFrame {
 							case 'false': this._fragment = valueFalse; break;
 							case 'null': this._fragment = valueNull; break;
 							case 'void': this._fragment = Type.Void; break;
-							case 'float': this._fragment = Type.Float; break;
 							case 'bool': case 'boolean': this._fragment = Type.Boolean; break;
 							case 'time': case 'timestamp': this._fragment = Type.Timestamp; break;
+							case 'flo': case 'float': this._fragment = Type.Float; break;
 							case 'int': case 'integer': this._fragment = Type.Integer; break;
 							case 'buf': case 'buffer': this._fragment = Type.Buffer; break;
 							case 'str': case 'string': this._fragment = Type.String; break;

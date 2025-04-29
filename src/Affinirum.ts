@@ -529,7 +529,7 @@ export class Affinirum {
 			}
 			state.closeBrackets().next();
 			return colon
-				? Type.objectType(Object.fromEntries(itemPropTypes.map(([prop, type]) => [prop as string, type])))
+				? Type.objectType(Object.fromEntries(itemPropTypes.map(([prop, type])=> [prop as string, type])))
 				: Type.arrayType(itemPropTypes.map(([, v])=> v));
 		}
 		else if (state.isTildaMark) { // function type

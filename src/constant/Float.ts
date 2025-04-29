@@ -1,7 +1,7 @@
 import { Constant } from '../Constant.js';
 import { Type } from '../Type.js';
 
-export const encodeFloat = (value: number, encoding: 'float32' | 'float32le' | 'float64' | 'float64le')=> {
+export const encodeFloat = (value: number, encoding: 'float32' | 'float32le' | 'float64' | 'float64le' = 'float64')=> {
 	if (value == null) {
 		return new Uint8Array(0).buffer;
 	}
@@ -23,11 +23,11 @@ export const encodeFloat = (value: number, encoding: 'float32' | 'float32le' | '
 	return dv.buffer;
 };
 
-const decodeFloat = (value: ArrayBuffer, encoding: 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: bigint)=> {
+const decodeFloat = (value: ArrayBuffer, encoding: 'float32' | 'float32le' | 'float64' | 'float64le' = 'float64', byteOffset?: number)=> {
 	if (value == null) {
 		return undefined;
 	}
-	const dv = new DataView(value, byteOffset == null ? undefined : Number(byteOffset));
+	const dv = new DataView(value, byteOffset);
 	switch (encoding) {
 		case 'float32': return dv.getFloat32(0);
 		case 'float32le': return dv.getFloat32(0, true);
@@ -112,9 +112,9 @@ const funcRandomFloat = new Constant(
 );
 
 const funcDecodeFloat = new Constant(
-	(value: ArrayBuffer, encoding: 'float32' | 'float32le' | 'float64' | 'float64le', byteOffset?: bigint)=>
-		decodeFloat(value, encoding, byteOffset),
-	Type.functionType(Type.OptionalFloat, [Type.Buffer, Type.String, Type.OptionalInteger]),
+	(value: ArrayBuffer, encoding: 'float32' | 'float32le' | 'float64' | 'float64le' = 'float64', byteOffset?: bigint)=>
+		decodeFloat(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
+	Type.functionType(Type.OptionalFloat, [Type.Buffer, Type.OptionalString, Type.OptionalInteger]),
 );
 
 const funcParseFloat = new Constant(

@@ -1,7 +1,7 @@
-import { Affinirum, Type } from '../src/index.js';
+import { Affinirum } from '../src/index.js';
 
-describe('FullScript test', () => {
-	it('parses and evaluates full script', () => {
+describe('FullScript test', ()=> {
+	it('parses and evaluates full script', ()=> {
 		const expression = new Affinirum(`
 const cnum = 1000 + myvr;
 const cint = 01000;

@@ -124,17 +124,15 @@ export const encodeString = (value: string, encoding: 'utf8' | 'ucs2' | 'ucs2le'
 	}
 };
 
-const decodeString = (value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: bigint, byteLength?: bigint)=> {
+const decodeString = (value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: number, byteLength?: number)=> {
 	if (value == null) {
 		return undefined;
 	}
-	const offset = byteOffset == null ? undefined : Number(byteOffset);
-	const length = byteLength == null ? undefined : Number(byteLength);
 	if (encoding === 'utf8') {
-		return new TextDecoder().decode(new DataView(value, offset, length));
+		return new TextDecoder().decode(new DataView(value, byteOffset, byteLength));
 	}
 	else {
-		const dv = new DataView(value, offset, length);
+		const dv = new DataView(value, byteOffset, byteLength);
 		const lessOrEqual = encoding.endsWith('le');
 		let str = '';
 		for (let i = 0; i < dv.byteLength; i += 2) {
@@ -258,7 +256,7 @@ const funcRandomString = new Constant(
 
 const funcDecodeString = new Constant(
 	(value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: bigint, byteLength?: bigint)=>
-		decodeString(value, encoding, byteOffset, byteLength),
+		decodeString(value, encoding, byteOffset == null ? undefined : Number(byteOffset), byteLength == null ? undefined : Number(byteLength)),
 	Type.functionType(Type.OptionalString, [Type.Buffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]),
 );
 

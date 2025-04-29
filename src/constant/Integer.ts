@@ -3,7 +3,7 @@ import { Type } from '../Type.js';
 
 export const encodeInteger = (value: bigint, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
 	| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le'
-	| 'int64' | 'int64le' | 'uint64' | 'uint64le')=> {
+	| 'int64' | 'int64le' | 'uint64' | 'uint64le' = 'int64')=> {
 	if (value == null) {
 		return new Uint8Array(0).buffer;
 	}
@@ -36,7 +36,7 @@ export const encodeInteger = (value: bigint, encoding: 'int8' | 'int16' | 'int16
 };
 
 const decodeInteger = (value: ArrayBuffer, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le' | 'int64' | 'int64le'
-	| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' | 'uint64' | 'uint64le', byteOffset?: bigint)=> {
+	| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' | 'uint64' | 'uint64le' = 'int64', byteOffset?: number)=> {
 	if (value == null) {
 		return undefined;
 	}
@@ -90,9 +90,9 @@ const funcRandomInteger = new Constant(
 
 const funcDecodeInteger = new Constant(
 	(value: ArrayBuffer, encoding: 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le' | 'int64' | 'int64le'
-		| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' | 'uint64' | 'uint64le', byteOffset?: bigint)=>
-			decodeInteger(value, encoding, byteOffset),
-	Type.functionType(Type.OptionalInteger, [Type.Buffer, Type.String, Type.OptionalInteger]),
+		| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' | 'uint64' | 'uint64le' = 'int64', byteOffset?: bigint)=>
+		decodeInteger(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
+	Type.functionType(Type.OptionalInteger, [Type.Buffer, Type.OptionalString, Type.OptionalInteger]),
 );
 
 const funcParseInteger = new Constant(

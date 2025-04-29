@@ -3,6 +3,16 @@ import { Type } from '../Type.js';
 
 const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
 
+export const encodeTimestamp = (value: Date, encoding: 'int64' | 'int64le' = 'int64')=> {
+	const buf = new ArrayBuffer(8);
+	const dv = new DataView(buf);
+	dv.setBigInt64(0, BigInt(value.getTime()), encoding === 'int64le');
+	return buf;
+};
+
+export const decodeTimestamp = (value: ArrayBuffer, encoding: 'int64' | 'int64le' = 'int64', byteOffset?: bigint)=>
+	new Date(Number(new DataView(value).getBigInt64(byteOffset == null ? 0 : Number(byteOffset), encoding === 'int64le')));
+
 export const formatTimestamp = (value: Date, radix?: number)=> {
 	const str = value.toISOString();
 	switch (radix) {
@@ -95,16 +105,24 @@ export const funcEpochTime = new Constant(
 const funcEpochTimestamp = new Constant(
 	(value: number | bigint, epoch = new Date(0))=>
 		new Date(Number(value) + epoch.getTime()),
-	Type.functionType(Type.Timestamp, [Type.union(Type.Float, Type.Integer), Type.OptionalTimestamp]),
+	Type.functionType(Type.Timestamp, [Type.Number, Type.OptionalTimestamp]),
+);
+
+const funcDecodeTimestamp = new Constant(
+	(value: ArrayBuffer, encoding: 'int64' | 'int64le' = 'int64', byteOffset?: bigint)=>
+		decodeTimestamp(value, encoding, byteOffset),
+	Type.functionType(Type.OptionalTimestamp, [Type.Buffer, Type.OptionalString, Type.OptionalInteger]),
 );
 
 const funcParseTimestamp = new Constant(
-	(value: string)=> parseTimestamp(value),
+	(value: string)=>
+		parseTimestamp(value),
 	Type.functionType(Type.OptionalTimestamp, [Type.String]),
 );
 
 export const constTimestamp = {
 	Now: funcNow,
 	Epoch: funcEpochTimestamp,
+	Decode: funcDecodeTimestamp,
 	Parse: funcParseTimestamp,
 };

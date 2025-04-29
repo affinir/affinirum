@@ -1,11 +1,7 @@
 # Affinirum
-A scripting language with a recursive descent parser for efficient evaluation of algorithmic expressions.
+A fast, embeddable scripting language with a recursive descent parser for evaluating complex algorithmic logic.
 
-Language supports regular algebraic expressions,
- various numeric, buffer, string, array, and object functions,
- global, and local variables, first-order functions, type checking,
- boolean, algebraic, conditional expressions and loops,
- along with a comprehensive set of numeric, buffer, string, array, and object functions.
+Supports algebraic and boolean expressions, variables, conditionals, loops, and a rich standard library for working with numbers, buffers, strings, arrays, and objects.
 
 It can be run in browser or in NodeJS.
 
@@ -13,22 +9,21 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 
 ## Features
 
-* Parse once, execute multiple times for provided variable values
-* Constant expression optimization and basic type checking
-* Boolean, arithmetic, buffer, string and indexing operators
-* Comparison operators for numeric, buffer, and string types
-* Variadic functions, first-order functions
-* Support for input and statement variables
-* Standard mathematical and composition functions
+- Efficient execution: Parse once, execute many times with different variable values
+- Variable support: Input and statement-scoped variables
+- Function support: Variadic and first-order function support for expressive scripting
+- Optimized evaluation: Constant expression folding with type checks
+- Comprehensive set of operators: Boolean, arithmetic, buffer, string, comparison, and indexing support
+- Built-in functions: Rich set of mathematical and composition utilities
 
 ## Specifications
 
 Script can contain multiple semicolon-separated expressions, and blocks of statements.
 The value of a block is determined by the value of the last expression.
-* Scientific notation is supported for floating point numbers, like *0.1281e+2*
-* ISO Timestamps prefixed with **@**, like *@2025-05-11T19:09:21.320Z*
-* Hexadecimal buffer values are prefixed with **#**, like *#10ab0901*
-* String literals are enclosed in single (**'**), double (**"**), or backtick (**`**) quotes, like *'string value'*
+- Scientific notation is supported for floating point numbers, like *0.1281e+2*
+- ISO Timestamps prefixed with **@**, like *@2025-05-11T19:09:21.320Z*
+- Hexadecimal buffer values are prefixed with **#**, like *#10ab0901*
+- String literals are enclosed in single (**'**), double (**"**), or backtick (**`**) quotes, like *'string value'*
 
 Array is an ordered sequence of values of any type.
 It is defined by comma-separated values enclosed in brackets (**[]**),
@@ -58,16 +53,16 @@ Valid variable and function names must start with a letter or underscore (**\_**
 Whitespace characters are ignored.
 
 ### Types
-* **void** for value **null**
-* **boolean** for values **true** and **false**
-* **timestamp** for date-time values, millisecons since Unix epoch
-* **float** IEEE 754 double-precision binary floating-point format: binary64
-* **integer** for 64-bit integer values
-* **buffer** for ordered sequences of bytes
-* **string** for ordered sequences of characters, text strings
-* **array** for ordered sequences of valuese
-* **object** for sets of named values
-* **function** for built-in, injected or script-defined subroutines
+- **void** for value **null**
+- **boolean** for values **true** and **false**
+- **timestamp** for date-time values, millisecons since Unix epoch
+- **float** IEEE 754 double-precision binary floating-point format: binary64
+- **integer** for 64-bit integer values
+- **buffer** for ordered sequences of bytes
+- **string** for ordered sequences of characters, text strings
+- **array** for ordered sequences of valuese
+- **object** for sets of named values
+- **function** for built-in, injected or script-defined subroutines
 
 Type modifier **?** can be used to make any type optional (nullable).
 <br>Examples: *float? optNumVar*, *array? optArrayVar*
@@ -75,62 +70,58 @@ Type modifier **?** can be used to make any type optional (nullable).
 Unknown or variant type is declared as **??**.
 
 ### Definitions
-* Value grouping: **(...)**
-* Unit grouping: **{...}**
-* Value and unit separator: **,**
-* Array element at numeric index, or object property by string key: **[]**
-* Object property by string key or method function call: **.**
-* Array definiton: **[item1, ...]**
-* Object definition: **[propery1-key: property1-value, ...]**
-* Subroutine definition: **~return-type(argument1-name: argument1-type, ...) {...}**
-* Conditional switch definition, returns first or second value if prefix is true or false: **if condition {value1} else {value2}**,
+- Value grouping: **(...)**
+- Unit grouping: **{...}**
+- Value and unit separator: **,**
+- Array element at numeric index, or object property by string key: **[]**
+- Object property by string key or method function call: **.**
+- Array definiton: **[item1, ...]**
+- Object definition: **[propery1-key: property1-value, ...]**
+- Subroutine definition: **~return-type(argument1-name: argument1-type, ...) {...}**
+- Conditional switch definition, returns first or second value if prefix is true or false: **if condition {value1} else {value2}**,
  and if **else** clause is ommited second value deemed null
-* Loop definition, iteratively evaluates suffix while prefix is true, returns last evaluated value: **while condition {...}**
+- Loop definition, iteratively evaluates suffix while prefix is true, returns last evaluated value: **while condition {...}**
 
 ### Operators
-* Boolean negation (Logical NOT): **!**
-* Boolean disjunction (Logical OR): **|**
-* Boolean conjunction (Logical AND): **&**
-* Greater than: **>**
-* Less than: **<**
-* Greater than or equals to: **>=**
-* Less than or equals to: **<=**
-* Equals to: **==**
-* Not equals to: **!=**
-* Null coalescence: **?:**
-* Arithmetic addition, or buffer, string, and array concatination: **+**
-* Arithmetic subtraction or negation: **-**
-* Arithmetic multiplication: **\***
-* Arithmetic division: **/**
-* Arithmetic remainder: **%**
-* Exponentiation operator: **^**
-* Assignment: **=**
-* Boolean disjunction (Logical OR) assignment: **|=**
-* Boolean conjunction (Logical AND) assignment: **&=**
-* Arithmetic addition assignment: **+=**
-* Arithmetic subtraction assignment: **-=**
-* Arithmetic multiplication assignment: ***=**
-* Arithmetic division assignment: **/=**
-* Arithmetic remainder assignment: **%=**
+- Boolean negation (Logical NOT): **!**
+- Boolean disjunction (Logical OR): **|**
+- Boolean conjunction (Logical AND): **&**
+- Greater than: **>**
+- Less than: **<**
+- Greater than or equals to: **>=**
+- Less than or equals to: **<=**
+- Equals to: **==**
+- Not equals to: **!=**
+- Null coalescence: **?:**
+- Arithmetic addition, or buffer, string, and array concatination: **+**
+- Arithmetic subtraction or negation: **-**
+- Arithmetic multiplication: **\***
+- Arithmetic division: **/**
+- Arithmetic remainder: **%**
+- Exponentiation operator: **^**
+- Assignment: **=**
+- Boolean disjunction (Logical OR) assignment: **|=**
+- Boolean conjunction (Logical AND) assignment: **&=**
+- Arithmetic addition assignment: **+=**
+- Arithmetic subtraction assignment: **-=**
+- Arithmetic multiplication assignment: ***=**
+- Arithmetic division assignment: **/=**
+- Arithmetic remainder assignment: **%=**
 
 ### Constants
-
-#### Array
-- **array Array.Join(values: array...)** — Join arrays of any depths into a single array  
-- **array Array.Range(inclusiveFrom: integer, exclusiveTo: integer)** — New array filled with integers in range  
-- **array Array.Unique()** — Array of unique values  
-- **array Array.Intersection(a1: array, a2: array)** — Common values from two arrays  
-- **array Array.Difference(a1: array, a2: array)** — Symmetrical difference between arrays  
 
 #### Boolean
 - **boolean Boolean.Or(values:array...)** — Boolean disjunction  
 - **boolean Boolean.And(values: array...)** — Boolean conjunction  
 - **boolean Boolean.Not(value: boolean)** — Boolean negation  
+- **boolean? Boolean.Decode(value: buffer, offset?: integer)** — Decode boolean from buffer  
 - **boolean? Boolean.ParseBoolean()** — Parse boolean from string  
 
-#### Buffer
-- **buffer Buffer.Random(length: integer)** — Buffer of given length filled with random bytes  
-- **buffer? Buffer.ParseBuffer(value: string)** — Parse buffer from hexadecimal string  
+#### Timestamp
+- **timestamp Timestamp.Now()** — Current date and time  
+- **timestamp Timestamp.Epoch(value: float | integer, epoch?: timestamp)** — Create timestamp from milliseconds  
+- **timestamp? Boolean.Decode(value: buffer, offset?: integer)** — Decode timestamp from buffer  
+- **timestamp? Timestamp.Parse(value: string)** — Parse string to timestamp  
 
 #### Float
 - **Float.NAN** — Not-a-number  
@@ -159,17 +150,23 @@ Unknown or variant type is declared as **??**.
 - **integer? Integer.Decode(value: buffer, encoding: string, offset?: integer)** — Decode integer from buffer  
 - **integer? Integer.Parse(value: string)** — Parse integer from string  
 
-#### Object
-- **object Object.Merge(values: array...)** — Merge multiple objects  
-
 #### String
 - **string String.Random(length: integer)** — Random alphanumeric string  
 - **string? String.Decode(value: buffer, encoding?: string, offset?: integer, length?: integer)** — Decode buffer to string  
 
-#### Timestamp
-- **timestamp Timestamp.Now()** — Current date and time  
-- **timestamp Timestamp.Epoch(value: float | integer, epoch?: timestamp)** — Create timestamp from milliseconds  
-- **timestamp? Timestamp.Parse(value: string)** — Parse string to timestamp  
+#### Buffer
+- **buffer Buffer.Random(length: integer)** — Buffer of given length filled with random bytes  
+- **buffer? Buffer.ParseBuffer(value: string)** — Parse buffer from hexadecimal string  
+
+#### Array
+- **array Array.Join(values: array...)** — Join arrays of any depths into a single array  
+- **array Array.Range(inclusiveFrom: integer, exclusiveTo: integer)** — New array filled with integers in range  
+- **array Array.Unique()** — Array of unique values  
+- **array Array.Intersection(a1: array, a2: array)** — Common values from two arrays  
+- **array Array.Difference(a1: array, a2: array)** — Symmetrical difference between arrays  
+
+#### Object
+- **object Object.Merge(values: array...)** — Merge multiple objects  
 
 #### AVN
 - **string AVN.Format(value: string, whitespace?: string)** — Format string as AVN  
@@ -182,9 +179,9 @@ Unknown or variant type is declared as **??**.
 ### Functions
 
 #### General Functions
-- Null coalescence: **?? ??.Coalesce(otherwise: ??)**  
-- Equals to: **boolean ??.Equal(value: ??)**  
-- Not equals to: **boolean ??.Unequal(value: ??)**  
+- **?? ??.Coalesce(otherwise: ??)** - Null coalescence
+- **boolean ??.Equal(value: ??)** - Equals to
+- **boolean ??.Unequal(value: ??)** - Not equals to
 - **buffer float | integer | string.Encode(encoding?: string)** — Encode value to buffer  
 - **string boolean | float | integer | buffer | string | array | object.Format(radix?: integer, separator?: string)** — Format value to string  
 
@@ -281,7 +278,7 @@ const expr = new Affinirum( 'x * (y + abc / 5) > 10' );
 const value1 = expr.evaluate( { x: 10, y: 20, abc: 10 } ); // true
 const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
 ...
-const arrExpr = new Affinirum( 'Sum([ 1, 2, 3, a, b, c ])' );
+const arrExpr = new Affinirum( 'Integer.Sum([ 1, 2, 3, a, b, c ])' );
 const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
 ...
 const objExpr = new Affinirum( '[`prop1`:a,`prop2`:`abc`].prop1+10' );

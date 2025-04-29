@@ -26,10 +26,10 @@ export const equateBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 };
 
 export const concatBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
-  const bytes = new Uint8Array(value1.byteLength + value2.byteLength);
-  bytes.set(new Uint8Array(value1), 0);
-  bytes.set(new Uint8Array(value2), value1.byteLength);
-  return bytes.buffer;
+	const bytes = new Uint8Array(value1.byteLength + value2.byteLength);
+	bytes.set(new Uint8Array(value1), 0);
+	bytes.set(new Uint8Array(value2), value1.byteLength);
+	return bytes.buffer;
 }
 
 export const formatBuffer = (value?: ArrayBuffer)=> {

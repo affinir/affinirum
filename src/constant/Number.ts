@@ -92,7 +92,7 @@ export const funcRoot = new Constant(
 			}
 			let low = 0n, high = value, result = 0n;
 			while (low <= high) {
-				const mid = (low + high) >> 1n;
+				const mid = low + high >> 1n;
 				const midPow = mid ** e;
 				if (midPow === value) {
 					return mid;

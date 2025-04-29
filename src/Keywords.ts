@@ -1,9 +1,9 @@
 export const Keywords = [
 	'true', 'false',
 	'null', 'void',
-	'number', 'num',
 	'boolean', 'bool',
 	'timestamp', 'time',
+	'float', 'flo',
 	'integer', 'int',
 	'buffer', 'buf',
 	'string', 'str',

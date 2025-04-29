@@ -22,6 +22,12 @@ export const funcNot = new Constant(
 	Type.functionType(Type.Boolean, [Type.Boolean]),
 );
 
+const funcDecodeBoolean = new Constant(
+	(value: ArrayBuffer, byteOffset?: bigint)=>
+		Boolean(new Uint8Array(value)[byteOffset == null ? 0 : Number(byteOffset)]),
+	Type.functionType(Type.OptionalBoolean, [Type.Buffer, Type.OptionalInteger]),
+);
+
 const funcParseBoolean = new Constant(
 	(value: string)=> {
 		if (value == null) {
@@ -37,5 +43,6 @@ export const constBoolean = {
 	Or: funcOr,
 	And: funcAnd,
 	Not: funcNot,
+	Decode: funcDecodeBoolean,
 	Parse: funcParseBoolean,
 };
