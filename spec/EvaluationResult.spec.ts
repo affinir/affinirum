@@ -1,5 +1,5 @@
 import { Affinirum } from '../src/index.js';
-import { replaceJSON } from '../src/constant/notation/JSON.js';
+import { formatJSON } from '../src/constant/notation/JSON.js';
 
 describe('Evaluation Result test', ()=> {
 	([
@@ -179,14 +179,14 @@ describe('Evaluation Result test', ()=> {
 		['a+=10 + b-=10 + c*=2 + d/=2 + e %= 2', [{ a: 10, b: 2, c: 3, d: 4, e: 6, result: 0 }]],
 	] as [string, Record<string, any>][]).forEach(([expr, args])=> {
 		(args as Record<string, any>[]).forEach((v)=> {
-			it(`parses expression '${expr}' and evaluates it for arguments ${JSON.stringify(v, replaceJSON)}`, ()=> {
+			it(`parses expression '${expr}' and evaluates it for arguments ${formatJSON(v)}`, ()=> {
 				try {
 					const expression = new Affinirum(expr);
 					expect(expression).toBeDefined();
 					try {
 						const value = expression.evaluate(v);
 						if (value !== v.result) {
-							fail(`value ${JSON.stringify(value, replaceJSON)} not matching expectation ${v.result}`);
+							fail(`value ${formatJSON(value as any)} not matching expectation ${v.result}`);
 						}
 					}
 					catch (err) {

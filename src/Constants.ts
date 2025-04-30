@@ -7,7 +7,7 @@ import { constFloat } from './constant/Float.js';
 import { constObject } from './constant/Object.js';
 import { constString } from './constant/String.js';
 import { constTimestamp } from './constant/Timestamp.js';
-import { constAVN } from './constant/notation/AVN.js';
+import { constAN } from './constant/notation/AN.js';
 import { constJSON } from './constant/notation/JSON.js';
 
 export const Constants: [string, Record<string, Constant>][] = [
@@ -19,6 +19,6 @@ export const Constants: [string, Record<string, Constant>][] = [
 	['Object', constObject],
 	['String', constString],
 	['Timestamp', constTimestamp],
-	['AVN', constAVN],
+	['AN', constAN],
 	['JSON', constJSON],
 ];

@@ -52,7 +52,7 @@ export const equate = (value1: Value, value2: Value)=> {
 	return true;
 };
 
-const encode = (value: Value, encoding?: 'float32' | 'float32le' | 'float64' | 'float64le'
+export const encode = (value: Value, encoding?: 'float32' | 'float32le' | 'float64' | 'float64le'
 	| 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le' | 'int64' | 'int64le'
 	| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' | 'uint64' | 'uint64le'
 	| 'utf8' | 'ucs2' | 'ucs2le'): ArrayBuffer=>
@@ -79,7 +79,7 @@ const encode = (value: Value, encoding?: 'float32' | 'float32le' | 'float64' | '
 											concatBuffers(acc, val))
 										: new Uint8Array(0).buffer;
 
-const format = (value: Value, radix?: number, separator: string = ''): string=>
+export const format = (value: Value, radix?: number, separator: string = ''): string=>
 	value == null
 		? 'null'
 		: typeof value === 'boolean'

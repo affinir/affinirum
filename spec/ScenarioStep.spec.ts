@@ -36,7 +36,7 @@ describe('Scenario Step test', ()=> {
 		expect(expression.evaluate() === expression.evaluate()).toBeFalse();
 	});
 	it('parses and evaluates null value conversion to text', ()=> {
-		const expression = new Affinirum('AVN.Format(obj0)');
+		const expression = new Affinirum('AN.Format(obj0)');
 		expect(expression.evaluate({ obj0: undefined }) as string).toBe('null');
 	});
 	it('parses pure constant expression and compiles to a constant node', ()=> {
@@ -44,7 +44,7 @@ describe('Scenario Step test', ()=> {
 		expect(expression.type.toString()).toBe('integer');
 	});
 	it('parses and evaluates value conversion to text', ()=> {
-		const expression = new Affinirum('AVN.Format(obj1)');
+		const expression = new Affinirum('AN.Format(obj1)');
 		expect(expression.evaluate({ obj1: {
 			xbool: true,
 			xfloat: -50,

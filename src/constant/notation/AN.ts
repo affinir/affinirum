@@ -1,20 +1,21 @@
 import { Constant } from '../../Constant.js';
 import { Value } from '../../Value.js';
 import { Type } from '../../Type.js';
+import { formatFloat } from '../Float.js';
 import { formatBuffer } from '../Buffer.js';
 
-export const notate = (value: Value, separator?: string, whitespace?: string): string=> {
+export const formatAN = (value: Value, whitespace?: string): string=> {
 	if (value == null) {
 		return 'null';
-	}
-	if (typeof value === 'number') {
-		return value.toString() + (Number.isInteger(value) ? '.0' : '');
 	}
 	if (typeof value === 'boolean') {
 		return value.toString();
 	}
 	if (value instanceof Date) {
 		return `@${value.toISOString()}`;
+	}
+	if (typeof value === 'number') {
+		return formatFloat(value);
 	}
 	if (typeof value === 'bigint') {
 		return value.toString();
@@ -27,22 +28,23 @@ export const notate = (value: Value, separator?: string, whitespace?: string): s
 	}
 	if (Array.isArray(value)) {
 		const [prefix, suffix] = whitespace ? ['\n' + whitespace, '\n'] : ['', ''];
-		const lines = value.map((i)=> `${prefix}${notate(i, whitespace).split('\n').join(prefix)}`);
-		return `[${lines.join(separator)}${suffix}]`;
+		const lines = value.map((i)=> `${prefix}${formatAN(i, whitespace).split('\n').join(prefix)}`);
+		return `[${lines.join(',')}${suffix}]`;
 	}
 	if (typeof value === 'object') {
 		const [prefix, suffix] = whitespace ? ['\n' + whitespace, '\n'] : ['', ''];
-		const lines = Object.entries(value).map(([k, v])=> `${prefix}"${k}":${notate(v, whitespace).split('\n').join(prefix)}`);
-		return `[${lines.join(separator)}${suffix}]`;
+		const lines = Object.entries(value).map(([k, v])=> `${prefix}"${k}":${formatAN(v, whitespace).split('\n').join(prefix)}`);
+		return `[${lines.join(',')}${suffix}]`;
 	}
 	return 'function';
 };
 
-const funcFormatAVN = new Constant(
-	(value: Value, whitespace?: string)=> notate(value, whitespace),
+const funcFormatAN = new Constant(
+	(value: Value, whitespace?: string)=>
+		formatAN(value ?? null, whitespace),
 	Type.functionType(Type.String, [Type.Unknown, Type.OptionalString]),
 );
 
-export const constAVN = {
-	Format: funcFormatAVN,
+export const constAN = {
+	Format: funcFormatAN,
 };
