@@ -46,7 +46,7 @@
 	"license": "AGPLv3.0",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/affinir/affinirum.git"
+		"url": "git+https://github.com/affinir/affinirum.git"
 	},
 	"exports": {
 		".": {
