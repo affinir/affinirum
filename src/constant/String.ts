@@ -192,20 +192,6 @@ export const funcCharCode = new Constant(
 	Type.functionType(Type.OptionalInteger, [Type.String, Type.Float]),
 );
 
-export const funcAlphanum = new Constant(
-	(value: string)=> {
-		const lowerCase = value.toLowerCase();
-		let result = '';
-		for (let i = 0; i < lowerCase.length; ++i) {
-			if (!isCaseSpaceEtc(value[i])) {
-				result += value[i];
-			}
-		}
-		return result;
-	},
-	typeStringMutator,
-);
-
 export const funcTrim = new Constant(
 	(value: string)=>
 		value.trim(),
@@ -242,6 +228,20 @@ export const funcSplit = new Constant(
 	Type.functionType(Type.arrayType([Type.String]), [Type.String, Type.OptionalString]),
 );
 
+const funcAlphanum = new Constant(
+	(value: string)=> {
+		const lowerCase = value.toLowerCase();
+		let result = '';
+		for (let i = 0; i < lowerCase.length; ++i) {
+			if (!isCaseSpaceEtc(value[i])) {
+				result += value[i];
+			}
+		}
+		return result;
+	},
+	typeStringMutator,
+);
+
 const funcRandomString = new Constant(
 	(value: bigint)=> {
 		let str = '';
@@ -261,6 +261,7 @@ const funcDecodeString = new Constant(
 );
 
 export const constString = {
+	Alphanum: funcAlphanum,
 	Random: funcRandomString,
 	Decode: funcDecodeString,
 };

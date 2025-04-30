@@ -8,8 +8,7 @@ import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, fun
 	funcPower, funcRoot, funcNegate, funcCast } from './constant/Number.js';
 import { funcEntries, funcKeys, funcValues } from './constant/Object.js';
 import { funcLike, funcUnlike, funcContains, funcStartsWith, funcEndsWith,
-	funcChar, funcCharCode, funcAlphanum, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase,
-	funcSplit } from './constant/String.js';
+	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit } from './constant/String.js';
 import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay,
 	funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime } from './constant/Timestamp.js';
 import { funcCoalesce, funcEqual, funcNotEqual, funcEncode, funcFormat } from './constant/Unknown.js';
@@ -66,7 +65,6 @@ export const Functions: [string, Constant][] = [
 	['EndsWith', funcEndsWith],
 	['Char', funcChar],
 	['CharCode', funcCharCode],
-	['Alphanum', funcAlphanum],
 	['Trim', funcTrim],
 	['TrimStart', funcTrimStart],
 	['TrimEnd', funcTrimEnd],

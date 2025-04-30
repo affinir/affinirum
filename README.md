@@ -1,9 +1,13 @@
 # Affinirum
-A fast, embeddable scripting language with a recursive descent parser for evaluating complex algorithmic logic.
+A fast, embeddable scripting language powered by a lightweight recursive descent parser,
+ designed to evaluate complex algorithmic logic with precision and flexibility.
+Ideal for embedding in host applications, it offers clear syntax, dynamic typing,
+ and extensibility for custom operations—enabling rapid prototyping, advanced rule evaluation,
+ and safe script execution in constrained environments.
 
 Supports algebraic and boolean expressions, variables, conditionals, loops, and a rich standard library for working with numbers, buffers, strings, arrays, and objects.
 
-It can be run in browser or in NodeJS.
+Runs in browser and NodeJS.
 
 Target: ES2022 [browser+NodeJS][ESM+CJS].
 
@@ -111,157 +115,157 @@ Unknown or variant type is declared as **??**.
 ### Constants
 
 #### Boolean
-- **boolean Boolean.Or(values:array...)** — Boolean disjunction  
-- **boolean Boolean.And(values: array...)** — Boolean conjunction  
-- **boolean Boolean.Not(value: boolean)** — Boolean negation  
-- **boolean? Boolean.Decode(value: buffer, offset?: integer)** — Decode boolean from buffer  
-- **boolean? Boolean.ParseBoolean()** — Parse boolean from string  
+- **boolean Boolean.Or(values:array...)** — Boolean disjunction
+- **boolean Boolean.And(values: array...)** — Boolean conjunction
+- **boolean Boolean.Not(value: boolean)** — Boolean negation
+- **boolean? Boolean.Decode(value: buffer, offset?: integer)** — Decode boolean from buffer
+- **boolean? Boolean.ParseBoolean()** — Parse boolean from string
 
 #### Timestamp
-- **timestamp Timestamp.Now()** — Current date and time  
-- **timestamp Timestamp.Epoch(value: float | integer, epoch?: timestamp)** — Create timestamp from milliseconds  
-- **timestamp? Boolean.Decode(value: buffer, offset?: integer)** — Decode timestamp from buffer  
-- **timestamp? Timestamp.Parse(value: string)** — Parse string to timestamp  
+- **timestamp Timestamp.Now()** — Current date and time
+- **timestamp Timestamp.Epoch(value: float | integer, epoch?: timestamp)** — Create timestamp from milliseconds
+- **timestamp? Boolean.Decode(value: buffer, offset?: integer)** — Decode timestamp from buffer
+- **timestamp? Timestamp.Parse(value: string)** — Parse string to timestamp
 
 #### Float
-- **Float.NAN** — Not-a-number  
-- **Float.PositiveInfinity** — Positive infinity  
-- **Float.NegativeInfinity** — Negative infinity  
-- **Float.Epsilon** — Smallest positive float  
-- **float Float.Sum(values: array...)** — Numeric sum  
-- **float Float.Min(values: array...)** — Numeric minimum  
-- **float Float.Max(values: array...)** — Numeric maximum  
-- **float Float.Exponent()** — Exponent  
-- **float Float.Logarithm()** — Logarithm  
-- **float Float.Abs()** — Absolute value  
-- **float Float.Ceil()** — Ceil  
-- **float Float.Floor()** — Floor  
-- **float Float.Round()** — Rounded value  
-- **float Float.Truncate()** — Truncated value  
-- **float Float.Random(exclusiveTo: float)** — Random float up to value  
-- **float? Float.Decode(value: buffer, encoding: string, offset?: integer)** — Decode float from buffer  
-- **float? Float.Parse(value: string)** — Parse float from string  
+- **Float.NAN** — Not-a-number
+- **Float.PositiveInfinity** — Positive infinity
+- **Float.NegativeInfinity** — Negative infinity
+- **Float.Epsilon** — Smallest positive float
+- **float Float.Sum(values: array...)** — Numeric sum
+- **float Float.Min(values: array...)** — Numeric minimum
+- **float Float.Max(values: array...)** — Numeric maximum
+- **float Float.Exponent()** — Exponent
+- **float Float.Logarithm()** — Logarithm
+- **float Float.Abs()** — Absolute value
+- **float Float.Ceil()** — Ceil
+- **float Float.Floor()** — Floor
+- **float Float.Round()** — Rounded value
+- **float Float.Truncate()** — Truncated value
+- **float Float.Random(exclusiveTo: float)** — Random float up to value
+- **float? Float.Decode(value: buffer, encoding: string, offset?: integer)** — Decode float from buffer
+- **float? Float.Parse(value: string)** — Parse float from string
 
 #### Integer
-- **integer Integer.Sum(values: array...)** — Numeric sum  
-- **integer Integer.Min(values: array...)** — Numeric minimum  
-- **integer Integer.Max(values: array...)** — Numeric maximum  
-- **integer Integer.Random(exclusiveTo: integer)** — Random integer up to value  
-- **integer? Integer.Decode(value: buffer, encoding: string, offset?: integer)** — Decode integer from buffer  
-- **integer? Integer.Parse(value: string)** — Parse integer from string  
+- **integer Integer.Sum(values: array...)** — Numeric sum
+- **integer Integer.Min(values: array...)** — Numeric minimum
+- **integer Integer.Max(values: array...)** — Numeric maximum
+- **integer Integer.Random(exclusiveTo: integer)** — Random integer up to value
+- **integer? Integer.Decode(value: buffer, encoding: string, offset?: integer)** — Decode integer from buffer
+- **integer? Integer.Parse(value: string)** — Parse integer from string
 
 #### String
-- **string String.Random(length: integer)** — Random alphanumeric string  
-- **string? String.Decode(value: buffer, encoding?: string, offset?: integer, length?: integer)** — Decode buffer to string  
+- **string String.Random(length: integer)** — Random alphanumeric string
+- **string? String.Decode(value: buffer, encoding?: string, offset?: integer, length?: integer)** — Decode buffer to string
 
 #### Buffer
-- **buffer Buffer.Random(length: integer)** — Buffer of given length filled with random bytes  
-- **buffer? Buffer.ParseBuffer(value: string)** — Parse buffer from hexadecimal string  
+- **buffer Buffer.Random(length: integer)** — Buffer of given length filled with random bytes
+- **buffer? Buffer.ParseBuffer(value: string)** — Parse buffer from hexadecimal string
 
 #### Array
-- **array Array.Join(values: array...)** — Join arrays of any depths into a single array  
-- **array Array.Range(inclusiveFrom: integer, exclusiveTo: integer)** — New array filled with integers in range  
-- **array Array.Unique()** — Array of unique values  
-- **array Array.Intersection(a1: array, a2: array)** — Common values from two arrays  
-- **array Array.Difference(a1: array, a2: array)** — Symmetrical difference between arrays  
+- **array Array.Join(values: array...)** — Join arrays of any depths into a single array
+- **array Array.Range(inclusiveFrom: integer, exclusiveTo: integer)** — New array filled with integers in range
+- **array Array.Unique()** — Array of unique values
+- **array Array.Intersection(a1: array, a2: array)** — Common values from two arrays
+- **array Array.Difference(a1: array, a2: array)** — Symmetrical difference between arrays
 
 #### Object
-- **object Object.Merge(values: array...)** — Merge multiple objects  
+- **object Object.Merge(values: array...)** — Merge multiple objects
 
-#### AVN
-- **string AVN.Format(value: string, whitespace?: string)** — Format string as AVN  
+#### AN
+- **string AN.Format(value: string, whitespace?: string)** — Format string as AN
 
 #### JSON
-- **string JSON.Format(value: void | boolean | float | string | array | object, whitespace?: string)** — Format as JSON string  
-- **void | boolean | float? | string? | array? | object? JSON.Parse(value?: string)** — Parse JSON-formatted string  
+- **string JSON.Format(value: void | boolean | float | string | array | object, whitespace?: string)** — Format as JSON string
+- **void | boolean | float? | string? | array? | object? JSON.Parse(value?: string)** — Parse JSON-formatted string
 
 
 ### Functions
 
 #### General Functions
-- **?? ??.Coalesce(otherwise: ??)** - Null coalescence
-- **boolean ??.Equal(value: ??)** - Equals to
-- **boolean ??.Unequal(value: ??)** - Not equals to
-- **buffer float | integer | string.Encode(encoding?: string)** — Encode value to buffer  
-- **string boolean | float | integer | buffer | string | array | object.Format(radix?: integer, separator?: string)** — Format value to string  
+- **?? ??.Coalesce(otherwise: ??)** — Null coalescence
+- **boolean ??.Equal(value: ??)** — Equals to
+- **boolean ??.Unequal(value: ??)** — Not equals to
+- **buffer float | integer | string.Encode(encoding?: string)** — Encode value to buffer
+- **string boolean | float | integer | buffer | string | array | object.Format(radix?: integer, separator?: string)** — Format value to string
 
 #### Array Functions
-- **?? array.First(condition: function)** — First item satisfying condition  
-- **?? array.Last(condition: function)** — Last item satisfying condition  
-- **integer array.FirstIndex(condition: function)** — First index satisfying condition  
-- **integer array.LastIndex(condition: function)** — Last index satisfying condition  
-- **boolean array.Every(condition: function)** — All items satisfy condition  
-- **boolean array.Any(condition: function)** — Any item satisfies condition  
-- **array array.Reverse()** — Reversed array  
-- **array array.Flatten(depth: integer = 1)** — Flatten array  
-- **array array.Mutate(transformation: function)** — Transform items  
-- **array array.Filter(condition: function)** — Filtered array  
-- **?? array.Reduce(reducer: function)** — Reduced value  
-- **object array.Compose(generator: function)** — Compose object from array  
-- **array array.Prepend(items: array...)** — Prepend items  
-- **array array.Append(items: array...)** — Append items  
+- **?? array.First(condition: function)** — First item satisfying condition
+- **?? array.Last(condition: function)** — Last item satisfying condition
+- **integer array.FirstIndex(condition: function)** — First index satisfying condition
+- **integer array.LastIndex(condition: function)** — Last index satisfying condition
+- **boolean array.Every(condition: function)** — All items satisfy condition
+- **boolean array.Any(condition: function)** — Any item satisfies condition
+- **array array.Reverse()** — Reversed array
+- **array array.Flatten(depth: integer = 1)** — Flatten array
+- **array array.Mutate(transformation: function)** — Transform items
+- **array array.Filter(condition: function)** — Filtered array
+- **?? array.Reduce(reducer: function)** — Reduced value
+- **object array.Compose(generator: function)** — Compose object from array
+- **array array.Prepend(items: array...)** — Prepend items
+- **array array.Append(items: array...)** — Append items
 
 #### Buffer Functions
-- **buffer buffer.Byte(pos: integer)** — Byte at position  
-- **string Buffer.FormatBuffer(value: buffer)** — Hexadecimal string from buffer  
+- **buffer buffer.Byte(pos: integer)** — Byte at position
+- **string Buffer.FormatBuffer(value: buffer)** — Hexadecimal string from buffer
 
 #### Enumerable Functions
-- **float | integer | buffer | string | array.Add(values:array...)** — Add or concatenate values  
-- **buffer | string | array.Slice(start?: integer, end?: integer)** — Slice section  
-- **buffer | string | array.Splice(start: integer, remove: integer, inject: array...)** — Splice section  
-- **buffer | string | array.Inject(start: integer, inject: array...)** — Inject section  
+- **float | integer | buffer | string | array.Add(values:array...)** — Add or concatenate values
+- **buffer | string | array.Slice(start?: integer, end?: integer)** — Slice section
+- **buffer | string | array.Splice(start: integer, remove: integer, inject: array...)** — Splice section
+- **buffer | string | array.Inject(start: integer, inject: array...)** — Inject section
 
 #### Iterable Functions
-- **integer buffer | string | array | object.Length()** — Get length  
-- **?? array? | object?.At(index: integer | string)** — Access by index or key  
+- **integer buffer | string | array | object.Length()** — Get length
+- **?? array? | object?.At(index: integer | string)** — Access by index or key
 
 #### Number Functions
-- **boolean float | integer.GreaterThan(value)** — Greater than  
-- **boolean float | integer.LessThan(value)** — Less than  
-- **boolean float | integer.GreaterOrEqual(value)** — Greater or equal  
-- **boolean float | integer.LessOrEqual(value)** — Less or equal  
-- **float | integer float | integer.Subtract(subtrahend)** — Subtract value  
-- **float | integer float | integer.Negate()** — Negate number  
-- **float | integer float | integer.Multiply(values:array...)** — Multiply values  
-- **float | integer float | integer.Divide(divisor)** — Divide value  
-- **float | integer float | integer.Remainder(divisor)** — Remainder  
-- **float | integer float | integer.Modulo(divisor)** — Modulo  
-- **float | integer float | integer.Power(exponent)** — Power  
-- **float | integer float | integer.Root(index)** — Root  
-- **float | integer float | integer.Cast()** — Cast to number  
+- **boolean float | integer.GreaterThan(value)** — Greater than
+- **boolean float | integer.LessThan(value)** — Less than
+- **boolean float | integer.GreaterOrEqual(value)** — Greater or equal
+- **boolean float | integer.LessOrEqual(value)** — Less or equal
+- **float | integer float | integer.Subtract(subtrahend)** — Subtract value
+- **float | integer float | integer.Negate()** — Negate number
+- **float | integer float | integer.Multiply(values:array...)** — Multiply values
+- **float | integer float | integer.Divide(divisor)** — Divide value
+- **float | integer float | integer.Remainder(divisor)** — Remainder
+- **float | integer float | integer.Modulo(divisor)** — Modulo
+- **float | integer float | integer.Power(exponent)** — Power
+- **float | integer float | integer.Root(index)** — Root
+- **float | integer float | integer.Cast()** — Cast to number
 
 #### Object Functions
-- **array object.Entries()** — Key-value pairs  
-- **array object.Keys()** — Object keys  
-- **array object.Values()** — Object values  
+- **array object.Entries()** — Key-value pairs
+- **array object.Keys()** — Object keys
+- **array object.Values()** — Object values
 
 #### String Functions
-- **boolean string.Like(value: string)** — Alphanumeric equality  
-- **boolean string.Unlike(value: string)** — Alphanumeric inequality  
-- **boolean string.Contains(search: string, startPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Substring check  
-- **boolean string.StartsWith(search: string, startPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Prefix check  
-- **boolean string.EndsWith(search: string, endPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Suffix check  
-- **string string.Char(pos: integer)** — Character at position  
-- **integer string.CharCode(pos: integer)** — Character code  
-- **string string.Alphanum()** — Alphanumeric digest  
-- **string string.Trim()** — Trim whitespace  
-- **string string.TrimStart()** — Trim leading whitespace  
-- **string string.TrimEnd()** — Trim trailing whitespace  
-- **string string.LowerCase()** — To lowercase  
-- **string string.UpperCase()** — To uppercase  
-- **array string.Split(separator: string = ' ')** — Split into array  
+- **boolean string.Like(value: string)** — Alphanumeric equality
+- **boolean string.Unlike(value: string)** — Alphanumeric inequality
+- **boolean string.Contains(search: string, startPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Substring check
+- **boolean string.StartsWith(search: string, startPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Prefix check
+- **boolean string.EndsWith(search: string, endPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Suffix check
+- **string string.Char(pos: integer)** — Character at position
+- **integer string.CharCode(pos: integer)** — Character code
+- **string string.Alphanum()** — Alphanumeric digest
+- **string string.Trim()** — Trim whitespace
+- **string string.TrimStart()** — Trim leading whitespace
+- **string string.TrimEnd()** — Trim trailing whitespace
+- **string string.LowerCase()** — To lowercase
+- **string string.UpperCase()** — To uppercase
+- **array string.Split(separator: string = ' ')** — Split into array
 
 #### Timestamp Functions
-- **integer timestamp.Year(utc?: boolean)** — Get year  
-- **integer timestamp.Month(utc?: boolean)** — Get month  
-- **integer timestamp.MonthIndex(utc?: boolean)** — Month index  
-- **integer timestamp.WeekdayIndex(utc?: boolean)** — Weekday index  
-- **integer timestamp.Day(utc?: boolean)** — Day of month  
-- **integer timestamp.Hour(utc?: boolean)** — Hour  
-- **integer timestamp.Minute(utc?: boolean)** — Minute  
-- **integer timestamp.Second(utc?: boolean)** — Second  
-- **integer timestamp.Millisecond(utc?: boolean)** — Millisecond  
-- **integer timestamp.EpochTime(epoch?: timestamp)** — Epoch milliseconds  
+- **integer timestamp.Year(utc?: boolean)** — Get year
+- **integer timestamp.Month(utc?: boolean)** — Get month
+- **integer timestamp.MonthIndex(utc?: boolean)** — Month index
+- **integer timestamp.WeekdayIndex(utc?: boolean)** — Weekday index
+- **integer timestamp.Day(utc?: boolean)** — Day of month
+- **integer timestamp.Hour(utc?: boolean)** — Hour
+- **integer timestamp.Minute(utc?: boolean)** — Minute
+- **integer timestamp.Second(utc?: boolean)** — Second
+- **integer timestamp.Millisecond(utc?: boolean)** — Millisecond
+- **integer timestamp.EpochTime(epoch?: timestamp)** — Epoch milliseconds
 
 ## Reference
 
