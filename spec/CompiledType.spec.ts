@@ -38,11 +38,11 @@ describe('Compiled Type test', ()=> {
 	] as [string, string][]).forEach(([expr, expected])=> {
 		it(`parses expression ${expr} and determines value type`, ()=> {
 			try {
-				const expression = new Affinirum(expr);
-				expect(expression).toBeDefined();
-				expression.evaluate({});
-				if (expression.type.toString() !== expected) {
-					fail(`value ${expression.type.toString()} not matching expectation ${expected}`)
+				const script = new Affinirum(expr);
+				expect(script).toBeDefined();
+				script.evaluate({});
+				if (script.type.toString() !== expected) {
+					fail(`value ${script.type.toString()} not matching expectation ${expected}`)
 				}
 			}
 			catch (err) {
@@ -51,12 +51,12 @@ describe('Compiled Type test', ()=> {
 		});
 	});
 	it('parses pure constant expression and tests return type', ()=> {
-		const expression = new Affinirum('("ABC" + Timestamp.Parse("2000-01-01").Format(1)).Length');
-		expect(expression.type.toString()).toBe('integer');
+		const script = new Affinirum('("ABC" + Timestamp.Parse("2000-01-01").Format(1)).Length');
+		expect(script.type.toString()).toBe('integer');
 	});
 	it('parses expression and tests undefined variable types', ()=> {
-		const expression = new Affinirum('(a-b)*c.prop/d.UpperCase.Length-100');
-		const variables = expression.variables();
+		const script = new Affinirum('(a-b)*c.prop/d.UpperCase.Length-100');
+		const variables = script.variables();
 		expect(variables.a.isNumeric).toBeTrue();
 		expect(variables.b.isNumeric).toBeTrue();
 		expect(variables.d.isString).toBeTrue();

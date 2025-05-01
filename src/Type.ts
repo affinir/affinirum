@@ -87,11 +87,11 @@ export class Type implements IType {
 	}
 
 	functionAtoms(type: Type, argc: number) {
-		if (this.isUnknown || type.isVoid) {
+		if (this.isUnknown) {
 			return Type.Function._atoms as FunctionAtom[];
 		}
 		return this._atoms.filter((i)=>
-			i instanceof FunctionAtom && i.minArity <= argc && i.maxArity >= argc && (!i.retType || i.retType.match(type))
+			i instanceof FunctionAtom && i.minArity <= argc && i.maxArity >= argc && (type.isVoid || i.retType.match(type))
 		) as FunctionAtom[];
 	}
 

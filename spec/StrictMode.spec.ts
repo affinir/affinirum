@@ -2,9 +2,9 @@ import { Affinirum, Type } from '../src/index.js';
 
 describe('Strict Mode test', ()=> {
 	it('defines variables in strict mode and evaluates', ()=> {
-		const expression = new Affinirum('predefined1*2 + predefined2 + 26 * 13',
+		const script = new Affinirum('predefined1*2 + predefined2 + 26 * 13',
 			{ strict: true, variables: { predefined1: Type.Integer, predefined2: Type.Integer, myvar: Type.String } });
-		expect(expression.evaluate({ predefined1: 10n, predefined2: 20n }) as bigint).toBe(378n);
+		expect(script.evaluate({ predefined1: 10n, predefined2: 20n }) as bigint).toBe(378n);
 	});
 	it('errors on undefines variables in strict mode', ()=> {
 		try {

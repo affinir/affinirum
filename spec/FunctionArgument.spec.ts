@@ -2,7 +2,7 @@ import { Affinirum } from '../src/index.js';
 
 describe('Function Argument test', ()=> {
 	it('parses and evaluates full script', ()=> {
-		const expression = new Affinirum(`
+		const script = new Affinirum(`
 const cnum = 1000 + myvr;
 const cint = 01000;
 const cstr = "thestring";
@@ -21,7 +21,6 @@ var vfunc = ~string (f: ~string(integer, integer, integer)) {
 };
 vfunc(cfunc)
 		`);
-		const result = expression.evaluate({ myvr: 100 }) as string;
-		expect(result).toBe('1006.0');
+		expect(script.evaluate({ myvr: 100 }) as string).toBe('1006.0');
 	});
 });

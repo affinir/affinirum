@@ -54,10 +54,10 @@ describe('Constant Expression', ()=> {
 	] as [string, any][]).forEach(([expr, expectation])=> {
 		it(`compiles expression '${expr}' and tests the value`, ()=> {
 			try {
-				const expression = new Affinirum(expr);
-				expect(expression).toBeDefined();
+				const script = new Affinirum(expr);
+				expect(script).toBeDefined();
 				try {
-					const value = expression.evaluate();
+					const value = script.evaluate();
 					if (!equate(value, expectation)) {
 						fail(`value ${formatAN(value)} not matching expectation ${expectation}`);
 					}
