@@ -5,7 +5,7 @@ import { Type } from '../../Type.js';
 const typeJson = Type.union(Type.Void, Type.Boolean, Type.Timestamp, Type.Float, Type.Integer, Type.String, Type.Array, Type.Object);
 
 export const formatJSON = (value: Value, whitespace?: string): string=>
-	JSON.stringify(value, (_key: string, value: any)=> typeof value === 'bigint' ? value.toString() : value as unknown, whitespace);
+	JSON.stringify(value, (_key: string, value: any)=> typeof value === 'bigint' ? `"${value.toString()}"` : value as unknown, whitespace);
 
 const funcFormatJSON = new Constant(
 	(value: Value, whitespace?: string)=>

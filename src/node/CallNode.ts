@@ -26,14 +26,14 @@ export class CallNode extends Node {
 		this._fnode = this._fnode.compile(this._fnode.type);
 		const mergedFunctionAtom = this._fnode.type.mergeFunctionAtom(type, this._subnodes.length);
 		if (!mergedFunctionAtom) {
-			this.throwError(`function type ${this._fnode.type} mismatch with expected return type ${type} and ${this._subnodes.length} arguments`);
+			this.throwError(`function ${this._fnode.type} does not return ${type} or take ${this._subnodes.length} arguments)`);
 		}
 		this._type = mergedFunctionAtom.retType as Type;
 		if (this._subnodes.length < mergedFunctionAtom.minArity) {
-			this.throwError(`function requires ${mergedFunctionAtom.minArity} arguments not ${this._subnodes.length}`);
+			this.throwError(`function requires at least ${mergedFunctionAtom.minArity} arguments not ${this._subnodes.length}`);
 		}
 		if (this._subnodes.length > mergedFunctionAtom.maxArity) {
-			this.throwError(`function requires ${mergedFunctionAtom.maxArity} arguments not ${this._subnodes.length}`);
+			this.throwError(`function requires at most ${mergedFunctionAtom.maxArity} arguments not ${this._subnodes.length}`);
 		}
 		let constant = this._fnode.constant;
 		for (let i = 0; i < this._subnodes.length; ++i) {
@@ -53,8 +53,8 @@ export class CallNode extends Node {
 
 	override toString(ident: number = 0): string {
 		const subnodes = this._subnodes.map((s)=> s.toString(ident + 1)).join('\n');
-		return `${super.toString(ident)} invocation node fnode:\n${this._fnode.toString(ident + 1)}\n`
-			+ `${super.toString(ident)} invocation node subnodes:\n${subnodes}`;
+		return `${super.toString(ident)} call node fnode:\n${this._fnode.toString(ident + 1)}\n`
+			+ `${super.toString(ident)} call node subnodes:\n${subnodes}`;
 	}
 
 }
