@@ -81,26 +81,18 @@ export class Type implements IType {
 		return this._atoms.length ? Type.union(Type.Void, this) : this;
 	}
 
-	mergeFunctionAtomRetType(type: Type) {
-		const atoms = this._atoms.filter((i)=> i instanceof FunctionAtom && (!i.retType || i.retType.match(type))) as FunctionAtom[];
-		return Type.union(...atoms.map((i)=> i.retType as Type ?? Type.Unknown));
+	functionAtomRetType(type: Type) {
+		const atoms = this._atoms.filter((i)=> i instanceof FunctionAtom && i.retType.match(type)) as FunctionAtom[];
+		return Type.union(...atoms.map((i)=> i.retType as Type));
 	}
 
-	mergeFunctionAtom(type: Type, argc: number) {
+	functionAtoms(type: Type, argc: number) {
 		if (this.isUnknown || type.isVoid) {
-			return Type._functionAtom(type, Array.from({ length: argc }).map(()=> Type.Unknown), false);
+			return Type.Function._atoms as FunctionAtom[];
 		}
-		const atoms = this._atoms.filter((i)=>
+		return this._atoms.filter((i)=>
 			i instanceof FunctionAtom && i.minArity <= argc && i.maxArity >= argc && (!i.retType || i.retType.match(type))
 		) as FunctionAtom[];
-		if (!atoms.length) {
-			return undefined;
-		}
-		return Type._functionAtom(
-			Type.union(...atoms.map((i)=> i.retType as Type ?? Type.Unknown)),
-			Array.from({ length: argc }).map((_, ix)=> Type.union(...atoms.map((i)=> i.argType(ix) as Type))),
-			atoms.some((i)=> i.isVariadic),
-		);
 	}
 
 	reduce(mask: Type) {

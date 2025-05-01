@@ -2,6 +2,7 @@ import { Node } from '../Node.js';
 import { ParserFrame } from '../ParserFrame.js';
 import { Constant } from '../Constant.js';
 import { ConstantNode } from './ConstantNode.js';
+import { ArrayNode } from './ArrayNode.js';
 import { Value } from '../Value.js';
 import { Type } from '../Type.js';
 
@@ -15,7 +16,11 @@ export class CallNode extends Node {
 		protected _subnodes: Node[],
 	) {
 		super(frame);
-		this._type = this._fnode.type.mergeFunctionAtom(Type.Unknown, _subnodes.length)?.retType as Type ?? Type.Unknown;
+		const functionAtoms = this._fnode.type.functionAtoms(Type.Unknown, this._subnodes.length);
+		if (!functionAtoms.length) {
+			this.throwError(`function ${this._fnode.type} does not take ${this._subnodes.length} arguments)`);
+		}
+		this._type = Type.union(...functionAtoms.map((i)=> i.retType));
 	}
 
 	override get type(): Type {
@@ -24,23 +29,37 @@ export class CallNode extends Node {
 
 	override compile(type: Type): Node {
 		this._fnode = this._fnode.compile(this._fnode.type);
-		const mergedFunctionAtom = this._fnode.type.mergeFunctionAtom(type, this._subnodes.length);
-		if (!mergedFunctionAtom) {
-			this.throwError(`function ${this._fnode.type} does not return ${type} or take ${this._subnodes.length} arguments)`);
+		const functionAtoms = this._fnode.type.functionAtoms(type, this._subnodes.length);
+		if (!functionAtoms.length) {
+			this.throwError(`function ${this._fnode.type} does not take ${this._subnodes.length} arguments returning ${type})`);
 		}
-		this._type = mergedFunctionAtom.retType as Type;
-		if (this._subnodes.length < mergedFunctionAtom.minArity) {
-			this.throwError(`function requires at least ${mergedFunctionAtom.minArity} arguments not ${this._subnodes.length}`);
+		this._type = Type.union(...functionAtoms.map((i)=> i.retType));
+		/*
+		if (this._subnodes.length < functionAtoms.minArity) {
+			this.throwError(`function requires at least ${functionAtoms.minArity} arguments not ${this._subnodes.length}`);
 		}
-		if (this._subnodes.length > mergedFunctionAtom.maxArity) {
-			this.throwError(`function requires at most ${mergedFunctionAtom.maxArity} arguments not ${this._subnodes.length}`);
+		if (this._subnodes.length > functionAtoms.maxArity) {
+			this.throwError(`function requires at most ${functionAtoms.maxArity} arguments not ${this._subnodes.length}`);
 		}
-		let constant = this._fnode.constant;
-		for (let i = 0; i < this._subnodes.length; ++i) {
-			this._subnodes[i] = this._subnodes[i].compile(mergedFunctionAtom.argType(i) as Type);
-			constant &&= this._subnodes[i].constant;
+		*/
+		if (this._fnode.constant) {
+			let constant = true;
+			for (let i = 0; i < this._subnodes.length; ++i) {
+				const argType = Type.union(...functionAtoms.map((a)=> a.argType(i)));
+				this._subnodes[i] = this._subnodes[i].compile(argType);
+				constant &&= this._subnodes[i].constant;
+			}
+			return constant ? new ConstantNode(this, new Constant(this.evaluate(), this.type)) : this;
 		}
-		return constant ? new ConstantNode(this, new Constant(this.evaluate(), this.type)) : this;
+		const arity = functionAtoms.filter((i)=> i.isVariadic).map((i)=> i.arity).reduce((acc, val)=> Math.max(acc, val), 0);
+		if (arity > 0) {
+			const frame = this._subnodes[arity - 1].starts();
+			this._subnodes = this._subnodes.slice(0, arity - 1).concat(new ArrayNode(
+				frame.ends(this._subnodes[this._subnodes.length - 1]),
+				this._subnodes.slice(arity - 1)
+			));
+		}
+		return this;
 	}
 
 	override evaluate(): Value {

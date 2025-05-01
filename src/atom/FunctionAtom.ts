@@ -1,4 +1,4 @@
-import { IType } from '../Type.js';
+import { IType, Type } from '../Type.js';
 
 export class FunctionAtom implements IType {
 
@@ -10,7 +10,7 @@ export class FunctionAtom implements IType {
 	) {}
 
 	get retType() {
-		return this._retType;
+		return this._retType as Type ?? Type.Unknown;
 	}
 
 	get minArity() {
@@ -25,12 +25,16 @@ export class FunctionAtom implements IType {
 		return this._isVariadic;
 	}
 
-	subtypes() {
+	get arity() {
+		return this._argTypes.length;
+	}
+
+	subtypes(): IType[] {
 		return this._retType ? [this._retType, ...this._argTypes] : [];
 	}
 
-	argType(index: number) {
-		return this._argTypes[index] ?? this._argTypes[this._argTypes.length - 1];
+	argType(index: number): Type {
+		return (this._argTypes[index] ?? this._argTypes[this._argTypes.length - 1]) as Type;
 	}
 
 	match(type: IType): boolean {

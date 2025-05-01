@@ -28,14 +28,15 @@ export class SwitchNode extends Node {
 	override compile(type: Type): Node {
 		this._cnode = this._cnode.compile(Type.Boolean);
 		this._type = type;
-		let constant = this._cnode.constant;
-		for (let i = 0; i < this._subnodes.length; ++i) {
-			this._subnodes[i] = this._subnodes[i].compile(type);
-			constant &&= this._subnodes[i].constant;
+		if (this._cnode.constant) {
+			let constant = true;
+			for (let i = 0; i < this._subnodes.length; ++i) {
+				this._subnodes[i] = this._subnodes[i].compile(type);
+				constant &&= this._subnodes[i].constant;
+			}
+			return constant ? new ConstantNode(this, new Constant(this.evaluate(), this.type)) : this;
 		}
-		return constant
-			? new ConstantNode(this, new Constant(this.evaluate(), this.type))
-			: this;
+		return this;
 	}
 
 	override evaluate(): Value {

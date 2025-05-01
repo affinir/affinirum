@@ -1,6 +1,6 @@
 import { Affinirum } from '../src/index.js';
 
-describe('Value Type test', ()=> {
+describe('Compiled Type test', ()=> {
 	([
 		['null', 'void'],
 		['true', 'boolean'],
@@ -49,5 +49,16 @@ describe('Value Type test', ()=> {
 				fail(`parsing error\n${(err as Error).message}`);
 			}
 		});
+	});
+	it('parses pure constant expression and tests return type', ()=> {
+		const expression = new Affinirum('("ABC" + Timestamp.Parse("2000-01-01").Format(1)).Length');
+		expect(expression.type.toString()).toBe('integer');
+	});
+	it('parses expression and tests undefined variable types', ()=> {
+		const expression = new Affinirum('(a-b)*c.prop/d.UpperCase.Length-100');
+		const variables = expression.variables();
+		expect(variables.a.isNumeric).toBeTrue();
+		expect(variables.b.isNumeric).toBeTrue();
+		expect(variables.d.isString).toBeTrue();
 	});
 });
