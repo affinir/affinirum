@@ -66,15 +66,23 @@ describe('Variable Expression test', ()=> {
 			{ a: '  abcd  0123  !', b: 'abcd-00123  ', result: true },
 			{ a: '  abcd  0123  ! ', b: 'Ab cD-0123  ', result: false },
 		]],
-		['v.Contains(str0)', [
-			{ v: ' abc def abc', str0: 'def', result: true },
-			{ v: ' abc ', str0: 'aba', result: false },
+		['v.Contains(s)', [
+			{ v: { a: 'abc', b: 4 }, s: 4, result: true },
+			{ v: { a: 'abc', b: 4 }, s: 6, result: false },
 		]],
-		['v.Contains(str0, pos, true)', [
-			{ v: '', str0: '', pos: null, result: true },
-			{ v: '', str0: '123', pos: 0n, result: false },
-			{ v: '  ab CD  0123   ', str0: ' A Bcd ', pos: null, result: true },
-			{ v: '  ab C-D  0123   ', str0: ' A+Bcd ', pos: null, result: true },
+		['v.Contains(s, pos)', [
+			{ v: ' abc def abc', s: 'def', pos: 2n, result: true },
+			{ v: ' abc ', s: 'aba', pos: 1n, result: false },
+			{ v: new Uint32Array([100, 200, 300, 400]).buffer, s: new Uint32Array([200, 300]).buffer, pos: 2n, result: true },
+			{ v: new Uint32Array([100, 202, 303, 400]).buffer, s: new Uint32Array([200, 300]).buffer, pos: 0n, result: false },
+			{ v: [0, 1, 2, 3, 4, 5], s: 4, pos: undefined, result: true },
+			{ v: [0, 1, 2, 3, 4, 5], s: 6, pos: 0n, result: false },
+		]],
+		['v.Contains(s, pos, true)', [
+			{ v: '', s: '', pos: null, result: true },
+			{ v: '', s: '123', pos: 0n, result: false },
+			{ v: '  ab CD  0123   ', s: ' A Bcd ', pos: null, result: true },
+			{ v: '  ab C-D  0123   ', s: ' A+Bcd ', pos: null, result: true },
 		]],
 		['v.StartsWith(str0, pos, true)', [
 			{ v: '', str0: '', pos: undefined, result: true },
@@ -466,6 +474,14 @@ describe('Variable Expression test', ()=> {
 		['Buffer.Random(c).Length + String.Random(c).Length', [
 			{ c: 0n, result: 0n },
 			{ c: 64n, result: 128n },
+		]],
+		['v.At("prop") + v.z', [
+			{ v: { prop: 10n, z: 10n }, result: 20n },
+			{ v: { prop: 100n }, result: undefined },
+		]],
+		['v.Has("prop") & v?z', [
+			{ v: { prop: 'abc', z: 10n }, result: true },
+			{ v: { prop: 'abc' }, result: false },
 		]],
 		['a|=b', [
 			{ a: true, b: false, result: true },

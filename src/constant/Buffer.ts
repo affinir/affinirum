@@ -8,8 +8,9 @@ export const equateBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	const dv1 = new DataView(value1);
 	const dv2 = new DataView(value2);
 	const length = dv1.byteLength;
-	for (let lfi = length - 3, i = 0; i < length;) {
-		if (i < lfi) {
+	const fastSearchLength = length - 3;
+	for (let i = 0; i < length;) {
+		if (i < fastSearchLength) {
 			if (dv1.getUint32(i) !== dv2.getUint32(i)) {
 				return false;
 			}
@@ -25,12 +26,49 @@ export const equateBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	return true;
 };
 
+export const containsBuffer = (value: ArrayBuffer, search: ArrayBuffer, startPos?: number)=> {
+	if (value.byteLength < search.byteLength) {
+		return false;
+	}
+	if (search.byteLength === 0) {
+		return true;
+	}
+	const pos = startPos == null ? 0 : startPos < 0 ? value.byteLength + startPos : startPos;
+	if (pos > value.byteLength - search.byteLength) {
+		return false;
+	}
+	const dvv = new DataView(value);
+	const dvs = new DataView(search);
+	const searchLength = value.byteLength - search.byteLength;
+	const fastSearchLength = search.byteLength - search.byteLength % 4;
+	for (let i = pos; i <= searchLength; ++i) {
+		let matched = true;
+		let ii = 0;
+		for (; ii < fastSearchLength; ii += 4) {
+			if (dvv.getUint32(i + ii) !== dvs.getUint32(ii)) {
+				matched = false;
+				break;
+			}
+		}
+		for (; matched && ii < search.byteLength; ++ii) {
+			if (dvv.getUint8(i + ii) !== dvs.getUint8(ii)) {
+				matched = false;
+				break;
+			}
+		}
+		if (matched) {
+			return true;
+		}
+	}
+	return false;
+};
+
 export const concatBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	const bytes = new Uint8Array(value1.byteLength + value2.byteLength);
 	bytes.set(new Uint8Array(value1), 0);
 	bytes.set(new Uint8Array(value2), value1.byteLength);
 	return bytes.buffer;
-}
+};
 
 export const formatBuffer = (value?: ArrayBuffer)=> {
 	if (value == null) {

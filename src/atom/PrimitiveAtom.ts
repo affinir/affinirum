@@ -1,14 +1,16 @@
-import { IType, Primitive } from '../Type.js';
+import { IAtom } from '../Atom.js';
 
-export class PrimitiveAtom implements IType {
+export type Primitive = 'void' | 'boolean' | 'timestamp' | 'float' | 'integer' | 'buffer' | 'string';
+
+export class PrimitiveAtom implements IAtom {
 
 	constructor(
 		protected readonly _primitive: Primitive = 'void',
 	) {}
 
-	match(type: IType): boolean {
-		if (type instanceof PrimitiveAtom) {
-			return type._primitive === this._primitive;
+	match(atom: IAtom): boolean {
+		if (atom instanceof PrimitiveAtom) {
+			return atom._primitive === this._primitive;
 		}
 		return false;
 	}

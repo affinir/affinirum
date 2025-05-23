@@ -41,7 +41,13 @@ export const containsString = (value: string, search: string, startPos?: number,
 	if (valueStr.length < searchStr.length) {
 		return false;
 	}
+	if (searchStr.length === 0) {
+		return true;
+	}
 	const pos = startPos == null ? 0 : startPos < 0 ? value.length + startPos : startPos;
+	if (pos > value.length - search.length) {
+		return false;
+	}
 	for (let i1 = pos, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2) {
 		while (isCaseSpaceEtc(valueStr[i1]) && i1 < valueStr.length) {
 			++i1;
@@ -156,12 +162,6 @@ export const funcUnlike = new Constant(
 	(value1: string, value2: string)=>
 		!equateStrings(value1, value2, true),
 	typeStringEquator,
-);
-
-export const funcContains = new Constant(
-	(value: string, search: string, start?: bigint, ignoreCaseSpaceEtc?: boolean)=>
-		containsString(value, search, start == null ? undefined : Number(start), ignoreCaseSpaceEtc),
-	typeStringComparator,
 );
 
 export const funcStartsWith = new Constant(

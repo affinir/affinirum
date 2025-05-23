@@ -3,11 +3,11 @@ import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
 	funcFlatten, funcReverse, funcMutate, funcFilter, funcReduce, funcCompose, funcPrepend, funcAppend } from './constant/Array.js';
 import { funcByte } from './constant/Buffer.js';
 import { funcAdd, funcSlice, funcSplice, funcInject } from './constant/Enumerable.js';
-import { funcLength, funcAt } from './constant/Iterable.js';
+import { funcLength, funcContains, funcAt, funcHas } from './constant/Iterable.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
 	funcPower, funcRoot, funcNegate, funcCast } from './constant/Number.js';
 import { funcEntries, funcKeys, funcValues } from './constant/Object.js';
-import { funcLike, funcUnlike, funcContains, funcStartsWith, funcEndsWith,
+import { funcLike, funcUnlike, funcStartsWith, funcEndsWith,
 	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit } from './constant/String.js';
 import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay,
 	funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime } from './constant/Timestamp.js';
@@ -38,7 +38,9 @@ export const Functions: [string, Constant][] = [
 	['Inject', funcInject],
 	// Iterable
 	['Length', funcLength],
+	['Contains', funcContains],
 	['At', funcAt],
+	['Has', funcHas],
 	// Number
 	['GreaterThan', funcGreaterThan],
 	['LessThan', funcLessThan],
@@ -60,7 +62,6 @@ export const Functions: [string, Constant][] = [
 	// String
 	['Like', funcLike],
 	['Unlike', funcUnlike],
-	['Contains', funcContains],
 	['StartsWith', funcStartsWith],
 	['EndsWith', funcEndsWith],
 	['Char', funcChar],

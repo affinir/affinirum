@@ -1,6 +1,6 @@
 import { funcOr, funcAnd, funcNot } from './constant/Boolean.js';
 import { funcAdd } from './constant/Enumerable.js';
-import { funcAt } from './constant/Iterable.js';
+import { funcAt, funcHas } from './constant/Iterable.js';
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from './constant/Number.js';
 import { funcCoalesce, funcEqual, funcNotEqual } from './constant/Unknown.js';
@@ -212,11 +212,12 @@ export class Affinirum {
 
 	protected _accessor(state: ParserState, scope: StaticScope): Node {
 		let node = this._term(state, scope);
-		while (state.operator === funcAt || state.isParenthesesOpen || state.isBracketsOpen) {
+		while (state.isDotMark || state.isQuestionMark || state.isParenthesesOpen || state.isBracketsOpen) {
 			const frame = state.starts();
-			if (state.operator === funcAt) {
-				if (state.next().isLiteral && (typeof state.literalValue === 'string' || typeof state.literalValue === 'bigint')) {
-					node = this._call(frame.ends(state), funcAt, [node, new ConstantNode(state, new Constant(state.literalValue))]);
+			if (state.isDotMark || state.isQuestionMark) {
+				const operator = state.isDotMark ? funcAt : funcHas;
+				if (state.next().isLiteral && (typeof state.literal.value === 'string' || typeof state.literal.value === 'bigint')) {
+					node = this._call(frame.ends(state), operator, [node, new ConstantNode(state, new Constant(state.literal.value))]);
 					state.next();
 				}
 				else if (state.isToken) {
@@ -239,12 +240,12 @@ export class Affinirum {
 						}
 					}
 					else {
-						node = this._call(frame, funcAt, [node, new ConstantNode(state, new Constant(state.token))]);
+						node = this._call(frame, operator, [node, new ConstantNode(state, new Constant(state.token))]);
 						state.next();
 					}
 				}
 				else {
-					state.throwError('missing array or object index');
+					state.throwError('missing array index or object key');
 				}
 			}
 			else if (state.isParenthesesOpen) {
@@ -269,7 +270,7 @@ export class Affinirum {
 	protected _term(state: ParserState, scope: StaticScope): Node {
 		if (state.isLiteral) {
 			const frame = state.starts();
-			const constant = new Constant(state.literalValue);
+			const constant = new Constant(state.literal.value);
 			state.next();
 			return new ConstantNode(frame, constant);
 		}
@@ -277,7 +278,7 @@ export class Affinirum {
 			const frame = state.starts();
 			const constants = this._constants.get(state.token);
 			if (constants != null) {
-				if (state.next().operator !== funcAt) {
+				if (!state.next().isDotMark) {
 					state.throwError('missing constant accessor operator');
 				}
 				if (!state.next().isToken) {
@@ -310,8 +311,8 @@ export class Affinirum {
 				if (variable.constant) {
 					state.throwError('illegal constant assignment');
 				}
-				if (state.assignmentOperator) {
-					const operator = state.assignmentOperator;
+				if (state.assignment.operator) {
+					const operator = state.assignment.operator;
 					const subnodes = [new VariableNode(frame, variable), this._unit(state.next(), scope)];
 					return new VariableNode(frame, variable, this._call(frame, operator, subnodes));
 				}
@@ -388,8 +389,8 @@ export class Affinirum {
 			const variable = new Variable(type, constant);
 			scope.local(token, variable);
 			if (state.isAssignment) {
-				if (state.assignmentOperator) {
-					state.throwError(`illegal assignment to ${constant ? 'constant' : 'variable'} ${token}`);
+				if (state.assignment.operator) {
+					state.throwError(`illegal assignment operator to ${constant ? 'constant' : 'variable'} ${token}`);
 				}
 				return new VariableNode(frame, variable, this._unit(state.next(), scope));
 			}
@@ -494,7 +495,7 @@ export class Affinirum {
 	protected _type(state: ParserState, scope: StaticScope): Type {
 		if (state.isType) {
 			let type = state.type;
-			if (state.next().isOptionalType) {
+			if (state.next().isQuestionMark) {
 				type = type.toOptional();
 				state.next();
 			}

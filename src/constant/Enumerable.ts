@@ -3,7 +3,13 @@ import { Value } from '../Value.js';
 import { Type } from '../Type.js';
 import { concatBuffers } from './Buffer.js';
 
-const aggregate = (value1: ArrayBuffer | string | Value[], value2: ArrayBuffer | string | Value[])=> {
+const aggregate = (
+	value1: ArrayBuffer | string | Value[] | null | undefined,
+	value2: ArrayBuffer | string | Value[] | null | undefined
+)=> {
+	if (value1 == null || value2 == null) {
+		return undefined;
+	}
 	if (value1 instanceof ArrayBuffer && value2 instanceof ArrayBuffer) {
 		return concatBuffers(value1, value2);
 	}
@@ -13,7 +19,10 @@ const aggregate = (value1: ArrayBuffer | string | Value[], value2: ArrayBuffer |
 	return [value1].flat().concat([value2].flat());
 };
 
-const add = (value1: number | bigint | ArrayBuffer | string | Value[], value2: number | bigint | ArrayBuffer | string | Value[])=> {
+const add = (
+	value1: number | bigint | ArrayBuffer | string | Value[] | null | undefined,
+	value2: number | bigint | ArrayBuffer | string | Value[] | null | undefined
+)=> {
 	if (typeof value1 === 'bigint' && typeof value2 === 'bigint') {
 		return BigInt.asIntN(64, value1 + value2);
 	}
@@ -49,7 +58,7 @@ export const funcSlice = new Constant(
 );
 
 export const funcSplice = new Constant(
-	(value: ArrayBuffer | string | Value[], start: bigint, remove: bigint, ...inject: (ArrayBuffer | string | Value[])[])=>
+	(value: ArrayBuffer | string | Value[], start: bigint, remove: bigint, ...inject: (ArrayBuffer | string | Value[] | null | undefined)[])=>
 		value == null
 			? undefined
 			: aggregate(
@@ -64,7 +73,7 @@ export const funcSplice = new Constant(
 );
 
 export const funcInject	= new Constant(
-	(value: ArrayBuffer | string | Value[], start: bigint, ...inject: (ArrayBuffer | string | Value[])[])=>
+	(value: ArrayBuffer | string | Value[], start: bigint, ...inject: (ArrayBuffer | string | Value[] | null | undefined)[])=>
 		value == null
 			? undefined
 			: aggregate(

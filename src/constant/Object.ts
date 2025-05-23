@@ -5,17 +5,17 @@ import { Type } from '../Type.js';
 const typeAccessor = Type.functionType(Type.Array, [Type.Object]);
 
 export const funcEntries = new Constant(
-	(value: { [ key: string ]: Value })=> Object.entries(value),
+	(value: { [ key: string ]: Value })=> value ? Object.entries(value) : undefined,
 	typeAccessor,
 );
 
 export const funcKeys = new Constant(
-	(value: { [ key: string ]: Value })=> Object.keys(value),
+	(value: { [ key: string ]: Value })=> value ? Object.keys(value) : undefined,
 	Type.functionType(Type.arrayType([Type.String]), [Type.Object]),
 );
 
 export const funcValues = new Constant(
-	(value: { [ key: string ]: Value })=> Object.values(value),
+	(value: { [ key: string ]: Value })=> value ? Object.values(value) : undefined,
 	typeAccessor,
 );
 

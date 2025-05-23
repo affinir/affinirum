@@ -1,4 +1,3 @@
-import { funcAt } from './constant/Iterable.js';
 import { funcOr, funcAnd, funcNot } from './constant/Boolean.js';
 import { parseBuffer } from './constant/Buffer.js';
 import { funcAdd } from './constant/Enumerable.js';
@@ -34,8 +33,9 @@ const symbolBracesClose = Symbol();
 const symbolSemicolonSeparator = Symbol();
 const symbolColonSeparator = Symbol();
 const symbolCommaSeparator = Symbol();
+const symbolDotMark = Symbol();
+const symbolQuestionMark = Symbol();
 const symbolTildaMark = Symbol();
-const symbolOptionalType = Symbol();
 const symbolVariadicFunction = Symbol();
 const symbolVariableDefinition = Symbol();
 const symbolConstantDefinition = Symbol();
@@ -53,12 +53,12 @@ export class ParserState extends ParserFrame {
 		super(expr);
 	}
 
-	get literalValue(): Value {
-		return (this._fragment as Literal).value;
+	get literal(): Literal {
+		return this._fragment as Literal;
 	}
 
-	get assignmentOperator(): Constant | undefined {
-		return (this._fragment as Assignment).operator;
+	get assignment(): Assignment {
+		return this._fragment as Assignment;
 	}
 
 	get operator(): Constant {
@@ -129,12 +129,16 @@ export class ParserState extends ParserFrame {
 		return this._fragment === symbolCommaSeparator;
 	}
 
-	get isTildaMark(): boolean {
-		return this._fragment === symbolTildaMark;
+	get isDotMark(): boolean {
+		return this._fragment === symbolDotMark;
 	}
 
-	get isOptionalType(): boolean {
-		return this._fragment === symbolOptionalType;
+	get isQuestionMark(): boolean {
+		return this._fragment === symbolQuestionMark;
+	}
+
+	get isTildaMark(): boolean {
+		return this._fragment === symbolTildaMark;
 	}
 
 	get isVariadicFunction(): boolean {
@@ -244,7 +248,7 @@ export class ParserState extends ParserFrame {
 					switch (this._expr.charAt(this._end)) {
 						case '?': ++this._end; this._fragment = Type.Unknown; break;
 						case ':': ++this._end; this._fragment = funcCoalesce; break;
-						default: this._fragment = symbolOptionalType; break;
+						default: this._fragment = symbolQuestionMark; break;
 					}
 					break;
 				case '|':
@@ -345,7 +349,7 @@ export class ParserState extends ParserFrame {
 							}
 							break;
 						default:
-							this._fragment = funcAt;
+							this._fragment = symbolDotMark;
 							break;
 					}
 					break;

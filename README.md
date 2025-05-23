@@ -13,38 +13,42 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 
 ## Features
 
-- Efficient execution: Parse once, execute many times with different variable values
-- Variable support: Input and statement-scoped variables
-- Function support: Variadic and first-order function support for expressive scripting
-- Optimized evaluation: Constant expression folding with type checks
-- Comprehensive set of operators: Boolean, arithmetic, buffer, string, comparison, and indexing support
-- Built-in functions: Rich set of mathematical and composition utilities
+- Efficient execution: Parse once, execute many times with different variable values.
+- Variable support: Input and statement-scoped variables.
+- Function support: Variadic and first-order function support for expressive scripting.
+- Optimized evaluation: Constant expression folding with type checks.
+- Comprehensive set of operators: Boolean, arithmetic, buffer, string, comparison, and indexing support.
+- Built-in functions: Rich set of mathematical and composition utilities.
 
 ## Specifications
 
 Script can contain multiple semicolon-separated expressions, and blocks of statements.
 The value of a block is determined by the value of the last expression.
-- Scientific notation is supported for floating point numbers, like *0.1281e+2*
-- ISO Timestamps prefixed with **@**, like *@2025-05-11T19:09:21.320Z*
-- Hexadecimal buffer values are prefixed with **#**, like *#10ab0901*
-- String literals are enclosed in single (**'**), double (**"**), or backtick (**`**) quotes, like *'string value'*
+- Scientific notation is supported for floating point numbers, like *0.1281e+2*.
+- ISO Timestamps prefixed with **@**, like *@2025-05-11T19:09:21.320Z*.
+- Hexadecimal buffer values are prefixed with **#**, like *#10ab0901*.
+- String literals are enclosed in single (**'**), double (**"**), or backtick (**`**) quotes, like *'string value'*.
 
 Array is an ordered sequence of values of any type.
 It is defined by comma-separated values enclosed in brackets (**[]**),
  like  *[0,1,2]*, *["a","b","c"]*.
 <br>An empty array is represented as **[]**.
 
-Array elements can be accessed using the dot (**.**) access operator with a index,
- or using brackets with a zero-based numeric index, like *theArray.23*, *theArray[0]*, *theArray[10]*, *theArray[indexVar]*
+Array elements can be accessed using the access operator (**.**),
+ or using brackets with a zero-based numeric index, like *theArray.23*, *theArray[0]*, *theArray[10]*, *theArray[indexVar]*.
+
+Easy way to check if array contains an index is to use presence operator (**?**), like *theArray?50*.
 
 Object is a container of named values of any type.
 It is defined by comma-separated key-value pair enclosed in brackets (**[]**) where key is separated from value by colon (**:**),
  like *["NumericProperty":100, "StringProperty":"abc"]*, *["a":0,"b":"str":"c":valueVar]*.
 <br>An empty object is represented as **[\:]**.
 
-Object properties can be accessed using the dot (**.**) access operator with a string literal,
- or with brackets containing a string key or numeric index,
- like *theObject."StringProperty"*, *theObject["StringProperty"]*, *theObject[indexVar]*
+Object properties can be accessed using the access operator (**.**) with a string literal, token,
+ or with brackets containing a string key,
+ like *theObject."StringProperty"*, *theObject.stringProp*, *theObject["StringProperty"]*.
+
+Easy way to check if object contains a key is to use presence operator (**?**), like *theObject?myKey*.
 
 A function is a callable code unit that produces a value.
 The set of built-in functions can be extended through configuration entries.
@@ -52,7 +56,7 @@ Additionally, subroutines (functions defined in code) can be created.
 
 Valid variable and function names must start with a letter or underscore (**\_**)
  and can be followed by any combination of alphanumeric characters or underscores,
- like *x*, *\_a1*, *abc25*
+ like *x*, *\_a1*, *abc25*.
 
 Whitespace characters are ignored.
 
@@ -103,6 +107,8 @@ Unknown or variant type is declared as **??**.
 - Arithmetic division: **/**
 - Arithmetic remainder: **%**
 - Exponentiation operator: **^**
+- Access operator: **.**
+- Presence operator: **?**
 - Assignment: **=**
 - Boolean disjunction (Logical OR) assignment: **|=**
 - Boolean conjunction (Logical AND) assignment: **&=**
@@ -177,7 +183,7 @@ Unknown or variant type is declared as **??**.
 
 #### JSON
 - **string JSON.Format(value: void | boolean | float | string | array | object, whitespace?: string)** — Format as JSON string
-- **void | boolean | float? | string? | array? | object? JSON.Parse(value?: string)** — Parse JSON-formatted string
+- **void | boolean | float? | string | array | object JSON.Parse(value: string)** — Parse JSON-formatted string
 
 
 ### Functions
@@ -217,7 +223,9 @@ Unknown or variant type is declared as **??**.
 
 #### Iterable Functions
 - **integer buffer | string | array | object.Length()** — Get length
-- **?? array? | object?.At(index: integer | string)** — Access by index or key
+- **boolean buffer | string | array | object.Contains(search: buffer | string | ??, startPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Substring check
+- **?? array? | object.At(index: integer | string)** — Access item in array or object by index or key
+- **?? array? | object.Has(index: integer | string)** — Identify if array or object has index or key
 
 #### Number Functions
 - **boolean float | integer.GreaterThan(value)** — Greater than
@@ -242,7 +250,6 @@ Unknown or variant type is declared as **??**.
 #### String Functions
 - **boolean string.Like(value: string)** — Alphanumeric equality
 - **boolean string.Unlike(value: string)** — Alphanumeric inequality
-- **boolean string.Contains(search: string, startPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Substring check
 - **boolean string.StartsWith(search: string, startPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Prefix check
 - **boolean string.EndsWith(search: string, endPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Suffix check
 - **string string.Char(pos: integer)** — Character at position

@@ -1,39 +1,40 @@
-import { IType } from '../Type.js';
+import { IAtom } from '../Atom.js';
+import { Type } from '../Type.js';
 
-export class ArrayAtom implements IType {
+export class ArrayAtom implements IAtom {
 
 	constructor(
-		protected readonly _itemTypes: IType[] = [],
+		protected readonly _itemTypes: Type[] = [],
 	) {}
 
 	get empty(): boolean {
 		return this._itemTypes.length === 0;
 	}
 
-	subtypes(): IType[] {
+	subtypes(): Type[] {
 		return this._itemTypes;
 	}
 
-	itemType(index: number): IType | undefined {
+	itemType(index: number): Type | undefined {
 		return this._itemTypes[index];
 	}
 
-	match(type: IType): boolean {
-		if (type instanceof ArrayAtom) {
-			if (this.empty || type.empty) {
+	match(atom: IAtom): boolean {
+		if (atom instanceof ArrayAtom) {
+			if (this.empty || atom.empty) {
 				return true;
 			}
-			if (this.subtypes().length !== type.subtypes().length) {
+			if (this.subtypes().length !== atom.subtypes().length) {
 				return false;
 			}
 			for (let i = 0; i < this._itemTypes.length; ++i) {
-				if (!this._itemTypes[i].match(type._itemTypes[i])) {
+				if (!this._itemTypes[i].match(atom._itemTypes[i])) {
 					return false;
 				}
 			}
 			return true;
 		}
-		return false
+		return false;
 	}
 
 	weight(): number {

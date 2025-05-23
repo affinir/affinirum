@@ -1,20 +1,12 @@
 import { Value } from './Value.js';
-import { PrimitiveAtom } from './atom/PrimitiveAtom.js';
+import { PrimitiveAtom, Primitive } from './atom/PrimitiveAtom.js';
 import { ArrayAtom } from './atom/ArrayAtom.js';
 import { ObjectAtom } from './atom/ObjectAtom.js';
 import { FunctionAtom } from './atom/FunctionAtom.js';
 
-export type Primitive = 'void' | 'boolean' | 'timestamp' | 'float' | 'integer' | 'buffer' | 'string';
-
 type Atom = PrimitiveAtom | ArrayAtom | ObjectAtom | FunctionAtom;
 
-export interface IType {
-	match(subtype: IType): boolean;
-	weight(): number;
-	toString(): string;
-}
-
-export class Type implements IType {
+export class Type {
 
 	private constructor(
 		protected readonly _atoms: Atom[] = [],
@@ -83,7 +75,7 @@ export class Type implements IType {
 
 	functionAtomRetType(type: Type) {
 		const atoms = this._atoms.filter((i)=> i instanceof FunctionAtom && i.retType.match(type)) as FunctionAtom[];
-		return Type.union(...atoms.map((i)=> i.retType as Type));
+		return Type.union(...atoms.map((i)=> i.retType));
 	}
 
 	functionAtoms(type: Type, argc: number) {
@@ -110,7 +102,7 @@ export class Type implements IType {
 				: new Type(list);
 	}
 
-	match(type: IType): boolean {
+	match(type: Type | Atom): boolean {
 		if (type instanceof Type) {
 			return this.isUnknown || type.isUnknown || type.isVoid || this._atoms.some((i)=> type._atoms.some((j)=> i.match(j)));
 		}

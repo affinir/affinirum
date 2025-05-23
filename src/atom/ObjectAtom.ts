@@ -1,16 +1,17 @@
-import { IType } from '../Type.js';
+import { IAtom } from '../Atom.js';
+import { Type } from '../Type.js';
 
-export class ObjectAtom implements IType {
+export class ObjectAtom implements IAtom {
 
 	constructor(
-		protected readonly _propTypes: Record<string, IType> = {},
+		protected readonly _propTypes: Record<string, Type> = {},
 	) {}
 
 	get empty(): boolean {
 		return Object.keys(this._propTypes).length === 0;
 	}
 
-	subtypes(): IType[] {
+	subtypes(): Type[] {
 		return Object.values(this._propTypes);
 	}
 
@@ -18,27 +19,27 @@ export class ObjectAtom implements IType {
 		return this._propTypes[property];
 	}
 
-	match(type: IType): boolean {
-		if (type instanceof ObjectAtom) {
-			if (this.empty || type.empty) {
+	match(atom: IAtom): boolean {
+		if (atom instanceof ObjectAtom) {
+			if (this.empty || atom.empty) {
 				return true;
 			}
 			for (const prop in this._propTypes) {
-				if (!type.propType(prop)) {
+				if (!atom.propType(prop)) {
 					return false;
 				}
-				if (!this._propTypes[prop].match(type._propTypes[prop])) {
+				if (!this._propTypes[prop].match(atom._propTypes[prop])) {
 					return false;
 				}
 			}
-			for (const prop in type._propTypes) {
+			for (const prop in atom._propTypes) {
 				if (!this.propType(prop)) {
 					return false;
 				}
 			}
 			return true;
 		}
-		return false
+		return false;
 	}
 
 	weight(): number {
