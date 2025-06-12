@@ -1,5 +1,5 @@
-import { IAtom } from '../Atom.js';
-import { Type } from '../Type.js';
+import { IAtom } from "../Atom.js";
+import { Type } from "../Type.js";
 
 export class ArrayAtom implements IAtom {
 
@@ -42,7 +42,7 @@ export class ArrayAtom implements IAtom {
 	}
 
 	toString(): string {
-		return `[${this._itemTypes.join(',')}]`;
+		return `[${this._itemTypes.join(",")}]`;
 	}
 
 }

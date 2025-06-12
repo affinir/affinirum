@@ -1,16 +1,15 @@
-import { Constant } from '../Constant.js';
-import { Type } from '../Type.js';
+import { Constant } from "../Constant.js";
+import { Type } from "../Type.js";
 
-export const isSign = (c: string)=> c === '+' || c === '-';
-export const isAlpha = (c: string)=>  c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c === '_' ;
-export const isNumeric = (c: string)=>  c >= '0' && c <= '9' ;
+export const isSign = (c: string)=> c === "+" || c === "-";
+export const isAlpha = (c: string)=>  c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_" ;
+export const isNumeric = (c: string)=>  c >= "0" && c <= "9" ;
 export const isAlphanumeric = (c: string)=> isAlpha(c) || isNumeric(c);
-export const isDateSymbol = (c: string)=> isNumeric(c) || c === '-';
-export const isTimeSymbol = (c: string)=> isNumeric(c) || c === ':';
-export const isDateTimeSeparator = (c: string)=> c === 'T' || c === ' ' || c === '@';
-export const isHexadecimal = (c: string)=> isNumeric(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
-export const isQuotation = (c: string)=>  c === '\'' || c === '"' || c === '`' ;
-export const isCaseSpaceEtc = (c: string)=> (c < 'a' || c > 'z') && (c < '0' || c > '9');
+export const isDateSymbol = (c: string)=> isNumeric(c) || c === "-";
+export const isTimeSymbol = (c: string)=> isNumeric(c) || c === ":";
+export const isDateTimeSeparator = (c: string)=> c === "T" || c === " " || c === "@";
+export const isHexadecimal = (c: string)=> isNumeric(c) || c >= "a" && c <= "f" || c >= "A" && c <= "F";
+export const isCaseSpaceEtc = (c: string)=> (c < "a" || c > "z") && (c < "0" || c > "9");
 
 export const equateStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
@@ -113,16 +112,16 @@ export const endsWithString = (value: string, search: string, endPos?: number, i
 	return true;
 };
 
-export const encodeString = (value: string, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8')=> {
+export const encodeString = (value: string, encoding: "utf8" | "ucs2" | "ucs2le" = "utf8")=> {
 	if (value == null) {
 		return new Uint8Array(0).buffer;
 	}
-	if (encoding === 'utf8') {
+	if (encoding === "utf8") {
 		return new TextEncoder().encode(value).buffer;
 	}
 	else {
 		const dv = new DataView(new Uint16Array(value.length).buffer);
-		const lessOrEqual = encoding.endsWith('le');
+		const lessOrEqual = encoding.endsWith("le");
 		for (let i = 0; i < value.length; ++i) {
 			dv.setUint16(i << 1, value.charCodeAt(i), lessOrEqual);
 		}
@@ -130,17 +129,17 @@ export const encodeString = (value: string, encoding: 'utf8' | 'ucs2' | 'ucs2le'
 	}
 };
 
-const decodeString = (value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: number, byteLength?: number)=> {
+const decodeString = (value: ArrayBuffer, encoding: "utf8" | "ucs2" | "ucs2le" = "utf8", byteOffset?: number, byteLength?: number)=> {
 	if (value == null) {
 		return undefined;
 	}
-	if (encoding === 'utf8') {
+	if (encoding === "utf8") {
 		return new TextDecoder().decode(new DataView(value, byteOffset, byteLength));
 	}
 	else {
 		const dv = new DataView(value, byteOffset, byteLength);
-		const lessOrEqual = encoding.endsWith('le');
-		let str = '';
+		const lessOrEqual = encoding.endsWith("le");
+		let str = "";
 		for (let i = 0; i < dv.byteLength; i += 2) {
 			str += String.fromCharCode(dv.getUint16(i, lessOrEqual));
 		}
@@ -223,7 +222,7 @@ export const funcUpperCase = new Constant(
 );
 
 export const funcSplit = new Constant(
-	(value: string, separator: string = ' ')=>
+	(value: string, separator: string = " ")=>
 		value.split(separator),
 	Type.functionType(Type.arrayType([Type.String]), [Type.String, Type.OptionalString]),
 );
@@ -231,7 +230,7 @@ export const funcSplit = new Constant(
 const funcAlphanum = new Constant(
 	(value: string)=> {
 		const lowerCase = value.toLowerCase();
-		let result = '';
+		let result = "";
 		for (let i = 0; i < lowerCase.length; ++i) {
 			if (!isCaseSpaceEtc(value[i])) {
 				result += value[i];
@@ -244,7 +243,7 @@ const funcAlphanum = new Constant(
 
 const funcRandomString = new Constant(
 	(value: bigint)=> {
-		let str = '';
+		let str = "";
 		while (str.length < value) {
 			str += Math.random().toString(36).slice(2);
 		}
@@ -255,7 +254,7 @@ const funcRandomString = new Constant(
 );
 
 const funcDecodeString = new Constant(
-	(value: ArrayBuffer, encoding: 'utf8' | 'ucs2' | 'ucs2le' = 'utf8', byteOffset?: bigint, byteLength?: bigint)=>
+	(value: ArrayBuffer, encoding: "utf8" | "ucs2" | "ucs2le" = "utf8", byteOffset?: bigint, byteLength?: bigint)=>
 		decodeString(value, encoding, byteOffset == null ? undefined : Number(byteOffset), byteLength == null ? undefined : Number(byteLength)),
 	Type.functionType(Type.OptionalString, [Type.Buffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]),
 );

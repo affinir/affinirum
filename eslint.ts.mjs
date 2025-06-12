@@ -32,7 +32,7 @@ const rules = {
 	"no-mixed-spaces-and-tabs": "error",
 	"no-trailing-spaces": "error",
 	"object-curly-spacing": [ "error", "always" ],
-	"quotes": [ "error", "single" ],
+	"quotes": [ "error", "double" ],
 	"space-before-blocks": "error",
 	"space-before-function-paren": [ "error", { "anonymous": "never", "named": "never", "asyncArrow": "always" } ],
 	"space-in-parens": [ "error", "never" ],

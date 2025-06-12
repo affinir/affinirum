@@ -1,7 +1,7 @@
-import { Constant } from '../Constant.js';
-import { Value } from '../Value.js';
-import { Type } from '../Type.js';
-import { equate } from './Unknown.js';
+import { Constant } from "../Constant.js";
+import { Value } from "../Value.js";
+import { Type } from "../Type.js";
+import { equate } from "./Unknown.js";
 
 const typePredicate = Type.functionType(Type.Boolean, [Type.Unknown, Type.OptionalInteger, Type.OptionalArray]);
 const typeItemFinder = Type.functionType(Type.Unknown, [Type.Array, typePredicate]);

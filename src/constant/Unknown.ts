@@ -1,29 +1,29 @@
-import { Constant } from '../Constant.js';
-import { Value } from '../Value.js';
-import { Type } from '../Type.js';
-import { encodeFloat, formatFloat } from './Float.js';
-import { encodeInteger } from './Integer.js';
-import { concatBuffers, equateBuffers, formatBuffer } from './Buffer.js';
-import { encodeString } from './String.js';
-import { encodeTimestamp, formatTimestamp } from './Timestamp.js';
+import { Constant } from "../Constant.js";
+import { Value } from "../Value.js";
+import { Type } from "../Type.js";
+import { encodeFloat, formatFloat } from "./Float.js";
+import { encodeInteger } from "./Integer.js";
+import { concatBuffers, equateBuffers, formatBuffer } from "./Buffer.js";
+import { encodeString } from "./String.js";
+import { encodeTimestamp, formatTimestamp } from "./Timestamp.js";
 
 export const equate = (value1: Value, value2: Value)=> {
 	if (value1 == null || value2 == null) {
 		return value1 == value2;
 	}
 	if (typeof value1 !== typeof value2) {
-		if (typeof value1 === 'number' && typeof value2 === 'bigint') {
+		if (typeof value1 === "number" && typeof value2 === "bigint") {
 			return value1 === Number(value2);
 		}
-		if (typeof value1 === 'bigint' && typeof value2 === 'number') {
+		if (typeof value1 === "bigint" && typeof value2 === "number") {
 			return Number.isInteger(value2) && value1 === BigInt(value2);
 		}
 		return false;
 	}
-	if (typeof value1 === 'number') {
+	if (typeof value1 === "number") {
 		return isNaN(value1) && isNaN(value2 as number) ? true : value1 === value2;
 	}
-	if (typeof value1 === 'boolean' || typeof value1 === 'bigint' || typeof value1 === 'string' || typeof value1 === 'function') {
+	if (typeof value1 === "boolean" || typeof value1 === "bigint" || typeof value1 === "string" || typeof value1 === "function") {
 		return value1 === value2;
 	}
 	if (value1 instanceof Date && value2 instanceof Date) {
@@ -52,53 +52,53 @@ export const equate = (value1: Value, value2: Value)=> {
 	return true;
 };
 
-export const encode = (value: Value, encoding?: 'float32' | 'float32le' | 'float64' | 'float64le'
-	| 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le' | 'int64' | 'int64le'
-	| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' | 'uint64' | 'uint64le'
-	| 'utf8' | 'ucs2' | 'ucs2le'): ArrayBuffer=>
+export const encode = (value: Value, encoding?: "float32" | "float32le" | "float64" | "float64le"
+	| "int8" | "int16" | "int16le" | "int32" | "int32le" | "int64" | "int64le"
+	| "uint8" | "uint16" | "uint16le" | "uint32" | "uint32le" | "uint64" | "uint64le"
+	| "utf8" | "ucs2" | "ucs2le"): ArrayBuffer=>
 	value == null
 		? new Uint8Array(0).buffer
-		: typeof value === 'boolean'
+		: typeof value === "boolean"
 			? new Uint8Array([value ? 255 : 0]).buffer
 			: value instanceof Date
-				? encodeTimestamp(value, encoding as 'int64' | 'int64le' ?? 'int64')
-				: typeof value === 'number'
-					? encodeFloat(value, encoding as 'float32' | 'float32le' | 'float64' | 'float64le' ?? 'float64')
-					: typeof value === 'bigint'
-						? encodeInteger(value, encoding as 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le'
-							| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' ?? 'int64')
+				? encodeTimestamp(value, encoding as "int64" | "int64le" ?? "int64")
+				: typeof value === "number"
+					? encodeFloat(value, encoding as "float32" | "float32le" | "float64" | "float64le" ?? "float64")
+					: typeof value === "bigint"
+						? encodeInteger(value, encoding as "int8" | "int16" | "int16le" | "int32" | "int32le"
+							| "uint8" | "uint16" | "uint16le" | "uint32" | "uint32le" ?? "int64")
 						: value instanceof ArrayBuffer
 							? value
-							: typeof value === 'string'
-								? encodeString(value, encoding as 'utf8' | 'ucs2' | 'ucs2le' ?? 'utf8')
+							: typeof value === "string"
+								? encodeString(value, encoding as "utf8" | "ucs2" | "ucs2le" ?? "utf8")
 								: Array.isArray(value)
 									? value.map((i)=> encode(i, encoding)).reduce((acc, val)=> concatBuffers(acc, val))
-									: typeof value === 'object'
+									: typeof value === "object"
 										? Object.entries(value).map(([k, v])=>
 											concatBuffers(encode(k, encoding), encode(v, encoding))).reduce((acc, val)=>
 											concatBuffers(acc, val))
 										: new Uint8Array(0).buffer;
 
-export const format = (value: Value, radix?: number, separator: string = ''): string=>
+export const format = (value: Value, radix?: number, separator: string = ""): string=>
 	value == null
-		? 'null'
-		: typeof value === 'boolean'
+		? "null"
+		: typeof value === "boolean"
 			? value.toString()
 			: value instanceof Date
 				? formatTimestamp(value, radix ? Number(radix) : undefined)
-				: typeof value === 'number'
+				: typeof value === "number"
 					? formatFloat(value, radix ? Number(radix) : undefined)
-					: typeof value === 'bigint'
+					: typeof value === "bigint"
 						? value.toString(radix ? Number(radix) : undefined)
 						: value instanceof ArrayBuffer
 							? formatBuffer(value)
-							: typeof value === 'string'
+							: typeof value === "string"
 								? value
 								: Array.isArray(value)
 									? value.map((i)=> format(i, radix)).join(separator)
-									: typeof value === 'object'
+									: typeof value === "object"
 										? Object.entries(value).map(([k, v])=> `${format(k)}${radix}${format(v)}`).join(separator)
-										: 'function';
+										: "function";
 
 const typeEquator = Type.functionType(Type.Boolean, [Type.Unknown, Type.Unknown]);
 
@@ -132,10 +132,10 @@ export const funcNotEqual = new Constant(
 );
 
 export const funcEncode = new Constant(
-	(value: boolean | Date | number | bigint | string | Value[] | { [ key: string ]: Value }, encoding: 'float32' | 'float32le' | 'float64' | 'float64le'
-		| 'int8' | 'int16' | 'int16le' | 'int32' | 'int32le' | 'int64' | 'int64le'
-		| 'uint8' | 'uint16' | 'uint16le' | 'uint32' | 'uint32le' | 'uint64' | 'uint64le'
-		| 'utf8' | 'ucs2' | 'ucs2le')=>
+	(value: boolean | Date | number | bigint | string | Value[] | { [ key: string ]: Value }, encoding: "float32" | "float32le" | "float64" | "float64le"
+		| "int8" | "int16" | "int16le" | "int32" | "int32le" | "int64" | "int64le"
+		| "uint8" | "uint16" | "uint16le" | "uint32" | "uint32le" | "uint64" | "uint64le"
+		| "utf8" | "ucs2" | "ucs2le")=>
 		encode(value, encoding),
 	Type.union(
 		Type.functionType(Type.Buffer, [Type.Boolean]),
@@ -149,7 +149,7 @@ export const funcEncode = new Constant(
 );
 
 export const funcFormat = new Constant(
-	(value: boolean | Date | number | bigint | ArrayBuffer | Value[] | { [ key: string ]: Value }, radix?: bigint, separator: string = '')=>
+	(value: boolean | Date | number | bigint | ArrayBuffer | Value[] | { [ key: string ]: Value }, radix?: bigint, separator: string = "")=>
 		format(value, radix == null ? undefined : Number(radix), separator),
 	Type.union(
 		Type.functionType(Type.String, [Type.Boolean]),

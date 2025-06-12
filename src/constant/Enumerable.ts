@@ -1,7 +1,7 @@
-import { Constant } from '../Constant.js';
-import { Value } from '../Value.js';
-import { Type } from '../Type.js';
-import { concatBuffers } from './Buffer.js';
+import { Constant } from "../Constant.js";
+import { Value } from "../Value.js";
+import { Type } from "../Type.js";
+import { concatBuffers } from "./Buffer.js";
 
 const aggregate = (
 	value1: ArrayBuffer | string | Value[] | null | undefined,
@@ -13,7 +13,7 @@ const aggregate = (
 	if (value1 instanceof ArrayBuffer && value2 instanceof ArrayBuffer) {
 		return concatBuffers(value1, value2);
 	}
-	if (typeof value1 === 'string' && typeof value2 === 'string') {
+	if (typeof value1 === "string" && typeof value2 === "string") {
 		return value1.concat(value2);
 	}
 	return [value1].flat().concat([value2].flat());
@@ -23,10 +23,10 @@ const add = (
 	value1: number | bigint | ArrayBuffer | string | Value[] | null | undefined,
 	value2: number | bigint | ArrayBuffer | string | Value[] | null | undefined
 )=> {
-	if (typeof value1 === 'bigint' && typeof value2 === 'bigint') {
+	if (typeof value1 === "bigint" && typeof value2 === "bigint") {
 		return BigInt.asIntN(64, value1 + value2);
 	}
-	if (typeof value1 === 'number' || typeof value2 === 'number') {
+	if (typeof value1 === "number" || typeof value2 === "number") {
 		return Number(value1) + Number(value2);
 	}
 	return aggregate(value1 as ArrayBuffer | string | Value[], value2 as ArrayBuffer | string | Value[]);

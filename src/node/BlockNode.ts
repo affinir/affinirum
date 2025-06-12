@@ -1,9 +1,9 @@
-import { Node } from '../Node.js';
-import { ParserFrame } from '../ParserFrame.js';
-import { Constant } from '../Constant.js';
-import { ConstantNode } from './ConstantNode.js';
-import { Value } from '../Value.js';
-import { Type } from '../Type.js';
+import { Node } from "../Node.js";
+import { ParserFrame } from "../ParserFrame.js";
+import { Constant } from "../Constant.js";
+import { ConstantNode } from "./ConstantNode.js";
+import { Value } from "../Value.js";
+import { Type } from "../Type.js";
 
 export class BlockNode extends Node {
 
@@ -32,7 +32,7 @@ export class BlockNode extends Node {
 	}
 
 	override toString(ident: number = 0): string {
-		const subnodes = this._subnodes.map((s)=> s.toString(ident + 1)).join('\n');
+		const subnodes = this._subnodes.map((s)=> s.toString(ident + 1)).join("\n");
 		return `${super.toString(ident)} block node subnodes:\n${subnodes}`;
 	}
 

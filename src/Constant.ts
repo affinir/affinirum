@@ -1,5 +1,5 @@
-import { Value } from './Value.js';
-import { Type } from './Type.js';
+import { Value } from "./Value.js";
+import { Type } from "./Type.js";
 
 export class Constant {
 

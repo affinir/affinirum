@@ -1,7 +1,7 @@
-import { Node } from '../Node.js';
-import { ParserFrame } from '../ParserFrame.js';
-import { Value } from '../Value.js';
-import { Type } from '../Type.js';
+import { Node } from "../Node.js";
+import { ParserFrame } from "../ParserFrame.js";
+import { Value } from "../Value.js";
+import { Type } from "../Type.js";
 
 export class LoopNode extends Node {
 

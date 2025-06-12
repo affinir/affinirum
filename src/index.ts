@@ -1,3 +1,3 @@
-export * from './Value.js';
-export * from './Type.js';
-export * from './Affinirum.js';
+export * from "./Value.js";
+export * from "./Type.js";
+export * from "./Affinirum.js";

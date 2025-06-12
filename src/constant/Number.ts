@@ -1,5 +1,5 @@
-import { Constant } from '../Constant.js';
-import { Type } from '../Type.js';
+import { Constant } from "../Constant.js";
+import { Type } from "../Type.js";
 
 const typeComparator = Type.functionType(Type.Boolean, [Type.Number, Type.Number]);
 const typeOperator = Type.union(
@@ -34,7 +34,7 @@ export const funcLessOrEqual = new Constant(
 
 export const funcSubtract = new Constant(
 	(value: number | bigint, subtrahend: number | bigint)=>
-		typeof value === 'bigint' && typeof subtrahend === 'bigint'
+		typeof value === "bigint" && typeof subtrahend === "bigint"
 			? BigInt.asIntN(64, value - subtrahend)
 			: Number(value) - Number(subtrahend),
 	typeOperator,
@@ -42,7 +42,7 @@ export const funcSubtract = new Constant(
 
 export const funcMultiply = new Constant(
 	(value1: number | bigint, value2: number | bigint)=>
-		typeof value1 === 'bigint' && typeof value2 === 'bigint'
+		typeof value1 === "bigint" && typeof value2 === "bigint"
 			? BigInt.asIntN(64, value1 * value2)
 			: Number(value1) * Number(value2),
 	typeOperator,
@@ -50,7 +50,7 @@ export const funcMultiply = new Constant(
 
 export const funcDivide = new Constant(
 	(value: number | bigint, divisor: number | bigint)=>
-		typeof value === 'bigint' && typeof divisor === 'bigint'
+		typeof value === "bigint" && typeof divisor === "bigint"
 			? BigInt.asIntN(64, value / divisor)
 			: Number(value) / Number(divisor),
 	typeOperator,
@@ -58,7 +58,7 @@ export const funcDivide = new Constant(
 
 export const funcRemainder = new Constant(
 	(value: number | bigint, divisor: number | bigint)=>
-		typeof value === 'bigint' && typeof divisor === 'bigint'
+		typeof value === "bigint" && typeof divisor === "bigint"
 			? BigInt.asIntN(64, value % divisor)
 			: Number(value) % Number(divisor),
 	typeOperator,
@@ -66,7 +66,7 @@ export const funcRemainder = new Constant(
 
 export const funcModulo = new Constant(
 	(value: number | bigint, divisor: number | bigint)=>
-		typeof value === 'bigint' && typeof divisor === 'bigint'
+		typeof value === "bigint" && typeof divisor === "bigint"
 			? BigInt.asIntN(64, (value % divisor + divisor) % divisor)
 			: (Number(value) % Number(divisor) + Number(divisor)) % Number(divisor),
 	typeOperator,
@@ -74,7 +74,7 @@ export const funcModulo = new Constant(
 
 export const funcPower = new Constant(
 	(value: number | bigint, exponent: number | bigint)=>
-		typeof value === 'bigint' && typeof exponent === 'bigint'
+		typeof value === "bigint" && typeof exponent === "bigint"
 			? BigInt.asIntN(64, value ** BigInt(exponent))
 			: Number(value) ** Number(exponent),
 	typeOperator,
@@ -82,7 +82,7 @@ export const funcPower = new Constant(
 
 export const funcRoot = new Constant(
 	(value: number | bigint, exponent: number | bigint)=> {
-		if (typeof value === 'bigint' && typeof exponent === 'bigint') {
+		if (typeof value === "bigint" && typeof exponent === "bigint") {
 			const e = BigInt(exponent);
 			if (value < 0n && e % 2n === 0n) {
 				return undefined;
@@ -114,7 +114,7 @@ export const funcRoot = new Constant(
 
 export const funcNegate = new Constant(
 	(value: number | bigint)=>
-		typeof value === 'number' ? -value : BigInt.asIntN(64, -value),
+		typeof value === "number" ? -value : BigInt.asIntN(64, -value),
 	Type.union(
 		Type.functionType(Type.Float, [Type.Float]),
 		Type.functionType(Type.Integer, [Type.Integer]),
@@ -123,7 +123,7 @@ export const funcNegate = new Constant(
 
 export const funcCast = new Constant(
 	(value: number | bigint)=>
-		typeof value === 'number' ? BigInt.asIntN(64, BigInt(Math.trunc(value))) : Number(value),
+		typeof value === "number" ? BigInt.asIntN(64, BigInt(Math.trunc(value))) : Number(value),
 	Type.union(
 		Type.functionType(Type.Float, [Type.Integer]),
 		Type.functionType(Type.Integer, [Type.Float]),

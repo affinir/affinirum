@@ -1,5 +1,5 @@
-import { Constant } from '../Constant.js';
-import { Type } from '../Type.js';
+import { Constant } from "../Constant.js";
+import { Type } from "../Type.js";
 
 export const equateBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	if (value1.byteLength !== value2.byteLength) {
@@ -72,12 +72,12 @@ export const concatBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 
 export const formatBuffer = (value?: ArrayBuffer)=> {
 	if (value == null) {
-		return '';
+		return "";
 	}
 	const bytes = new Uint8Array(value);
-	let str = '';
+	let str = "";
 	for (let i = 0; i < bytes.byteLength; ++i) {
-		str += bytes[i].toString(16).padStart(2, '0');
+		str += bytes[i].toString(16).padStart(2, "0");
 	}
 	return str;
 };

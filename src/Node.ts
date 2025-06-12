@@ -1,6 +1,6 @@
-import { ParserFrame } from './ParserFrame.js';
-import { Value } from './Value.js';
-import { Type } from './Type.js';
+import { ParserFrame } from "./ParserFrame.js";
+import { Value } from "./Value.js";
+import { Type } from "./Type.js";
 
 export abstract class Node extends ParserFrame {
 
@@ -31,7 +31,7 @@ export abstract class Node extends ParserFrame {
 	}
 
 	toString(ident: number = 0): string {
-		return '  '.repeat(ident) + `[${this._start}:${this.end}] <${this.type}>`;
+		return "  ".repeat(ident) + `[${this._start}:${this.end}] <${this.type}>`;
 	}
 
 }

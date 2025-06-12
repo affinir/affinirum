@@ -1,9 +1,9 @@
-import { Node } from '../Node.js';
-import { Constant } from '../Constant.js';
-import { ConstantNode } from './ConstantNode.js';
-import { ParserFrame } from '../ParserFrame.js';
-import { Value } from '../Value.js';
-import { Type } from '../Type.js';
+import { Node } from "../Node.js";
+import { Constant } from "../Constant.js";
+import { ConstantNode } from "./ConstantNode.js";
+import { ParserFrame } from "../ParserFrame.js";
+import { Value } from "../Value.js";
+import { Type } from "../Type.js";
 
 export class SwitchNode extends Node {
 
@@ -44,7 +44,7 @@ export class SwitchNode extends Node {
 	}
 
 	override toString(ident: number = 0): string {
-		const subnodes = this._subnodes.map((s)=> s.toString(ident + 1)).join('\n');
+		const subnodes = this._subnodes.map((s)=> s.toString(ident + 1)).join("\n");
 		return `${super.toString(ident)} switch node cnode:\n${this._cnode.toString(ident + 1)}\n`
 			+ `${super.toString(ident)} switch node subnodes:\n${subnodes}`;
 	}

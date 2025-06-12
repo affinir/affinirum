@@ -1,8 +1,8 @@
-import { Value } from './Value.js';
-import { PrimitiveAtom, Primitive } from './atom/PrimitiveAtom.js';
-import { ArrayAtom } from './atom/ArrayAtom.js';
-import { ObjectAtom } from './atom/ObjectAtom.js';
-import { FunctionAtom } from './atom/FunctionAtom.js';
+import { Value } from "./Value.js";
+import { PrimitiveAtom, Primitive } from "./atom/PrimitiveAtom.js";
+import { ArrayAtom } from "./atom/ArrayAtom.js";
+import { ObjectAtom } from "./atom/ObjectAtom.js";
+import { FunctionAtom } from "./atom/FunctionAtom.js";
 
 type Atom = PrimitiveAtom | ArrayAtom | ObjectAtom | FunctionAtom;
 
@@ -117,8 +117,8 @@ export class Type {
 
 	toString(): string {
 		return this._atoms.length
-			? this._atoms.sort((a, b)=> a.weight() - b.weight()).map((i)=> i.toString()).join('|')
-			: '??';
+			? this._atoms.sort((a, b)=> a.weight() - b.weight()).map((i)=> i.toString()).join("|")
+			: "??";
 	}
 
 	static union(...types: Type[]) {
@@ -137,33 +137,33 @@ export class Type {
 	static of(value: Value) {
 		return value == null
 			? Type.Void
-			: typeof value === 'boolean'
+			: typeof value === "boolean"
 				? Type.Boolean
 				: value instanceof Date
 					? Type.Timestamp
-					: typeof value === 'number'
+					: typeof value === "number"
 						? Type.Float
-						: typeof value === 'bigint'
+						: typeof value === "bigint"
 							? Type.Integer
 							: value instanceof ArrayBuffer
 								? Type.Buffer
-								: typeof value === 'string'
+								: typeof value === "string"
 									? Type.String
 									: Array.isArray(value)
 										? Type.Array
-										: typeof value === 'object'
+										: typeof value === "object"
 											? Type.Object
 											: Type.Function;
 	}
 
 	static isPrimitiveType(value: Value) {
 		return value == null
-			|| typeof value === 'boolean'
+			|| typeof value === "boolean"
 			|| value instanceof Date
-			|| typeof value === 'number'
-			|| typeof value === 'bigint'
+			|| typeof value === "number"
+			|| typeof value === "bigint"
 			|| value instanceof ArrayBuffer
-			|| typeof value === 'string';
+			|| typeof value === "string";
 	}
 
 	static arrayType(itemTypes: Type[] = []) {
@@ -179,18 +179,18 @@ export class Type {
 	}
 
 	static readonly Unknown = new Type();
-	static readonly Void = Type._primitiveType('void');
-	static readonly Boolean = Type._primitiveType('boolean');
+	static readonly Void = Type._primitiveType("void");
+	static readonly Boolean = Type._primitiveType("boolean");
 	static readonly OptionalBoolean = Type.union(Type.Void, Type.Boolean);
-	static readonly Timestamp = Type._primitiveType('timestamp');
+	static readonly Timestamp = Type._primitiveType("timestamp");
 	static readonly OptionalTimestamp = Type.union(Type.Void, Type.Timestamp);
-	static readonly Float = Type._primitiveType('float');
+	static readonly Float = Type._primitiveType("float");
 	static readonly OptionalFloat = Type.union(Type.Void, Type.Float);
-	static readonly Integer = Type._primitiveType('integer');
+	static readonly Integer = Type._primitiveType("integer");
 	static readonly OptionalInteger = Type.union(Type.Void, Type.Integer);
-	static readonly Buffer = Type._primitiveType('buffer');
+	static readonly Buffer = Type._primitiveType("buffer");
 	static readonly OptionalBuffer = Type.union(Type.Void, Type.Buffer);
-	static readonly String = Type._primitiveType('string');
+	static readonly String = Type._primitiveType("string");
 	static readonly OptionalString = Type.union(Type.Void, Type.String);
 	static readonly Array = Type.arrayType();
 	static readonly OptionalArray = Type.union(Type.Void, Type.Array);
@@ -220,7 +220,7 @@ export class Type {
 				++ix;
 			}
 			if (ix < argTypes.length) {
-				throw new Error('a required parameter illegally follows an optional one');
+				throw new Error("a required parameter illegally follows an optional one");
 			}
 		}
 		return new FunctionAtom(retType, argTypes, minArity, isVariadic);

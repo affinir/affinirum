@@ -1,6 +1,6 @@
-import { Constant } from '../Constant.js';
-import { Value } from '../Value.js';
-import { Type } from '../Type.js';
+import { Constant } from "../Constant.js";
+import { Value } from "../Value.js";
+import { Type } from "../Type.js";
 
 const typeAccessor = Type.functionType(Type.Array, [Type.Object]);
 

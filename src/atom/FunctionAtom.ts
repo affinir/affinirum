@@ -1,5 +1,5 @@
-import { IAtom } from '../Atom.js';
-import { Type } from '../Type.js';
+import { IAtom } from "../Atom.js";
+import { Type } from "../Type.js";
 
 export class FunctionAtom implements IAtom {
 
@@ -35,7 +35,7 @@ export class FunctionAtom implements IAtom {
 	}
 
 	argType(index: number): Type {
-		return (this._argTypes[index] ?? this._argTypes[this._argTypes.length - 1]);
+		return this._argTypes[index] ?? this._argTypes[this._argTypes.length - 1];
 	}
 
 	match(atom: IAtom): boolean {
@@ -61,8 +61,8 @@ export class FunctionAtom implements IAtom {
 	}
 
 	toString(): string {
-		const argTypes = this._argTypes.map((i)=> i.toString()).join(',');
-		return this._retType ? `~${this._retType.toString()}(${argTypes}${this.isVariadic ? '...' : ''})` : '~()';
+		const argTypes = this._argTypes.map((i)=> i.toString()).join(",");
+		return this._retType ? `~${this._retType.toString()}(${argTypes}${this.isVariadic ? "..." : ""})` : "~()";
 	}
 
 }

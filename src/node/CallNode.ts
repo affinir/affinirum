@@ -1,10 +1,10 @@
-import { Node } from '../Node.js';
-import { ParserFrame } from '../ParserFrame.js';
-import { Constant } from '../Constant.js';
-import { ConstantNode } from './ConstantNode.js';
-import { ArrayNode } from './ArrayNode.js';
-import { Value } from '../Value.js';
-import { Type } from '../Type.js';
+import { Node } from "../Node.js";
+import { ParserFrame } from "../ParserFrame.js";
+import { Constant } from "../Constant.js";
+import { ConstantNode } from "./ConstantNode.js";
+import { ArrayNode } from "./ArrayNode.js";
+import { Value } from "../Value.js";
+import { Type } from "../Type.js";
 
 export class CallNode extends Node {
 
@@ -64,14 +64,14 @@ export class CallNode extends Node {
 
 	override evaluate(): Value {
 		const func = (this._fnode.evaluate() as (...values: any[])=> Value);
-		if (typeof func !== 'function') {
+		if (typeof func !== "function") {
 			this.throwError(`function expected not ${Type.of(func)}`);
 		}
 		return func(...this._subnodes.map((node)=> node.evaluate()));
 	}
 
 	override toString(ident: number = 0): string {
-		const subnodes = this._subnodes.map((s)=> s.toString(ident + 1)).join('\n');
+		const subnodes = this._subnodes.map((s)=> s.toString(ident + 1)).join("\n");
 		return `${super.toString(ident)} call node fnode:\n${this._fnode.toString(ident + 1)}\n`
 			+ `${super.toString(ident)} call node subnodes:\n${subnodes}`;
 	}

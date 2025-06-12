@@ -1,5 +1,5 @@
-import { IAtom } from '../Atom.js';
-import { Type } from '../Type.js';
+import { IAtom } from "../Atom.js";
+import { Type } from "../Type.js";
 
 export class ObjectAtom implements IAtom {
 
@@ -48,7 +48,7 @@ export class ObjectAtom implements IAtom {
 
 	toString(): string {
 		const entries = Object.entries(this._propTypes);
-		return entries.length ? `[${entries.map((i)=> i[0] + ':' + i[1].toString()).join(',')}]` : '[:]';
+		return entries.length ? `[${entries.map((i)=> i[0] + ":" + i[1].toString()).join(",")}]` : "[:]";
 	}
 
 }

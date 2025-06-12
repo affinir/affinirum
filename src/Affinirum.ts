@@ -1,28 +1,28 @@
-import { funcOr, funcAnd, funcNot } from './constant/Boolean.js';
-import { funcAdd } from './constant/Enumerable.js';
-import { funcAt, funcHas } from './constant/Iterable.js';
+import { funcOr, funcAnd, funcNot } from "./constant/Boolean.js";
+import { funcAdd } from "./constant/Enumerable.js";
+import { funcAt, funcHas } from "./constant/Iterable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from './constant/Number.js';
-import { funcCoalesce, funcEqual, funcNotEqual } from './constant/Unknown.js';
-import { Constant } from './Constant.js';
-import { Variable } from './Variable.js';
-import { Value } from './Value.js';
-import { Type } from './Type.js';
-import { Keywords } from './Keywords.js';
-import { Constants } from './Constants.js';
-import { Functions } from './Functions.js';
-import { Node } from './Node.js';
-import { ArrayNode } from './node/ArrayNode.js';
-import { BlockNode } from './node/BlockNode.js';
-import { ConstantNode } from './node/ConstantNode.js';
-import { CallNode } from './node/CallNode.js';
-import { LoopNode } from './node/LoopNode.js';
-import { ObjectNode } from './node/ObjectNode.js';
-import { SwitchNode } from './node/SwitchNode.js';
-import { VariableNode } from './node/VariableNode.js';
-import { ParserFrame } from './ParserFrame.js';
-import { ParserState } from './ParserState.js';
-import { StaticScope } from './StaticScope.js';
+	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from "./constant/Number.js";
+import { funcCoalesce, funcEqual, funcNotEqual } from "./constant/Unknown.js";
+import { Constant } from "./Constant.js";
+import { Variable } from "./Variable.js";
+import { Value } from "./Value.js";
+import { Type } from "./Type.js";
+import { Keywords } from "./Keywords.js";
+import { Constants } from "./Constants.js";
+import { Functions } from "./Functions.js";
+import { Node } from "./Node.js";
+import { ArrayNode } from "./node/ArrayNode.js";
+import { BlockNode } from "./node/BlockNode.js";
+import { ConstantNode } from "./node/ConstantNode.js";
+import { CallNode } from "./node/CallNode.js";
+import { LoopNode } from "./node/LoopNode.js";
+import { ObjectNode } from "./node/ObjectNode.js";
+import { SwitchNode } from "./node/SwitchNode.js";
+import { VariableNode } from "./node/VariableNode.js";
+import { ParserFrame } from "./ParserFrame.js";
+import { ParserState } from "./ParserState.js";
+import { StaticScope } from "./StaticScope.js";
 
 export class Affinirum {
 
@@ -58,7 +58,7 @@ export class Affinirum {
 		const state = new ParserState(this._script);
 		this._root = this._block(state.next(), this._scope);
 		if (!state.isVoid) {
-			state.throwError('unexpected expression token or expression end');
+			state.throwError("unexpected expression token or expression end");
 		}
 		this._root = this._root.compile(config?.type ?? Type.Unknown);
 	}
@@ -216,7 +216,7 @@ export class Affinirum {
 			const frame = state.starts();
 			if (state.isDotMark || state.isQuestionMark) {
 				const operator = state.isDotMark ? funcAt : funcHas;
-				if (state.next().isLiteral && (typeof state.literal.value === 'string' || typeof state.literal.value === 'bigint')) {
+				if (state.next().isLiteral && (typeof state.literal.value === "string" || typeof state.literal.value === "bigint")) {
 					node = this._call(frame.ends(state), operator, [node, new ConstantNode(state, new Constant(state.literal.value))]);
 					state.next();
 				}
@@ -245,7 +245,7 @@ export class Affinirum {
 					}
 				}
 				else {
-					state.throwError('missing array index or object key');
+					state.throwError("missing array index or object key");
 				}
 			}
 			else if (state.isParenthesesOpen) {
@@ -279,10 +279,10 @@ export class Affinirum {
 			const constants = this._constants.get(state.token);
 			if (constants != null) {
 				if (!state.next().isDotMark) {
-					state.throwError('missing constant accessor operator');
+					state.throwError("missing constant accessor operator");
 				}
 				if (!state.next().isToken) {
-					state.throwError('missing constant name');
+					state.throwError("missing constant name");
 				}
 				const constant = constants[state.token];
 				if (!constant) {
@@ -309,7 +309,7 @@ export class Affinirum {
 			}
 			if (state.next().isAssignment) {
 				if (variable.constant) {
-					state.throwError('illegal constant assignment');
+					state.throwError("illegal constant assignment");
 				}
 				if (state.assignment.operator) {
 					const operator = state.assignment.operator;
@@ -328,7 +328,7 @@ export class Affinirum {
 			return node;
 		}
 		else if (state.isBracesClose) {
-			state.throwError('unexpected closing braces');
+			state.throwError("unexpected closing braces");
 		}
 		else if (state.isParenthesesOpen) {
 			const node = this._unit(state.next(), scope);
@@ -336,7 +336,7 @@ export class Affinirum {
 			return node;
 		}
 		else if (state.isParenthesesClose) {
-			state.throwError('unexpected closing parentheses');
+			state.throwError("unexpected closing parentheses");
 		}
 		else if (state.isBracketsOpen) {
 			const frame = state.starts();
@@ -364,22 +364,22 @@ export class Affinirum {
 			state.closeBrackets().next();
 			if (colon) {
 				return new ObjectNode(frame, subnodes.map(([k, v])=>
-					[typeof k === 'number' ? new ConstantNode(v, new Constant(String(k))) : k, v] as const
+					[typeof k === "number" ? new ConstantNode(v, new Constant(String(k))) : k, v] as const
 				));
 			}
 			return new ArrayNode(frame, subnodes.map(([, v])=> v));
 		}
 		else if (state.isBracketsClose) {
-			state.throwError('unexpected closing brackets');
+			state.throwError("unexpected closing brackets");
 		}
 		else if (state.isVariableDefinition || state.isConstantDefinition) {
 			const constant = state.isConstantDefinition;
 			if (!state.next().isToken) {
-				state.throwError(`missing ${constant ? 'constant' : 'variable'} name`);
+				state.throwError(`missing ${constant ? "constant" : "variable"} name`);
 			}
 			const token = state.token;
 			if (scope.has(token)) {
-				state.throwError(`illegal redefinition of ${constant ? 'constant' : 'variable'} ${token}`);
+				state.throwError(`illegal redefinition of ${constant ? "constant" : "variable"} ${token}`);
 			}
 			const frame = state.starts();
 			let type: Type | undefined;
@@ -390,7 +390,7 @@ export class Affinirum {
 			scope.local(token, variable);
 			if (state.isAssignment) {
 				if (state.assignment.operator) {
-					state.throwError(`illegal assignment operator to ${constant ? 'constant' : 'variable'} ${token}`);
+					state.throwError(`illegal assignment operator to ${constant ? "constant" : "variable"} ${token}`);
 				}
 				return new VariableNode(frame, variable, this._unit(state.next(), scope));
 			}
@@ -406,9 +406,9 @@ export class Affinirum {
 			return this._switch(state, scope);
 		}
 		else if (state.isVoid) {
-			state.throwError('unexpected end of expression');
+			state.throwError("unexpected end of expression");
 		}
-		state.throwError('unexpected expression token');
+		state.throwError("unexpected expression token");
 	}
 
 	protected _function(state: ParserState, scope: StaticScope): Node {
@@ -422,11 +422,11 @@ export class Affinirum {
 		const variables = new Map<string, Variable>();
 		while (!state.next().isParenthesesClose) {
 			if (!state.isToken) {
-				state.throwError('missing function argument name');
+				state.throwError("missing function argument name");
 			}
 			const token = state.token;
 			if (scope.get(token)) {
-				state.throwError('variable redefinition');
+				state.throwError("variable redefinition");
 			}
 			let argType = Type.Unknown;
 			if (state.next().isColonSeparator) {
@@ -522,7 +522,7 @@ export class Affinirum {
 					itemPropTypes.push([token, this._type(state, scope)]);
 				}
 				else {
-					state.throwError('missing type or property name');
+					state.throwError("missing type or property name");
 				}
 				if (!state.isCommaSeparator) {
 					break;
@@ -551,7 +551,7 @@ export class Affinirum {
 						break;
 					}
 					else {
-						state.throwError('variadic function argument must be an array type');
+						state.throwError("variadic function argument must be an array type");
 					}
 				}
 				if (!state.isCommaSeparator) {
@@ -565,7 +565,7 @@ export class Affinirum {
 			return Type.functionType(retType, argTypes, variadic);
 		}
 		else {
-			state.throwError('missing type name');
+			state.throwError("missing type name");
 		}
 	}
 

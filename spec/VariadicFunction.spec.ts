@@ -1,7 +1,7 @@
-import { Affinirum } from '../src/index.js';
+import { Affinirum } from "../src/index.js";
 
-describe('Variadic Function test', ()=> {
-	it('parses and evaluates variadic function', ()=> {
+describe("Variadic Function test", ()=> {
+	it("parses and evaluates variadic function", ()=> {
 		const script = new Affinirum(`
 const f = ~int(x: int, a: [int]...) {
 	x * Integer.Sum(a)

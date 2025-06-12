@@ -1,17 +1,17 @@
-import { Constant } from '../Constant.js';
-import { Type } from '../Type.js';
+import { Constant } from "../Constant.js";
+import { Type } from "../Type.js";
 
 const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
 
-export const encodeTimestamp = (value: Date, encoding: 'int64' | 'int64le' = 'int64')=> {
+export const encodeTimestamp = (value: Date, encoding: "int64" | "int64le" = "int64")=> {
 	const buf = new ArrayBuffer(8);
 	const dv = new DataView(buf);
-	dv.setBigInt64(0, BigInt(value.getTime()), encoding === 'int64le');
+	dv.setBigInt64(0, BigInt(value.getTime()), encoding === "int64le");
 	return buf;
 };
 
-export const decodeTimestamp = (value: ArrayBuffer, encoding: 'int64' | 'int64le' = 'int64', byteOffset?: bigint)=>
-	new Date(Number(new DataView(value).getBigInt64(byteOffset == null ? 0 : Number(byteOffset), encoding === 'int64le')));
+export const decodeTimestamp = (value: ArrayBuffer, encoding: "int64" | "int64le" = "int64", byteOffset?: bigint)=>
+	new Date(Number(new DataView(value).getBigInt64(byteOffset == null ? 0 : Number(byteOffset), encoding === "int64le")));
 
 export const formatTimestamp = (value: Date, radix?: number)=> {
 	const str = value.toISOString();
@@ -109,7 +109,7 @@ const funcEpochTimestamp = new Constant(
 );
 
 const funcDecodeTimestamp = new Constant(
-	(value: ArrayBuffer, encoding: 'int64' | 'int64le' = 'int64', byteOffset?: bigint)=>
+	(value: ArrayBuffer, encoding: "int64" | "int64le" = "int64", byteOffset?: bigint)=>
 		decodeTimestamp(value, encoding, byteOffset),
 	Type.functionType(Type.OptionalTimestamp, [Type.Buffer, Type.OptionalString, Type.OptionalInteger]),
 );

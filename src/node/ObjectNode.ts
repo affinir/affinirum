@@ -1,9 +1,9 @@
-import { Node } from '../Node.js';
-import { ParserFrame } from '../ParserFrame.js';
-import { Constant } from '../Constant.js';
-import { ConstantNode } from './ConstantNode.js';
-import { Value } from '../Value.js';
-import { Type } from '../Type.js';
+import { Node } from "../Node.js";
+import { ParserFrame } from "../ParserFrame.js";
+import { Constant } from "../Constant.js";
+import { ConstantNode } from "./ConstantNode.js";
+import { Value } from "../Value.js";
+import { Type } from "../Type.js";
 
 export class ObjectNode extends Node {
 
@@ -42,7 +42,7 @@ export class ObjectNode extends Node {
 	}
 
 	override toString(ident: number = 0): string {
-		const subnodes = this._subnodes.map(([k, v])=> `${k.toString(ident + 1)}:\n${v.toString(ident + 1)}`).join('\n');
+		const subnodes = this._subnodes.map(([k, v])=> `${k.toString(ident + 1)}:\n${v.toString(ident + 1)}`).join("\n");
 		return `${super.toString(ident)} object node subnodes:\n${subnodes}`;
 	}
 

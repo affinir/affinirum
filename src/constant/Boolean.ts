@@ -1,5 +1,5 @@
-import { Constant } from '../Constant.js';
-import { Type } from '../Type.js';
+import { Constant } from "../Constant.js";
+import { Type } from "../Type.js";
 
 const typeBooleanOrArray = Type.union(Type.Boolean, Type.arrayType([Type.Boolean]));
 const typeBooleanLogic = Type.functionType(Type.Boolean, [typeBooleanOrArray], true);
@@ -34,7 +34,7 @@ const funcParseBoolean = new Constant(
 			return undefined;
 		}
 		const v = value.toLowerCase();
-		return v === 'true' ? true : v === 'false' ? false : undefined;
+		return v === "true" ? true : v === "false" ? false : undefined;
 	},
 	Type.functionType(Type.OptionalBoolean, [Type.String]),
 );

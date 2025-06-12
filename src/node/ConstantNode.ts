@@ -1,8 +1,8 @@
-import { Node } from '../Node.js';
-import { ParserFrame } from '../ParserFrame.js';
-import { Constant } from '../Constant.js';
-import { Value } from '../Value.js';
-import { Type } from '../Type.js';
+import { Node } from "../Node.js";
+import { ParserFrame } from "../ParserFrame.js";
+import { Constant } from "../Constant.js";
+import { Value } from "../Value.js";
+import { Type } from "../Type.js";
 
 export class ConstantNode extends Node {
 

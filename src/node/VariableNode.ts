@@ -1,8 +1,8 @@
-import { Node } from '../Node.js';
-import { ParserFrame } from '../ParserFrame.js';
-import { Variable } from '../Variable.js';
-import { Value } from '../Value.js';
-import { Type } from '../Type.js';
+import { Node } from "../Node.js";
+import { ParserFrame } from "../ParserFrame.js";
+import { Variable } from "../Variable.js";
+import { Value } from "../Value.js";
+import { Type } from "../Type.js";
 
 export class VariableNode extends Node {
 
