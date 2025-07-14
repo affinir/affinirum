@@ -42,7 +42,7 @@ export const formatFloat = (value: number, radix?: number)=>
 
 const typeNumberOrArray = Type.union(Type.Float, Type.arrayType([Type.Float]));
 const typeAggregator = Type.functionType(Type.Float, [typeNumberOrArray], true);
-const typeNumberTransform = Type.functionType(Type.Float, [Type.Float]);
+const typeTransform = Type.functionType(Type.Float, [Type.Float]);
 
 const funcSum = new Constant(
 	(...values: (number | number[])[])=>
@@ -65,43 +65,43 @@ const funcMax = new Constant(
 const funcExponent = new Constant(
 	(value: number)=>
 		Math.exp(value),
-	typeNumberTransform,
+	typeTransform,
 );
 
 const funcLogarithm = new Constant(
 	(value: number)=>
 		Math.log(value),
-	typeNumberTransform,
+	typeTransform,
 );
 
 const funcAbs = new Constant(
 	(value: number)=>
 		Math.abs(value),
-	typeNumberTransform,
+	typeTransform,
 );
 
 const funcCeil = new Constant(
 	(value: number)=>
 		Math.ceil(value),
-	typeNumberTransform,
+	typeTransform,
 );
 
 const funcFloor = new Constant(
 	(value: number)=>
 		Math.floor(value),
-	typeNumberTransform,
+	typeTransform,
 );
 
 const funcRound = new Constant(
 	(value: number)=>
 		Math.round(value),
-	typeNumberTransform,
+	typeTransform,
 );
 
 const funcTruncate = new Constant(
 	(value: number)=>
 		Math.trunc(value),
-	typeNumberTransform,
+	typeTransform,
 );
 
 const funcRandomFloat = new Constant(

@@ -129,3 +129,15 @@ export const funcCast = new Constant(
 		Type.functionType(Type.Integer, [Type.Float]),
 	)
 );
+
+export const funcCastToFloat = new Constant(
+	(value: bigint)=>
+		Number(value),
+	Type.functionType(Type.Float, [Type.Integer]),
+);
+
+export const funcCastToInteger = new Constant(
+	(value: number)=>
+		BigInt.asIntN(64, BigInt(Math.trunc(value))),
+	Type.functionType(Type.Integer, [Type.Float]),
+);

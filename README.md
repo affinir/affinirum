@@ -240,7 +240,9 @@ Unknown or variant type is declared as **??**.
 - **float | integer float | integer.Modulo(divisor)** — Modulo
 - **float | integer float | integer.Power(exponent)** — Power
 - **float | integer float | integer.Root(index)** — Root
-- **float | integer float | integer.Cast()** — Cast to number
+- **float | integer float | integer.Cast()** — Cast to integer or float
+- **float integer.CastToFloat()** — Cast to float
+- **integer float.CastToInteger()** — Cast to integer
 
 #### Object Functions
 - **array object.Entries()** — Key-value pairs

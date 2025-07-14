@@ -5,7 +5,7 @@ import { funcByte } from "./constant/Buffer.js";
 import { funcAdd, funcSlice, funcSplice, funcInject } from "./constant/Enumerable.js";
 import { funcLength, funcContains, funcAt, funcHas } from "./constant/Iterable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
-	funcPower, funcRoot, funcNegate, funcCast } from "./constant/Number.js";
+	funcPower, funcRoot, funcNegate, funcCast, funcCastToFloat, funcCastToInteger } from "./constant/Number.js";
 import { funcEntries, funcKeys, funcValues } from "./constant/Object.js";
 import { funcLike, funcUnlike, funcStartsWith, funcEndsWith,
 	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit } from "./constant/String.js";
@@ -55,6 +55,8 @@ export const Functions: [string, Constant][] = [
 	["Root", funcRoot],
 	["Negate", funcNegate],
 	["Cast", funcCast],
+	["CastToFloat", funcCastToFloat],
+	["CastToInteger", funcCastToInteger],
 	// Object
 	["Entries", funcEntries],
 	["Keys", funcKeys],
