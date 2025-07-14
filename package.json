@@ -1,6 +1,6 @@
 {
 	"name": "affinirum",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"description": "Affinirum Scripting Language",
 	"main": "dst/cjs/index.js",
 	"module": "dst/index.js",

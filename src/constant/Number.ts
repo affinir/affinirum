@@ -1,6 +1,19 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
+const castToInteger = (value: number)=> {
+	if (Number.isNaN(value)) {
+		return 0n;
+	}
+	if (value === Number.NEGATIVE_INFINITY) {
+		return -0x8000000000000000n;
+	}
+	if (value === Number.POSITIVE_INFINITY) {
+		return 0x7FFFFFFFFFFFFFFFn;
+	}
+	return BigInt.asIntN(64, BigInt(Math.trunc(value)));
+};
+
 const typeComparator = Type.functionType(Type.Boolean, [Type.Number, Type.Number]);
 const typeOperator = Type.union(
 	Type.functionType(Type.Float, [Type.Float, Type.Integer]),
@@ -123,7 +136,9 @@ export const funcNegate = new Constant(
 
 export const funcCast = new Constant(
 	(value: number | bigint)=>
-		typeof value === "number" ? BigInt.asIntN(64, BigInt(Math.trunc(value))) : Number(value),
+		typeof value !== "number"
+			? Number(value)
+			: castToInteger(value),
 	Type.union(
 		Type.functionType(Type.Float, [Type.Integer]),
 		Type.functionType(Type.Integer, [Type.Float]),
@@ -138,6 +153,6 @@ export const funcCastToFloat = new Constant(
 
 export const funcCastToInteger = new Constant(
 	(value: number)=>
-		BigInt.asIntN(64, BigInt(Math.trunc(value))),
+		castToInteger(value),
 	Type.functionType(Type.Integer, [Type.Float]),
 );
