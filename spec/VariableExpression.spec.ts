@@ -255,6 +255,14 @@ describe("Variable Expression test", ()=> {
 			{ v: "The quick brown fox", s: " ", i: 2n, result: "brown" },
 			{ v: "The~quick~brown~~fox", s: "~", i: 1n, result: "quick" },
 		]],
+		["v.ReplaceWith(r, s)", [
+			{ v: "The quick brown fox", s: " ", r: "-", result: "The-quick-brown-fox" },
+			{ v: "The~quick~brown~fox", s: "~", r: " ", result: "The quick brown fox" },
+		]],
+		["v.ReplaceWith('', [s], '!')", [
+			{ v: "The quick brown fox", s: " ", result: "Thequickbrownfox" },
+			{ v: "The~quick~brown~fox", s: "~", result: "Thequickbrownfox" },
+		]],
 		["Object.Merge([:], [:], [\"a\":x], [`b`:x]).Length", [
 			{ x: 1n, result: 2n },
 			{ x: undefined, result: 2n },
@@ -516,10 +524,26 @@ describe("Variable Expression test", ()=> {
 			{ a: 0, b: 2, result: 0 },
 		]],
 		["(a+=10) + (b-=10) + (c*=2) + (d/=2) + (e %= 5)", [
-			{ a: 1, b: 2, c: 3, d: 4, e: 6, result: 12 }
+			{ a: 1, b: 2, c: 3, d: 4, e: 6, result: 12 },
 		]],
 		["a+=10 + b-=10 + c*=2 + d/=2 + e %= 2", [
-			{ a: 10, b: 2, c: 3, d: 4, e: 6, result: 0 }
+			{ a: 10, b: 2, c: 3, d: 4, e: 6, result: 0 },
+		]],
+		["a.DaysSince(b)", [
+			{ a: new Date("2020-01-02 10:30:33"), b: new Date("2020-01-03 10:30:33"), result: -1 },
+			{ a: new Date("1970-01-05 00:30:33"), b: new Date("1970-01-10 00:30:33"), result: -5 },
+		]],
+		["a.HoursSince(b)", [
+			{ a: new Date("2020-01-02 20:30:33"), b: new Date("2020-01-02 10:30:33"), result: 10 },
+			{ a: new Date("1970-01-05 22:30:33"), b: new Date("1970-01-05 01:30:33"), result: 21 },
+		]],
+		["a.MinutesSince(b)", [
+			{ a: new Date("2020-01-02 20:30:33"), b: new Date("2020-01-02 10:30:33"), result: 600 },
+			{ a: new Date("1970-01-05 22:30:33"), b: new Date("1970-01-05 20:30:33"), result: 120 },
+		]],
+		["a.SecondsSince(b)", [
+			{ a: new Date("2020-01-02 11:30:33"), b: new Date("2020-01-02 10:30:33"), result: 3600 },
+			{ a: new Date("1970-01-05 22:30:33"), b: new Date("1970-01-05 20:30:33"), result: 7200 },
 		]],
 	] as [string, Record<string, any>][]).forEach(([expr, args])=> {
 		(args as Record<string, any>[]).forEach((v)=> {

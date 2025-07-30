@@ -2,6 +2,7 @@ import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
 const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
+const typeTimestampSince = Type.functionType(Type.Float, [Type.Timestamp, Type.Timestamp]);
 
 export const encodeTimestamp = (value: Date, encoding: "int64" | "int64le" = "int64")=> {
 	const buf = new ArrayBuffer(8);
@@ -100,6 +101,30 @@ export const funcEpochTime = new Constant(
 	(value: Date, epoch = new Date(0))=>
 		BigInt.asIntN(64, BigInt(value.getTime() - epoch.getTime())),
 	Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalTimestamp]),
+);
+
+export const funcDaysSince = new Constant(
+	(value1: Date, value2: Date)=>
+		(value1.getTime() - value2.getTime()) / 86400000.0,
+	typeTimestampSince,
+);
+
+export const funcHoursSince = new Constant(
+	(value1: Date, value2: Date)=>
+		(value1.getTime() - value2.getTime()) / 3600000.0,
+	typeTimestampSince,
+);
+
+export const funcMinutesSince = new Constant(
+	(value1: Date, value2: Date)=>
+		(value1.getTime() - value2.getTime()) / 60000.0,
+	typeTimestampSince,
+);
+
+export const funcSecondsSince = new Constant(
+	(value1: Date, value2: Date)=>
+		(value1.getTime() - value2.getTime()) / 1000.0,
+	typeTimestampSince,
 );
 
 const funcEpochTimestamp = new Constant(

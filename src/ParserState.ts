@@ -1,8 +1,8 @@
 import { funcOr, funcAnd, funcNot } from "./constant/Boolean.js";
 import { parseBuffer } from "./constant/Buffer.js";
 import { funcAdd } from "./constant/Enumerable.js";
-import { isSign, isAlpha, isNumeric, isAlphanumeric, isHexadecimal,
-	isDateSymbol, isTimeSymbol, isDateTimeSeparator } from "./constant/String.js";
+import { isSign, isAlpha, isNumeric, isAlphanumeric,
+	isDateSymbol, isTimeSymbol, isDateTimeSeparator, replaceWith } from "./constant/String.js";
 import { Constant } from "./Constant.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from "./constant/Number.js";
@@ -362,7 +362,7 @@ export class ParserState extends ParserFrame {
 						while (isTimeSymbol(this._expr.charAt(this._end))) {
 							++this._end;
 						}
-						if (this._expr.charAt(this._end) === ".") {
+						if (this._expr.charAt(this._end) === "." && isNumeric(this._expr.charAt(this._end + 1))) {
 							++this._end;
 							while (isNumeric(this._expr.charAt(this._end))) {
 								++this._end;
@@ -375,10 +375,15 @@ export class ParserState extends ParserFrame {
 					this._fragment = new Literal(new Date(this._expr.substring(this._start + 1, this._end)));
 					break;
 				case "#":
-					while (isHexadecimal(this._expr.charAt(this._end))) {
+					while (this._expr.charAt(this._end) !== "" && this._expr.charAt(this._end) !== c) {
 						++this._end;
 					}
-					this._fragment = new Literal(parseBuffer(this._expr.substring(this._start + 1, this._end)));
+					if (this._end >= this._expr.length) {
+						this._start = this._expr.length;
+						throw new Error(`missing closing buffer mark ${c}`);
+					}
+					this._fragment = new Literal(parseBuffer(replaceWith(this._expr.substring(this._start + 1, this._end), "", " ", "\t", "\n")));
+					++this._end;
 					break;
 				case "\"": case "'": case "`":
 					while (this._expr.charAt(this._end) !== "" && this._expr.charAt(this._end) !== c) {
@@ -388,7 +393,7 @@ export class ParserState extends ParserFrame {
 						this._start = this._expr.length;
 						throw new Error(`missing closing quotation mark ${c}`);
 					}
-					this._fragment = new Literal(this._expr.substring(this._start + 1, this._end));
+					this._fragment = new Literal(replaceWith(this._expr.substring(this._start + 1, this._end), "", "\\\n"));
 					++this._end;
 					break;
 				default:

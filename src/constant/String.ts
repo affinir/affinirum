@@ -11,6 +11,14 @@ export const isDateTimeSeparator = (c: string)=> c === "T" || c === " " || c ===
 export const isHexadecimal = (c: string)=> isNumeric(c) || c >= "a" && c <= "f" || c >= "A" && c <= "F";
 export const isCaseSpaceEtc = (c: string)=> (c < "a" || c > "z") && (c < "0" || c > "9");
 
+export const replaceWith = (value: string, replacement: string, ...search: string[])=> {
+	let str = value;
+	for (const s of search) {
+		str = str.split(s).join(replacement ?? "");
+	}
+	return str;
+};
+
 export const equateStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boolean)=> {
 	if (!ignoreCaseSpaceEtc) {
 		return value1 === value2;
@@ -150,6 +158,7 @@ const decodeString = (value: ArrayBuffer, encoding: "utf8" | "ucs2" | "ucs2le" =
 const typeStringEquator = Type.functionType(Type.Boolean, [Type.String, Type.String]);
 const typeStringComparator = Type.functionType(Type.Boolean, [Type.String, Type.String, Type.OptionalInteger, Type.OptionalBoolean]);
 const typeStringMutator = Type.functionType(Type.String, [Type.String]);
+const typeStringOrArray = Type.union(Type.String, Type.arrayType([Type.String]));
 
 export const funcLike = new Constant(
 	(value1: string, value2: string)=>
@@ -225,6 +234,12 @@ export const funcSplit = new Constant(
 	(value: string, separator: string = " ")=>
 		value.split(separator),
 	Type.functionType(Type.arrayType([Type.String]), [Type.String, Type.OptionalString]),
+);
+
+export const funcReplaceWith = new Constant(
+	(value: string, replacement: string, ...search: (string | string[])[])=>
+		replaceWith(value, replacement, ...search.flat()),
+	Type.functionType(Type.String, [Type.String, Type.String, typeStringOrArray], true),
 );
 
 const funcAlphanum = new Constant(

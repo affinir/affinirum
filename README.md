@@ -26,7 +26,7 @@ Script can contain multiple semicolon-separated expressions, and blocks of state
 The value of a block is determined by the value of the last expression.
 - Scientific notation is supported for floating point numbers, like *0.1281e+2*.
 - ISO Timestamps prefixed with **@**, like *@2025-05-11T19:09:21.320Z*.
-- Hexadecimal buffer values are prefixed with **#**, like *#10ab0901*.
+- Hexadecimal buffer values are enclosed in **#**, like *#10ab0901#*.
 - String literals are enclosed in single (**'**), double (**"**), or backtick (**`**) quotes, like *'string value'*.
 
 Array is an ordered sequence of values of any type.
@@ -124,13 +124,13 @@ Unknown or variant type is declared as **??**.
 - **boolean Boolean.Or(values:array...)** — Boolean disjunction
 - **boolean Boolean.And(values: array...)** — Boolean conjunction
 - **boolean Boolean.Not(value: boolean)** — Boolean negation
-- **boolean? Boolean.Decode(value: buffer, offset?: integer)** — Decode boolean from buffer
+- **boolean? Boolean.Decode(value: buffer, offset: integer?)** — Decode boolean from buffer
 - **boolean? Boolean.ParseBoolean()** — Parse boolean from string
 
 #### Timestamp
 - **timestamp Timestamp.Now()** — Current date and time
-- **timestamp Timestamp.Epoch(value: float | integer, epoch?: timestamp)** — Create timestamp from milliseconds
-- **timestamp? Boolean.Decode(value: buffer, offset?: integer)** — Decode timestamp from buffer
+- **timestamp Timestamp.Epoch(value: float | integer, epoch: timestamp?)** — Create timestamp from milliseconds
+- **timestamp? Timestamp.Decode(value: buffer, offset: integer?)** — Decode timestamp from buffer
 - **timestamp? Timestamp.Parse(value: string)** — Parse string to timestamp
 
 #### Float
@@ -149,7 +149,7 @@ Unknown or variant type is declared as **??**.
 - **float Float.Round()** — Rounded value
 - **float Float.Truncate()** — Truncated value
 - **float Float.Random(exclusiveTo: float)** — Random float up to value
-- **float? Float.Decode(value: buffer, encoding: string, offset?: integer)** — Decode float from buffer
+- **float? Float.Decode(value: buffer, encoding: string, offset: integer?)** — Decode float from buffer
 - **float? Float.Parse(value: string)** — Parse float from string
 
 #### Integer
@@ -157,12 +157,12 @@ Unknown or variant type is declared as **??**.
 - **integer Integer.Min(values: array...)** — Numeric minimum
 - **integer Integer.Max(values: array...)** — Numeric maximum
 - **integer Integer.Random(exclusiveTo: integer)** — Random integer up to value
-- **integer? Integer.Decode(value: buffer, encoding: string, offset?: integer)** — Decode integer from buffer
+- **integer? Integer.Decode(value: buffer, encoding: string, offset: integer?)** — Decode integer from buffer
 - **integer? Integer.Parse(value: string)** — Parse integer from string
 
 #### String
 - **string String.Random(length: integer)** — Random alphanumeric string
-- **string? String.Decode(value: buffer, encoding?: string, offset?: integer, length?: integer)** — Decode buffer to string
+- **string? String.Decode(value: buffer, encoding: string?, offset: integer?, length: integer?)** — Decode buffer to string
 
 #### Buffer
 - **buffer Buffer.Random(length: integer)** — Buffer of given length filled with random bytes
@@ -179,11 +179,11 @@ Unknown or variant type is declared as **??**.
 - **object Object.Merge(values: array...)** — Merge multiple objects
 
 #### AN
-- **string AN.Format(value: string, whitespace?: string)** — Format string as AN
+- **string AN.Format(value: string, whitespace: string?)** — Format string as AN
 
 #### JSON
-- **string JSON.Format(value: void | boolean | float | string | array | object, whitespace?: string)** — Format as JSON string
-- **void | boolean | float? | string | array | object JSON.Parse(value: string)** — Parse JSON-formatted string
+- **string JSON.Format(value: void | boolean | float | string | array | object, whitespace: string?)** — Format as JSON string
+- **void | boolean | float | string | array | object JSON.Parse(value: string)** — Parse JSON-formatted string
 
 
 ### Functions
@@ -192,8 +192,8 @@ Unknown or variant type is declared as **??**.
 - **?? ??.Coalesce(otherwise: ??)** — Null coalescence
 - **boolean ??.Equal(value: ??)** — Equals to
 - **boolean ??.Unequal(value: ??)** — Not equals to
-- **buffer float | integer | string.Encode(encoding?: string)** — Encode value to buffer
-- **string boolean | float | integer | buffer | string | array | object.Format(radix?: integer, separator?: string)** — Format value to string
+- **buffer float | integer | string.Encode(encoding: string?)** — Encode value to buffer
+- **string boolean | float | integer | buffer | string | array | object.Format(radix: integer?, separator: string?)** — Format value to string
 
 #### Array Functions
 - **?? array.First(condition: function)** — First item satisfying condition
@@ -216,16 +216,16 @@ Unknown or variant type is declared as **??**.
 - **string Buffer.FormatBuffer(value: buffer)** — Hexadecimal string from buffer
 
 #### Enumerable Functions
-- **float | integer | buffer | string | array.Add(values:array...)** — Add or concatenate values
-- **buffer | string | array.Slice(start?: integer, end?: integer)** — Slice section
+- **float | integer | buffer | string | array.Add(values: array...)** — Add or concatenate values
+- **buffer | string | array.Slice(start: integer?, end: integer?)** — Slice section
 - **buffer | string | array.Splice(start: integer, remove: integer, inject: array...)** — Splice section
 - **buffer | string | array.Inject(start: integer, inject: array...)** — Inject section
 
 #### Iterable Functions
 - **integer buffer | string | array | object.Length()** — Get length
-- **boolean buffer | string | array | object.Contains(search: buffer | string | ??, startPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Substring check
-- **?? array? | object.At(index: integer | string)** — Access item in array or object by index or key
-- **?? array? | object.Has(index: integer | string)** — Identify if array or object has index or key
+- **boolean buffer | string | array | object.Contains(search: buffer | string | ??, startPos: integer?, ignoreCaseSpaceEtc: boolean?)** — Substring check
+- **?? void | array | object.At(index: integer | string)** — Access item in array or object by index or key
+- **?? void | array | object.Has(index: integer | string)** — Identify if array or object has index or key
 
 #### Number Functions
 - **boolean float | integer.GreaterThan(value)** — Greater than
@@ -234,7 +234,7 @@ Unknown or variant type is declared as **??**.
 - **boolean float | integer.LessOrEqual(value)** — Less or equal
 - **float | integer float | integer.Subtract(subtrahend)** — Subtract value
 - **float | integer float | integer.Negate()** — Negate number
-- **float | integer float | integer.Multiply(values:array...)** — Multiply values
+- **float | integer float | integer.Multiply(values: array...)** — Multiply values
 - **float | integer float | integer.Divide(divisor)** — Divide value
 - **float | integer float | integer.Remainder(divisor)** — Remainder
 - **float | integer float | integer.Modulo(divisor)** — Modulo
@@ -252,8 +252,8 @@ Unknown or variant type is declared as **??**.
 #### String Functions
 - **boolean string.Like(value: string)** — Alphanumeric equality
 - **boolean string.Unlike(value: string)** — Alphanumeric inequality
-- **boolean string.StartsWith(search: string, startPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Prefix check
-- **boolean string.EndsWith(search: string, endPos?: integer, ignoreCaseSpaceEtc?: boolean)** — Suffix check
+- **boolean string.StartsWith(search: string, startPos: integer?, ignoreCaseSpaceEtc: boolean?)** — Prefix check
+- **boolean string.EndsWith(search: string, endPos: integer?, ignoreCaseSpaceEtc: boolean?)** — Suffix check
 - **string string.Char(pos: integer)** — Character at position
 - **integer string.CharCode(pos: integer)** — Character code
 - **string string.Alphanum()** — Alphanumeric digest
@@ -263,18 +263,19 @@ Unknown or variant type is declared as **??**.
 - **string string.LowerCase()** — To lowercase
 - **string string.UpperCase()** — To uppercase
 - **array string.Split(separator: string = ' ')** — Split into array
+- **string string.ReplaceWith(replacement: string, search: array...)** — Replace all instances of substring with another
 
 #### Timestamp Functions
-- **integer timestamp.Year(utc?: boolean)** — Get year
-- **integer timestamp.Month(utc?: boolean)** — Get month
-- **integer timestamp.MonthIndex(utc?: boolean)** — Month index
-- **integer timestamp.WeekdayIndex(utc?: boolean)** — Weekday index
-- **integer timestamp.Day(utc?: boolean)** — Day of month
-- **integer timestamp.Hour(utc?: boolean)** — Hour
-- **integer timestamp.Minute(utc?: boolean)** — Minute
-- **integer timestamp.Second(utc?: boolean)** — Second
-- **integer timestamp.Millisecond(utc?: boolean)** — Millisecond
-- **integer timestamp.EpochTime(epoch?: timestamp)** — Epoch milliseconds
+- **integer timestamp.Year(utc: boolean?)** — Get year
+- **integer timestamp.Month(utc: boolean?)** — Get month
+- **integer timestamp.MonthIndex(utc: boolean?)** — Month index
+- **integer timestamp.WeekdayIndex(utc: boolean?)** — Weekday index
+- **integer timestamp.Day(utc: boolean?)** — Day of month
+- **integer timestamp.Hour(utc: boolean?)** — Hour
+- **integer timestamp.Minute(utc: boolean?)** — Minute
+- **integer timestamp.Second(utc: boolean?)** — Second
+- **integer timestamp.Millisecond(utc: boolean?)** — Millisecond
+- **integer timestamp.EpochTime(epoch: timestamp?)** — Epoch milliseconds
 
 ## Reference
 

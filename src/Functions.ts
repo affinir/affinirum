@@ -8,9 +8,9 @@ import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, fun
 	funcPower, funcRoot, funcNegate, funcCast, funcCastToFloat, funcCastToInteger } from "./constant/Number.js";
 import { funcEntries, funcKeys, funcValues } from "./constant/Object.js";
 import { funcLike, funcUnlike, funcStartsWith, funcEndsWith,
-	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit } from "./constant/String.js";
-import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay,
-	funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime } from "./constant/Timestamp.js";
+	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit, funcReplaceWith } from "./constant/String.js";
+import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay, funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime,
+	funcDaysSince, funcHoursSince, funcMinutesSince, funcSecondsSince } from "./constant/Timestamp.js";
 import { funcCoalesce, funcEqual, funcNotEqual, funcEncode, funcFormat } from "./constant/Unknown.js";
 
 export const Functions: [string, Constant][] = [
@@ -74,6 +74,7 @@ export const Functions: [string, Constant][] = [
 	["LowerCase", funcLowerCase],
 	["UpperCase", funcUpperCase],
 	["Split", funcSplit],
+	["ReplaceWith", funcReplaceWith],
 	// Timestamp
 	["Year", funcYear],
 	["Month", funcMonth],
@@ -85,6 +86,10 @@ export const Functions: [string, Constant][] = [
 	["Second", funcSecond],
 	["Millisecond", funcMillisecond],
 	["EpochTime", funcEpochTime],
+	["DaysSince", funcDaysSince],
+	["HoursSince", funcHoursSince],
+	["MinutesSince", funcMinutesSince],
+	["SecondsSince", funcSecondsSince],
 	// Unknown
 	["Coalesce", funcCoalesce],
 	["Equal", funcEqual],
