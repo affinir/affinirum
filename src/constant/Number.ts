@@ -1,8 +1,8 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
-const castToInteger = (value: number)=> {
-	if (Number.isNaN(value)) {
+const castToInteger = (value?: number)=> {
+	if (value == null || Number.isNaN(value)) {
 		return 0n;
 	}
 	if (value === Number.NEGATIVE_INFINITY) {
@@ -127,7 +127,7 @@ export const funcRoot = new Constant(
 
 export const funcNegate = new Constant(
 	(value: number | bigint)=>
-		typeof value === "number" ? -value : BigInt.asIntN(64, -value),
+		value == null ? undefined : typeof value === "number" ? -value : BigInt.asIntN(64, -value),
 	Type.union(
 		Type.functionType(Type.Float, [Type.Float]),
 		Type.functionType(Type.Integer, [Type.Integer]),

@@ -24,7 +24,7 @@ export const funcNot = new Constant(
 
 const funcDecodeBoolean = new Constant(
 	(value: ArrayBuffer, byteOffset?: bigint)=>
-		Boolean(new Uint8Array(value)[byteOffset == null ? 0 : Number(byteOffset)]),
+		value ? Boolean(new Uint8Array(value)[byteOffset == null ? 0 : Number(byteOffset)]) : undefined,
 	Type.functionType(Type.OptionalBoolean, [Type.Buffer, Type.OptionalInteger]),
 );
 

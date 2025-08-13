@@ -1,7 +1,7 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
-export const encodeFloat = (value: number, encoding: "float32" | "float32le" | "float64" | "float64le" = "float64")=> {
+export const encodeFloat = (value?: number, encoding: "float32" | "float32le" | "float64" | "float64le" = "float64")=> {
 	if (value == null) {
 		return new Uint8Array(0).buffer;
 	}
@@ -23,7 +23,7 @@ export const encodeFloat = (value: number, encoding: "float32" | "float32le" | "
 	return dv.buffer;
 };
 
-const decodeFloat = (value: ArrayBuffer, encoding: "float32" | "float32le" | "float64" | "float64le" = "float64", byteOffset?: number)=> {
+const decodeFloat = (value?: ArrayBuffer, encoding: "float32" | "float32le" | "float64" | "float64le" = "float64", byteOffset?: number)=> {
 	if (value == null) {
 		return undefined;
 	}

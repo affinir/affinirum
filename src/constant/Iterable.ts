@@ -19,7 +19,7 @@ export const funcLength = new Constant(
 export const funcContains = new Constant(
 	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value }, search: Value, start?: bigint, ignoreCaseSpaceEtc?: boolean)=>
 		value == null
-			? undefined
+			? false
 			: value instanceof ArrayBuffer
 				? containsBuffer(value, search as ArrayBuffer, start == null ? undefined : Number(start))
 				: typeof value === "string"
@@ -48,14 +48,14 @@ export const funcAt = new Constant(
 	},
 	Type.union(
 		Type.functionType(Type.Unknown, [Type.Array, Type.Integer]),
-		Type.functionType(Type.Unknown, [Type.Object, Type.String])
+		Type.functionType(Type.Unknown, [Type.Object, Type.String]),
 	),
 );
 
 export const funcHas = new Constant(
 	(value: Value[] | { [ key: string ]: Value } | null | undefined, index: bigint | string)=> {
 		if (value == null) {
-			return undefined;
+			return false;
 		}
 		else if (Array.isArray(value)) {
 			const ix = Number(index);

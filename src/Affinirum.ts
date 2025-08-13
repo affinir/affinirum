@@ -129,7 +129,15 @@ export class Affinirum {
 	}
 
 	protected _unit(state: ParserState, scope: StaticScope): Node {
-		return this._disjunction(state, scope);
+		return this._coalescence(state, scope);
+	}
+
+	protected _coalescence(state: ParserState, scope: StaticScope): Node {
+		let node = this._disjunction(state, scope);
+		while (state.operator === funcCoalesce) {
+			node = this._call(state.starts(), state.operator, [node, this._disjunction(state.next(), scope)]);
+		}
+		return node;
 	}
 
 	protected _disjunction(state: ParserState, scope: StaticScope): Node {
@@ -192,20 +200,12 @@ export class Affinirum {
 			frame.starts(state);
 			state.next();
 		}
-		let node = this._coalescence(state, scope);
+		let node = this._accessor(state, scope);
 		while (state.operator === funcPower) {
-			node = this._call(state.starts(), state.operator, [node, this._coalescence(state.next(), scope)]);
+			node = this._call(state.starts(), state.operator, [node, this._accessor(state.next(), scope)]);
 		}
 		if (neg) {
 			node = this._call(frame.ends(state), funcNegate, [node]);
-		}
-		return node;
-	}
-
-	protected _coalescence(state: ParserState, scope: StaticScope): Node {
-		let node = this._accessor(state, scope);
-		while (state.operator === funcCoalesce) {
-			node = this._call(state.starts(), state.operator, [node, this._accessor(state.next(), scope)]);
 		}
 		return node;
 	}

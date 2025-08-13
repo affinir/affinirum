@@ -1,7 +1,7 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
-export const encodeInteger = (value: bigint, encoding: "int8" | "int16" | "int16le" | "int32" | "int32le"
+export const encodeInteger = (value?: bigint, encoding: "int8" | "int16" | "int16le" | "int32" | "int32le"
 	| "uint8" | "uint16" | "uint16le" | "uint32" | "uint32le"
 	| "int64" | "int64le" | "uint64" | "uint64le" = "int64")=> {
 	if (value == null) {
@@ -35,7 +35,7 @@ export const encodeInteger = (value: bigint, encoding: "int8" | "int16" | "int16
 	return dv.buffer;
 };
 
-const decodeInteger = (value: ArrayBuffer, encoding: "int8" | "int16" | "int16le" | "int32" | "int32le" | "int64" | "int64le"
+const decodeInteger = (value?: ArrayBuffer, encoding: "int8" | "int16" | "int16le" | "int32" | "int32le" | "int64" | "int64le"
 	| "uint8" | "uint16" | "uint16le" | "uint32" | "uint32le" | "uint64" | "uint64le" = "int64", byteOffset?: number)=> {
 	if (value == null) {
 		return undefined;

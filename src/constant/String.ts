@@ -11,7 +11,10 @@ export const isDateTimeSeparator = (c: string)=> c === "T" || c === " " || c ===
 export const isHexadecimal = (c: string)=> isNumeric(c) || c >= "a" && c <= "f" || c >= "A" && c <= "F";
 export const isCaseSpaceEtc = (c: string)=> (c < "a" || c > "z") && (c < "0" || c > "9");
 
-export const replaceWith = (value: string, replacement: string, ...search: string[])=> {
+export const replaceWith = (value?: string, replacement?: string, ...search: string[])=> {
+	if (value == null) {
+		return undefined;
+	}
 	let str = value;
 	for (const s of search) {
 		str = str.split(s).join(replacement ?? "");
@@ -19,7 +22,13 @@ export const replaceWith = (value: string, replacement: string, ...search: strin
 	return str;
 };
 
-export const equateStrings = (value1: string, value2: string, ignoreCaseSpaceEtc?: boolean)=> {
+export const equateStrings = (value1?: string, value2?: string, ignoreCaseSpaceEtc?: boolean)=> {
+	if (value1 == null && value2 == null) {
+		return true;
+	}
+	if (value1 == null || value2 == null) {
+		return false;
+	}
 	if (!ignoreCaseSpaceEtc) {
 		return value1 === value2;
 	}
@@ -39,7 +48,13 @@ export const equateStrings = (value1: string, value2: string, ignoreCaseSpaceEtc
 	return true;
 };
 
-export const containsString = (value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+export const containsString = (value?: string, search?: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+	if (value == null) {
+		return false;
+	}
+	if (search == null) {
+		return true;
+	}
 	if (!ignoreCaseSpaceEtc) {
 		return value.includes(search, startPos);
 	}
@@ -72,7 +87,13 @@ export const containsString = (value: string, search: string, startPos?: number,
 	return true;
 };
 
-export const startsWithString = (value: string, search: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+export const startsWithString = (value?: string, search?: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+	if (value == null) {
+		return false;
+	}
+	if (search == null) {
+		return true;
+	}
 	if (!ignoreCaseSpaceEtc) {
 		return value.startsWith(search, startPos);
 	}
@@ -96,7 +117,13 @@ export const startsWithString = (value: string, search: string, startPos?: numbe
 	return true;
 };
 
-export const endsWithString = (value: string, search: string, endPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+export const endsWithString = (value?: string, search?: string, endPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+	if (value == null) {
+		return false;
+	}
+	if (search == null) {
+		return true;
+	}
 	if (!ignoreCaseSpaceEtc) {
 		return value.endsWith(search, endPos);
 	}
@@ -120,7 +147,7 @@ export const endsWithString = (value: string, search: string, endPos?: number, i
 	return true;
 };
 
-export const encodeString = (value: string, encoding: "utf8" | "ucs2" | "ucs2le" = "utf8")=> {
+export const encodeString = (value?: string, encoding: "utf8" | "ucs2" | "ucs2le" = "utf8")=> {
 	if (value == null) {
 		return new Uint8Array(0).buffer;
 	}
@@ -137,7 +164,7 @@ export const encodeString = (value: string, encoding: "utf8" | "ucs2" | "ucs2le"
 	}
 };
 
-const decodeString = (value: ArrayBuffer, encoding: "utf8" | "ucs2" | "ucs2le" = "utf8", byteOffset?: number, byteLength?: number)=> {
+const decodeString = (value?: ArrayBuffer, encoding: "utf8" | "ucs2" | "ucs2le" = "utf8", byteOffset?: number, byteLength?: number)=> {
 	if (value == null) {
 		return undefined;
 	}
@@ -202,37 +229,37 @@ export const funcCharCode = new Constant(
 
 export const funcTrim = new Constant(
 	(value: string)=>
-		value.trim(),
+		value?.trim(),
 	typeStringMutator,
 );
 
 export const funcTrimStart = new Constant(
 	(value: string)=>
-		value.trimStart(),
+		value?.trimStart(),
 	typeStringMutator,
 );
 
 export const funcTrimEnd = new Constant(
 	(value: string)=>
-		value.trimEnd(),
+		value?.trimEnd(),
 	typeStringMutator,
 );
 
 export const funcLowerCase = new Constant(
 	(value: string)=>
-		value.toLowerCase(),
+		value?.toLowerCase(),
 	typeStringMutator,
 );
 
 export const funcUpperCase = new Constant(
 	(value: string)=>
-		value.toUpperCase(),
+		value?.toUpperCase(),
 	typeStringMutator,
 );
 
 export const funcSplit = new Constant(
 	(value: string, separator: string = " ")=>
-		value.split(separator),
+		value?.split(separator) ?? [],
 	Type.functionType(Type.arrayType([Type.String]), [Type.String, Type.OptionalString]),
 );
 
@@ -244,6 +271,9 @@ export const funcReplaceWith = new Constant(
 
 const funcAlphanum = new Constant(
 	(value: string)=> {
+		if (!value) {
+			return undefined;
+		}
 		const lowerCase = value.toLowerCase();
 		let result = "";
 		for (let i = 0; i < lowerCase.length; ++i) {
@@ -259,10 +289,11 @@ const funcAlphanum = new Constant(
 const funcRandomString = new Constant(
 	(value: bigint)=> {
 		let str = "";
-		while (str.length < value) {
+		const length = Number(value ?? 0);
+		while (str.length < length) {
 			str += Math.random().toString(36).slice(2);
 		}
-		return str.slice(0, Number(value));
+		return str.slice(0, length);
 	},
 	Type.functionType(Type.String, [Type.Integer]),
 	false,

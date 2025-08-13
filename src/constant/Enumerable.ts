@@ -26,7 +26,7 @@ const add = (
 	if (typeof value1 === "bigint" && typeof value2 === "bigint") {
 		return BigInt.asIntN(64, value1 + value2);
 	}
-	if (typeof value1 === "number" || typeof value2 === "number") {
+	if ((typeof value1 === "number" || typeof value1 === "bigint") && (typeof value2 === "number" || typeof value2 === "bigint")) {
 		return Number(value1) + Number(value2);
 	}
 	return aggregate(value1 as ArrayBuffer | string | Value[], value2 as ArrayBuffer | string | Value[]);

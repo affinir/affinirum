@@ -4,17 +4,20 @@ import { Type } from "../Type.js";
 const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
 const typeTimestampSince = Type.functionType(Type.Float, [Type.Timestamp, Type.Timestamp]);
 
-export const encodeTimestamp = (value: Date, encoding: "int64" | "int64le" = "int64")=> {
+export const encodeTimestamp = (value?: Date, encoding: "int64" | "int64le" = "int64")=> {
 	const buf = new ArrayBuffer(8);
 	const dv = new DataView(buf);
-	dv.setBigInt64(0, BigInt(value.getTime()), encoding === "int64le");
+	dv.setBigInt64(0, BigInt(value?.getTime() ?? 0), encoding === "int64le");
 	return buf;
 };
 
-export const decodeTimestamp = (value: ArrayBuffer, encoding: "int64" | "int64le" = "int64", byteOffset?: bigint)=>
-	new Date(Number(new DataView(value).getBigInt64(byteOffset == null ? 0 : Number(byteOffset), encoding === "int64le")));
+export const decodeTimestamp = (value?: ArrayBuffer, encoding: "int64" | "int64le" = "int64", byteOffset?: bigint)=>
+	value ? new Date(Number(new DataView(value).getBigInt64(byteOffset == null ? 0 : Number(byteOffset), encoding === "int64le"))) : undefined;
 
-export const formatTimestamp = (value: Date, radix?: number)=> {
+export const formatTimestamp = (value?: Date, radix?: number)=> {
+	if (value == null) {
+		return "";
+	}
 	const str = value.toISOString();
 	switch (radix) {
 		case 1: return str.slice(0, 4);
@@ -45,91 +48,91 @@ const funcNow = new Constant(
 
 export const funcYear = new Constant(
 	(value: Date, utc = false)=>
-		BigInt(utc ? value.getUTCFullYear() : value.getFullYear()),
+		value ? BigInt(utc ? value.getUTCFullYear() : value.getFullYear()) : undefined,
 	typeTimestampPart,
 );
 
 export const funcMonth = new Constant(
 	(value: Date, utc = false)=>
-		BigInt(1 + (utc ? value.getUTCMonth() : value.getMonth())),
+		value ? BigInt(1 + (utc ? value.getUTCMonth() : value.getMonth())) : undefined,
 	typeTimestampPart,
 );
 
 export const funcMonthIndex = new Constant(
 	(value: Date, utc = false)=>
-		BigInt(utc ? value.getUTCMonth() : value.getMonth()),
+		value ? BigInt(utc ? value.getUTCMonth() : value.getMonth()) : undefined,
 	typeTimestampPart,
 );
 
 export const funcWeekdayIndex = new Constant(
 	(value: Date, utc = false)=>
-		BigInt(utc ? value.getUTCDay() : value.getDay()),
+		value ? BigInt(utc ? value.getUTCDay() : value.getDay()) : undefined,
 	typeTimestampPart,
 );
 
 export const funcDay = new Constant(
 	(value: Date, utc = false)=>
-		BigInt(utc ? value.getUTCDate() : value.getDate()),
+		value ? BigInt(utc ? value.getUTCDate() : value.getDate()) : undefined,
 	typeTimestampPart,
 );
 
 export const funcHour = new Constant(
 	(value: Date, utc = false)=>
-		BigInt(utc ? value.getUTCHours() : value.getHours()),
+		value ? BigInt(utc ? value.getUTCHours() : value.getHours()) : undefined,
 	typeTimestampPart,
 );
 
 export const funcMinute = new Constant(
 	(value: Date, utc = false)=>
-		BigInt(utc ? value.getUTCMinutes() : value.getMinutes()),
+		value ? BigInt(utc ? value.getUTCMinutes() : value.getMinutes()) : undefined,
 	typeTimestampPart,
 );
 
 export const funcSecond = new Constant(
 	(value: Date, utc = false)=>
-		BigInt(utc ? value.getUTCSeconds() : value.getSeconds()),
+		value ? BigInt(utc ? value.getUTCSeconds() : value.getSeconds()) : undefined,
 	typeTimestampPart,
 );
 
 export const funcMillisecond = new Constant(
 	(value: Date, utc = false)=>
-		BigInt(utc ? value.getUTCMilliseconds() : value.getMilliseconds()),
+		value ? BigInt(utc ? value.getUTCMilliseconds() : value.getMilliseconds()) : undefined,
 	typeTimestampPart,
 );
 
 export const funcEpochTime = new Constant(
 	(value: Date, epoch = new Date(0))=>
-		BigInt.asIntN(64, BigInt(value.getTime() - epoch.getTime())),
+		value ? BigInt.asIntN(64, BigInt(value.getTime() - epoch.getTime())) : undefined,
 	Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalTimestamp]),
 );
 
 export const funcDaysSince = new Constant(
 	(value1: Date, value2: Date)=>
-		(value1.getTime() - value2.getTime()) / 86400000.0,
+		(value1?.getTime() - value2?.getTime()) / 86400000.0,
 	typeTimestampSince,
 );
 
 export const funcHoursSince = new Constant(
 	(value1: Date, value2: Date)=>
-		(value1.getTime() - value2.getTime()) / 3600000.0,
+		(value1?.getTime() - value2?.getTime()) / 3600000.0,
 	typeTimestampSince,
 );
 
 export const funcMinutesSince = new Constant(
 	(value1: Date, value2: Date)=>
-		(value1.getTime() - value2.getTime()) / 60000.0,
+		(value1?.getTime() - value2?.getTime()) / 60000.0,
 	typeTimestampSince,
 );
 
 export const funcSecondsSince = new Constant(
 	(value1: Date, value2: Date)=>
-		(value1.getTime() - value2.getTime()) / 1000.0,
+		(value1?.getTime() - value2?.getTime()) / 1000.0,
 	typeTimestampSince,
 );
 
 const funcEpochTimestamp = new Constant(
 	(value: number | bigint, epoch = new Date(0))=>
-		new Date(Number(value) + epoch.getTime()),
+		new Date(Number(value ?? 0) + epoch?.getTime()),
 	Type.functionType(Type.Timestamp, [Type.Number, Type.OptionalTimestamp]),
 );
 

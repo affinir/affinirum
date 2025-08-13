@@ -112,6 +112,14 @@ describe("Variable Expression test", ()=> {
 			{ c: 10n, a: 1n, b: 2n, result: 10n },
 			{ c: 1n, a: 1n, b: 2n, result: 40n },
 		]],
+		["a?:0.0", [
+			{ a: 1, result: 1 },
+			{ a: undefined, result: 0 },
+		]],
+		["a?:-0.1", [
+			{ a: 1, result: 1 },
+			{ a: undefined, result: -0.1 },
+		]],
 		["a?:b", [
 			{ a: 1, b: 2, result: 1 },
 			{ a: undefined, b: 0, result: 0 },

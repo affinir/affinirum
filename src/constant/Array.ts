@@ -59,25 +59,25 @@ export const funcLastIndex = new Constant(
 
 export const funcEvery = new Constant(
 	(value: Value[], predicate: (v: Value, i: bigint, a: Value[])=> boolean)=>
-		value?.every((v, i, a)=> predicate(v, BigInt(i), a)),
+		value?.every((v, i, a)=> predicate(v, BigInt(i), a)) ?? false,
 	typeConditionSet,
 );
 
 export const funcAny = new Constant(
 	(value: Value[], predicate: (v: Value, i: bigint, a: Value[])=> boolean)=>
-		value?.some((v, i, a)=> predicate(v, BigInt(i), a)),
+		value?.some((v, i, a)=> predicate(v, BigInt(i), a)) ?? false,
 	typeConditionSet,
 );
 
 export const funcFlatten = new Constant(
 	(values: Value[], depth: bigint = 1n)=>
-		(values as [])?.flat(Number(depth)) as Value,
+		values ? (values as [])?.flat(Number(depth)) as Value : undefined,
 	Type.functionType(Type.Array, [Type.Array, Type.OptionalInteger]),
 );
 
 export const funcReverse = new Constant(
 	(value: Value[])=>
-		[...value].reverse(),
+		value ? [...value].reverse() : undefined,
 	Type.functionType(Type.Array, [Type.Array]),
 );
 
@@ -96,7 +96,8 @@ export const funcFilter = new Constant(
 export const funcReduce = new Constant(
 	(value: Value[], reducer: (acc: Value, v: Value, i: bigint, arr: Value[])=> Value, initial?: Value)=>
 		initial != null
-			? value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a), initial) : value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a)),
+			? value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a), initial)
+			: value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a)),
 	Type.functionType(Type.Unknown, [Type.Array, Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown, Type.OptionalInteger, Type.OptionalArray])]),
 );
 
@@ -117,7 +118,7 @@ export const funcCompose = new Constant(
 
 export const funcPrepend = new Constant(
 	(value: Value[], ...items: Value[])=> {
-		value.unshift(items);
+		value?.unshift(items);
 		return value;
 	},
 	typeVariadicInsert,
@@ -125,7 +126,7 @@ export const funcPrepend = new Constant(
 
 export const funcAppend = new Constant(
 	(value: Value[], ...items: Value[])=> {
-		value.push(items);
+		value?.push(items);
 		return value;
 	},
 	typeVariadicInsert,
@@ -149,7 +150,7 @@ const funcRange = new Constant(
 const funcUnique = new Constant(
 	(value: Value[])=> {
 		const result: Value[] = [];
-		value.forEach((i)=> {
+		value?.forEach((i)=> {
 			if (result.every((v)=> !equate(v, i))) {
 				result.push(i);
 			}
@@ -161,13 +162,13 @@ const funcUnique = new Constant(
 
 const funcIntersection = new Constant(
 	(value1: Value[], value2: Value[])=>
-		value1.filter((i)=> value2.some((v)=> equate(v, i))),
+		value1?.filter((i)=> value2?.some((v)=> equate(v, i))) ?? [],
 	typeArrayOperator,
 );
 
 const funcDifference = new Constant(
 	(value1: Value[], value2: Value[])=>
-		[...value1.filter((i)=> value2.every((v)=> !equate(v, i))), ...value2.filter((i)=> value1.every((v)=> !equate(v, i)))],
+		[...value1?.filter((i)=> value2?.every((v)=> !equate(v, i))) ?? [], ...value2?.filter((i)=> value1?.every((v)=> !equate(v, i))) ?? []],
 	typeArrayOperator,
 );
 
