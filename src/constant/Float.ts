@@ -46,67 +46,67 @@ const typeTransform = Type.functionType(Type.Float, [Type.Float]);
 
 const funcSum = new Constant(
 	(...values: (number | number[])[])=>
-		values.flat().reduce((acc, val)=> acc + val, 0),
+		values.flat().reduce((acc, val)=> acc + Number(val), 0),
 	typeAggregator,
 );
 
 const funcMin = new Constant(
 	(...values: (number | number[])[])=>
-		Math.min(Number.POSITIVE_INFINITY, ...values.flat()),
+		Math.min(Number.POSITIVE_INFINITY, ...values.flat().map((i)=> Number(i))),
 	typeAggregator,
 );
 
 const funcMax = new Constant(
 	(...values: (number | number[])[])=>
-		Math.max(Number.NEGATIVE_INFINITY, ...values.flat()),
+		Math.max(Number.NEGATIVE_INFINITY, ...values.flat().map((i)=> Number(i))),
 	typeAggregator,
 );
 
 const funcExponent = new Constant(
 	(value: number)=>
-		Math.exp(value),
+		Math.exp(Number(value)),
 	typeTransform,
 );
 
 const funcLogarithm = new Constant(
 	(value: number)=>
-		Math.log(value),
+		Math.log(Number(value)),
 	typeTransform,
 );
 
 const funcAbs = new Constant(
 	(value: number)=>
-		Math.abs(value),
+		Math.abs(Number(value)),
 	typeTransform,
 );
 
 const funcCeil = new Constant(
 	(value: number)=>
-		Math.ceil(value),
+		Math.ceil(Number(value)),
 	typeTransform,
 );
 
 const funcFloor = new Constant(
 	(value: number)=>
-		Math.floor(value),
+		Math.floor(Number(value)),
 	typeTransform,
 );
 
 const funcRound = new Constant(
 	(value: number)=>
-		Math.round(value),
+		Math.round(Number(value)),
 	typeTransform,
 );
 
 const funcTruncate = new Constant(
 	(value: number)=>
-		Math.trunc(value),
+		Math.trunc(Number(value)),
 	typeTransform,
 );
 
 const funcRandomFloat = new Constant(
 	(value: number)=>
-		value == null ? undefined : Math.random() * value,
+		value == null ? undefined : Math.random() * Number(value),
 	Type.functionType(Type.Float, [Type.Float]),
 	false,
 );
