@@ -81,7 +81,7 @@ export const funcReverse = new Constant(
 	Type.functionType(Type.Array, [Type.Array]),
 );
 
-export const funcMutate = new Constant(
+export const funcDerive = new Constant(
 	(value: Value[], transform: (v: Value, i: bigint, a: Value[])=> Value)=>
 		value?.map((v, i, a)=> transform(v, BigInt(i), a)),
 	Type.functionType(Type.Array, [Type.Array, Type.functionType(Type.Unknown, [Type.Unknown, Type.OptionalInteger, Type.OptionalArray])]),

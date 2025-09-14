@@ -295,15 +295,15 @@ describe("Variable Expression test", ()=> {
 			{ start: 5n, end: 10n, result: 11n },
 			{ start: -5n, end: -10n, result: -19n },
 		]],
-		["var s:integer=0;Array.Range(start, end).Mutate(~void(x:float){s=s+x});s", [
+		["var s:integer=0;Array.Range(start, end).Derive(~void(x:float){s=s+x});s", [
 			{ start: 1n, end: 11n, result: 55n },
 			{ start: -1n, end: -11n, result: -65n },
 		]],
-		["[p,11].Mutate(~ integer?(a:integer) {const t=10; if (a>10){t}else{null} } )[i]", [
+		["[p,11].Derive(~ integer?(a:integer) {const t=10; if (a>10){t}else{null} } )[i]", [
 			{ i: 1n, p: 10n, result: 10n },
 			{ i: 0n, p: 1n, result: undefined },
 		]],
-		["[p,p,1, 2, 3].Mutate(~integer?(a:integer?){a?:10})[1]", [
+		["[p,p,1, 2, 3].Derive(~integer?(a:integer?){a?:10})[1]", [
 			{ p: undefined, result: 10n },
 			{ p: 0n, result: 0n },
 		]],
@@ -324,10 +324,10 @@ describe("Variable Expression test", ()=> {
 		["arr1.Filter(~boolean(v:float, i:integer, a:array){(a[i]*i>2)})[1]", [
 			{ arr1: [1, 1, 5, 4, 1], result: 4 },
 		]],
-		["arr0.Mutate(~float(val:float){val*2*t}).Filter(~boolean(val:float){val>5})[1]+[9].Length()", [
+		["arr0.Derive(~float(val:float){val*2*t}).Filter(~boolean(val:float){val>5})[1]+[9].Length()", [
 			{ arr0: [1, 2, 3], t: 2, result: 13 },
 		]],
-		["Float.Sum(arr0.Mutate( ~ array(a:array){ a.Mutate(~float(b:float){b+12.0})} ).Flatten())", [
+		["Float.Sum(arr0.Derive( ~ array(a:array){ a.Derive(~float(b:float){b+12.0})} ).Flatten())", [
 			{ arr0: [[1], [1, 2], [2, 3, 4]], result: 85 },
 		]],
 		["arr0.Any(~boolean(a:object){a.i>0 & a.d>0})", [

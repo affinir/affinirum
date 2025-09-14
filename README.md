@@ -204,7 +204,7 @@ Unknown or variant type is declared as **??**.
 - **boolean array.Any(condition: function)** — Any item satisfies condition
 - **array array.Reverse()** — Reversed array
 - **array array.Flatten(depth: integer = 1)** — Flatten array
-- **array array.Mutate(transformation: function)** — Transform items
+- **array array.Derive(transformation: function)** — Derived array
 - **array array.Filter(condition: function)** — Filtered array
 - **?? array.Reduce(reducer: function)** — Reduced value
 - **object array.Compose(generator: function)** — Compose object from array
@@ -299,7 +299,7 @@ const objExpr = new Affinirum( '[`prop1`:a,`prop2`:`abc`].prop1+10' );
 const oValue = objExpr.evaluate( { a: 50 } ); // 60
 ...
 const iteratorExpr = new Affinirum(
-	'Float.Sum(arr1.Mutate(float(a:float)->a*2).Filter(boolean(a:float)->a>3))'
+	'Float.Sum(arr1.Derive(float(a:float)->a*2).Filter(boolean(a:float)->a>3))'
 );
 const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
 ...

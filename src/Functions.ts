@@ -1,6 +1,6 @@
 import { Constant } from "./Constant.js";
 import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
-	funcFlatten, funcReverse, funcMutate, funcFilter, funcReduce, funcCompose, funcPrepend, funcAppend } from "./constant/Array.js";
+	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose, funcPrepend, funcAppend } from "./constant/Array.js";
 import { funcByte } from "./constant/Buffer.js";
 import { funcAdd, funcSlice, funcSplice, funcInject } from "./constant/Enumerable.js";
 import { funcLength, funcContains, funcAt, funcHas } from "./constant/Iterable.js";
@@ -23,7 +23,7 @@ export const Functions: [string, Constant][] = [
 	["Every", funcEvery],
 	["Flatten", funcFlatten],
 	["Reverse", funcReverse],
-	["Mutate", funcMutate],
+	["Derive", funcDerive],
 	["Filter", funcFilter],
 	["Reduce", funcReduce],
 	["Compose", funcCompose],
