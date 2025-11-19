@@ -413,7 +413,7 @@ export class Affinirum {
 
 	protected _function(state: ParserState, scope: StaticScope): Node {
 		const frame = state.starts();
-		let retType = Type.Unknown;
+		let retType: Type | undefined = undefined;
 		if (!state.next().isParenthesesOpen) {
 			retType = this._type(state, scope);
 			state.openParentheses();
@@ -446,7 +446,7 @@ export class Affinirum {
 		frame.ends(state);
 		const args = Array.from(variables.values());
 		state.next().openBraces().next();
-		if (args.length === 0 && state.isBracesClose) {
+		if (!retType && args.length === 0 && state.isBracesClose) {
 			state.next();
 			return new ConstantNode(frame, Constant.EmptyFunction);
 		}
@@ -456,7 +456,7 @@ export class Affinirum {
 			args.forEach((arg, ix)=> arg.value = values[ix]);
 			return subnode.evaluate();
 		};
-		const constant = new Constant(value, Type.functionType(retType, args.map((v)=> v.type), variadic));
+		const constant = new Constant(value, Type.functionType(retType ?? Type.Unknown, args.map((v)=> v.type), variadic));
 		return new ConstantNode(frame, constant, subnode);
 	}
 
