@@ -28,5 +28,6 @@ export class Constant {
 	static Null = new Constant(undefined);
 	static EmptyArray = new Constant([]);
 	static EmptyObject = new Constant({});
+	static EmptyFunction = new Constant(()=> undefined, Type.functionType(undefined, [], false));
 
 }

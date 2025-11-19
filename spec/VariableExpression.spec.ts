@@ -235,7 +235,7 @@ describe("Variable Expression test", ()=> {
 			{ s: "my+", p: 0n, result: "m" },
 			{ s: "1", p: 1n, result: "" },
 		]],
-		["str0.Char(2) == `a`", [
+		["str0.Char(2) == \"a\"", [
 			{ str0: "bca", result: true },
 			{ str0: "bce", result: false },
 		]],
@@ -271,7 +271,7 @@ describe("Variable Expression test", ()=> {
 			{ v: "The quick brown fox", s: " ", result: "Thequickbrownfox" },
 			{ v: "The~quick~brown~fox", s: "~", result: "Thequickbrownfox" },
 		]],
-		["Object.Merge([:], [:], [\"a\":x], [`b`:x]).Length", [
+		["Object.Merge([:], [:], [\"a\":x], [\"b\":x]).Length", [
 			{ x: 1n, result: 2n },
 			{ x: undefined, result: 2n },
 		]],
@@ -344,11 +344,11 @@ describe("Variable Expression test", ()=> {
 		["const x=arr0.Any(~boolean(a:float){a<0});var b:boolean=c;x&b", [
 			{ arr0: [0, -1], c: true, result: true },
 		]],
-		["[`a`:a1+a2, \"b\": b1, \"c\": \"10\", `d`: a1*a2, \"p\": 10][p]", [
+		["[\"a\":a1+a2, \"b\": b1, \"c\": \"10\", \"d\": a1*a2, \"p\": 10][p]", [
 			{ a1: 1, a2: 2, b1: "b", p: "d", result: 2 },
 			{ a1: -2, a2: 18, b1: "bb", p: "a", result: 16 },
 		]],
-		["[`n`:50,\"a\" : 10,\"b\":`my string`,][p]", [
+		["[\"n\":50,\"a\" : 10,\"b\":\"my string\",][p]", [
 			{ p: "n", result: 50n },
 			{ p: "a", result: 10n },
 			{ p: "b", result: "my string" },
@@ -381,7 +381,7 @@ describe("Variable Expression test", ()=> {
 			{ myvar: 6, mv: 1, result: 1 },
 			{ myvar: 30, mv: 5, result: 1 },
 		]],
-		["obj1.`a0`", [
+		["obj1.\"a0\"", [
 			{ obj1: { a0: 10 }, result: 10 },
 			{ obj1: { a0: "10" }, result: "10" },
 		]],
@@ -475,7 +475,7 @@ describe("Variable Expression test", ()=> {
 			{ a: "abc", b: "def", c: "abc", result: 1n },
 			{ a: "abc", b: "def", c: "def", result: 2n },
 		]],
-		["[if (x == `a`) { x } else { `a` } :1].a", [
+		["[if (x == `a`) { x } else { \"a\" } :1].a", [
 			{ x: "a", result: 1n },
 			{ x: "b", result: 1n },
 		]],

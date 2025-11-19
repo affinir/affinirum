@@ -374,24 +374,24 @@ export class ParserState extends ParserFrame {
 					}
 					this._fragment = new Literal(new Date(this._expr.substring(this._start + 1, this._end)));
 					break;
-				case "#":
+				case "`":
 					while (this._expr.charAt(this._end) !== "" && this._expr.charAt(this._end) !== c) {
 						++this._end;
 					}
 					if (this._end >= this._expr.length) {
 						this._start = this._expr.length;
-						throw new Error(`missing closing buffer mark ${c}`);
+						throw new Error(`missing closing buffer quotation mark ${c}`);
 					}
 					this._fragment = new Literal(parseBuffer(replaceWith(this._expr.substring(this._start + 1, this._end), "", " ", "\t", "\n")));
 					++this._end;
 					break;
-				case "\"": case "'": case "`":
+				case "\"": case "'":
 					while (this._expr.charAt(this._end) !== "" && this._expr.charAt(this._end) !== c) {
 						++this._end;
 					}
 					if (this._end >= this._expr.length) {
 						this._start = this._expr.length;
-						throw new Error(`missing closing quotation mark ${c}`);
+						throw new Error(`missing closing string quotation mark ${c}`);
 					}
 					this._fragment = new Literal(replaceWith(this._expr.substring(this._start + 1, this._end), "", "\\\n"));
 					++this._end;

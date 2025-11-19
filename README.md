@@ -26,8 +26,8 @@ Script can contain multiple semicolon-separated expressions, and blocks of state
 The value of a block is determined by the value of the last expression.
 - Scientific notation is supported for floating point numbers, like *0.1281e+2*.
 - ISO Timestamps prefixed with **@**, like *@2025-05-11T19:09:21.320Z*.
-- Hexadecimal buffer values are enclosed in **#**, like *#10ab0901#*.
-- String literals are enclosed in single (**'**), double (**"**), or backtick (**`**) quotes, like *'string value'*.
+- Hexadecimal buffer values are enclosed in backtick (**\`**) quotes, like *\`10ab0901\`*.
+- String literals are enclosed in single (**'**), or double (**"**) quotes, like *'string value'*.
 
 Array is an ordered sequence of values of any type.
 It is defined by comma-separated values enclosed in brackets (**[]**),
