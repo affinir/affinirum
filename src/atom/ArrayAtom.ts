@@ -7,7 +7,7 @@ export class ArrayAtom implements IAtom {
 		protected readonly _itemTypes: Type[] = [],
 	) {}
 
-	get empty(): boolean {
+	private get _undefined(): boolean {
 		return this._itemTypes.length === 0;
 	}
 
@@ -21,7 +21,7 @@ export class ArrayAtom implements IAtom {
 
 	match(atom: IAtom): boolean {
 		if (atom instanceof ArrayAtom) {
-			if (this.empty || atom.empty) {
+			if (this._undefined || atom._undefined) {
 				return true;
 			}
 			if (this.subtypes().length !== atom.subtypes().length) {
@@ -42,7 +42,7 @@ export class ArrayAtom implements IAtom {
 	}
 
 	toString(): string {
-		return `[${this._itemTypes.join(",")}]`;
+		return this._undefined ? "array" : `[${this._itemTypes.join(",")}]`;
 	}
 
 }

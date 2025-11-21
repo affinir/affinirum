@@ -1,15 +1,19 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
-export const isSign = (c: string)=> c === "+" || c === "-";
-export const isAlpha = (c: string)=>  c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_" ;
-export const isNumeric = (c: string)=>  c >= "0" && c <= "9" ;
-export const isAlphanumeric = (c: string)=> isAlpha(c) || isNumeric(c);
-export const isDateSymbol = (c: string)=> isNumeric(c) || c === "-";
-export const isTimeSymbol = (c: string)=> isNumeric(c) || c === ":";
-export const isDateTimeSeparator = (c: string)=> c === "T" || c === " " || c === "@";
-export const isHexadecimal = (c: string)=> isNumeric(c) || c >= "a" && c <= "f" || c >= "A" && c <= "F";
-export const isCaseSpaceEtc = (c: string)=> (c < "a" || c > "z") && (c < "0" || c > "9");
+export type StringEncoding = "utf8" | "ucs2" | "ucs2le";
+
+export const isSignSymbol = (c: string)=> c === "+" || c === "-";
+export const isNumericSymbol = (c: string)=>  c >= "0" && c <= "9" ;
+export const isAlphanumericSymbol = (c: string)=> c >= "a" && c <= "z" || c >= "0" && c <= "9";
+export const isTokenStartSymbol = (c: string)=>  c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_" ;
+export const isTokenSymbol = (c: string)=> isTokenStartSymbol(c) || isNumericSymbol(c);
+export const isDateSeparatorSymbol = (c: string)=> c === "-";
+export const isTimeSeparatorSymbol = (c: string)=> c === ":";
+export const isDateTimeSeparatorSymbol = (c: string)=> c === "T" || c === " " || c === "@";
+export const isDateSymbol = (c: string)=> isNumericSymbol(c) || isDateSeparatorSymbol(c);
+export const isTimeSymbol = (c: string)=> isNumericSymbol(c) || isTimeSeparatorSymbol(c);
+export const isHexadecimalSymbol = (c: string)=> isNumericSymbol(c) || c >= "a" && c <= "f" || c >= "A" && c <= "F";
 
 export const replaceWith = (value?: string, replacement?: string, ...search: string[])=> {
 	if (value == null) {
@@ -35,10 +39,10 @@ export const equateStrings = (value1?: string, value2?: string, ignoreCaseSpaceE
 	const str1 = value1.toLowerCase();
 	const str2 = value2.toLowerCase();
 	for (let i1 = 0, i2 = 0; i1 < str1.length && i2 < str2.length; ++i1, ++i2) {
-		while (isCaseSpaceEtc(str1[i1]) && i1 < str1.length) {
+		while (!isAlphanumericSymbol(str1[i1]) && i1 < str1.length) {
 			++i1;
 		}
-		while (isCaseSpaceEtc(str2[i2]) && i2 < str2.length) {
+		while (!isAlphanumericSymbol(str2[i2]) && i2 < str2.length) {
 			++i2;
 		}
 		if (str1[i1] != str2[i2]) {
@@ -71,10 +75,10 @@ export const containsString = (value?: string, search?: string, startPos?: numbe
 		return false;
 	}
 	for (let i1 = pos, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2) {
-		while (isCaseSpaceEtc(valueStr[i1]) && i1 < valueStr.length) {
+		while (!isAlphanumericSymbol(valueStr[i1]) && i1 < valueStr.length) {
 			++i1;
 		}
-		while (isCaseSpaceEtc(searchStr[i2]) && i2 < searchStr.length) {
+		while (!isAlphanumericSymbol(searchStr[i2]) && i2 < searchStr.length) {
 			++i2;
 		}
 		while (valueStr[i1] != searchStr[i2] && i1 < valueStr.length) {
@@ -104,10 +108,10 @@ export const startsWithString = (value?: string, search?: string, startPos?: num
 	}
 	const pos = startPos == null ? 0 : startPos < 0 ? value.length + startPos : startPos;
 	for (let i1 = pos, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2) {
-		while (isCaseSpaceEtc(valueStr[i1]) && i1 < valueStr.length) {
+		while (!isAlphanumericSymbol(valueStr[i1]) && i1 < valueStr.length) {
 			++i1;
 		}
-		while (isCaseSpaceEtc(searchStr[i2]) && i2 < searchStr.length) {
+		while (!isAlphanumericSymbol(searchStr[i2]) && i2 < searchStr.length) {
 			++i2;
 		}
 		if (valueStr[i1] != searchStr[i2] && i2 < searchStr.length) {
@@ -134,10 +138,10 @@ export const endsWithString = (value?: string, search?: string, endPos?: number,
 	}
 	const pos = endPos == null ? valueStr.length : endPos < 0 ? value.length + endPos : endPos;
 	for (let i1 = pos - 1, i2 = searchStr.length - 1; i1 > -1 && i2 > -1; --i1, --i2) {
-		while (isCaseSpaceEtc(valueStr[i1]) && i1 > -1) {
+		while (!isAlphanumericSymbol(valueStr[i1]) && i1 > -1) {
 			--i1;
 		}
-		while (isCaseSpaceEtc(searchStr[i2]) && i2 > -1) {
+		while (!isAlphanumericSymbol(searchStr[i2]) && i2 > -1) {
 			--i2;
 		}
 		if (valueStr[i1] != searchStr[i2] && i2 > -1) {
@@ -147,7 +151,7 @@ export const endsWithString = (value?: string, search?: string, endPos?: number,
 	return true;
 };
 
-export const encodeString = (value?: string, encoding: "utf8" | "ucs2" | "ucs2le" = "utf8")=> {
+export const encodeString = (value?: string, encoding: StringEncoding = "utf8")=> {
 	if (value == null) {
 		return new Uint8Array(0).buffer;
 	}
@@ -164,7 +168,7 @@ export const encodeString = (value?: string, encoding: "utf8" | "ucs2" | "ucs2le
 	}
 };
 
-const decodeString = (value?: ArrayBuffer, encoding: "utf8" | "ucs2" | "ucs2le" = "utf8", byteOffset?: number, byteLength?: number)=> {
+const decodeString = (value?: ArrayBuffer, encoding: StringEncoding = "utf8", byteOffset?: number, byteLength?: number)=> {
 	if (value == null) {
 		return undefined;
 	}
@@ -224,7 +228,7 @@ export const funcCharCode = new Constant(
 		value == null
 			? undefined
 			: value.charCodeAt(pos < 0 ? value.length + Number(pos) : Number(pos)),
-	Type.functionType(Type.OptionalInteger, [Type.String, Type.Float]),
+	Type.functionType(Type.OptionalInteger, [Type.String, Type.Real]),
 );
 
 export const funcTrim = new Constant(
@@ -277,7 +281,7 @@ const funcAlphanum = new Constant(
 		const lowerCase = value.toLowerCase();
 		let result = "";
 		for (let i = 0; i < lowerCase.length; ++i) {
-			if (!isCaseSpaceEtc(value[i])) {
+			if (isAlphanumericSymbol(value[i])) {
 				result += value[i];
 			}
 		}
@@ -300,7 +304,7 @@ const funcRandomString = new Constant(
 );
 
 const funcDecodeString = new Constant(
-	(value: ArrayBuffer, encoding: "utf8" | "ucs2" | "ucs2le" = "utf8", byteOffset?: bigint, byteLength?: bigint)=>
+	(value: ArrayBuffer, encoding: StringEncoding = "utf8", byteOffset?: bigint, byteLength?: bigint)=>
 		decodeString(value, encoding, byteOffset == null ? undefined : Number(byteOffset), byteLength == null ? undefined : Number(byteLength)),
 	Type.functionType(Type.OptionalString, [Type.Buffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]),
 );

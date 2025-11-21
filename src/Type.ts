@@ -37,7 +37,7 @@ export class Type {
 	}
 
 	get isFloat() {
-		return this.isAtom && this._atoms[0].match(Type.Float._atoms[0]);
+		return this.isAtom && this._atoms[0].match(Type.Real._atoms[0]);
 	}
 
 	get isInteger() {
@@ -66,7 +66,7 @@ export class Type {
 
 	get isNumeric() {
 		return this._atoms.length === 2
-			&& (this._atoms[0].match(Type.Float._atoms[0]) || this._atoms[0].match(Type.Integer._atoms[0]));
+			&& (this._atoms[0].match(Type.Real._atoms[0]) || this._atoms[0].match(Type.Integer._atoms[0]));
 	}
 
 	toOptional() {
@@ -142,7 +142,7 @@ export class Type {
 				: value instanceof Date
 					? Type.Timestamp
 					: typeof value === "number"
-						? Type.Float
+						? Type.Real
 						: typeof value === "bigint"
 							? Type.Integer
 							: value instanceof ArrayBuffer
@@ -166,6 +166,10 @@ export class Type {
 			|| typeof value === "string";
 	}
 
+	static primitiveType(primitive: Primitive) {
+		return new Type([new PrimitiveAtom(primitive)]);
+	}
+
 	static arrayType(itemTypes: Type[] = []) {
 		return new Type([new ArrayAtom(itemTypes)]);
 	}
@@ -174,56 +178,35 @@ export class Type {
 		return new Type([new ObjectAtom(propTypes)]);
 	}
 
-	static functionType(retType?: Type, argTypes: Type[] = [], isVariadic: boolean = false) {
-		return new Type([Type._functionAtom(retType, argTypes, isVariadic)]);
+	static functionType(retType: Type = Type.Unknown, argTypes: Type[] = [], isVariadic: boolean = false) {
+		return new Type([new FunctionAtom(retType, argTypes, isVariadic)]);
 	}
 
 	static readonly Unknown = new Type();
-	static readonly Void = Type._primitiveType("void");
-	static readonly Boolean = Type._primitiveType("boolean");
+	static readonly Void = Type.primitiveType("void");
+	static readonly Boolean = Type.primitiveType("boolean");
 	static readonly OptionalBoolean = Type.union(Type.Void, Type.Boolean);
-	static readonly Timestamp = Type._primitiveType("timestamp");
+	static readonly Timestamp = Type.primitiveType("timestamp");
 	static readonly OptionalTimestamp = Type.union(Type.Void, Type.Timestamp);
-	static readonly Float = Type._primitiveType("float");
-	static readonly OptionalFloat = Type.union(Type.Void, Type.Float);
-	static readonly Integer = Type._primitiveType("integer");
+	static readonly Real = Type.primitiveType("real");
+	static readonly OptionalReal = Type.union(Type.Void, Type.Real);
+	static readonly Integer = Type.primitiveType("integer");
 	static readonly OptionalInteger = Type.union(Type.Void, Type.Integer);
-	static readonly Buffer = Type._primitiveType("buffer");
+	static readonly Buffer = Type.primitiveType("buffer");
 	static readonly OptionalBuffer = Type.union(Type.Void, Type.Buffer);
-	static readonly String = Type._primitiveType("string");
+	static readonly String = Type.primitiveType("string");
 	static readonly OptionalString = Type.union(Type.Void, Type.String);
 	static readonly Array = Type.arrayType();
 	static readonly OptionalArray = Type.union(Type.Void, Type.Array);
 	static readonly Object = Type.objectType();
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
-	static readonly Function = Type.functionType();
+	static readonly Function = Type.functionType(undefined, undefined, true);
 	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
-	static readonly Number = Type.union(Type.Float, Type.Integer);
-	static readonly OptionalNumber = Type.union(Type.Void, Type.Float, Type.Integer);
+	static readonly Number = Type.union(Type.Real, Type.Integer);
+	static readonly OptionalNumber = Type.union(Type.Void, Type.Real, Type.Integer);
 	static readonly Enumerable = Type.union(Type.Buffer, Type.String, Type.Array);
 	static readonly OptionalEnumerable = Type.union(Type.Void, Type.Buffer, Type.String, Type.Array);
 	static readonly Iterable = Type.union(Type.Buffer, Type.String, Type.Array, Type.Object);
 	static readonly OptionalIterable = Type.union(Type.Void, Type.Buffer, Type.String, Type.Array, Type.Object);
-
-	private static _primitiveType(primitive: Primitive) {
-		return new Type([new PrimitiveAtom(primitive)]);
-	}
-
-	private static _functionAtom(retType?: Type, argTypes: Type[] = [], isVariadic: boolean = false) {
-		let ix = 0;
-		while (ix < argTypes.length && !argTypes[ix].isOptional) {
-			++ix;
-		}
-		const minArity = ix;
-		if (ix < argTypes.length) {
-			while (ix < argTypes.length && argTypes[ix].isOptional) {
-				++ix;
-			}
-			if (ix < argTypes.length) {
-				throw new Error("a required parameter illegally follows an optional one");
-			}
-		}
-		return new FunctionAtom(retType, argTypes, minArity, isVariadic);
-	}
 
 }

@@ -27,7 +27,7 @@ The value of a block is determined by the value of the last expression.
 - Scientific notation is supported for floating point numbers, like *0.1281e+2*.
 - ISO Timestamps prefixed with **@**, like *@2025-05-11T19:09:21.320Z*.
 - Hexadecimal buffer values are enclosed in backtick (**\`**) quotes, like *\`10ab0901\`*.
-- String literals are enclosed in single (**'**), or double (**"**) quotes, like *'string value'*.
+- String literals are enclosed in single (**'**), or double (**"**) quotes, like *'string value1'*, or *"string value2"*.
 
 Array is an ordered sequence of values of any type.
 It is defined by comma-separated values enclosed in brackets (**[]**),
@@ -41,12 +41,12 @@ Easy way to check if array contains an index is to use presence operator (**?**)
 
 Object is a container of named values of any type.
 It is defined by comma-separated key-value pair enclosed in brackets (**[]**) where key is separated from value by colon (**:**),
- like *["NumericProperty":100, "StringProperty":"abc"]*, *["a":0,"b":"str":"c":valueVar]*.
+ like *["key1":100, "key2":"abc"]*, *["a":0,"b":"str":"c":valueVar]*.
 <br>An empty object is represented as **[\:]**.
 
 Object properties can be accessed using the access operator (**.**) with a string literal, token,
  or with brackets containing a string key,
- like *theObject."StringProperty"*, *theObject.stringProp*, *theObject["StringProperty"]*.
+ like *theObject."key"*, *theObject.key*, or *theObject["key"]*.
 
 Easy way to check if object contains a key is to use presence operator (**?**), like *theObject?myKey*.
 

@@ -34,14 +34,6 @@ export class CallNode extends Node {
 			this.throwError(`function ${this._fnode.type} does not take ${this._subnodes.length} arguments returning ${type})`);
 		}
 		this._type = Type.union(...functionAtoms.map((i)=> i.retType));
-		/*
-		if (this._subnodes.length < functionAtoms.minArity) {
-			this.throwError(`function requires at least ${functionAtoms.minArity} arguments not ${this._subnodes.length}`);
-		}
-		if (this._subnodes.length > functionAtoms.maxArity) {
-			this.throwError(`function requires at most ${functionAtoms.maxArity} arguments not ${this._subnodes.length}`);
-		}
-		*/
 		if (this._fnode.constant) {
 			let constant = true;
 			for (let i = 0; i < this._subnodes.length; ++i) {

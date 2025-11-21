@@ -122,7 +122,7 @@ export class Affinirum {
 	protected _block(state: ParserState, scope: StaticScope): Node {
 		const frame = state.starts();
 		const nodes: Node[] = [this._unit(state, scope)];
-		while (state.isSemicolonSeparator) {
+		while (state.isSemicolon) {
 			nodes.push(this._unit(state.next(), scope));
 		}
 		return new BlockNode(frame.ends(state), nodes);
@@ -212,10 +212,10 @@ export class Affinirum {
 
 	protected _accessor(state: ParserState, scope: StaticScope): Node {
 		let node = this._term(state, scope);
-		while (state.isDotMark || state.isQuestionMark || state.isParenthesesOpen || state.isBracketsOpen) {
+		while (state.isDot || state.isQuestion || state.isParenthesesOpen || state.isBracketsOpen) {
 			const frame = state.starts();
-			if (state.isDotMark || state.isQuestionMark) {
-				const operator = state.isDotMark ? funcAt : funcHas;
+			if (state.isDot || state.isQuestion) {
+				const operator = state.isDot ? funcAt : funcHas;
 				if (state.next().isLiteral && (typeof state.literal.value === "string" || typeof state.literal.value === "bigint")) {
 					node = this._call(frame.ends(state), operator, [node, new ConstantNode(state, new Constant(state.literal.value))]);
 					state.next();
@@ -228,7 +228,7 @@ export class Affinirum {
 							const subnodes: Node[] = [node];
 							while (!state.next().isParenthesesClose) {
 								subnodes.push(this._unit(state, scope));
-								if (!state.isCommaSeparator) {
+								if (!state.isComma) {
 									break;
 								}
 							}
@@ -252,7 +252,7 @@ export class Affinirum {
 				const subnodes: Node[] = [];
 				while (!state.next().isParenthesesClose) {
 					subnodes.push(this._unit(state, scope));
-					if (!state.isCommaSeparator) {
+					if (!state.isComma) {
 						break;
 					}
 				}
@@ -278,7 +278,7 @@ export class Affinirum {
 			const frame = state.starts();
 			const constants = this._constants.get(state.token);
 			if (constants != null) {
-				if (!state.next().isDotMark) {
+				if (!state.next().isDot) {
 					state.throwError("missing constant accessor operator");
 				}
 				if (!state.next().isToken) {
@@ -343,20 +343,20 @@ export class Affinirum {
 			const subnodes: [number | Node, Node][] = [];
 			let index = 0, colon = false;
 			while (!state.next().isBracketsClose) {
-				if (state.isColonSeparator) {
+				if (state.isColon) {
 					colon = true;
 					state.next();
 					break;
 				}
 				const node = this._unit(state, scope);
-				if (state.isColonSeparator) {
+				if (state.isColon) {
 					colon = true;
 					subnodes.push([node, this._unit(state.next(), scope)]);
 				}
 				else {
 					subnodes.push([index++, node]);
 				}
-				if (!state.isCommaSeparator) {
+				if (!state.isComma) {
 					break;
 				}
 			}
@@ -372,8 +372,8 @@ export class Affinirum {
 		else if (state.isBracketsClose) {
 			state.throwError("unexpected closing brackets");
 		}
-		else if (state.isVariableDefinition || state.isConstantDefinition) {
-			const constant = state.isConstantDefinition;
+		else if (state.isVariable || state.isConstant) {
+			const constant = state.isConstant;
 			if (!state.next().isToken) {
 				state.throwError(`missing ${constant ? "constant" : "variable"} name`);
 			}
@@ -383,7 +383,7 @@ export class Affinirum {
 			}
 			const frame = state.starts();
 			let type: Type | undefined;
-			if (state.next().isColonSeparator) {
+			if (state.next().isColon) {
 				type = this._type(state.next(), scope);
 			}
 			const variable = new Variable(type, constant);
@@ -396,7 +396,7 @@ export class Affinirum {
 			}
 			return new VariableNode(frame, variable);
 		}
-		else if (state.isTildaMark) {
+		else if (state.isTilda) {
 			return this._function(state, scope);
 		}
 		else if (state.isWhile) {
@@ -413,7 +413,7 @@ export class Affinirum {
 
 	protected _function(state: ParserState, scope: StaticScope): Node {
 		const frame = state.starts();
-		let retType: Type | undefined = undefined;
+		let retType = Type.Unknown;
 		if (!state.next().isParenthesesOpen) {
 			retType = this._type(state, scope);
 			state.openParentheses();
@@ -429,16 +429,21 @@ export class Affinirum {
 				state.throwError("variable redefinition");
 			}
 			let argType = Type.Unknown;
-			if (state.next().isColonSeparator) {
+			if (state.next().isColon) {
 				argType = this._type(state.next(), scope);
 			}
 			variables.set(token, new Variable(argType));
-			if (argType.isArray && state.isVariadicFunction) {
-				variadic = true;
-				state.next();
-				break;
+			if (state.isEllipsis) {
+				if (argType.isArray) {
+					variadic = true;
+					state.next();
+					break;
+				}
+				else {
+					state.throwError("variadic function argument must be an array type");
+				}
 			}
-			if (!state.isCommaSeparator) {
+			if (!state.isComma) {
 				break;
 			}
 		}
@@ -446,17 +451,13 @@ export class Affinirum {
 		frame.ends(state);
 		const args = Array.from(variables.values());
 		state.next().openBraces().next();
-		if (!retType && args.length === 0 && state.isBracesClose) {
-			state.next();
-			return new ConstantNode(frame, Constant.EmptyFunction);
-		}
 		const subnode =  this._block(state, scope.subscope(variables));
 		state.closeBraces().next();
 		const value = (...values: Value[])=> {
 			args.forEach((arg, ix)=> arg.value = values[ix]);
 			return subnode.evaluate();
 		};
-		const constant = new Constant(value, Type.functionType(retType ?? Type.Unknown, args.map((v)=> v.type), variadic));
+		const constant = new Constant(value, Type.functionType(retType, args.map((v)=> v.type), variadic));
 		return new ConstantNode(frame, constant, subnode);
 	}
 
@@ -496,7 +497,7 @@ export class Affinirum {
 	protected _type(state: ParserState, scope: StaticScope): Type {
 		if (state.isType) {
 			let type = state.type;
-			if (state.next().isQuestionMark) {
+			if (state.next().isQuestion) {
 				type = type.toOptional();
 				state.next();
 			}
@@ -506,36 +507,29 @@ export class Affinirum {
 			return type;
 		}
 		else if (state.isBracketsOpen) { // array or object type
-			const itemPropTypes: [number | string, Type][] = [];
+			const itemKeyTypes: [number | string, Type][] = [];
 			let index = 0, colon = false;
 			while (!state.next().isBracketsClose) {
-				if (state.isColonSeparator) { // default object type
-					colon = true;
-					state.next();
-					break;
-				}
-				if (state.isType) {
-					itemPropTypes.push([index++, this._type(state, scope)]);
-				}
-				else if (state.isToken) {
-					const token = state.token;
+				if (state.isLiteral && typeof state.literal.value === "string") {
+					const key = state.literal.value;
 					state.next().separateByColon().next();
-					itemPropTypes.push([token, this._type(state, scope)]);
+					itemKeyTypes.push([key, this._type(state, scope)]);
+					colon = true;
 				}
 				else {
-					state.throwError("missing type or property name");
+					itemKeyTypes.push([index++, this._type(state, scope)]);
 				}
-				if (!state.isCommaSeparator) {
+				if (!state.isComma) {
 					break;
 				}
 			}
 			state.closeBrackets().next();
 			return colon
-				? Type.objectType(Object.fromEntries(itemPropTypes.map(([prop, type])=> [prop as string, type])))
-				: Type.arrayType(itemPropTypes.map(([, v])=> v));
+				? Type.objectType(Object.fromEntries(itemKeyTypes.map(([key, type])=> [key as string, type])))
+				: Type.arrayType(itemKeyTypes.map(([, v])=> v));
 		}
-		else if (state.isTildaMark) { // function type
-			let retType: Type | undefined = undefined;
+		else if (state.isTilda) { // function type
+			let retType = Type.Unknown;
 			if (!state.next().isParenthesesOpen) {
 				retType = this._type(state, scope);
 				state.openParentheses();
@@ -545,7 +539,7 @@ export class Affinirum {
 			while (!state.next().isParenthesesClose) {
 				const argType = this._type(state, scope);
 				argTypes.push(argType);
-				if (state.isVariadicFunction) {
+				if (state.isEllipsis) {
 					if (argType.isArray) {
 						variadic = true;
 						state.next();
@@ -555,7 +549,7 @@ export class Affinirum {
 						state.throwError("variadic function argument must be an array type");
 					}
 				}
-				if (!state.isCommaSeparator) {
+				if (!state.isComma) {
 					break;
 				}
 			}

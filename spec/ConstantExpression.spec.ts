@@ -54,7 +54,7 @@ describe("Constant Expression", ()=> {
 		["Integer.Sum([0,1,2,3]+[10,20,30,40],100)", 206n],
 		["[[[10]]][0][0][0]", 10n],
 		["var a=[0,10,200,3000,40000]; a[1] + a.At(2)", 210n],
-		["[1,2,3,4].Reduce(\n~float (a:float, b : float){a.Subtract(b)}\n)", -8n],
+		["[1,2,3,4].Reduce(\n~real (a:real, b : real){a.Subtract(b)}\n)", -8n],
 	] as [string, any][]).forEach(([expr, expectation])=> {
 		it(`compiles expression '${expr}' and tests the value`, ()=> {
 			try {

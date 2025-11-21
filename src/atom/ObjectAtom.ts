@@ -7,7 +7,7 @@ export class ObjectAtom implements IAtom {
 		protected readonly _propTypes: Record<string, Type> = {},
 	) {}
 
-	get empty(): boolean {
+	private get _undefined(): boolean {
 		return Object.keys(this._propTypes).length === 0;
 	}
 
@@ -21,7 +21,7 @@ export class ObjectAtom implements IAtom {
 
 	match(atom: IAtom): boolean {
 		if (atom instanceof ObjectAtom) {
-			if (this.empty || atom.empty) {
+			if (this._undefined || atom._undefined) {
 				return true;
 			}
 			for (const prop in this._propTypes) {
@@ -47,8 +47,7 @@ export class ObjectAtom implements IAtom {
 	}
 
 	toString(): string {
-		const entries = Object.entries(this._propTypes);
-		return entries.length ? `[${entries.map((i)=> i[0] + ":" + i[1].toString()).join(",")}]` : "[:]";
+		return this._undefined ? "object" : `[${Object.entries(this._propTypes).map((i)=> `"${i[0]}":${i[1]}`).join(",")}]`;
 	}
 
 }

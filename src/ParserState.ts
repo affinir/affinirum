@@ -1,8 +1,8 @@
 import { funcOr, funcAnd, funcNot } from "./constant/Boolean.js";
 import { parseBuffer } from "./constant/Buffer.js";
 import { funcAdd } from "./constant/Enumerable.js";
-import { isSign, isAlpha, isNumeric, isAlphanumeric,
-	isDateSymbol, isTimeSymbol, isDateTimeSeparator, replaceWith } from "./constant/String.js";
+import { isSignSymbol, isTokenStartSymbol, isNumericSymbol, isTokenSymbol,
+	isDateSymbol, isTimeSymbol, isDateTimeSeparatorSymbol, replaceWith } from "./constant/String.js";
 import { Constant } from "./Constant.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from "./constant/Number.js";
@@ -24,24 +24,24 @@ const funcSubtractAssignment = new Assignment(funcSubtract);
 const funcMultiplyAssignment = new Assignment(funcMultiply);
 const funcDivideAssignment = new Assignment(funcDivide);
 const funcRemainderAssignment = new Assignment(funcRemainder);
-const symbolParenthesesOpen = Symbol();
-const symbolParenthesesClose = Symbol();
-const symbolBracketsOpen = Symbol();
-const symbolBracketsClose = Symbol();
-const symbolBracesOpen = Symbol();
-const symbolBracesClose = Symbol();
-const symbolSemicolonSeparator = Symbol();
-const symbolColonSeparator = Symbol();
-const symbolCommaSeparator = Symbol();
-const symbolDotMark = Symbol();
-const symbolQuestionMark = Symbol();
-const symbolTildaMark = Symbol();
-const symbolVariadicFunction = Symbol();
-const symbolVariableDefinition = Symbol();
-const symbolConstantDefinition = Symbol();
-const symbolWhile = Symbol();
-const symbolIf = Symbol();
-const symbolElse = Symbol();
+const idParenthesesOpen = Symbol();
+const idParenthesesClose = Symbol();
+const idBracketsOpen = Symbol();
+const idBracketsClose = Symbol();
+const idBracesOpen = Symbol();
+const idBracesClose = Symbol();
+const idSemicolon = Symbol();
+const idColon = Symbol();
+const idComma = Symbol();
+const idDot = Symbol();
+const idQuestion = Symbol();
+const idTilda = Symbol();
+const idEllipsis = Symbol();
+const idVariable = Symbol();
+const idConstant = Symbol();
+const idWhile = Symbol();
+const idIf = Symbol();
+const idElse = Symbol();
 
 export class ParserState extends ParserFrame {
 
@@ -94,75 +94,75 @@ export class ParserState extends ParserFrame {
 	}
 
 	get isParenthesesOpen(): boolean {
-		return this._fragment === symbolParenthesesOpen;
+		return this._fragment === idParenthesesOpen;
 	}
 
 	get isParenthesesClose(): boolean {
-		return this._fragment === symbolParenthesesClose;
+		return this._fragment === idParenthesesClose;
 	}
 
 	get isBracketsOpen(): boolean {
-		return this._fragment === symbolBracketsOpen;
+		return this._fragment === idBracketsOpen;
 	}
 
 	get isBracketsClose(): boolean {
-		return this._fragment === symbolBracketsClose;
+		return this._fragment === idBracketsClose;
 	}
 
 	get isBracesOpen(): boolean {
-		return this._fragment === symbolBracesOpen;
+		return this._fragment === idBracesOpen;
 	}
 
 	get isBracesClose(): boolean {
-		return this._fragment === symbolBracesClose;
+		return this._fragment === idBracesClose;
 	}
 
-	get isSemicolonSeparator(): boolean {
-		return this._fragment === symbolSemicolonSeparator;
+	get isSemicolon(): boolean {
+		return this._fragment === idSemicolon;
 	}
 
-	get isColonSeparator(): boolean {
-		return this._fragment === symbolColonSeparator;
+	get isColon(): boolean {
+		return this._fragment === idColon;
 	}
 
-	get isCommaSeparator(): boolean {
-		return this._fragment === symbolCommaSeparator;
+	get isComma(): boolean {
+		return this._fragment === idComma;
 	}
 
-	get isDotMark(): boolean {
-		return this._fragment === symbolDotMark;
+	get isDot(): boolean {
+		return this._fragment === idDot;
 	}
 
-	get isQuestionMark(): boolean {
-		return this._fragment === symbolQuestionMark;
+	get isQuestion(): boolean {
+		return this._fragment === idQuestion;
 	}
 
-	get isTildaMark(): boolean {
-		return this._fragment === symbolTildaMark;
+	get isTilda(): boolean {
+		return this._fragment === idTilda;
 	}
 
-	get isVariadicFunction(): boolean {
-		return this._fragment === symbolVariadicFunction;
+	get isEllipsis(): boolean {
+		return this._fragment === idEllipsis;
 	}
 
-	get isVariableDefinition(): boolean {
-		return this._fragment === symbolVariableDefinition;
+	get isVariable(): boolean {
+		return this._fragment === idVariable;
 	}
 
-	get isConstantDefinition(): boolean {
-		return this._fragment === symbolConstantDefinition;
+	get isConstant(): boolean {
+		return this._fragment === idConstant;
 	}
 
 	get isWhile(): boolean {
-		return this._fragment === symbolWhile;
+		return this._fragment === idWhile;
 	}
 
 	get isIf(): boolean {
-		return this._fragment === symbolIf;
+		return this._fragment === idIf;
 	}
 
 	get isElse(): boolean {
-		return this._fragment === symbolElse;
+		return this._fragment === idElse;
 	}
 
 	get isVoid(): boolean {
@@ -212,7 +212,7 @@ export class ParserState extends ParserFrame {
 	}
 
 	separateByColon() {
-		if (!this.isColonSeparator) {
+		if (!this.isColon) {
 			this.throwError("missing colon separator")
 		}
 		return this;
@@ -234,21 +234,21 @@ export class ParserState extends ParserFrame {
 			++this._end;
 			switch (c) {
 				case " ": case "\t": case "\n": case "\r": case "\v": case "\f": break;
-				case "(": this._fragment = symbolParenthesesOpen; break;
-				case ")": this._fragment = symbolParenthesesClose; break;
-				case "[": this._fragment = symbolBracketsOpen; break;
-				case "]": this._fragment = symbolBracketsClose; break;
-				case "{": this._fragment = symbolBracesOpen; break;
-				case "}": this._fragment = symbolBracesClose; break;
-				case ";": this._fragment = symbolSemicolonSeparator; break;
-				case ":": this._fragment = symbolColonSeparator; break;
-				case ",": this._fragment = symbolCommaSeparator; break;
-				case "~": this._fragment = symbolTildaMark; break;
+				case "(": this._fragment = idParenthesesOpen; break;
+				case ")": this._fragment = idParenthesesClose; break;
+				case "[": this._fragment = idBracketsOpen; break;
+				case "]": this._fragment = idBracketsClose; break;
+				case "{": this._fragment = idBracesOpen; break;
+				case "}": this._fragment = idBracesClose; break;
+				case ";": this._fragment = idSemicolon; break;
+				case ":": this._fragment = idColon; break;
+				case ",": this._fragment = idComma; break;
+				case "~": this._fragment = idTilda; break;
 				case "?":
 					switch (this._expr.charAt(this._end)) {
 						case "?": ++this._end; this._fragment = Type.Unknown; break;
 						case ":": ++this._end; this._fragment = funcCoalesce; break;
-						default: this._fragment = symbolQuestionMark; break;
+						default: this._fragment = idQuestion; break;
 					}
 					break;
 				case "|":
@@ -342,14 +342,14 @@ export class ParserState extends ParserFrame {
 						case ".":
 							if (this._expr.charAt(++this._end) === ".") {
 								++this._end;
-								this._fragment = symbolVariadicFunction;
+								this._fragment = idEllipsis;
 							}
 							else {
 								throw new Error("incomplete ellipsis ...");
 							}
 							break;
 						default:
-							this._fragment = symbolDotMark;
+							this._fragment = idDot;
 							break;
 					}
 					break;
@@ -357,14 +357,14 @@ export class ParserState extends ParserFrame {
 					while (isDateSymbol(this._expr.charAt(this._end))) {
 						++this._end;
 					}
-					if (isDateTimeSeparator(this._expr.charAt(this._end))) {
+					if (isDateTimeSeparatorSymbol(this._expr.charAt(this._end))) {
 						++this._end;
 						while (isTimeSymbol(this._expr.charAt(this._end))) {
 							++this._end;
 						}
-						if (this._expr.charAt(this._end) === "." && isNumeric(this._expr.charAt(this._end + 1))) {
+						if (this._expr.charAt(this._end) === "." && isNumericSymbol(this._expr.charAt(this._end + 1))) {
 							++this._end;
-							while (isNumeric(this._expr.charAt(this._end))) {
+							while (isNumericSymbol(this._expr.charAt(this._end))) {
 								++this._end;
 							}
 							if (this._expr.charAt(this._end) === "Z") {
@@ -397,8 +397,8 @@ export class ParserState extends ParserFrame {
 					++this._end;
 					break;
 				default:
-					if (isAlpha(c)) {
-						while (isAlphanumeric(this._expr.charAt(this._end))) {
+					if (isTokenStartSymbol(c)) {
+						while (isTokenSymbol(this._expr.charAt(this._end))) {
 							++this._end;
 						}
 						const token = this._expr.substring(this._start, this._end);
@@ -407,33 +407,33 @@ export class ParserState extends ParserFrame {
 							case "false": this._fragment = valueFalse; break;
 							case "null": this._fragment = valueNull; break;
 							case "void": this._fragment = Type.Void; break;
-							case "bool": case "boolean": this._fragment = Type.Boolean; break;
-							case "time": case "timestamp": this._fragment = Type.Timestamp; break;
-							case "flo": case "float": this._fragment = Type.Float; break;
-							case "int": case "integer": this._fragment = Type.Integer; break;
-							case "buf": case "buffer": this._fragment = Type.Buffer; break;
-							case "str": case "string": this._fragment = Type.String; break;
-							case "arr": case "array": this._fragment = Type.Array; break;
-							case "obj": case "object": this._fragment = Type.Object; break;
-							case "func": case "function": this._fragment = Type.Function; break;
-							case "var": case "variable": this._fragment = symbolVariableDefinition; break;
-							case "const": case "constant": this._fragment = symbolConstantDefinition; break;
-							case "while": this._fragment = symbolWhile; break;
-							case "if": this._fragment = symbolIf; break;
-							case "else": this._fragment = symbolElse; break;
+							case "boolean": this._fragment = Type.Boolean; break;
+							case "timestamp": this._fragment = Type.Timestamp; break;
+							case "real": this._fragment = Type.Real; break;
+							case "integer": this._fragment = Type.Integer; break;
+							case "buffer": this._fragment = Type.Buffer; break;
+							case "string": this._fragment = Type.String; break;
+							case "array": this._fragment = Type.Array; break;
+							case "object": this._fragment = Type.Object; break;
+							case "function": this._fragment = Type.Function; break;
+							case "variable": case "var": this._fragment = idVariable; break;
+							case "constant": case "const": this._fragment = idConstant; break;
+							case "while": this._fragment = idWhile; break;
+							case "if": this._fragment = idIf; break;
+							case "else": this._fragment = idElse; break;
 							default: this._fragment = token; break;
 						}
 					}
-					else if (isNumeric(c)) {
+					else if (isNumericSymbol(c)) {
 						let integer = true;
-						while (isNumeric(this._expr.charAt(this._end))) {
+						while (isNumericSymbol(this._expr.charAt(this._end))) {
 							++this._end;
 						}
 						if (this._expr.charAt(this._end) === ".") {
 							++this._end;
-							if (isNumeric(this._expr.charAt(this._end))) {
+							if (isNumericSymbol(this._expr.charAt(this._end))) {
 								++this._end;
-								while (isNumeric(this._expr.charAt(this._end))) {
+								while (isNumericSymbol(this._expr.charAt(this._end))) {
 									++this._end;
 								}
 								integer = false;
@@ -444,9 +444,9 @@ export class ParserState extends ParserFrame {
 						}
 						if (this._expr.charAt(this._end) === "e") {
 							++this._end;
-							if (isNumeric(this._expr.charAt(this._end)) || isSign(this._expr.charAt(this._end))) {
+							if (isNumericSymbol(this._expr.charAt(this._end)) || isSignSymbol(this._expr.charAt(this._end))) {
 								++this._end;
-								while (isNumeric(this._expr.charAt(this._end))) {
+								while (isNumericSymbol(this._expr.charAt(this._end))) {
 									++this._end;
 								}
 							}

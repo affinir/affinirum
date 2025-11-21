@@ -1,9 +1,10 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
-export const encodeInteger = (value?: bigint, encoding: "int8" | "int16" | "int16le" | "int32" | "int32le"
-	| "uint8" | "uint16" | "uint16le" | "uint32" | "uint32le"
-	| "int64" | "int64le" | "uint64" | "uint64le" = "int64")=> {
+export type IntegerEncoding = "int8" | "int16" | "int16le" | "int32" | "int32le" | "int64" | "int64le"
+	| "nat8" | "nat16" | "nat16le" | "nat32" | "nat32le" | "nat64" | "nat64le";
+
+export const encodeInteger = (value?: bigint, encoding: IntegerEncoding = "int64")=> {
 	if (value == null) {
 		return new Uint8Array(0).buffer;
 	}
@@ -21,22 +22,21 @@ export const encodeInteger = (value?: bigint, encoding: "int8" | "int16" | "int1
 		case "int16le": dv.setInt16(0, Number(value), true); break;
 		case "int32": dv.setInt32(0, Number(value)); break;
 		case "int32le": dv.setInt32(0, Number(value), true); break;
-		case "uint8": dv.setUint8(0, Number(value)); break;
-		case "uint16": dv.setUint16(0, Number(value)); break;
-		case "uint16le": dv.setUint16(0, Number(value), true); break;
-		case "uint32": dv.setUint32(0, Number(value)); break;
-		case "uint32le": dv.setUint32(0, Number(value), true); break;
+		case "nat8": dv.setUint8(0, Number(value)); break;
+		case "nat16": dv.setUint16(0, Number(value)); break;
+		case "nat16le": dv.setUint16(0, Number(value), true); break;
+		case "nat32": dv.setUint32(0, Number(value)); break;
+		case "nat32le": dv.setUint32(0, Number(value), true); break;
 		case "int64": dv.setBigInt64(0, value); break;
 		case "int64le": dv.setBigInt64(0, value, true); break;
-		case "uint64": dv.setBigUint64(0, value); break;
-		case "uint64le": dv.setBigUint64(0, value, true); break;
+		case "nat64": dv.setBigUint64(0, value); break;
+		case "nat64le": dv.setBigUint64(0, value, true); break;
 		default: throw new Error(`${encoding} encoding not supported`);
 	}
 	return dv.buffer;
 };
 
-const decodeInteger = (value?: ArrayBuffer, encoding: "int8" | "int16" | "int16le" | "int32" | "int32le" | "int64" | "int64le"
-	| "uint8" | "uint16" | "uint16le" | "uint32" | "uint32le" | "uint64" | "uint64le" = "int64", byteOffset?: number)=> {
+const decodeInteger = (value?: ArrayBuffer, encoding: IntegerEncoding = "int64", byteOffset?: number)=> {
 	if (value == null) {
 		return undefined;
 	}
@@ -49,13 +49,13 @@ const decodeInteger = (value?: ArrayBuffer, encoding: "int8" | "int16" | "int16l
 		case "int32le": return BigInt(dv.getInt32(0, true));
 		case "int64": return dv.getBigInt64(0);
 		case "int64le": return dv.getBigInt64(0, true);
-		case "uint8": return BigInt(dv.getUint8(0));
-		case "uint16": return BigInt(dv.getUint16(0));
-		case "uint16le": return BigInt(dv.getUint16(0, true));
-		case "uint32": return BigInt(dv.getUint32(0));
-		case "uint32le": return BigInt(dv.getUint32(0, true));
-		case "uint64": return dv.getBigUint64(0);
-		case "uint64le": return dv.getBigUint64(0, true);
+		case "nat8": return BigInt(dv.getUint8(0));
+		case "nat16": return BigInt(dv.getUint16(0));
+		case "nat16le": return BigInt(dv.getUint16(0, true));
+		case "nat32": return BigInt(dv.getUint32(0));
+		case "nat32le": return BigInt(dv.getUint32(0, true));
+		case "nat64": return dv.getBigUint64(0);
+		case "nat64le": return dv.getBigUint64(0, true);
 		default: throw new Error(`${encoding} encoding not supported`);
 	}
 };
@@ -89,8 +89,7 @@ const funcRandomInteger = new Constant(
 );
 
 const funcDecodeInteger = new Constant(
-	(value: ArrayBuffer, encoding: "int8" | "int16" | "int16le" | "int32" | "int32le" | "int64" | "int64le"
-		| "uint8" | "uint16" | "uint16le" | "uint32" | "uint32le" | "uint64" | "uint64le" = "int64", byteOffset?: bigint)=>
+	(value: ArrayBuffer, encoding: IntegerEncoding = "int64", byteOffset?: bigint)=>
 		decodeInteger(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
 	Type.functionType(Type.OptionalInteger, [Type.Buffer, Type.OptionalString, Type.OptionalInteger]),
 );

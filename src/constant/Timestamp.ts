@@ -1,17 +1,19 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
-const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
-const typeTimestampSince = Type.functionType(Type.Float, [Type.Timestamp, Type.Timestamp]);
+export type TimestampEncoding = "int64" | "int64le";
 
-export const encodeTimestamp = (value?: Date, encoding: "int64" | "int64le" = "int64")=> {
+const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
+const typeTimestampSince = Type.functionType(Type.Real, [Type.Timestamp, Type.Timestamp]);
+
+export const encodeTimestamp = (value?: Date, encoding: TimestampEncoding = "int64")=> {
 	const buf = new ArrayBuffer(8);
 	const dv = new DataView(buf);
 	dv.setBigInt64(0, BigInt(value?.getTime() ?? 0), encoding === "int64le");
 	return buf;
 };
 
-export const decodeTimestamp = (value?: ArrayBuffer, encoding: "int64" | "int64le" = "int64", byteOffset?: bigint)=>
+export const decodeTimestamp = (value?: ArrayBuffer, encoding: TimestampEncoding = "int64", byteOffset?: bigint)=>
 	value ? new Date(Number(new DataView(value).getBigInt64(byteOffset == null ? 0 : Number(byteOffset), encoding === "int64le"))) : undefined;
 
 export const formatTimestamp = (value?: Date, radix?: number)=> {

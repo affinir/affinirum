@@ -1,11 +1,11 @@
 import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
-import { encodeFloat, formatFloat } from "./Float.js";
-import { encodeInteger } from "./Integer.js";
+import { RealEncoding, encodeReal, formatReal } from "./Real.js";
+import { IntegerEncoding, encodeInteger } from "./Integer.js";
 import { concatBuffers, equateBuffers, formatBuffer } from "./Buffer.js";
-import { encodeString } from "./String.js";
-import { encodeTimestamp, formatTimestamp } from "./Timestamp.js";
+import { StringEncoding, encodeString } from "./String.js";
+import { TimestampEncoding, encodeTimestamp, formatTimestamp } from "./Timestamp.js";
 
 export const equate = (value1: Value, value2: Value)=> {
 	if (value1 == null || value2 == null) {
@@ -52,25 +52,21 @@ export const equate = (value1: Value, value2: Value)=> {
 	return true;
 };
 
-export const encode = (value: Value, encoding?: "float32" | "float32le" | "float64" | "float64le"
-	| "int8" | "int16" | "int16le" | "int32" | "int32le" | "int64" | "int64le"
-	| "uint8" | "uint16" | "uint16le" | "uint32" | "uint32le" | "uint64" | "uint64le"
-	| "utf8" | "ucs2" | "ucs2le"): ArrayBuffer=>
+export const encode = (value: Value, encoding?: RealEncoding | IntegerEncoding | TimestampEncoding | StringEncoding): ArrayBuffer=>
 	value == null
 		? new Uint8Array(0).buffer
 		: typeof value === "boolean"
 			? new Uint8Array([value ? 255 : 0]).buffer
 			: value instanceof Date
-				? encodeTimestamp(value, encoding as "int64" | "int64le" ?? "int64")
+				? encodeTimestamp(value, encoding as TimestampEncoding ?? "int64")
 				: typeof value === "number"
-					? encodeFloat(value, encoding as "float32" | "float32le" | "float64" | "float64le" ?? "float64")
+					? encodeReal(value, encoding as RealEncoding ?? "float64")
 					: typeof value === "bigint"
-						? encodeInteger(value, encoding as "int8" | "int16" | "int16le" | "int32" | "int32le"
-							| "uint8" | "uint16" | "uint16le" | "uint32" | "uint32le" ?? "int64")
+						? encodeInteger(value, encoding as IntegerEncoding ?? "int64")
 						: value instanceof ArrayBuffer
 							? value
 							: typeof value === "string"
-								? encodeString(value, encoding as "utf8" | "ucs2" | "ucs2le" ?? "utf8")
+								? encodeString(value, encoding as StringEncoding ?? "utf8")
 								: Array.isArray(value)
 									? value.map((i)=> encode(i, encoding)).reduce((acc, val)=> concatBuffers(acc, val))
 									: typeof value === "object"
@@ -87,7 +83,7 @@ export const format = (value: Value, radix?: number, separator: string = ""): st
 			: value instanceof Date
 				? formatTimestamp(value, radix ? Number(radix) : undefined)
 				: typeof value === "number"
-					? formatFloat(value, radix ? Number(radix) : undefined)
+					? formatReal(value, radix ? Number(radix) : undefined)
 					: typeof value === "bigint"
 						? value.toString(radix ? Number(radix) : undefined)
 						: value instanceof ArrayBuffer
@@ -107,7 +103,7 @@ export const funcCoalesce = new Constant(
 		value ?? valueOtherwise,
 	Type.union(
 		Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown]),
-		Type.functionType(Type.OptionalFloat, [Type.OptionalFloat, Type.OptionalFloat]),
+		Type.functionType(Type.OptionalReal, [Type.OptionalReal, Type.OptionalReal]),
 		Type.functionType(Type.OptionalBoolean, [Type.OptionalBoolean, Type.OptionalBoolean]),
 		Type.functionType(Type.OptionalTimestamp, [Type.OptionalTimestamp, Type.OptionalTimestamp]),
 		Type.functionType(Type.OptionalInteger, [Type.OptionalInteger, Type.OptionalInteger]),
@@ -132,15 +128,12 @@ export const funcNotEqual = new Constant(
 );
 
 export const funcEncode = new Constant(
-	(value: boolean | Date | number | bigint | string | Value[] | { [ key: string ]: Value }, encoding: "float32" | "float32le" | "float64" | "float64le"
-		| "int8" | "int16" | "int16le" | "int32" | "int32le" | "int64" | "int64le"
-		| "uint8" | "uint16" | "uint16le" | "uint32" | "uint32le" | "uint64" | "uint64le"
-		| "utf8" | "ucs2" | "ucs2le")=>
+	(value: boolean | Date | number | bigint | string | Value[] | { [ key: string ]: Value }, encoding: RealEncoding | IntegerEncoding | TimestampEncoding | StringEncoding)=>
 		encode(value, encoding),
 	Type.union(
 		Type.functionType(Type.Buffer, [Type.Boolean]),
 		Type.functionType(Type.Buffer, [Type.Timestamp, Type.OptionalString]),
-		Type.functionType(Type.Buffer, [Type.Float, Type.OptionalString]),
+		Type.functionType(Type.Buffer, [Type.Real, Type.OptionalString]),
 		Type.functionType(Type.Buffer, [Type.Integer, Type.OptionalString]),
 		Type.functionType(Type.Buffer, [Type.String, Type.OptionalString]),
 		Type.functionType(Type.Buffer, [Type.Array, Type.OptionalString]),
@@ -154,7 +147,7 @@ export const funcFormat = new Constant(
 	Type.union(
 		Type.functionType(Type.String, [Type.Boolean]),
 		Type.functionType(Type.String, [Type.Timestamp, Type.OptionalInteger]),
-		Type.functionType(Type.String, [Type.Float, Type.OptionalInteger]),
+		Type.functionType(Type.String, [Type.Real, Type.OptionalInteger]),
 		Type.functionType(Type.String, [Type.Integer, Type.OptionalInteger]),
 		Type.functionType(Type.String, [Type.Buffer]),
 		Type.functionType(Type.String, [Type.Array, Type.OptionalInteger, Type.OptionalString]),
