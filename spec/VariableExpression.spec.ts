@@ -138,7 +138,7 @@ describe("Variable Expression test", ()=> {
 		["(a + b + c + d) * (a - b - c + 1) / b + 1 * (if (a < 23) { 10 } else { 20 })", [
 			{ a: 20, b: 10, c: 1, d: 2, result: 43 },
 		]],
-		["[a, b, c].Add([1, 2, 3, 4]).Reduce(~real(acc:real, val) { acc + val })", [
+		["[a, b, c].Add([1, 2, 3, 4]).Reduce(~float(acc:float, val) { acc + val })", [
 			{ a: 1, b: 2, c: 3, result: 16 },
 		]],
 		["-a^2 == b", [
@@ -168,17 +168,31 @@ describe("Variable Expression test", ()=> {
 			{ v: 1055n, result: 1055n },
 		]],
 		["Float.Decode(v.Encode(enc), enc)", [
-			{ v: 50, enc: "real32le", result: 50 },
-			{ v: 10, enc: "real64", result: 10 },
+			{ v: 50505, enc: "f32", result: 50505 },
+			{ v: 500, enc: "f32le", result: 500 },
+			{ v: 10101, enc: "f64", result: 10101 },
+			{ v: 100, enc: "f64le", result: 100 },
 		]],
 		["Integer.Decode(v.Encode(enc), enc)", [
-			{ v: 0n, enc: "nat16", result: 0n },
-			{ v: 1055n, enc: "nat32", result: 1055n },
-			{ v: 1055n, enc: "nat16le", result: 1055n },
+			{ v: 0n, enc: "i16", result: 0n },
+			{ v: 1200n, enc: "i16", result: 1200n },
+			{ v: -5n, enc: "i16le", result: -5n },
+			{ v: -155000n, enc: "i32", result: -155000n },
+			{ v: -1055n, enc: "i32le", result: -1055n },
+			{ v: -155000n, enc: "i64", result: -155000n },
+			{ v: -1055n, enc: "i64le", result: -1055n },
+			{ v: 0n, enc: "n16", result: 0n },
+			{ v: 1200n, enc: "n16", result: 1200n },
+			{ v: 15n, enc: "n16le", result: 15n },
+			{ v: 105500n, enc: "n32", result: 105500n },
+			{ v: 1055n, enc: "n32le", result: 1055n },
+			{ v: 1055000n, enc: "n64", result: 1055000n },
+			{ v: 11055n, enc: "n64le", result: 11055n },
 		]],
 		["String.Decode(v.Encode(enc), enc)", [
 			{ v: "", enc: "utf8", result: "" },
 			{ v: "1055", enc: "utf8", result: "1055" },
+			{ v: "1055", enc: "ucs2", result: "1055" },
 			{ v: "1055", enc: "ucs2le", result: "1055" },
 		]],
 		["a.Byte(b).Format()", [
@@ -295,7 +309,7 @@ describe("Variable Expression test", ()=> {
 			{ start: 5n, end: 10n, result: 11n },
 			{ start: -5n, end: -10n, result: -19n },
 		]],
-		["var s:integer=0;Array.Range(start, end).Derive(~void(x:real){s=s+x});s", [
+		["var s:integer=0;Array.Range(start, end).Derive(~void(x:float){s=s+x});s", [
 			{ start: 1n, end: 11n, result: 55n },
 			{ start: -1n, end: -11n, result: -65n },
 		]],
@@ -307,41 +321,41 @@ describe("Variable Expression test", ()=> {
 			{ p: undefined, result: 10n },
 			{ p: 0n, result: 0n },
 		]],
-		["arr1.First(~boolean(v:real, i:integer){v==2})", [
+		["arr1.First(~boolean(v:float, i:integer){v==2})", [
 			{ arr1: [1, 2, 3], result: 2 },
 			{ arr1: [2, 2, 3], result: 2 },
 		]],
-		["arr1.Last(~boolean(v:real, i:integer){(i==1)})", [
+		["arr1.Last(~boolean(v:float, i:integer){(i==1)})", [
 			{ arr1: [1, 2, 3], result: 2 },
 			{ arr1: [10, 20, 30], result: 20 },
 		]],
-		["arr1.FirstIndex(~boolean(v:real, i:integer){(v==2)})", [
+		["arr1.FirstIndex(~boolean(v:float, i:integer){(v==2)})", [
 			{ arr1: [1, 2, 3], result: 1n },
 		]],
-		["arr1.LastIndex(~boolean(v:real, i:integer){i==1})", [
+		["arr1.LastIndex(~boolean(v:float, i:integer){i==1})", [
 			{ arr1: [1, 2, 3], result: 1n },
 		]],
-		["arr1.Filter(~boolean(v:real, i:integer, a:array){(a[i]*i>2)})[1]", [
+		["arr1.Filter(~boolean(v:float, i:integer, a:array){(a[i]*i>2)})[1]", [
 			{ arr1: [1, 1, 5, 4, 1], result: 4 },
 		]],
-		["arr0.Derive(~real(val:real){val*2*t}).Filter(~boolean(val:real){val>5})[1]+[9].Length()", [
+		["arr0.Derive(~float(val:float){val*2*t}).Filter(~boolean(val:float){val>5})[1]+[9].Length()", [
 			{ arr0: [1, 2, 3], t: 2, result: 13 },
 		]],
-		["Float.Sum(arr0.Derive( ~ array(a:array){ a.Derive(~real(b:real){b+12.0})} ).Flatten())", [
+		["Float.Sum(arr0.Derive( ~ array(a:array){ a.Derive(~float(b:float){b+12.0})} ).Flatten())", [
 			{ arr0: [[1], [1, 2], [2, 3, 4]], result: 85 },
 		]],
 		["arr0.Any(~boolean(a:object){a.i>0 & a.d>0})", [
 			{ arr0: [{ i: -1, d: -1 }, { i: -1, d: 5 }, { i: 1, d: 1 }], result: true }
 		]],
-		["arr0.Any(~boolean(a:real) { a > 0 } )", [
+		["arr0.Any(~boolean(a:float) { a > 0 } )", [
 			{ arr0: [1, -2, -3, -4], result: true },
 			{ arr0: [-1, -2, -3, -4], result: false },
 		]],
-		["arr0.Every(~boolean(a:real) { a > 0 } )", [
+		["arr0.Every(~boolean(a:float) { a > 0 } )", [
 			{ arr0: [1, 2, 3, 4], result: true },
 			{ arr0: [1, -2, 3, 4], result: false },
 		]],
-		["const x=arr0.Any(~boolean(a:real){a<0});var b:boolean=c;x&b", [
+		["const x=arr0.Any(~boolean(a:float){a<0});var b:boolean=c;x&b", [
 			{ arr0: [0, -1], c: true, result: true },
 		]],
 		["[\"a\":a1+a2, \"b\": b1, \"c\": \"10\", \"d\": a1*a2, \"p\": 10][p]", [
@@ -377,7 +391,7 @@ describe("Variable Expression test", ()=> {
 			{ o1: { a: 0, b: 1 }, i: 0n, result: 0 },
 			{ o1: { b: "baa", c: "caa" }, i: 1n, result: "caa" },
 		]],
-		["const a:real=myvar/3;var b=mv*2;a/b", [
+		["const a:float=myvar/3;var b=mv*2;a/b", [
 			{ myvar: 6, mv: 1, result: 1 },
 			{ myvar: 30, mv: 5, result: 1 },
 		]],
@@ -439,7 +453,7 @@ describe("Variable Expression test", ()=> {
 			{ a: 1, b: 10, result: 1110 },
 			{ a: -5, b: -1, result: 1099 },
 		]],
-		["var f=~boolean(a:real){a=a*100; a>0};Float.Sum(a.Filter(f))", [
+		["var f=~boolean(a:float){a=a*100; a>0};Float.Sum(a.Filter(f))", [
 			{ a: [-10, -20, 1, 2], result: 3 },
 		]],
 		["const f=~??(){b = b + 1000; true}; Float.Sum(a.Filter(f)) + b", [

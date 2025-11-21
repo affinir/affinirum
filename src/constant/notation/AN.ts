@@ -1,7 +1,7 @@
 import { Constant } from "../../Constant.js";
 import { Value } from "../../Value.js";
 import { Type } from "../../Type.js";
-import { formatReal } from "../Real.js";
+import { formatReal } from "../Float.js";
 import { formatBuffer } from "../Buffer.js";
 
 export const formatAN = (value: Value, whitespace?: string): string=> {

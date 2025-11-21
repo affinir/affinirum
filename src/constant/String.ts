@@ -228,7 +228,7 @@ export const funcCharCode = new Constant(
 		value == null
 			? undefined
 			: value.charCodeAt(pos < 0 ? value.length + Number(pos) : Number(pos)),
-	Type.functionType(Type.OptionalInteger, [Type.String, Type.Real]),
+	Type.functionType(Type.OptionalInteger, [Type.String, Type.Float]),
 );
 
 export const funcTrim = new Constant(

@@ -1,7 +1,7 @@
 import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
-import { RealEncoding, encodeReal, formatReal } from "./Real.js";
+import { FloatEncoding, encodeFloat, formatReal } from "./Float.js";
 import { IntegerEncoding, encodeInteger } from "./Integer.js";
 import { concatBuffers, equateBuffers, formatBuffer } from "./Buffer.js";
 import { StringEncoding, encodeString } from "./String.js";
@@ -52,17 +52,17 @@ export const equate = (value1: Value, value2: Value)=> {
 	return true;
 };
 
-export const encode = (value: Value, encoding?: RealEncoding | IntegerEncoding | TimestampEncoding | StringEncoding): ArrayBuffer=>
+export const encode = (value: Value, encoding?: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding): ArrayBuffer=>
 	value == null
 		? new Uint8Array(0).buffer
 		: typeof value === "boolean"
 			? new Uint8Array([value ? 255 : 0]).buffer
 			: value instanceof Date
-				? encodeTimestamp(value, encoding as TimestampEncoding ?? "int64")
+				? encodeTimestamp(value, encoding as TimestampEncoding ?? "i64")
 				: typeof value === "number"
-					? encodeReal(value, encoding as RealEncoding ?? "float64")
+					? encodeFloat(value, encoding as FloatEncoding ?? "f64")
 					: typeof value === "bigint"
-						? encodeInteger(value, encoding as IntegerEncoding ?? "int64")
+						? encodeInteger(value, encoding as IntegerEncoding ?? "i64")
 						: value instanceof ArrayBuffer
 							? value
 							: typeof value === "string"
@@ -103,7 +103,7 @@ export const funcCoalesce = new Constant(
 		value ?? valueOtherwise,
 	Type.union(
 		Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown]),
-		Type.functionType(Type.OptionalReal, [Type.OptionalReal, Type.OptionalReal]),
+		Type.functionType(Type.OptionalFloat, [Type.OptionalFloat, Type.OptionalFloat]),
 		Type.functionType(Type.OptionalBoolean, [Type.OptionalBoolean, Type.OptionalBoolean]),
 		Type.functionType(Type.OptionalTimestamp, [Type.OptionalTimestamp, Type.OptionalTimestamp]),
 		Type.functionType(Type.OptionalInteger, [Type.OptionalInteger, Type.OptionalInteger]),
@@ -128,12 +128,12 @@ export const funcNotEqual = new Constant(
 );
 
 export const funcEncode = new Constant(
-	(value: boolean | Date | number | bigint | string | Value[] | { [ key: string ]: Value }, encoding: RealEncoding | IntegerEncoding | TimestampEncoding | StringEncoding)=>
+	(value: boolean | Date | number | bigint | string | Value[] | { [ key: string ]: Value }, encoding: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding)=>
 		encode(value, encoding),
 	Type.union(
 		Type.functionType(Type.Buffer, [Type.Boolean]),
 		Type.functionType(Type.Buffer, [Type.Timestamp, Type.OptionalString]),
-		Type.functionType(Type.Buffer, [Type.Real, Type.OptionalString]),
+		Type.functionType(Type.Buffer, [Type.Float, Type.OptionalString]),
 		Type.functionType(Type.Buffer, [Type.Integer, Type.OptionalString]),
 		Type.functionType(Type.Buffer, [Type.String, Type.OptionalString]),
 		Type.functionType(Type.Buffer, [Type.Array, Type.OptionalString]),
@@ -147,7 +147,7 @@ export const funcFormat = new Constant(
 	Type.union(
 		Type.functionType(Type.String, [Type.Boolean]),
 		Type.functionType(Type.String, [Type.Timestamp, Type.OptionalInteger]),
-		Type.functionType(Type.String, [Type.Real, Type.OptionalInteger]),
+		Type.functionType(Type.String, [Type.Float, Type.OptionalInteger]),
 		Type.functionType(Type.String, [Type.Integer, Type.OptionalInteger]),
 		Type.functionType(Type.String, [Type.Buffer]),
 		Type.functionType(Type.String, [Type.Array, Type.OptionalInteger, Type.OptionalString]),

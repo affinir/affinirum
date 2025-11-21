@@ -16,8 +16,8 @@ const castToInteger = (value?: number)=> {
 
 const typeComparator = Type.functionType(Type.Boolean, [Type.Number, Type.Number]);
 const typeOperator = Type.union(
-	Type.functionType(Type.Real, [Type.Real, Type.Integer]),
-	Type.functionType(Type.Real, [Type.Integer, Type.Real]),
+	Type.functionType(Type.Float, [Type.Float, Type.Integer]),
+	Type.functionType(Type.Float, [Type.Integer, Type.Float]),
 	Type.functionType(Type.Integer, [Type.Integer, Type.Integer]),
 );
 
@@ -129,7 +129,7 @@ export const funcNegate = new Constant(
 	(value: number | bigint)=>
 		value == null ? undefined : typeof value === "number" ? -value : BigInt.asIntN(64, -value),
 	Type.union(
-		Type.functionType(Type.Real, [Type.Real]),
+		Type.functionType(Type.Float, [Type.Float]),
 		Type.functionType(Type.Integer, [Type.Integer]),
 	)
 );
@@ -140,19 +140,19 @@ export const funcCast = new Constant(
 			? Number(value)
 			: castToInteger(value),
 	Type.union(
-		Type.functionType(Type.Real, [Type.Integer]),
-		Type.functionType(Type.Integer, [Type.Real]),
+		Type.functionType(Type.Float, [Type.Integer]),
+		Type.functionType(Type.Integer, [Type.Float]),
 	)
 );
 
 export const funcCastToFloat = new Constant(
 	(value: bigint)=>
 		Number(value),
-	Type.functionType(Type.Real, [Type.Integer]),
+	Type.functionType(Type.Float, [Type.Integer]),
 );
 
 export const funcCastToInteger = new Constant(
 	(value: number)=>
 		castToInteger(value),
-	Type.functionType(Type.Integer, [Type.Real]),
+	Type.functionType(Type.Integer, [Type.Float]),
 );

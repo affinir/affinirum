@@ -1,6 +1,6 @@
 {
 	"name": "affinirum",
-	"version": "1.1.5",
+	"version": "1.1.6",
 	"description": "Affinirum Scripting Language",
 	"main": "dst/cjs/index.js",
 	"module": "dst/index.js",
@@ -25,7 +25,7 @@
 		"void",
 		"boolean",
 		"timestamp",
-		"real",
+		"float",
 		"integer",
 		"buffer",
 		"string",

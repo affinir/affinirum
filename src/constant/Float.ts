@@ -1,9 +1,9 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
-export type RealEncoding = "real32" | "real32le" | "real64" | "real64le";
+export type FloatEncoding = "f32" | "f32le" | "f64" | "f64le";
 
-export const encodeReal = (value?: number, encoding: RealEncoding = "real64")=> {
+export const encodeFloat = (value?: number, encoding: FloatEncoding = "f64")=> {
 	if (value == null) {
 		return new Uint8Array(0).buffer;
 	}
@@ -16,25 +16,25 @@ export const encodeReal = (value?: number, encoding: RealEncoding = "real64")=> 
 	}
 	const dv = new DataView(new Uint8Array(Number.parseInt(bits) / 8).buffer);
 	switch (encoding) {
-		case "real32": dv.setFloat32(0, value); break;
-		case "real32le": dv.setFloat32(0, value, true); break;
-		case "real64": dv.setFloat64(0, value); break;
-		case "real64le": dv.setFloat64(0, value, true); break;
+		case "f32": dv.setFloat32(0, value); break;
+		case "f32le": dv.setFloat32(0, value, true); break;
+		case "f64": dv.setFloat64(0, value); break;
+		case "f64le": dv.setFloat64(0, value, true); break;
 		default: throw new Error(`${encoding} encoding not supported`);
 	}
 	return dv.buffer;
 };
 
-const decodeReal = (value?: ArrayBuffer, encoding: RealEncoding = "real64", byteOffset?: number)=> {
+const decodeFloat = (value?: ArrayBuffer, encoding: FloatEncoding = "f64", byteOffset?: number)=> {
 	if (value == null) {
 		return undefined;
 	}
 	const dv = new DataView(value, byteOffset);
 	switch (encoding) {
-		case "real32": return dv.getFloat32(0);
-		case "real32le": return dv.getFloat32(0, true);
-		case "real64": return dv.getFloat64(0);
-		case "real64le": return dv.getFloat64(0, true);
+		case "f32": return dv.getFloat32(0);
+		case "f32le": return dv.getFloat32(0, true);
+		case "f64": return dv.getFloat64(0);
+		case "f64le": return dv.getFloat64(0, true);
 		default: throw new Error(`${encoding} encoding not supported`);
 	}
 };
@@ -42,9 +42,9 @@ const decodeReal = (value?: ArrayBuffer, encoding: RealEncoding = "real64", byte
 export const formatReal = (value: number, radix?: number)=>
 	value.toString(radix) + (Number.isInteger(value) ? ".0" : "");
 
-const typeNumberOrArray = Type.union(Type.Real, Type.arrayType([Type.Real]));
-const typeAggregator = Type.functionType(Type.Real, [typeNumberOrArray], true);
-const typeTransform = Type.functionType(Type.Real, [Type.Real]);
+const typeNumberOrArray = Type.union(Type.Float, Type.arrayType([Type.Float]));
+const typeAggregator = Type.functionType(Type.Float, [typeNumberOrArray], true);
+const typeTransform = Type.functionType(Type.Float, [Type.Float]);
 
 const funcSum = new Constant(
 	(...values: (number | number[])[])=>
@@ -109,20 +109,20 @@ const funcTruncate = new Constant(
 const funcRandomFloat = new Constant(
 	(value: number)=>
 		value == null ? undefined : Math.random() * Number(value),
-	Type.functionType(Type.Real, [Type.Real]),
+	Type.functionType(Type.Float, [Type.Float]),
 	false,
 );
 
 const funcDecodeFloat = new Constant(
-	(value: ArrayBuffer, encoding: RealEncoding = "real64", byteOffset?: bigint)=>
-		decodeReal(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
-	Type.functionType(Type.OptionalReal, [Type.Buffer, Type.OptionalString, Type.OptionalInteger]),
+	(value: ArrayBuffer, encoding: FloatEncoding = "f64", byteOffset?: bigint)=>
+		decodeFloat(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
+	Type.functionType(Type.OptionalFloat, [Type.Buffer, Type.OptionalString, Type.OptionalInteger]),
 );
 
 const funcParseFloat = new Constant(
 	(value: string)=>
 		value ? Number.parseFloat(value) : undefined,
-	Type.functionType(Type.OptionalReal, [Type.String]),
+	Type.functionType(Type.OptionalFloat, [Type.String]),
 );
 
 export const constFloat = {

@@ -37,7 +37,7 @@ export class Type {
 	}
 
 	get isFloat() {
-		return this.isAtom && this._atoms[0].match(Type.Real._atoms[0]);
+		return this.isAtom && this._atoms[0].match(Type.Float._atoms[0]);
 	}
 
 	get isInteger() {
@@ -66,7 +66,7 @@ export class Type {
 
 	get isNumeric() {
 		return this._atoms.length === 2
-			&& (this._atoms[0].match(Type.Real._atoms[0]) || this._atoms[0].match(Type.Integer._atoms[0]));
+			&& (this._atoms[0].match(Type.Float._atoms[0]) || this._atoms[0].match(Type.Integer._atoms[0]));
 	}
 
 	toOptional() {
@@ -142,7 +142,7 @@ export class Type {
 				: value instanceof Date
 					? Type.Timestamp
 					: typeof value === "number"
-						? Type.Real
+						? Type.Float
 						: typeof value === "bigint"
 							? Type.Integer
 							: value instanceof ArrayBuffer
@@ -188,8 +188,8 @@ export class Type {
 	static readonly OptionalBoolean = Type.union(Type.Void, Type.Boolean);
 	static readonly Timestamp = Type.primitiveType("timestamp");
 	static readonly OptionalTimestamp = Type.union(Type.Void, Type.Timestamp);
-	static readonly Real = Type.primitiveType("real");
-	static readonly OptionalReal = Type.union(Type.Void, Type.Real);
+	static readonly Float = Type.primitiveType("float");
+	static readonly OptionalFloat = Type.union(Type.Void, Type.Float);
 	static readonly Integer = Type.primitiveType("integer");
 	static readonly OptionalInteger = Type.union(Type.Void, Type.Integer);
 	static readonly Buffer = Type.primitiveType("buffer");
@@ -202,8 +202,8 @@ export class Type {
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
 	static readonly Function = Type.functionType(undefined, undefined, true);
 	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
-	static readonly Number = Type.union(Type.Real, Type.Integer);
-	static readonly OptionalNumber = Type.union(Type.Void, Type.Real, Type.Integer);
+	static readonly Number = Type.union(Type.Float, Type.Integer);
+	static readonly OptionalNumber = Type.union(Type.Void, Type.Float, Type.Integer);
 	static readonly Enumerable = Type.union(Type.Buffer, Type.String, Type.Array);
 	static readonly OptionalEnumerable = Type.union(Type.Void, Type.Buffer, Type.String, Type.Array);
 	static readonly Iterable = Type.union(Type.Buffer, Type.String, Type.Array, Type.Object);

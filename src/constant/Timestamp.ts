@@ -4,7 +4,7 @@ import { Type } from "../Type.js";
 export type TimestampEncoding = "int64" | "int64le";
 
 const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
-const typeTimestampSince = Type.functionType(Type.Real, [Type.Timestamp, Type.Timestamp]);
+const typeTimestampSince = Type.functionType(Type.Float, [Type.Timestamp, Type.Timestamp]);
 
 export const encodeTimestamp = (value?: Date, encoding: TimestampEncoding = "int64")=> {
 	const buf = new ArrayBuffer(8);

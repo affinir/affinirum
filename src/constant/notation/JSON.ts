@@ -2,7 +2,7 @@ import { Constant } from "../../Constant.js";
 import { Value } from "src/Value.js";
 import { Type } from "../../Type.js";
 
-const typeJson = Type.union(Type.Void, Type.Boolean, Type.Timestamp, Type.Real, Type.Integer, Type.String, Type.Array, Type.Object);
+const typeJson = Type.union(Type.Void, Type.Boolean, Type.Timestamp, Type.Float, Type.Integer, Type.String, Type.Array, Type.Object);
 
 export const formatJSON = (value: Value, whitespace?: string): string=>
 	JSON.stringify(value, (_key: string, value: any)=> typeof value === "bigint" ? `"${value.toString()}"` : value as unknown, whitespace);

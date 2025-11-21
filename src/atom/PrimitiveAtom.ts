@@ -1,6 +1,6 @@
 import { IAtom } from "../Atom.js";
 
-export type Primitive = "void" | "boolean" | "timestamp" | "real" | "integer" | "buffer" | "string";
+export type Primitive = "void" | "boolean" | "timestamp" | "float" | "integer" | "buffer" | "string";
 
 export class PrimitiveAtom implements IAtom {
 
@@ -24,7 +24,7 @@ export class PrimitiveAtom implements IAtom {
 			case "void": return 0x0;
 			case "boolean": return 0x2;
 			case "timestamp": return 0x3;
-			case "real": return 0x8;
+			case "float": return 0x8;
 			case "integer": return 0x10;
 			case "buffer": return 0x20;
 			case "string": return 0x30;

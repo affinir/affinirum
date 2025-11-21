@@ -8,7 +8,7 @@ describe("Strict Mode test", ()=> {
 	});
 	it("errors on undefines variables in strict mode", ()=> {
 		try {
-			new Affinirum("undefined1*2 + undefined2", { strict: true, variables: { defined: Type.Real } });
+			new Affinirum("undefined1*2 + undefined2", { strict: true, variables: { defined: Type.Float } });
 		}
 		catch (err: any) {
 			expect(err.message).toContain("error");

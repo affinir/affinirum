@@ -3,7 +3,7 @@ export const Keywords = [
 	"null", "void",
 	"boolean",
 	"timestamp",
-	"real",
+	"float",
 	"integer",
 	"buffer",
 	"string",
