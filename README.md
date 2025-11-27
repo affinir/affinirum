@@ -64,12 +64,12 @@ Whitespace characters are ignored.
 - **void** for value **null**
 - **boolean** for values **true** and **false**
 - **timestamp** for date-time values, millisecons since Unix epoch
-- **float** for binary64 - IEEE 754 double-precision binary floating-point format
+- **float** for 64-bit floating point values in binary64, IEEE 754 binary floating-point format
 - **integer** for 64-bit integer values
 - **buffer** for ordered sequences of bytes
 - **string** for ordered sequences of characters, text strings
-- **array** for ordered sequences of valuese
-- **object** for sets of named values
+- **array** for ordered sequences of values
+- **object** for collections of named values
 - **function** for built-in, injected or script-defined subroutines
 
 Type modifier **?** can be used to make any type optional (nullable).
