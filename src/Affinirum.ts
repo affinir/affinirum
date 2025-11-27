@@ -387,7 +387,7 @@ export class Affinirum {
 		else if (state.isVariable || state.isValue) {
 			const assignable = state.isVariable;
 			if (!state.next().isToken) {
-				state.throwError(`missing variable name`);
+				state.throwError("missing variable name");
 			}
 			const token = state.token;
 			if (scope.has(token)) {

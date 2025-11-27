@@ -275,7 +275,7 @@ Unknown or variant type is declared as **??**.
 - **integer timestamp.Minute(utc: boolean?)** — Minute
 - **integer timestamp.Second(utc: boolean?)** — Second
 - **integer timestamp.Millisecond(utc: boolean?)** — Millisecond
-- **integer timestamp.EpochTime(epoch: timestamp?)** — Epoch milliseconds
+- **integer timestamp.EpochTime(epoch: timestamp?)** — Milliseconds since epoch
 
 ## Reference
 
