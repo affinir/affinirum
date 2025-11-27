@@ -125,6 +125,10 @@ describe("Variable Expression test", ()=> {
 			{ a: undefined, b: 0, result: 0 },
 			{ a: undefined, b: undefined, result: undefined },
 		]],
+		["(++a + -b)++--(-c +--+d)", [
+			{ a: 1, b: 2, c: 3, d: 4, result: 0 },
+			{ a: -1, b: -2, c: -3, d: -4, result: 0 },
+		]],
 		["(a + b) * (c + d) - (e - f) / (g + h)", [
 			{ a: 1, b: 2, c: 3, d: 4, e: 1, f: 0, g: 0.5, h: 0.5, result: 20 },
 		]],
@@ -138,7 +142,7 @@ describe("Variable Expression test", ()=> {
 		["(a + b + c + d) * (a - b - c + 1) / b + 1 * (if (a < 23) { 10 } else { 20 })", [
 			{ a: 20, b: 10, c: 1, d: 2, result: 43 },
 		]],
-		["[a, b, c].Add([1, 2, 3, 4]).Reduce(~float(acc:float, val) { acc + val })", [
+		["[a, b, c].Add([1, 2, 3, 4]).Reduce(~float(acc:float, v) { acc + v })", [
 			{ a: 1, b: 2, c: 3, result: 16 },
 		]],
 		["-a^2 == b", [
@@ -289,7 +293,7 @@ describe("Variable Expression test", ()=> {
 			{ x: 1n, result: 2n },
 			{ x: undefined, result: 2n },
 		]],
-		["Array.Unique(a).Reduce(~?? (acc,val){acc+val})", [
+		["Array.Unique(a).Reduce(~?? (acc,v){acc+v})", [
 			{ a: [1, 2, 3, 3, 2, 1], result: 6 },
 			{ a: ["a", "b", "c", "a", "b", "c"], result: "abc" },
 		]],
@@ -313,7 +317,7 @@ describe("Variable Expression test", ()=> {
 			{ start: 1n, end: 11n, result: 55n },
 			{ start: -1n, end: -11n, result: -65n },
 		]],
-		["[p,11].Derive(~ integer?(a:integer) {const t=10; if (a>10){t}else{null} } )[i]", [
+		["[p,11].Derive(~ integer?(a:integer) {val t=10; if (a>10){t}else{null} } )[i]", [
 			{ i: 1n, p: 10n, result: 10n },
 			{ i: 0n, p: 1n, result: undefined },
 		]],
@@ -338,7 +342,7 @@ describe("Variable Expression test", ()=> {
 		["arr1.Filter(~boolean(v:float, i:integer, a:array){(a[i]*i>2)})[1]", [
 			{ arr1: [1, 1, 5, 4, 1], result: 4 },
 		]],
-		["arr0.Derive(~float(val:float){val*2*t}).Filter(~boolean(val:float){val>5})[1]+[9].Length()", [
+		["arr0.Derive(~float(v:float){v*2*t}).Filter(~boolean(v:float){v>5})[1]+[9].Length()", [
 			{ arr0: [1, 2, 3], t: 2, result: 13 },
 		]],
 		["Float.Sum(arr0.Derive( ~ array(a:array){ a.Derive(~float(b:float){b+12.0})} ).Flatten())", [
@@ -355,7 +359,7 @@ describe("Variable Expression test", ()=> {
 			{ arr0: [1, 2, 3, 4], result: true },
 			{ arr0: [1, -2, 3, 4], result: false },
 		]],
-		["const x=arr0.Any(~boolean(a:float){a<0});var b:boolean=c;x&b", [
+		["val x=arr0.Any(~boolean(a:float){a<0});var b:boolean=c;x&b", [
 			{ arr0: [0, -1], c: true, result: true },
 		]],
 		["[\"a\":a1+a2, \"b\": b1, \"c\": \"10\", \"d\": a1*a2, \"p\": 10][p]", [
@@ -391,7 +395,7 @@ describe("Variable Expression test", ()=> {
 			{ o1: { a: 0, b: 1 }, i: 0n, result: 0 },
 			{ o1: { b: "baa", c: "caa" }, i: 1n, result: "caa" },
 		]],
-		["const a:float=myvar/3;var b=mv*2;a/b", [
+		["val a:float=myvar/3;var b=mv*2;a/b", [
 			{ myvar: 6, mv: 1, result: 1 },
 			{ myvar: 30, mv: 5, result: 1 },
 		]],
@@ -403,8 +407,8 @@ describe("Variable Expression test", ()=> {
 			{ obj2: { prop: { a: 10 } }, result: 10 },
 			{ obj2: { prop: { a: "10" } }, result: "10" },
 		]],
-		["val*myobj[a[\"prop\"]]+1", [
-			{ val: 1, myobj: { test: 10 }, a: { prop: "test" }, result: 11 },
+		["v*myobj[a[\"prop\"]]+1", [
+			{ v: 1, myobj: { test: 10 }, a: { prop: "test" }, result: 11 },
 		]],
 		["obj3[prop1]+obj3[prop2]", [
 			{ obj3: { prop1: 1, prop2: 2 }, prop1: "prop1", prop2: "prop2", result: 3 },
@@ -456,7 +460,7 @@ describe("Variable Expression test", ()=> {
 		["var f=~boolean(a:float){a=a*100; a>0};Float.Sum(a.Filter(f))", [
 			{ a: [-10, -20, 1, 2], result: 3 },
 		]],
-		["const f=~??(){b = b + 1000; true}; Float.Sum(a.Filter(f)) + b", [
+		["val f=~??(){b = b + 1000; true}; Float.Sum(a.Filter(f)) + b", [
 			{ a: [10, 20, 1, 2], b: 0, result: 4033 },
 		]],
 		["var a=~(){b = b + 10}; a(); b", [

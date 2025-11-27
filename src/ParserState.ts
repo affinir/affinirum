@@ -1,8 +1,8 @@
 import { funcOr, funcAnd, funcNot } from "./constant/Boolean.js";
 import { parseBuffer } from "./constant/Buffer.js";
 import { funcAdd } from "./constant/Enumerable.js";
-import { isSignSymbol, isTokenStartSymbol, isNumericSymbol, isTokenSymbol,
-	isDateSymbol, isTimeSymbol, isDateTimeSeparatorSymbol, replaceWith } from "./constant/String.js";
+import { isSignSymbol, isTokenStartSymbol, isNumericSymbol, isTokenSymbol, isDateSymbol, isTimeSymbol, isDateTimeSeparatorSymbol,
+	replaceWith } from "./constant/String.js";
 import { Constant } from "./Constant.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from "./constant/Number.js";
@@ -38,7 +38,7 @@ const idQuestion = Symbol();
 const idTilda = Symbol();
 const idEllipsis = Symbol();
 const idVariable = Symbol();
-const idConstant = Symbol();
+const idValue = Symbol();
 const idWhile = Symbol();
 const idIf = Symbol();
 const idElse = Symbol();
@@ -149,8 +149,8 @@ export class ParserState extends ParserFrame {
 		return this._fragment === idVariable;
 	}
 
-	get isConstant(): boolean {
-		return this._fragment === idConstant;
+	get isValue(): boolean {
+		return this._fragment === idValue;
 	}
 
 	get isWhile(): boolean {
@@ -416,8 +416,8 @@ export class ParserState extends ParserFrame {
 							case "array": this._fragment = Type.Array; break;
 							case "object": this._fragment = Type.Object; break;
 							case "function": this._fragment = Type.Function; break;
-							case "variable": case "var": this._fragment = idVariable; break;
-							case "constant": case "const": this._fragment = idConstant; break;
+							case "var": this._fragment = idVariable; break;
+							case "val": this._fragment = idValue; break;
 							case "while": this._fragment = idWhile; break;
 							case "if": this._fragment = idIf; break;
 							case "else": this._fragment = idElse; break;

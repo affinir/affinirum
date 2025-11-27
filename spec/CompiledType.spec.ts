@@ -40,9 +40,9 @@ describe("Compiled Type test", ()=> {
 		["~string (x:string, y:array...){y.Append(x); y.Join()}", "~string(string,array...)"],
 		["~integer (x:integer, y:array...){y.Prepend(x); y.Length}", "~integer(integer,array...)"],
 		["var a:[integer] = [0,1];a", "[integer]"],
-		["const a:[[integer]] = [[0,1],[2,3]];a", "[[integer]]"],
+		["val a:[[integer]] = [[0,1],[2,3]];a", "[[integer]]"],
 		["var o:['a':integer,'b':string] = ['a':0,'b':'1'];o", "[\"a\":integer,\"b\":string]"],
-		["const o:['a':['c':integer],'b':string] = ['a':['c':0],'b':'1'];o", "[\"a\":[\"c\":integer],\"b\":string]"],
+		["val o:['a':['c':integer],'b':string] = ['a':['c':0],'b':'1'];o", "[\"a\":[\"c\":integer],\"b\":string]"],
 	] as [string, string][]).forEach(([expr, expected])=> {
 		it(`parses expression ${expr} and determines value type`, ()=> {
 			try {

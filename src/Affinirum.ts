@@ -149,29 +149,34 @@ export class Affinirum {
 	}
 
 	protected _conjunction(state: ParserState, scope: StaticScope): Node {
-		let node = this._comparison(state, scope);
+		let node = this._negation(state, scope);
 		while (state.operator === funcAnd) {
-			node = this._call(state.starts(), state.operator, [node, this._comparison(state.next(), scope)]);
+			node = this._call(state.starts(), state.operator, [node, this._negation(state.next(), scope)]);
+		}
+		return node;
+	}
+
+	protected _negation(state: ParserState, scope: StaticScope): Node {
+		const frame = state.starts();
+		let negate = false;
+		while (state.operator === funcNot) {
+			negate = !negate;
+			frame.ends(state);
+			state.next();
+		}
+		let node = this._comparison(state, scope);
+		if (negate) {
+			node = this._call(frame, funcNot, [node]);
 		}
 		return node;
 	}
 
 	protected _comparison(state: ParserState, scope: StaticScope): Node {
-		const frame = state.starts();
-		let not = false;
-		while (state.operator === funcNot) {
-			not = !not;
-			frame.starts(state);
-			state.next();
-		}
 		let node = this._aggregate(state, scope);
 		while (state.operator === funcGreaterThan || state.operator === funcLessThan
 			|| state.operator === funcGreaterOrEqual || state.operator === funcLessOrEqual
 			|| state.operator === funcEqual || state.operator === funcNotEqual) {
 			node = this._call(state.starts(), state.operator, [node, this._aggregate(state.next(), scope)]);
-		}
-		if (not) {
-			node = this._call(frame.ends(state), funcNot, [node]);
 		}
 		return node;
 	}
@@ -185,27 +190,34 @@ export class Affinirum {
 	}
 
 	protected _product(state: ParserState, scope: StaticScope): Node {
-		let node = this._factor(state, scope);
+		let node = this._signum(state, scope);
 		while (state.operator === funcMultiply || state.operator === funcDivide || state.operator === funcRemainder) {
-			node = this._call(state.starts(), state.operator, [node, this._factor(state.next(), scope)]);
+			node = this._call(state.starts(), state.operator, [node, this._signum(state.next(), scope)]);
+		}
+		return node;
+	}
+
+	protected _signum(state: ParserState, scope: StaticScope): Node {
+		const frame = state.starts();
+		let negate = false;
+		while (state.operator === funcAdd || state.operator === funcSubtract) {
+			if (state.operator === funcSubtract) {
+				negate = !negate;
+			}
+			frame.ends(state);
+			state.next();
+		}
+		let node = this._factor(state, scope);
+		if (negate) {
+			node = this._call(frame.ends(state), funcNegate, [node]);
 		}
 		return node;
 	}
 
 	protected _factor(state: ParserState, scope: StaticScope): Node {
-		const frame = state.starts();
-		let neg = false;
-		while (state.operator === funcSubtract) {
-			neg = !neg;
-			frame.starts(state);
-			state.next();
-		}
 		let node = this._accessor(state, scope);
 		while (state.operator === funcPower) {
 			node = this._call(state.starts(), state.operator, [node, this._accessor(state.next(), scope)]);
-		}
-		if (neg) {
-			node = this._call(frame.ends(state), funcNegate, [node]);
 		}
 		return node;
 	}
@@ -308,8 +320,8 @@ export class Affinirum {
 				this._vframes.set(state.token, state.starts());
 			}
 			if (state.next().isAssignment) {
-				if (variable.constant) {
-					state.throwError("illegal constant assignment");
+				if (!variable.assignable) {
+					state.throwError("illegal re-assignment");
 				}
 				if (state.assignment.operator) {
 					const operator = state.assignment.operator;
@@ -372,25 +384,25 @@ export class Affinirum {
 		else if (state.isBracketsClose) {
 			state.throwError("unexpected closing brackets");
 		}
-		else if (state.isVariable || state.isConstant) {
-			const constant = state.isConstant;
+		else if (state.isVariable || state.isValue) {
+			const assignable = state.isVariable;
 			if (!state.next().isToken) {
-				state.throwError(`missing ${constant ? "constant" : "variable"} name`);
+				state.throwError(`missing variable name`);
 			}
 			const token = state.token;
 			if (scope.has(token)) {
-				state.throwError(`illegal redefinition of ${constant ? "constant" : "variable"} ${token}`);
+				state.throwError(`illegal redefinition of variable ${token}`);
 			}
 			const frame = state.starts();
 			let type: Type | undefined;
 			if (state.next().isColon) {
 				type = this._type(state.next(), scope);
 			}
-			const variable = new Variable(type, constant);
+			const variable = new Variable(type, assignable);
 			scope.local(token, variable);
 			if (state.isAssignment) {
 				if (state.assignment.operator) {
-					state.throwError(`illegal assignment operator to ${constant ? "constant" : "variable"} ${token}`);
+					state.throwError(`illegal assignment operator with variable ${token}`);
 				}
 				return new VariableNode(frame, variable, this._unit(state.next(), scope));
 			}

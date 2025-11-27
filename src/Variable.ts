@@ -7,7 +7,7 @@ export class Variable {
 
 	constructor(
 		protected _type = Type.Unknown,
-		protected _constant = false,
+		protected readonly _assignable = true,
 	) {}
 
 	get value() {
@@ -26,8 +26,8 @@ export class Variable {
 		this._type = type;
 	}
 
-	get constant() {
-		return this._constant;
+	get assignable() {
+		return this._assignable;
 	}
 
 }

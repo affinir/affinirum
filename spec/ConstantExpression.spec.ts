@@ -30,6 +30,8 @@ describe("Constant Expression", ()=> {
 		["Float.NegativeInfinity.Cast", -0x8000000000000000n],
 		["Float.Epsilon.Cast", 0n],
 		["0.5", 0.5],
+		["-0.5", -0.5],
+		["+0.5", +0.5],
 		["0.434e+2", 43.4],
 		["0.434e2", 43.4],
 		["0.434e000002", 43.4],

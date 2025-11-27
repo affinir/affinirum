@@ -64,7 +64,7 @@ Whitespace characters are ignored.
 - **void** for value **null**
 - **boolean** for values **true** and **false**
 - **timestamp** for date-time values, millisecons since Unix epoch
-- **float** IEEE 754 double-precision binary floating-point format: binary64
+- **float** for binary64 - IEEE 754 double-precision binary floating-point format
 - **integer** for 64-bit integer values
 - **buffer** for ordered sequences of bytes
 - **string** for ordered sequences of characters, text strings
@@ -304,7 +304,7 @@ const iteratorExpr = new Affinirum(
 const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
 ...
 const complexExpr = new Affinirum(
-	'var a=myvar1/10, const b=myvar2-100, a/b + b*a + 600'
+	'var a=myvar1/10, val b=myvar2-100, a/b + b*a + 600'
 );
 const value = complexExpr.evaluate( { myvar1: 40, myvar2: 104 } ); // 4761
 ...
