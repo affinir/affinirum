@@ -384,8 +384,8 @@ export class Affinirum {
 		else if (state.isBracketsClose) {
 			state.throwError("unexpected closing brackets");
 		}
-		else if (state.isVariable || state.isValue) {
-			const assignable = state.isVariable;
+		else if (state.isVar || state.isVal) {
+			const assignable = state.isVar;
 			if (!state.next().isToken) {
 				state.throwError("missing variable name");
 			}

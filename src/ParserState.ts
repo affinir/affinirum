@@ -145,11 +145,11 @@ export class ParserState extends ParserFrame {
 		return this._fragment === idEllipsis;
 	}
 
-	get isVariable(): boolean {
+	get isVar(): boolean {
 		return this._fragment === idVar;
 	}
 
-	get isValue(): boolean {
+	get isVal(): boolean {
 		return this._fragment === idVal;
 	}
 
