@@ -37,8 +37,8 @@ const idDot = Symbol();
 const idQuestion = Symbol();
 const idTilda = Symbol();
 const idEllipsis = Symbol();
-const idVariable = Symbol();
-const idValue = Symbol();
+const idVar = Symbol();
+const idVal = Symbol();
 const idWhile = Symbol();
 const idIf = Symbol();
 const idElse = Symbol();
@@ -146,11 +146,11 @@ export class ParserState extends ParserFrame {
 	}
 
 	get isVariable(): boolean {
-		return this._fragment === idVariable;
+		return this._fragment === idVar;
 	}
 
 	get isValue(): boolean {
-		return this._fragment === idValue;
+		return this._fragment === idVal;
 	}
 
 	get isWhile(): boolean {
@@ -416,8 +416,8 @@ export class ParserState extends ParserFrame {
 							case "array": this._fragment = Type.Array; break;
 							case "object": this._fragment = Type.Object; break;
 							case "function": this._fragment = Type.Function; break;
-							case "var": this._fragment = idVariable; break;
-							case "val": this._fragment = idValue; break;
+							case "var": this._fragment = idVar; break;
+							case "val": this._fragment = idVal; break;
 							case "while": this._fragment = idWhile; break;
 							case "if": this._fragment = idIf; break;
 							case "else": this._fragment = idElse; break;
