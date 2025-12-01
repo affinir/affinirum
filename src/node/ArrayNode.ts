@@ -25,11 +25,18 @@ export class ArrayNode extends Node {
 			this._subnodes[i] = this._subnodes[i].compile(Type.Unknown);
 			constant &&= this._subnodes[i].constant;
 		}
-		return constant ? new ConstantNode(this, new Constant(this.evaluate(), this.type)) : this;
+		if (constant) {
+			return new ConstantNode(this, new Constant(this.evaluate(), this.type));
+		}
+		return this;
 	}
 
 	override evaluate(): Value {
-		return this._subnodes.map((s)=> s.evaluate());
+		const result: Value[] = [];
+		for (const subnode of this._subnodes) {
+			result.push(subnode.evaluate());
+		}
+		return result;
 	}
 
 	override toString(ident: number = 0): string {

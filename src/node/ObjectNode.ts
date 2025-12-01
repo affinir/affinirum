@@ -30,15 +30,18 @@ export class ObjectNode extends Node {
 			this._subnodes[i][1] = this._subnodes[i][1].compile(Type.Unknown);
 			constant &&= this._subnodes[i][1].constant;
 		}
-		return constant ? new ConstantNode(this, new Constant(this.evaluate(), this.type)) : this;
+		if (constant) {
+			return new ConstantNode(this, new Constant(this.evaluate(), this.type));
+		}
+		return this;
 	}
 
 	override evaluate(): Value {
-		const obj: { [ key: string ]: Value } = {};
+		const result: { [ key: string ]: Value } = {};
 		for (const [key, value] of this._subnodes) {
-			obj[key.evaluate() as string] = value.evaluate();
+			result[key.evaluate() as string] = value.evaluate();
 		}
-		return obj;
+		return result;
 	}
 
 	override toString(ident: number = 0): string {

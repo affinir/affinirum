@@ -1,6 +1,6 @@
 import { ParserFrame } from "./ParserFrame.js";
-import { Value } from "./Value.js";
 import { Type } from "./Type.js";
+import { Value } from "./Value.js";
 
 export abstract class Node extends ParserFrame {
 

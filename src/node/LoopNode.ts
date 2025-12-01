@@ -2,6 +2,7 @@ import { Node } from "../Node.js";
 import { ParserFrame } from "../ParserFrame.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
+import { JumpException } from "../JumpException.js";
 
 export class LoopNode extends Node {
 
@@ -24,16 +25,29 @@ export class LoopNode extends Node {
 	}
 
 	override evaluate(): Value {
-		let value: Value;
+		let result: Value = undefined;
 		while (this._cnode.evaluate()) {
-			value = this._subnode.evaluate();
+			try {
+				result = this._subnode.evaluate();
+			}
+			catch (e) {
+				if (e instanceof JumpException) {
+					if (e.jump === "stop") {
+						break;
+					}
+					if (e.jump === "next") {
+						continue;
+					}
+				}
+				throw e;
+			}
 		}
-		return value;
+		return result;
 	}
 
 	override toString(ident: number = 0): string {
 		return `${super.toString(ident)} loop node cnode:\n${this._cnode.toString(ident + 1)}\n`
-			+ `${super.toString(ident)} subnode:\n${this._subnode.toString(ident + 1)}`;
+			+ `${super.toString(ident)} loop node subnode:\n${this._subnode.toString(ident + 1)}`;
 	}
 
 }

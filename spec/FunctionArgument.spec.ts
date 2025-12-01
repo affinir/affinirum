@@ -8,15 +8,15 @@ val cint = 01000;
 val cstr = "thestring";
 var vnum = cnum + cstr.Length;
 var vint = if myvr > 1000 {cint + cnum} else {cint - cnum};
-var vstr = cstr + cnum;
+var vstr = cstr + cnum; $$ test comment
 val carr1 = [1, 2, 3, 4];
 var varr2 = [5, 6, 7, 8] + carr1;
 val cobj = [ "a": 1, "b": 2 ];
 var vobj = Object.Merge([ "x": 3, "abcdef": 4 ], cobj);
 val cfunc = ~string (x: integer, y: integer, z: integer) {
-  (x + y + z + cnum + vint).Format
+  (x + y + z + cnum + vint).Format;
 };
-var vfunc = ~string (f: ~string(integer, integer, integer)) {
+var vfunc = ~string (f: ~string(integer, integer, integer)) $ tetsstts $ {
   f(1, 2, cobj."a" + vobj."b")
 };
 vfunc(cfunc)

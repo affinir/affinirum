@@ -15,7 +15,8 @@ import { Node } from "./Node.js";
 import { ArrayNode } from "./node/ArrayNode.js";
 import { BlockNode } from "./node/BlockNode.js";
 import { ConstantNode } from "./node/ConstantNode.js";
-import { CallNode } from "./node/CallNode.js";
+import { FunctionNode } from "./node/FunctionNode.js";
+import { JumpNode } from "./node/JumpNode.js";
 import { LoopNode } from "./node/LoopNode.js";
 import { ObjectNode } from "./node/ObjectNode.js";
 import { SwitchNode } from "./node/SwitchNode.js";
@@ -23,6 +24,7 @@ import { VariableNode } from "./node/VariableNode.js";
 import { ParserFrame } from "./ParserFrame.js";
 import { ParserState } from "./ParserState.js";
 import { StaticScope } from "./StaticScope.js";
+import { JumpException } from "./JumpException.js";
 
 export class Affinirum {
 
@@ -56,8 +58,8 @@ export class Affinirum {
 			}
 		}
 		const state = new ParserState(this._script);
-		this._root = this._block(state.next(), this._scope);
-		if (!state.isVoid) {
+		this._root = this._list(state.next(), this._scope);
+		if (!state.isEmpty) {
 			state.throwError("unexpected expression token or expression end");
 		}
 		this._root = this._root.compile(config?.type ?? Type.Unknown);
@@ -116,16 +118,35 @@ export class Affinirum {
 			}
 			variable.value = value;
 		}
-		return this._root.evaluate();
+		try {
+			return this._root.evaluate();
+		}
+		catch (e) {
+			if (e instanceof JumpException) {
+				if (e.jump === "exit") {
+					return e.value;
+				}
+				else {
+					throw this._root.throwError(`unexpected ${e.jump} jump`);
+				}
+			}
+			throw e;
+		}
 	}
 
-	protected _block(state: ParserState, scope: StaticScope): Node {
+	protected _list(state: ParserState, scope: StaticScope): Node {
 		const frame = state.starts();
-		const nodes: Node[] = [this._unit(state, scope)];
-		while (state.isSemicolon) {
-			nodes.push(this._unit(state.next(), scope));
+		const subnodes: Node[] = [];
+		while (!state.isEmpty) {
+			subnodes.push(this._unit(state, scope));
+			if (!state.isSemicolon) {
+				break;
+			}
+			else {
+				state.next();
+			}
 		}
-		return new BlockNode(frame.ends(state), nodes);
+		return new BlockNode(frame.ends(state), subnodes);
 	}
 
 	protected _unit(state: ParserState, scope: StaticScope): Node {
@@ -135,7 +156,8 @@ export class Affinirum {
 	protected _coalescence(state: ParserState, scope: StaticScope): Node {
 		let node = this._disjunction(state, scope);
 		while (state.operator === funcCoalesce) {
-			node = this._call(state.starts(), state.operator, [node, this._disjunction(state.next(), scope)]);
+			const fnode = new ConstantNode(state, state.operator);
+			node = new FunctionNode(state, fnode, [node, this._disjunction(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -143,7 +165,8 @@ export class Affinirum {
 	protected _disjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this._conjunction(state, scope);
 		while (state.operator === funcOr) {
-			node = this._call(state.starts(), state.operator, [node, this._conjunction(state.next(), scope)]);
+			const fnode = new ConstantNode(state, state.operator);
+			node = new FunctionNode(state, fnode, [node, this._conjunction(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -151,7 +174,8 @@ export class Affinirum {
 	protected _conjunction(state: ParserState, scope: StaticScope): Node {
 		let node = this._negation(state, scope);
 		while (state.operator === funcAnd) {
-			node = this._call(state.starts(), state.operator, [node, this._negation(state.next(), scope)]);
+			const fnode = new ConstantNode(state, state.operator);
+			node = new FunctionNode(state, fnode, [node, this._negation(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -166,7 +190,8 @@ export class Affinirum {
 		}
 		let node = this._comparison(state, scope);
 		if (negate) {
-			node = this._call(frame, funcNot, [node]);
+			const fnode = new ConstantNode(frame, funcNot);
+			node = new FunctionNode(frame, fnode, [node]);
 		}
 		return node;
 	}
@@ -176,7 +201,8 @@ export class Affinirum {
 		while (state.operator === funcGreaterThan || state.operator === funcLessThan
 			|| state.operator === funcGreaterOrEqual || state.operator === funcLessOrEqual
 			|| state.operator === funcEqual || state.operator === funcNotEqual) {
-			node = this._call(state.starts(), state.operator, [node, this._aggregate(state.next(), scope)]);
+			const fnode = new ConstantNode(state, state.operator);
+			node = new FunctionNode(state, fnode, [node, this._aggregate(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -184,7 +210,8 @@ export class Affinirum {
 	protected _aggregate(state: ParserState, scope: StaticScope): Node {
 		let node = this._product(state, scope);
 		while (state.operator === funcAdd || state.operator === funcSubtract) {
-			node = this._call(state.starts(), state.operator, [node, this._product(state.next(), scope)]);
+			const fnode = new ConstantNode(state, state.operator);
+			node = new FunctionNode(state, fnode, [node, this._product(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -192,7 +219,8 @@ export class Affinirum {
 	protected _product(state: ParserState, scope: StaticScope): Node {
 		let node = this._signum(state, scope);
 		while (state.operator === funcMultiply || state.operator === funcDivide || state.operator === funcRemainder) {
-			node = this._call(state.starts(), state.operator, [node, this._signum(state.next(), scope)]);
+			const fnode = new ConstantNode(state, state.operator);
+			node = new FunctionNode(state, fnode, [node, this._signum(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -209,7 +237,8 @@ export class Affinirum {
 		}
 		let node = this._factor(state, scope);
 		if (negate) {
-			node = this._call(frame.ends(state), funcNegate, [node]);
+			const fnode = new ConstantNode(frame, funcNegate);
+			node = new FunctionNode(frame, fnode, [node]);
 		}
 		return node;
 	}
@@ -217,7 +246,8 @@ export class Affinirum {
 	protected _factor(state: ParserState, scope: StaticScope): Node {
 		let node = this._accessor(state, scope);
 		while (state.operator === funcPower) {
-			node = this._call(state.starts(), state.operator, [node, this._accessor(state.next(), scope)]);
+			const fnode = new ConstantNode(state, state.operator);
+			node = new FunctionNode(state, fnode, [node, this._accessor(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -229,11 +259,11 @@ export class Affinirum {
 			if (state.isDot || state.isQuestion) {
 				const operator = state.isDot ? funcAt : funcHas;
 				if (state.next().isLiteral && (typeof state.literal.value === "string" || typeof state.literal.value === "bigint")) {
-					node = this._call(frame.ends(state), operator, [node, new ConstantNode(state, new Constant(state.literal.value))]);
+					const fnode = new ConstantNode(frame.ends(state), operator);
+					node = new FunctionNode(frame, fnode, [node, new ConstantNode(state, new Constant(state.literal.value))]);
 					state.next();
 				}
 				else if (state.isToken) {
-					frame.ends(state);
 					const func = this._functions.get(state.token);
 					if (func) {
 						if (state.next().isParenthesesOpen) {
@@ -244,15 +274,18 @@ export class Affinirum {
 									break;
 								}
 							}
-							node = this._call(frame.ends(state), func, subnodes);
+							const fnode = new ConstantNode(frame.ends(state), func);
+							node = new FunctionNode(frame, fnode, subnodes);
 							state.closeParentheses().next();
 						}
 						else {
-							node = this._call(frame, func, [node]);
+							const fnode = new ConstantNode(frame.ends(state), func);
+							node = new FunctionNode(frame, fnode, [node]);
 						}
 					}
 					else {
-						node = this._call(frame, operator, [node, new ConstantNode(state, new Constant(state.token))]);
+						const fnode = new ConstantNode(frame.ends(), operator);
+						node = new FunctionNode(frame, fnode, [node, new ConstantNode(state, new Constant(state.token))]);
 						state.next();
 					}
 				}
@@ -268,11 +301,12 @@ export class Affinirum {
 						break;
 					}
 				}
-				node = new CallNode(frame.ends(state), node, subnodes);
+				node = new FunctionNode(frame.ends(state), node, subnodes);
 				state.closeParentheses().next();
 			}
 			else if (state.isBracketsOpen) {
-				node = this._call(frame, funcAt, [node, this._unit(state.next(), scope)]);
+				const fnode = new ConstantNode(frame, funcAt);
+				node = new FunctionNode(frame, fnode, [node, this._unit(state.next(), scope)]);
 				state.closeBrackets().next();
 			}
 		}
@@ -325,19 +359,29 @@ export class Affinirum {
 				}
 				if (state.assignment.operator) {
 					const operator = state.assignment.operator;
-					const subnodes = [new VariableNode(frame, variable), this._unit(state.next(), scope)];
-					return new VariableNode(frame, variable, this._call(frame, operator, subnodes));
+					const fnode = new ConstantNode(frame, operator);
+					const subnode = new FunctionNode(frame, fnode, [new VariableNode(frame, variable), this._unit(state.next(), scope)]);
+					return new VariableNode(frame, variable, subnode);
 				}
 				else {
-					return new VariableNode(frame, variable, this._unit(state.next(), scope));
+					const subnode = this._unit(state.next(), scope);
+					return new VariableNode(frame, variable, subnode);
 				}
 			}
 			return new VariableNode(frame, variable);
 		}
 		else if (state.isBracesOpen) {
-			const node = this._block(state.next(), scope);
-			state.closeBraces().next();
-			return node;
+			const frame = state.starts();
+			const subnodes: Node[] = [];
+			while (!state.next().isBracesClose) {
+				subnodes.push(this._unit(state, scope));
+				if (!state.isSemicolon) {
+					break;
+				}
+			}
+			frame.ends(state);
+			state.next();
+			return new BlockNode(frame, subnodes);
 		}
 		else if (state.isBracesClose) {
 			state.throwError("unexpected closing braces");
@@ -373,7 +417,7 @@ export class Affinirum {
 				}
 			}
 			frame.ends(state);
-			state.closeBrackets().next();
+			state.next();
 			if (colon) {
 				return new ObjectNode(frame, subnodes.map(([k, v])=>
 					[typeof k === "number" ? new ConstantNode(v, new Constant(String(k))) : k, v] as const
@@ -411,13 +455,29 @@ export class Affinirum {
 		else if (state.isTilda) {
 			return this._function(state, scope);
 		}
-		else if (state.isWhile) {
-			return this._loop(state, scope);
-		}
 		else if (state.isIf) {
 			return this._switch(state, scope);
 		}
-		else if (state.isVoid) {
+		else if (state.isWhile) {
+			return this._loop(state, scope);
+		}
+		else if (state.isExit) {
+			return new JumpNode(state, "exit", this._unit(state.next(), scope));
+		}
+		else if (state.isReturn) {
+			return new JumpNode(state, "return", this._unit(state.next(), scope));
+		}
+		else if (state.isStop) {
+			const node = new JumpNode(state, "stop");
+			state.next();
+			return node;
+		}
+		else if (state.isNext) {
+			const node = new JumpNode(state, "next");
+			state.next();
+			return node;
+		}
+		else if (state.isEmpty) {
 			state.throwError("unexpected end of expression");
 		}
 		state.throwError("unexpected expression token");
@@ -462,14 +522,12 @@ export class Affinirum {
 		state.closeParentheses();
 		frame.ends(state);
 		const args = Array.from(variables.values());
-		state.next().openBraces().next();
-		const subnode =  this._block(state, scope.subscope(variables));
-		state.closeBraces().next();
-		const value = (...values: Value[])=> {
+		const subnode =  this._unit(state.next(), scope.subscope(variables));
+		const func = (...values: Value[])=> {
 			args.forEach((arg, ix)=> arg.value = values[ix]);
 			return subnode.evaluate();
 		};
-		const constant = new Constant(value, Type.functionType(retType, args.map((v)=> v.type), variadic));
+		const constant = new Constant(func, Type.functionType(retType, args.map((v)=> v.type), variadic));
 		return new ConstantNode(frame, constant, subnode);
 	}
 
@@ -477,33 +535,18 @@ export class Affinirum {
 		const frame = state.starts();
 		const cnode = this._unit(state.next(), scope);
 		frame.ends(state);
-		state.openBraces().next();
-		const subnode = this._block(state, scope);
-		state.closeBraces().next();
-		return new LoopNode(frame, cnode, subnode);
+		return new LoopNode(frame, cnode, this._unit(state, scope));
 	}
 
 	protected _switch(state: ParserState, scope: StaticScope) {
 		const frame = state.starts();
 		const cnode = this._unit(state.next(), scope);
 		frame.ends(state);
-		const subnodes: Node[] = [];
-		state.openBraces().next();
-		subnodes.push(this._block(state, scope));
-		state.closeBraces().next();
-		if (state.isElse) {
-			state.next().openBraces().next();
-			subnodes.push(this._block(state, scope));
-			state.closeBraces().next();
-		}
-		else {
-			subnodes.push(new ConstantNode(state.starts(), Constant.Null));
-		}
-		return new SwitchNode(frame, cnode, subnodes);
-	}
-
-	protected _call(frame: ParserFrame, func: Constant, subnodes: Node[]): Node {
-		return new CallNode(frame, new ConstantNode(frame, func), subnodes);
+		const cthen = this._unit(state, scope);
+		const celse = state.isElse
+			? this._unit(state.next(), scope)
+			: new ConstantNode(state.starts(), Constant.Null);
+		return new SwitchNode(frame, cnode, [cthen, celse]);
 	}
 
 	protected _type(state: ParserState, scope: StaticScope): Type {

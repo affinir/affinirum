@@ -5,8 +5,9 @@ import { ConstantNode } from "./ConstantNode.js";
 import { ArrayNode } from "./ArrayNode.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
+import { JumpException } from "../JumpException.js";
 
-export class CallNode extends Node {
+export class FunctionNode extends Node {
 
 	protected _type: Type;
 
@@ -41,15 +42,19 @@ export class CallNode extends Node {
 				this._subnodes[i] = this._subnodes[i].compile(argType);
 				constant &&= this._subnodes[i].constant;
 			}
-			return constant ? new ConstantNode(this, new Constant(this.evaluate(), this.type)) : this;
+			if (constant) {
+				return new ConstantNode(this, new Constant(this.evaluate(), this.type));
+			}
 		}
-		const arity = functionAtoms.filter((i)=> i.isVariadic).map((i)=> i.arity).reduce((acc, val)=> Math.max(acc, val), 0);
-		if (arity > 0) {
-			const frame = this._subnodes[arity - 1].starts();
-			this._subnodes = this._subnodes.slice(0, arity - 1).concat(new ArrayNode(
-				frame.ends(this._subnodes[this._subnodes.length - 1]),
-				this._subnodes.slice(arity - 1)
-			));
+		else {
+			const arity = functionAtoms.filter((i)=> i.isVariadic).map((i)=> i.arity).reduce((acc, val)=> Math.max(acc, val), 0);
+			if (arity > 0) {
+				const frame = this._subnodes[arity - 1].starts();
+				this._subnodes = this._subnodes.slice(0, arity - 1).concat(new ArrayNode(
+					frame.ends(this._subnodes[this._subnodes.length - 1]),
+					this._subnodes.slice(arity - 1)
+				));
+			}
 		}
 		return this;
 	}
@@ -59,7 +64,20 @@ export class CallNode extends Node {
 		if (typeof func !== "function") {
 			this.throwError(`function expected not ${Type.of(func)}`);
 		}
-		return func(...this._subnodes.map((node)=> node.evaluate()));
+		try {
+			return func(...this._subnodes.map((node)=> node.evaluate()));
+		}
+		catch (e) {
+			if (e instanceof JumpException) {
+				if (e.jump === "return") {
+					return e.value;
+				}
+				if (e.jump === "stop" || e.jump === "next") {
+					throw this.throwError(`unexpected ${e.jump} jump`);
+				}
+			}
+			throw e;
+		}
 	}
 
 	override toString(ident: number = 0): string {

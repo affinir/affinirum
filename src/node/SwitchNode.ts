@@ -34,7 +34,9 @@ export class SwitchNode extends Node {
 				this._subnodes[i] = this._subnodes[i].compile(type);
 				constant &&= this._subnodes[i].constant;
 			}
-			return constant ? new ConstantNode(this, new Constant(this.evaluate(), this.type)) : this;
+			if (constant) {
+				return new ConstantNode(this, new Constant(this.evaluate(), this.type));
+			}
 		}
 		return this;
 	}

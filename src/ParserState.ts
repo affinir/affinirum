@@ -35,13 +35,17 @@ const idColon = Symbol();
 const idComma = Symbol();
 const idDot = Symbol();
 const idQuestion = Symbol();
-const idTilda = Symbol();
 const idEllipsis = Symbol();
+const idTilda = Symbol();
 const idVar = Symbol();
 const idVal = Symbol();
-const idWhile = Symbol();
 const idIf = Symbol();
 const idElse = Symbol();
+const idWhile = Symbol();
+const idExit = Symbol();
+const idReturn = Symbol();
+const idStop = Symbol();
+const idNext = Symbol();
 
 export class ParserState extends ParserFrame {
 
@@ -137,12 +141,12 @@ export class ParserState extends ParserFrame {
 		return this._fragment === idQuestion;
 	}
 
-	get isTilda(): boolean {
-		return this._fragment === idTilda;
-	}
-
 	get isEllipsis(): boolean {
 		return this._fragment === idEllipsis;
+	}
+
+	get isTilda(): boolean {
+		return this._fragment === idTilda;
 	}
 
 	get isVar(): boolean {
@@ -153,10 +157,6 @@ export class ParserState extends ParserFrame {
 		return this._fragment === idVal;
 	}
 
-	get isWhile(): boolean {
-		return this._fragment === idWhile;
-	}
-
 	get isIf(): boolean {
 		return this._fragment === idIf;
 	}
@@ -165,7 +165,27 @@ export class ParserState extends ParserFrame {
 		return this._fragment === idElse;
 	}
 
-	get isVoid(): boolean {
+	get isWhile(): boolean {
+		return this._fragment === idWhile;
+	}
+
+	get isExit(): boolean {
+		return this._fragment === idExit;
+	}
+
+	get isReturn(): boolean {
+		return this._fragment === idReturn;
+	}
+
+	get isStop(): boolean {
+		return this._fragment === idStop;
+	}
+
+	get isNext(): boolean {
+		return this._fragment === idNext;
+	}
+
+	get isEmpty(): boolean {
 		return this._fragment == null;
 	}
 
@@ -243,7 +263,12 @@ export class ParserState extends ParserFrame {
 				case ";": this._fragment = idSemicolon; break;
 				case ":": this._fragment = idColon; break;
 				case ",": this._fragment = idComma; break;
-				case "~": this._fragment = idTilda; break;
+				case "~":
+					switch (this._expr.charAt(this._end)) {
+						case ">": ++this._end; this._fragment = idReturn; break;
+						default: this._fragment = idTilda; break;
+					}
+					break;
 				case "?":
 					switch (this._expr.charAt(this._end)) {
 						case "?": ++this._end; this._fragment = Type.Unknown; break;
@@ -284,6 +309,7 @@ export class ParserState extends ParserFrame {
 				case "=":
 					switch (this._expr.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcEqual; break;
+						case ">": ++this._end; this._fragment = idExit; break;
 						default: this._fragment = funcAssignment; break;
 					}
 					break;
@@ -418,9 +444,11 @@ export class ParserState extends ParserFrame {
 							case "function": this._fragment = Type.Function; break;
 							case "var": this._fragment = idVar; break;
 							case "val": this._fragment = idVal; break;
-							case "while": this._fragment = idWhile; break;
 							case "if": this._fragment = idIf; break;
 							case "else": this._fragment = idElse; break;
+							case "while": this._fragment = idWhile; break;
+							case "stop": this._fragment = idStop; break;
+							case "next": this._fragment = idNext; break;
 							default: this._fragment = token; break;
 						}
 					}

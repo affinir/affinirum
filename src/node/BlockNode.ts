@@ -24,11 +24,24 @@ export class BlockNode extends Node {
 			this._subnodes[i] = this._subnodes[i].compile(i < last ? Type.Unknown : type);
 			constant &&= this._subnodes[i].constant;
 		}
-		return constant ? new ConstantNode(this, new Constant(this.evaluate(), this.type)) : this;
+		if (constant) {
+			return new ConstantNode(this, new Constant(this.evaluate(), this.type));
+		}
+		if (this._subnodes.length === 0) {
+			return new ConstantNode(this, Constant.Null);
+		}
+		if (this._subnodes.length === 1) {
+			return this._subnodes[0];
+		}
+		return this;
 	}
 
 	override evaluate(): Value {
-		return this._subnodes.map((s)=> s.evaluate())[this._subnodes.length - 1];
+		let result: Value = undefined;
+		for (const subnode of this._subnodes) {
+			result = subnode.evaluate();
+		}
+		return result;
 	}
 
 	override toString(ident: number = 0): string {

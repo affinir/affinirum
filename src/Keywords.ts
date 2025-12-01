@@ -10,8 +10,8 @@ export const Keywords = [
 	"array",
 	"object",
 	"function",
-	"variable", "var",
-	"constant", "const",
-	"while",
+	"var",
+	"val",
 	"if", "else",
+	"while", "stop", "next",
 ];
