@@ -16,7 +16,8 @@ describe("Variable Expression test", ()=> {
 		["_var", [
 			{ _var: undefined, result: undefined },
 			{ _var: 0, result: 0 },
-			{ _var: "str0", result: "str0" }, { _var: true, result: true },
+			{ _var: "str0", result: "str0" },
+			{ _var: true, result: true },
 		]],
 		["!b", [
 			{ b: true, result: false },

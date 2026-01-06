@@ -6,7 +6,7 @@ export type StringEncoding = "utf8" | "ucs2" | "ucs2le";
 export const isSignSymbol = (c: string)=> c === "+" || c === "-";
 export const isNumericSymbol = (c: string)=>  c >= "0" && c <= "9" ;
 export const isAlphanumericSymbol = (c: string)=> c >= "a" && c <= "z" || c >= "0" && c <= "9";
-export const isTokenStartSymbol = (c: string)=>  c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_" ;
+export const isTokenStartSymbol = (c: string)=>  c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_" || c === "#" || c === "$";
 export const isTokenSymbol = (c: string)=> isTokenStartSymbol(c) || isNumericSymbol(c);
 export const isDateSeparatorSymbol = (c: string)=> c === "-";
 export const isTimeSeparatorSymbol = (c: string)=> c === ":";

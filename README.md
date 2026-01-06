@@ -22,13 +22,15 @@ Target: ES2022 [browser+NodeJS][ESM+CJS].
 
 ## Specifications
 
-Script can contain multiple semicolon-separated expressions, and blocks of statements.
-The value of a block is determined by the value of the last expression.
+A script may contain multiple expressions separated by semicolons, as well as blocks of statements.
+The value of a block is defined by the value of its last expression.
 - Scientific notation is supported for floating point numbers, like *0.1281e+2*.
 - ISO Timestamps prefixed with **@**, like *@2025-05-11T19:09:21.320Z*.
-- Hexadecimal buffer values are enclosed in backtick (**\`**) quotes, like *\`10ab0901\`*.
-- String literals are enclosed in single (**'**), or double (**"**) quotes, like *'string value1'*, or *"string value2"*.
+- Hexadecimal buffer values are enclosed in backticks (**\`**), like *\`10ab0901\`*.
+- String literals may be enclosed in single (**'**), or double (**"**) quotes, like *'string value1'*, or *"string value2"*.
+- Line comments begin with a double slash (**//**), while block comments are enclosed in triple slashes (**///**).
 
+### Arrays
 Array is an ordered sequence of values of any type.
 It is defined by comma-separated values enclosed in brackets (**[]**),
  like  *[0,1,2]*, *["a","b","c"]*.
@@ -39,6 +41,7 @@ Array elements can be accessed using the access operator (**.**),
 
 Easy way to check if array contains an index is to use presence operator (**?**), like *theArray?50*.
 
+### Objects
 Object is a container of named values of any type.
 It is defined by comma-separated key-value pair enclosed in brackets (**[]**) where key is separated from value by colon (**:**),
  like *["key1":100, "key2":"abc"]*, *["a":0,"b":"str":"c":valueVar]*.
@@ -50,13 +53,14 @@ Object properties can be accessed using the access operator (**.**) with a strin
 
 Easy way to check if object contains a key is to use presence operator (**?**), like *theObject?myKey*.
 
+### Functions
 A function is a callable code unit that produces a value.
 The set of built-in functions can be extended through configuration entries.
 Additionally, subroutines (functions defined in code) can be created.
 
-Valid variable and function names must start with a letter or underscore (**\_**)
- and can be followed by any combination of alphanumeric characters or underscores,
- like *x*, *\_a1*, *abc25*.
+Valid variable and function names must start with a letter, number sign (**\#**), dollar sign (**\$**), or underscore (**\_**)
+ and can be followed by any combination of alphanumeric characters, number signs, dollar signs, or underscores,
+ like *x*, *\_a1$*, *abc25*.
 
 Whitespace characters are ignored.
 
@@ -118,7 +122,7 @@ Unknown or variant type is declared as **??**.
 - Arithmetic division assignment: **/=**
 - Arithmetic remainder assignment: **%=**
 
-### Constants
+### Predefined Constants
 
 #### Boolean
 - **boolean Boolean.Or(values:array...)** — Boolean disjunction
@@ -186,7 +190,7 @@ Unknown or variant type is declared as **??**.
 - **void | boolean | float | string | array | object JSON.Parse(value: string)** — Parse JSON-formatted string
 
 
-### Functions
+### Predefined Functions
 
 #### General Functions
 - **?? ??.Coalesce(otherwise: ??)** — Null coalescence

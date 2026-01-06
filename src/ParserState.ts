@@ -334,6 +334,28 @@ export class ParserState extends ParserFrame {
 				case "/":
 					switch (this._expr.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcDivideAssignment; break;
+						case "/":
+							if (this._expr.charAt(++this._end) === '/') {
+								++this._end;
+								while (this._expr.charAt(this._end) !== ""
+									&& (this._expr.charAt(this._end) !== c
+									|| this._expr.charAt(this._end - 1) !== c
+									|| this._expr.charAt(this._end - 2) !== c)) {
+									++this._end;
+								}
+								if (this._end >= this._expr.length) {
+									this._start = this._expr.length;
+									throw new Error(`missing closing comment mark`);
+								}
+								++this._end;
+							}
+							else {
+								while (this._expr.charAt(this._end) !== ""
+									&& this._expr.charAt(this._end) !== "\n") {
+									++this._end;
+								}
+							}
+							break;
 						default: this._fragment = funcDivide; break;
 					}
 					break;
@@ -341,25 +363,6 @@ export class ParserState extends ParserFrame {
 					switch (this._expr.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcRemainderAssignment; break;
 						default: this._fragment = funcRemainder; break;
-					}
-					break;
-				case "$":
-					switch (this._expr.charAt(this._end)) {
-						case "$":
-							while (this._expr.charAt(this._end) !== "" && this._expr.charAt(this._end) !== "\n") {
-								++this._end;
-							}
-							break;
-						default:
-							while (this._expr.charAt(this._end) !== "" && this._expr.charAt(this._end) !== c) {
-								++this._end;
-							}
-							if (this._end >= this._expr.length) {
-								this._start = this._expr.length;
-								throw new Error(`missing closing comment mark ${c}`);
-							}
-							++this._end;
-							break;
 					}
 					break;
 				case "^": this._fragment = funcPower; break;
@@ -388,7 +391,8 @@ export class ParserState extends ParserFrame {
 						while (isTimeSymbol(this._expr.charAt(this._end))) {
 							++this._end;
 						}
-						if (this._expr.charAt(this._end) === "." && isNumericSymbol(this._expr.charAt(this._end + 1))) {
+						if (this._expr.charAt(this._end) === "."
+							&& isNumericSymbol(this._expr.charAt(this._end + 1))) {
 							++this._end;
 							while (isNumericSymbol(this._expr.charAt(this._end))) {
 								++this._end;
@@ -401,7 +405,8 @@ export class ParserState extends ParserFrame {
 					this._fragment = new Literal(new Date(this._expr.substring(this._start + 1, this._end)));
 					break;
 				case "`":
-					while (this._expr.charAt(this._end) !== "" && this._expr.charAt(this._end) !== c) {
+					while (this._expr.charAt(this._end) !== ""
+						&& this._expr.charAt(this._end) !== c) {
 						++this._end;
 					}
 					if (this._end >= this._expr.length) {
@@ -412,7 +417,8 @@ export class ParserState extends ParserFrame {
 					++this._end;
 					break;
 				case "\"": case "'":
-					while (this._expr.charAt(this._end) !== "" && this._expr.charAt(this._end) !== c) {
+					while (this._expr.charAt(this._end) !== ""
+						&& this._expr.charAt(this._end) !== c) {
 						++this._end;
 					}
 					if (this._end >= this._expr.length) {
@@ -472,7 +478,8 @@ export class ParserState extends ParserFrame {
 						}
 						if (this._expr.charAt(this._end) === "e") {
 							++this._end;
-							if (isNumericSymbol(this._expr.charAt(this._end)) || isSignSymbol(this._expr.charAt(this._end))) {
+							if (isNumericSymbol(this._expr.charAt(this._end))
+								|| isSignSymbol(this._expr.charAt(this._end))) {
 								++this._end;
 								while (isNumericSymbol(this._expr.charAt(this._end))) {
 									++this._end;
