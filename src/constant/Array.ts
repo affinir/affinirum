@@ -98,7 +98,7 @@ export const funcReduce = new Constant(
 		initial != null
 			? value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a), initial)
 			: value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a)),
-	Type.functionType(Type.Unknown, [Type.Array, Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown, Type.OptionalInteger, Type.OptionalArray])]),
+	Type.functionType(Type.Unknown, [Type.Array, Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown, Type.OptionalInteger, Type.OptionalArray]), Type.Unknown]),
 );
 
 export const funcCompose = new Constant(
@@ -134,7 +134,7 @@ export const funcAppend = new Constant(
 
 const funcJoin = new Constant(
 	(...values: (Value[] | Value[][])[])=>
-		(values as []).flat(Infinity).reduce((acc, val)=> [...acc, val], []),
+		(values as []).flat(Infinity),
 	Type.functionType(Type.Array, [Type.Array], true),
 );
 

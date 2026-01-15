@@ -16,21 +16,43 @@ export const encodeTimestamp = (value?: Date, encoding: TimestampEncoding = "int
 export const decodeTimestamp = (value?: ArrayBuffer, encoding: TimestampEncoding = "int64", byteOffset?: bigint)=>
 	value ? new Date(Number(new DataView(value).getBigInt64(byteOffset == null ? 0 : Number(byteOffset), encoding === "int64le"))) : undefined;
 
-export const formatTimestamp = (value?: Date, radix?: number)=> {
+export const formatTimestamp = (value?: Date, template?: string)=> {
 	if (value == null) {
 		return "";
 	}
-	const str = value.toISOString();
-	switch (radix) {
-		case 1: return str.slice(0, 4);
-		case 2: return str.slice(5, 7);
-		case 3: return str.slice(8, 10);
-		case 4: return str.slice(11, 13);
-		case 5: return str.slice(14, 16);
-		case 6: return str.slice(17, 19);
-		case 7: return str.slice(20, 23);
-		default: return str;
+	if (!template || typeof template !== "string") {
+		return value.toISOString();
 	}
+	const map = template.includes("Z")
+		? {
+				YYYY: value.getUTCFullYear(),
+				YY: value.getUTCFullYear() % 100,
+				MM: value.getUTCMonth() + 1,
+				DD: value.getUTCDate(),
+				hh: value.getUTCHours(),
+				mm: value.getUTCMinutes(),
+				ss: value.getUTCSeconds(),
+				fff: value.getUTCMilliseconds(),
+		  }
+		: {
+				YYYY: value.getFullYear(),
+				YY: value.getFullYear() % 100,
+				MM: value.getMonth() + 1,
+				DD: value.getDate(),
+				hh: value.getHours(),
+				mm: value.getMinutes(),
+				ss: value.getSeconds(),
+				fff: value.getMilliseconds(),
+		  };
+	return template.replaceAll("Z", "")
+		.replace("YYYY", map.YYYY.toString())
+		.replace("YY", map.YY.toString().padStart(2, "0"))
+		.replace("MM", map.MM.toString().padStart(2, "0"))
+		.replace("DD", map.DD.toString().padStart(2, "0"))
+		.replace("hh", map.hh.toString().padStart(2, "0"))
+		.replace("mm", map.mm.toString().padStart(2, "0"))
+		.replace("ss", map.ss.toString().padStart(2, "0"))
+		.replace("fff", map.fff.toString().padStart(3, "0"));
 };
 
 const parseTimestamp = (value?: number | string)=> {

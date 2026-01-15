@@ -183,7 +183,7 @@ Unknown or variant type is declared as **??**.
 - **object Object.Merge(values: array...)** — Merge multiple objects
 
 #### AN
-- **string AN.Format(value: string, whitespace: string?)** — Format string as AN
+- **string AN.Format(value: ??, whitespace: string?)** — Format string as AN
 
 #### JSON
 - **string JSON.Format(value: void | boolean | float | string | array | object, whitespace: string?)** — Format as JSON string
@@ -197,7 +197,7 @@ Unknown or variant type is declared as **??**.
 - **boolean ??.Equal(value: ??)** — Equals to
 - **boolean ??.Unequal(value: ??)** — Not equals to
 - **buffer float | integer | string.Encode(encoding: string?)** — Encode value to buffer
-- **string boolean | float | integer | buffer | string | array | object.Format(radix: integer?, separator: string?)** — Format value to string
+- **string ??.Format(formatting: integer? | string?)** — Format value to string
 
 #### Array Functions
 - **?? array.First(condition: function)** — First item satisfying condition

@@ -232,11 +232,11 @@ describe("Variable Expression test", ()=> {
 		["a.Inject(1, b)", [
 			{ a: "abcdef", b: "12", result: "a12bcdef" },
 		]],
-		["a.Splice(1, 1, b).Format", [
-			{ a: "abcdef".split(""), b: "12".split(""), result: "a12cdef" },
+		["v.Splice(1, 1, b).Reduce(~(a, c) {a += c})", [
+			{ v: "abcdef".split(""), b: "12".split(""), result: "a12cdef" },
 		]],
-		["a.Inject(1, b).Format", [
-			{ a: "abcdef".split(""), b: "12".split(""), result: "a12bcdef" },
+		["v.Inject(1, b).Reduce(~(a, c) {a += c})", [
+			{ v: "abcdef".split(""), b: "12".split(""), result: "a12bcdef" },
 		]],
 		["str1.Trim() + str2.TrimStart() + str3.TrimEnd()", [
 			{ str1: " abcd ", str2: "  a", str3: "0  ", result: "abcda0" },
@@ -269,10 +269,9 @@ describe("Variable Expression test", ()=> {
 		["(a[n+1] + 2)^2", [
 			{ a: [0, 1, 2], n: 1n, result: 16 },
 		]],
-		["[20,21,22,23,24].Format(f, sep)", [
-			{ f: undefined, sep: undefined, result: "2021222324" },
-			{ f: undefined, sep: ":", result: "20:21:22:23:24" },
-			{ f: 16n, sep: ":", result: "14:15:16:17:18" },
+		["v.Format(f)", [
+			{ v: new Date("2025-01-10"), f: "MM", result: "01" },
+			{ v: new Date("2025-01-10"), f: "YY", result: "25" },
 		]],
 		["v.Split()[i]", [
 			{ v: "The quick brown fox", i: 2n, result: "brown" },
@@ -484,11 +483,12 @@ describe("Variable Expression test", ()=> {
 		["d.Minute(true)", [
 			{ d: new Date("2025-04-22 03:04:05.99Z"), result: 4n },
 		]],
-		["Timestamp.Epoch(a.EpochTime).Format(6)", [
-			{ a: new Date("2020-02-25 20:30:45.555Z"), result: "45" },
+		["Timestamp.Epoch(a.EpochTime).Format(b)", [
+			{ a: new Date("2020-02-25 20:30:45.555Z"), b: 'ss', result: "45" },
+			{ a: new Date("2020-02-25 20:30:45.555Z"), b: 'fff', result: "555" },
 		]],
-		["a.Format(1)+a.Format(2) + a.Format(3)+a.Format(4)+a.Format(5)+a.Format(6)+a.Format(7)", [
-			{ a: new Date("2020-02-20 20:30:40.555Z"), result: "20200220203040555" },
+		["a.Format('ZYYYY/MM/DD hh:mm:ss.fffZ')", [
+			{ a: new Date("2020-02-20 20:30:40.555Z"), result: "2020/02/20 20:30:40.555" },
 		]],
 		["[a:1, b:2,][c]", [
 			{ a: "abc", b: "def", c: "abc", result: 1n },

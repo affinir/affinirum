@@ -1,5 +1,5 @@
 import { Constant } from "../Constant.js";
-import { Value } from "../Value.js";
+import { DataValue, Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { FloatEncoding, encodeFloat, formatReal } from "./Float.js";
 import { IntegerEncoding, encodeInteger } from "./Integer.js";
@@ -75,25 +75,25 @@ export const encode = (value: Value, encoding?: FloatEncoding | IntegerEncoding 
 											concatBuffers(acc, val))
 										: new Uint8Array(0).buffer;
 
-export const format = (value: Value, radix?: number, separator: string = ""): string=>
+export const format = (value: Value, formatting?: number | string): string=>
 	value == null
 		? "null"
 		: typeof value === "boolean"
 			? value.toString()
 			: value instanceof Date
-				? formatTimestamp(value, radix ? Number(radix) : undefined)
+				? formatTimestamp(value, String(formatting))
 				: typeof value === "number"
-					? formatReal(value, radix ? Number(radix) : undefined)
+					? formatReal(value, formatting ? Number(formatting) : undefined)
 					: typeof value === "bigint"
-						? value.toString(radix ? Number(radix) : undefined)
+						? value.toString(formatting ? Number(formatting) : undefined)
 						: value instanceof ArrayBuffer
 							? formatBuffer(value)
 							: typeof value === "string"
 								? value
 								: Array.isArray(value)
-									? value.map((i)=> format(i, radix)).join(separator)
+									? "array"
 									: typeof value === "object"
-										? Object.entries(value).map(([k, v])=> `${format(k)}${radix}${format(v)}`).join(separator)
+										? "object"
 										: "function";
 
 const typeEquator = Type.functionType(Type.Boolean, [Type.Unknown, Type.Unknown]);
@@ -128,7 +128,7 @@ export const funcNotEqual = new Constant(
 );
 
 export const funcEncode = new Constant(
-	(value: boolean | Date | number | bigint | string | Value[] | { [ key: string ]: Value }, encoding: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding)=>
+	(value: DataValue, encoding: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding)=>
 		encode(value, encoding),
 	Type.union(
 		Type.functionType(Type.Buffer, [Type.Boolean]),
@@ -142,15 +142,16 @@ export const funcEncode = new Constant(
 );
 
 export const funcFormat = new Constant(
-	(value: boolean | Date | number | bigint | ArrayBuffer | Value[] | { [ key: string ]: Value }, radix?: bigint, separator: string = "")=>
-		format(value, radix == null ? undefined : Number(radix), separator),
+	(value: Value, formatting?: bigint | string)=>
+		format(value, formatting == null ? undefined : typeof formatting === 'string' ? formatting : Number(formatting)),
 	Type.union(
 		Type.functionType(Type.String, [Type.Boolean]),
-		Type.functionType(Type.String, [Type.Timestamp, Type.OptionalInteger]),
+		Type.functionType(Type.String, [Type.Timestamp, Type.OptionalString]),
 		Type.functionType(Type.String, [Type.Float, Type.OptionalInteger]),
 		Type.functionType(Type.String, [Type.Integer, Type.OptionalInteger]),
 		Type.functionType(Type.String, [Type.Buffer]),
-		Type.functionType(Type.String, [Type.Array, Type.OptionalInteger, Type.OptionalString]),
-		Type.functionType(Type.String, [Type.Object, Type.OptionalInteger, Type.OptionalString]),
+		Type.functionType(Type.String, [Type.Array]),
+		Type.functionType(Type.String, [Type.Object]),
+		Type.functionType(Type.String, [Type.Function]),
 	),
 );
