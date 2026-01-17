@@ -39,9 +39,6 @@ const decodeFloat = (value?: ArrayBuffer, encoding: FloatEncoding = "f64", byteO
 	}
 };
 
-export const formatReal = (value: number, radix?: number)=>
-	value.toString(radix) + (Number.isInteger(value) ? ".0" : "");
-
 const typeNumberOrArray = Type.union(Type.Float, Type.arrayType([Type.Float]));
 const typeAggregator = Type.functionType(Type.Float, [typeNumberOrArray], true);
 const typeTransform = Type.functionType(Type.Float, [Type.Float]);

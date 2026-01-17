@@ -1,5 +1,5 @@
 import { funcOr, funcAnd, funcNot } from "./constant/Boolean.js";
-import { funcAdd } from "./constant/Enumerable.js";
+import { funcAdd } from "./constant/Aggregable.js";
 import { funcAt, funcHas } from "./constant/Iterable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from "./constant/Number.js";

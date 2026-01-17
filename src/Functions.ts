@@ -1,8 +1,9 @@
 import { Constant } from "./Constant.js";
+import { funcAdd } from "./constant/Aggregable.js";
 import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
 	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose, funcPrepend, funcAppend } from "./constant/Array.js";
 import { funcByte } from "./constant/Buffer.js";
-import { funcAdd, funcSlice, funcSplice, funcInject } from "./constant/Enumerable.js";
+import { funcSlice, funcSplice, funcInject } from "./constant/Enumerable.js";
 import { funcLength, funcContains, funcAt, funcHas } from "./constant/Iterable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
 	funcPower, funcRoot, funcNegate, funcCast, funcCastToFloat, funcCastToInteger } from "./constant/Number.js";
@@ -14,6 +15,8 @@ import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay, funcHou
 import { funcCoalesce, funcEqual, funcNotEqual, funcEncode, funcFormat } from "./constant/Unknown.js";
 
 export const Functions: [string, Constant][] = [
+	// Aggregable
+	["Add", funcAdd],
 	// Array
 	["First", funcFirst],
 	["Last", funcLast],
@@ -32,7 +35,6 @@ export const Functions: [string, Constant][] = [
 	// Buffer
 	["Byte", funcByte],
 	// Enumerable
-	["Add", funcAdd],
 	["Slice", funcSlice],
 	["Splice", funcSplice],
 	["Inject", funcInject],

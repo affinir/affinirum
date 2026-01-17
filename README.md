@@ -196,8 +196,11 @@ Unknown or variant type is declared as **??**.
 - **?? ??.Coalesce(otherwise: ??)** — Null coalescence
 - **boolean ??.Equal(value: ??)** — Equals to
 - **boolean ??.Unequal(value: ??)** — Not equals to
-- **buffer float | integer | string.Encode(encoding: string?)** — Encode value to buffer
+- **buffer ??.Encode(encoding: string?)** — Encode value to buffer
 - **string ??.Format(formatting: integer? | string?)** — Format value to string
+
+#### Aggregable Functions
+- **float | integer | buffer | string | array float | integer | buffer | string | array.Add(values: array...)** — Add or concatenate values
 
 #### Array Functions
 - **?? array.First(condition: function)** — First item satisfying condition
@@ -220,7 +223,6 @@ Unknown or variant type is declared as **??**.
 - **string Buffer.FormatBuffer(value: buffer)** — Hexadecimal string from buffer
 
 #### Enumerable Functions
-- **float | integer | buffer | string | array.Add(values: array...)** — Add or concatenate values
 - **buffer | string | array.Slice(start: integer?, end: integer?)** — Slice section
 - **buffer | string | array.Splice(start: integer, remove: integer, inject: array...)** — Splice section
 - **buffer | string | array.Inject(start: integer, inject: array...)** — Inject section

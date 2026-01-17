@@ -1,6 +1,6 @@
 import { funcOr, funcAnd, funcNot } from "./constant/Boolean.js";
 import { parseBuffer } from "./constant/Buffer.js";
-import { funcAdd } from "./constant/Enumerable.js";
+import { funcAdd } from "./constant/Aggregable.js";
 import { isSignSymbol, isTokenStartSymbol, isNumericSymbol, isTokenSymbol, isDateSymbol, isTimeSymbol, isDateTimeSeparatorSymbol,
 	replaceWith } from "./constant/String.js";
 import { Constant } from "./Constant.js";

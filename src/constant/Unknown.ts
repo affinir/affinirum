@@ -1,9 +1,10 @@
 import { Constant } from "../Constant.js";
-import { DataValue, Value } from "../Value.js";
+import { Value } from "../Value.js";
 import { Type } from "../Type.js";
-import { FloatEncoding, encodeFloat, formatReal } from "./Float.js";
+import { FloatEncoding, encodeFloat } from "./Float.js";
 import { IntegerEncoding, encodeInteger } from "./Integer.js";
-import { concatBuffers, equateBuffers, formatBuffer } from "./Buffer.js";
+import { formatNumber } from "./Number.js";
+import { BufferFormatting, formatBuffer, concatBuffers, equateBuffers } from "./Buffer.js";
 import { StringEncoding, encodeString } from "./String.js";
 import { TimestampEncoding, encodeTimestamp, formatTimestamp } from "./Timestamp.js";
 
@@ -70,30 +71,32 @@ export const encode = (value: Value, encoding?: FloatEncoding | IntegerEncoding 
 								: Array.isArray(value)
 									? value.map((i)=> encode(i, encoding)).reduce((acc, val)=> concatBuffers(acc, val))
 									: typeof value === "object"
-										? Object.entries(value).map(([k, v])=>
-											concatBuffers(encode(k, encoding), encode(v, encoding))).reduce((acc, val)=>
-											concatBuffers(acc, val))
+										? Object.entries(value)
+												.map(([k, v])=> concatBuffers(encode(k, encoding), encode(v, encoding)))
+												.reduce((acc, val)=> concatBuffers(acc, val))
 										: new Uint8Array(0).buffer;
 
-export const format = (value: Value, formatting?: number | string): string=>
+export const format = (value: Value, formatting?: string): string=>
 	value == null
 		? "null"
 		: typeof value === "boolean"
 			? value.toString()
 			: value instanceof Date
-				? formatTimestamp(value, String(formatting))
+				? formatTimestamp(value, formatting)
 				: typeof value === "number"
-					? formatReal(value, formatting ? Number(formatting) : undefined)
+					? formatNumber(value, formatting)
 					: typeof value === "bigint"
-						? value.toString(formatting ? Number(formatting) : undefined)
+						? formatNumber(value, formatting)
 						: value instanceof ArrayBuffer
-							? formatBuffer(value)
+							? formatBuffer(value, formatting as BufferFormatting)
 							: typeof value === "string"
 								? value
 								: Array.isArray(value)
-									? "array"
+									? value.map((i)=> format(i, formatting)).reduce((acc, val)=> acc + val)
 									: typeof value === "object"
-										? "object"
+										? Object.entries(value)
+												.map(([k, v])=> format(k, formatting) + format(v, formatting))
+												.reduce((acc, val)=> acc + val)
 										: "function";
 
 const typeEquator = Type.functionType(Type.Boolean, [Type.Unknown, Type.Unknown]);
@@ -128,30 +131,33 @@ export const funcNotEqual = new Constant(
 );
 
 export const funcEncode = new Constant(
-	(value: DataValue, encoding: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding)=>
+	(value: Value, encoding: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding)=>
 		encode(value, encoding),
 	Type.union(
 		Type.functionType(Type.Buffer, [Type.Boolean]),
 		Type.functionType(Type.Buffer, [Type.Timestamp, Type.OptionalString]),
 		Type.functionType(Type.Buffer, [Type.Float, Type.OptionalString]),
 		Type.functionType(Type.Buffer, [Type.Integer, Type.OptionalString]),
+		Type.functionType(Type.Buffer, [Type.Buffer]),
 		Type.functionType(Type.Buffer, [Type.String, Type.OptionalString]),
 		Type.functionType(Type.Buffer, [Type.Array, Type.OptionalString]),
 		Type.functionType(Type.Buffer, [Type.Object, Type.OptionalString]),
+		Type.functionType(Type.Buffer, [Type.Function]),
 	),
 );
 
 export const funcFormat = new Constant(
-	(value: Value, formatting?: bigint | string)=>
-		format(value, formatting == null ? undefined : typeof formatting === 'string' ? formatting : Number(formatting)),
+	(value: Value, formatting?: string)=>
+		format(value, formatting),
 	Type.union(
 		Type.functionType(Type.String, [Type.Boolean]),
 		Type.functionType(Type.String, [Type.Timestamp, Type.OptionalString]),
-		Type.functionType(Type.String, [Type.Float, Type.OptionalInteger]),
-		Type.functionType(Type.String, [Type.Integer, Type.OptionalInteger]),
-		Type.functionType(Type.String, [Type.Buffer]),
-		Type.functionType(Type.String, [Type.Array]),
-		Type.functionType(Type.String, [Type.Object]),
+		Type.functionType(Type.String, [Type.Float, Type.OptionalString]),
+		Type.functionType(Type.String, [Type.Integer, Type.OptionalString]),
+		Type.functionType(Type.String, [Type.Buffer, Type.OptionalString]),
+		Type.functionType(Type.String, [Type.String]),
+		Type.functionType(Type.String, [Type.Array, Type.OptionalString]),
+		Type.functionType(Type.String, [Type.Object, Type.OptionalString]),
 		Type.functionType(Type.String, [Type.Function]),
 	),
 );

@@ -1,6 +1,8 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
+export type BufferFormatting = "hex" | "base64";
+
 export const equateBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	if (value1.byteLength !== value2.byteLength) {
 		return false;
@@ -70,9 +72,19 @@ export const concatBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	return bytes.buffer;
 };
 
-export const formatBuffer = (value?: ArrayBuffer)=> {
+export const formatBuffer = (value?: ArrayBuffer, formatting: BufferFormatting = "hex")=> {
 	if (value == null) {
 		return "";
+	}
+	if (formatting === "base64") {
+		let binary = "";
+		const bytes = new Uint8Array(value);
+		const chunkSize = 0x4000;
+		for (let i = 0; i < bytes.length; i += chunkSize) {
+			const chunk = bytes.subarray(i, i + chunkSize);
+			binary += String.fromCharCode(...chunk);
+		}
+		return btoa(binary);
 	}
 	const bytes = new Uint8Array(value);
 	let str = "";

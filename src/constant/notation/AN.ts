@@ -1,7 +1,7 @@
 import { Constant } from "../../Constant.js";
 import { Value } from "../../Value.js";
 import { Type } from "../../Type.js";
-import { formatReal } from "../Float.js";
+import { formatNumber } from "../Number.js";
 import { formatBuffer } from "../Buffer.js";
 
 export const formatAN = (value: Value, whitespace?: string): string=> {
@@ -15,10 +15,10 @@ export const formatAN = (value: Value, whitespace?: string): string=> {
 		return `@${value.toISOString()}`;
 	}
 	if (typeof value === "number") {
-		return formatReal(value);
+		return formatNumber(value);
 	}
 	if (typeof value === "bigint") {
-		return value.toString();
+		return formatNumber(value);
 	}
 	if (value instanceof ArrayBuffer) {
 		return `#${formatBuffer(value)}`;

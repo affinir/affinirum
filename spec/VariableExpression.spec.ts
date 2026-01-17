@@ -232,10 +232,10 @@ describe("Variable Expression test", ()=> {
 		["a.Inject(1, b)", [
 			{ a: "abcdef", b: "12", result: "a12bcdef" },
 		]],
-		["v.Splice(1, 1, b).Reduce(~(a, c) {a += c})", [
+		["v.Splice(1, 1, b).Format", [
 			{ v: "abcdef".split(""), b: "12".split(""), result: "a12cdef" },
 		]],
-		["v.Inject(1, b).Reduce(~(a, c) {a += c})", [
+		["v.Inject(1, b).Format", [
 			{ v: "abcdef".split(""), b: "12".split(""), result: "a12bcdef" },
 		]],
 		["str1.Trim() + str2.TrimStart() + str3.TrimEnd()", [

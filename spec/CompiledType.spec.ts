@@ -59,7 +59,7 @@ describe("Compiled Type test", ()=> {
 		});
 	});
 	it("parses pure constant expression and tests return type", ()=> {
-		const script = new Affinirum("(\"ABC\" + Timestamp.Parse(\"2000-01-01\").Format(1)).Length");
+		const script = new Affinirum("(\"ABC\" + Timestamp.Parse(\"2000-01-01\").Format('YY')).Length");
 		expect(script.type.toString()).toBe("integer");
 	});
 	it("parses expression and tests undefined variable types", ()=> {

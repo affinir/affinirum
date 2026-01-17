@@ -1,6 +1,34 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
+export interface NumberFormatting {
+	min_integer_digits?: number;
+	min_fraction_digits?: number;
+	max_fraction_digits?: number;
+	min_significant_digits?: number;
+	max_significant_digits?: number;
+	notation?: "standard" | "scientific";
+}
+
+export const formatNumber = (value: bigint | number, formatting?: string)=> {
+	if (formatting) {
+		const nformat = JSON.parse(`{${formatting}}`);
+		if (typeof nformat === "object") {
+			return new Intl.NumberFormat(undefined, {
+				minimumIntegerDigits: nformat?.min_integer_digits,
+				minimumFractionDigits: nformat?.min_fraction_digits,
+				maximumFractionDigits: nformat?.max_fraction_digits,
+				minimumSignificantDigits: nformat?.min_significant_digits,
+				maximumSignificantDigits: nformat?.max_significant_digits,
+				notation: nformat?.notation,
+			}).format(value);
+		}
+	}
+	return typeof value === "number" && Number.isInteger(value)
+		? `${value.toString()}.0` 
+		: value.toString();
+}
+
 const castToInteger = (value?: number)=> {
 	if (value == null || Number.isNaN(value)) {
 		return 0n;

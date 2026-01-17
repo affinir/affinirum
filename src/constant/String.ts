@@ -158,14 +158,12 @@ export const encodeString = (value?: string, encoding: StringEncoding = "utf8")=
 	if (encoding === "utf8") {
 		return new TextEncoder().encode(value).buffer;
 	}
-	else {
-		const dv = new DataView(new Uint16Array(value.length).buffer);
-		const lessOrEqual = encoding.endsWith("le");
-		for (let i = 0; i < value.length; ++i) {
-			dv.setUint16(i << 1, value.charCodeAt(i), lessOrEqual);
-		}
-		return dv.buffer;
+	const dv = new DataView(new Uint16Array(value.length).buffer);
+	const lessOrEqual = encoding.endsWith("le");
+	for (let i = 0; i < value.length; ++i) {
+		dv.setUint16(i << 1, value.charCodeAt(i), lessOrEqual);
 	}
+	return dv.buffer;
 };
 
 const decodeString = (value?: ArrayBuffer, encoding: StringEncoding = "utf8", byteOffset?: number, byteLength?: number)=> {
