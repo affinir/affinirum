@@ -1,3 +1,4 @@
+import { formatAN } from "./constant/notation/AN.js";
 import { funcOr, funcAnd, funcNot } from "./constant/Boolean.js";
 import { funcAdd } from "./constant/Aggregable.js";
 import { funcAt, funcHas } from "./constant/Iterable.js";
@@ -132,6 +133,16 @@ export class Affinirum {
 			}
 			throw e;
 		}
+	}
+
+	/**
+		Produces string in Affinirum Notation.
+		@param value Value to format.
+		@param whitespace Optional white space characters for readability.
+		@returns String formatted in Affinirum Notation.
+	*/
+	static format(value: Value, whitespace?: string): string {
+		return formatAN(value, whitespace);
 	}
 
 	protected _list(state: ParserState, scope: StaticScope): Node {
