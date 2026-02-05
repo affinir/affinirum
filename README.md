@@ -58,6 +58,7 @@ A function is a callable code unit that produces a value.
 The set of built-in functions can be extended through configuration entries.
 Additionally, subroutines (functions defined in code) can be created.
 
+### Variables
 Valid variable and function names must start with a letter, number sign (**\#**), dollar sign (**\$**), or underscore (**\_**)
  and can be followed by any combination of alphanumeric characters, number signs, dollar signs, or underscores,
  like *x*, *\_a1$*, *abc25*.
@@ -77,7 +78,7 @@ Whitespace characters are ignored.
 - **function** for built-in, injected or script-defined subroutines
 
 Type modifier **?** can be used to make any type optional (nullable).
-<br>Examples: *float? optNumVar*, *array? optArrayVar*
+<br>Examples: *float?*, *array?*
 
 Unknown or variant type is declared as **??**.
 
@@ -129,7 +130,7 @@ Unknown or variant type is declared as **??**.
 - **boolean Boolean.And(values: array...)** — Boolean conjunction
 - **boolean Boolean.Not(value: boolean)** — Boolean negation
 - **boolean? Boolean.Decode(value: buffer, offset: integer?)** — Decode boolean from buffer
-- **boolean? Boolean.ParseBoolean()** — Parse boolean from string
+- **boolean? Boolean.Parse()** — Parse boolean from string
 
 #### Timestamp
 - **timestamp Timestamp.Now()** — Current date and time
@@ -170,7 +171,7 @@ Unknown or variant type is declared as **??**.
 
 #### Buffer
 - **buffer Buffer.Random(length: integer)** — Buffer of given length filled with random bytes
-- **buffer? Buffer.ParseBuffer(value: string)** — Parse buffer from hexadecimal string
+- **buffer? Buffer.Parse(value: string)** — Parse buffer from hexadecimal string
 
 #### Array
 - **array Array.Join(values: array...)** — Join arrays of any depths into a single array
