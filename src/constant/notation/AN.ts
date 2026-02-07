@@ -28,13 +28,17 @@ export const formatAN = (value: Value, whitespace?: string): string=> {
 	}
 	if (Array.isArray(value)) {
 		const [prefix, suffix] = whitespace ? ["\n" + whitespace, "\n"] : ["", ""];
-		const lines = value.map((i)=> `${prefix}${formatAN(i, whitespace).split("\n").join(prefix)}`);
-		return `[${lines.join(",")}${suffix}]`;
+		const lines = value.map((i)=>
+			`${prefix}${formatAN(i, whitespace).split("\n").join(prefix)}`
+		);
+		return lines.length ? `[${lines.join(",")}${suffix}]` : "[]";
 	}
 	if (typeof value === "object") {
 		const [prefix, suffix, separator] = whitespace ? ["\n" + whitespace, "\n", ": "] : ["", "", ":"];
-		const lines = Object.entries(value).map(([k, v])=> `${prefix}"${k}"${separator}${formatAN(v, whitespace).split("\n").join(prefix)}`);
-		return `[${lines.join(",")}${suffix}]`;
+		const lines = Object.entries(value).map(([k, v])=>
+			`${prefix}"${k}"${separator}${formatAN(v, whitespace).split("\n").join(prefix)}`
+		);
+		return lines.length ? `[${lines.join(",")}${suffix}]` : "[:]";
 	}
 	return "function";
 };

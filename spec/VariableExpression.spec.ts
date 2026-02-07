@@ -462,7 +462,7 @@ describe("Variable Expression test", ()=> {
 			{ a: [-1, -2, 1, 2], b: [1, 2], result: -3 },
 		]],
 		["a.b.c.d ?: 10", [
-			{ a: { b: { c: undefined } }, result: 10n },
+			{ a: { b: { c: { d: 50n } } }, result: 50n },
 			{ a: { b: {} }, result: 10n },
 		]],
 		["a[4][0][0] ?: 10", [
