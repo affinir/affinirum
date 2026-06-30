@@ -126,8 +126,8 @@ Unknown or variant type is declared as **??**.
 ### Predefined Constants
 
 #### Boolean
-- **boolean Boolean.Or(values:array...)** — Boolean disjunction
-- **boolean Boolean.And(values: array...)** — Boolean conjunction
+- **boolean Boolean.Or(values:...array)** — Boolean disjunction
+- **boolean Boolean.And(values: ...array)** — Boolean conjunction
 - **boolean Boolean.Not(value: boolean)** — Boolean negation
 - **boolean? Boolean.Decode(value: buffer, offset: integer?)** — Decode boolean from buffer
 - **boolean? Boolean.Parse()** — Parse boolean from string
@@ -143,9 +143,9 @@ Unknown or variant type is declared as **??**.
 - **Float.PositiveInfinity** — Positive infinity
 - **Float.NegativeInfinity** — Negative infinity
 - **Float.Epsilon** — Smallest positive float
-- **float Float.Sum(values: array...)** — Numeric sum
-- **float Float.Min(values: array...)** — Numeric minimum
-- **float Float.Max(values: array...)** — Numeric maximum
+- **float Float.Sum(values: ...array)** — Numeric sum
+- **float Float.Min(values: ...array)** — Numeric minimum
+- **float Float.Max(values: ...array)** — Numeric maximum
 - **float Float.Exponent()** — Exponent
 - **float Float.Logarithm()** — Logarithm
 - **float Float.Abs()** — Absolute value
@@ -158,9 +158,9 @@ Unknown or variant type is declared as **??**.
 - **float? Float.Parse(value: string)** — Parse float from string
 
 #### Integer
-- **integer Integer.Sum(values: array...)** — Numeric sum
-- **integer Integer.Min(values: array...)** — Numeric minimum
-- **integer Integer.Max(values: array...)** — Numeric maximum
+- **integer Integer.Sum(values: ...array)** — Numeric sum
+- **integer Integer.Min(values: ...array)** — Numeric minimum
+- **integer Integer.Max(values: ...array)** — Numeric maximum
 - **integer Integer.Random(exclusiveTo: integer)** — Random integer up to value
 - **integer? Integer.Decode(value: buffer, encoding: string, offset: integer?)** — Decode integer from buffer
 - **integer? Integer.Parse(value: string)** — Parse integer from string
@@ -174,14 +174,14 @@ Unknown or variant type is declared as **??**.
 - **buffer? Buffer.Parse(value: string)** — Parse buffer from hexadecimal string
 
 #### Array
-- **array Array.Join(values: array...)** — Join arrays of any depths into a single array
+- **array Array.Join(values: ...array)** — Join arrays of any depths into a single array
 - **array Array.Range(inclusiveFrom: integer, exclusiveTo: integer)** — New array filled with integers in range
 - **array Array.Unique()** — Array of unique values
 - **array Array.Intersection(a1: array, a2: array)** — Common values from two arrays
 - **array Array.Difference(a1: array, a2: array)** — Symmetrical difference between arrays
 
 #### Object
-- **object Object.Merge(values: array...)** — Merge multiple objects
+- **object Object.Merge(values: ...array)** — Merge multiple objects
 
 #### AN
 - **string AN.Format(value: ??, whitespace: string?)** — Format string as AN
@@ -201,7 +201,7 @@ Unknown or variant type is declared as **??**.
 - **string ??.Format(formatting: integer? | string?)** — Format value to string
 
 #### Aggregable Functions
-- **float | integer | buffer | string | array float | integer | buffer | string | array.Add(values: array...)** — Add or concatenate values
+- **float | integer | buffer | string | array float | integer | buffer | string | array.Add(values: ...array)** — Add or concatenate values
 
 #### Array Functions
 - **?? array.First(condition: function)** — First item satisfying condition
@@ -216,8 +216,8 @@ Unknown or variant type is declared as **??**.
 - **array array.Filter(condition: function)** — Filtered array
 - **?? array.Reduce(reducer: function)** — Reduced value
 - **object array.Compose(generator: function)** — Compose object from array
-- **array array.Prepend(items: array...)** — Prepend items
-- **array array.Append(items: array...)** — Append items
+- **array array.Prepend(items: ...array)** — Prepend items
+- **array array.Append(items: ...array)** — Append items
 
 #### Buffer Functions
 - **buffer buffer.Byte(pos: integer)** — Byte at position
@@ -225,8 +225,8 @@ Unknown or variant type is declared as **??**.
 
 #### Enumerable Functions
 - **buffer | string | array.Slice(start: integer?, end: integer?)** — Slice section
-- **buffer | string | array.Splice(start: integer, remove: integer, inject: array...)** — Splice section
-- **buffer | string | array.Inject(start: integer, inject: array...)** — Inject section
+- **buffer | string | array.Splice(start: integer, remove: integer, inject: ...array)** — Splice section
+- **buffer | string | array.Inject(start: integer, inject: ...array)** — Inject section
 
 #### Iterable Functions
 - **integer buffer | string | array | object.Length()** — Get length
@@ -241,7 +241,7 @@ Unknown or variant type is declared as **??**.
 - **boolean float | integer.LessOrEqual(value)** — Less or equal
 - **float | integer float | integer.Subtract(subtrahend)** — Subtract value
 - **float | integer float | integer.Negate()** — Negate number
-- **float | integer float | integer.Multiply(values: array...)** — Multiply values
+- **float | integer float | integer.Multiply(values: ...array)** — Multiply values
 - **float | integer float | integer.Divide(divisor)** — Divide value
 - **float | integer float | integer.Remainder(divisor)** — Remainder
 - **float | integer float | integer.Modulo(divisor)** — Modulo
@@ -270,7 +270,7 @@ Unknown or variant type is declared as **??**.
 - **string string.LowerCase()** — To lowercase
 - **string string.UpperCase()** — To uppercase
 - **array string.Split(separator: string = ' ')** — Split into array
-- **string string.ReplaceWith(replacement: string, search: array...)** — Replace all instances of substring with another
+- **string string.ReplaceWith(replacement: string, search: ...array)** — Replace all instances of substring with another
 
 #### Timestamp Functions
 - **integer timestamp.Year(utc: boolean?)** — Get year

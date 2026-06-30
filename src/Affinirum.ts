@@ -391,7 +391,7 @@ export class Affinirum {
 				}
 			}
 			frame.ends(state);
-			state.next();
+			state.closeBraces().next();
 			return new BlockNode(frame, subnodes);
 		}
 		else if (state.isBracesClose) {
@@ -428,7 +428,7 @@ export class Affinirum {
 				}
 			}
 			frame.ends(state);
-			state.next();
+			state.closeBrackets().next();
 			if (colon) {
 				return new ObjectNode(frame, subnodes.map(([k, v])=>
 					[typeof k === "number" ? new ConstantNode(v, new Constant(String(k))) : k, v] as const
@@ -513,13 +513,15 @@ export class Affinirum {
 			}
 			let argType = Type.Unknown;
 			if (state.next().isColon) {
-				argType = this._type(state.next(), scope);
+				variadic = state.next().isEllipsis;
+				if (variadic) {
+					state.next();
+				}
+				argType = this._type(state, scope);
 			}
 			variables.set(token, new Variable(argType));
-			if (state.isEllipsis) {
+			if (variadic) {
 				if (argType.isArray) {
-					variadic = true;
-					state.next();
 					break;
 				}
 				else {
@@ -603,12 +605,14 @@ export class Affinirum {
 			let variadic = false;
 			const argTypes: Type[] = [];
 			while (!state.next().isParenthesesClose) {
+				variadic = state.isEllipsis;
+				if (variadic) {
+					state.next();
+				}
 				const argType = this._type(state, scope);
 				argTypes.push(argType);
-				if (state.isEllipsis) {
+				if (variadic) {
 					if (argType.isArray) {
-						variadic = true;
-						state.next();
 						break;
 					}
 					else {

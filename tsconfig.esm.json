@@ -5,6 +5,7 @@
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
 		"outDir": "./dst",
+		"rootDir": "./src",
 	},
 	"include": [
 		"src/**/*"

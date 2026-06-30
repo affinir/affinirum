@@ -1,5 +1,5 @@
 import { Constant } from "../../Constant.js";
-import { Value } from "src/Value.js";
+import { Value } from "../../Value.js";
 import { Type } from "../../Type.js";
 
 const typeJson = Type.union(Type.Void, Type.Boolean, Type.Timestamp, Type.Float, Type.Integer, Type.String, Type.Array, Type.Object);

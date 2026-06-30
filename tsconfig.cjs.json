@@ -4,7 +4,9 @@
 		"declaration": false,
 		"module": "CommonJS",
 		"moduleResolution": "Node",
+		"ignoreDeprecations": "6.0",
 		"outDir": "./dst/cjs",
+		"rootDir": "./src",
 	},
 	"include": [
 		"src/**/*"
