@@ -6,7 +6,7 @@
 		"moduleResolution": "NodeNext",
 		"sourceMap": true,
 		"outDir": "./dst",
-		"rootDir": ".",
+		"rootDir": "./",
 		"types": [
 			"jasmine"
 		]

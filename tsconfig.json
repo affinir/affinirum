@@ -21,5 +21,11 @@
 	"exclude": [
 		"dst",
 		"node_modules"
+	],
+	"files": [],
+	"references": [
+		{
+			"path": "./tsconfig.spec.json"
+		}
 	]
 }
