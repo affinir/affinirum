@@ -14,10 +14,10 @@ val carr1 = [1, 2, 3, 4];
 var varr2 = [5, 6, 7, 8] + carr1;
 val cobj = [ "a": 1, "b": 2 ];
 var vobj = Object.Merge([ "x": 3, "abcdef": 4 ], cobj);
-val cfunc = ~string (x: integer, y: integer, z: integer) {
+val cfunc = ~ (x: integer, y: integer, z: integer) : string {
   (x + y + z + cnum + vint + #vnum).Format;
 };
-var vfunc = ~string (f: ~string(integer, integer, integer)) /// tetsstts /// {
+var vfunc = ~ (f: ~(integer, integer, integer):(string)):string /// tetsstts /// {
   f(1, 2, cobj."a" + vobj."b")
 };
 vfunc(cfunc)

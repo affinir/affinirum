@@ -4,7 +4,7 @@ describe("Variadic function test", ()=> {
 	runAffinirumTests([
 		{
 			script: `
-val f = ~integer(x: integer, a: ...[integer]) {
+val f = ~(x: integer, a: ...[integer]):integer {
 	x * Integer.Sum(a)
 };
 f(x, 1, 2, 3, 4)

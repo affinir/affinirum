@@ -22,7 +22,7 @@ r;
 	it("parses and evaluates expression with exit operator inside loop in function", ()=> {
 		const script = new Affinirum(`
 var i = a;
-val f = ~integer() while i<100 {
+val f = ~():integer while i<100 {
   if i>50 {
 		800;
 		~>i*1000;

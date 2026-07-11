@@ -112,8 +112,8 @@ Unknown or variant type is declared as **??**.
 - Arithmetic division: **/**
 - Arithmetic remainder: **%**
 - Exponentiation operator: **^**
-- Access operator: **.**
-- Presence operator: **?**
+- Property access operator: **.**
+- Property existance operator: **?**
 - Assignment: **=**
 - Boolean disjunction (Logical OR) assignment: **|=**
 - Boolean conjunction (Logical AND) assignment: **&=**

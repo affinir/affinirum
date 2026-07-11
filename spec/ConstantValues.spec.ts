@@ -54,6 +54,6 @@ describe("Constant value test", ()=> {
 		{ script: "Integer.Sum([0,1,2,3]+[10,20,30,40],100)", cases: [{ result: 206n }] },
 		{ script: "[[[10]]][0][0][0]", cases: [{ result: 10n }] },
 		{ script: "var a=[0,10,200,3000,40000]; a[1] + a.At(2)", cases: [{ result: 210n }] },
-		{ script: "[1,2,3,4].Reduce(\n~float (a:float, b : float){a.Subtract(b)}\n)", cases: [{ result: -8n }] },
+		{ script: "[1,2,3,4].Reduce(\n~ (a:float, b : float):float{a.Subtract(b)}\n)", cases: [{ result: -8n }] },
 	]);
 });

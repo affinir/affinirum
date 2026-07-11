@@ -80,7 +80,7 @@ export class FunctionAtom implements IAtom {
 			const argType = i.toString();
 			return (ix === (this._argTypes.length - 1) && this.isVariadic) ? "..." + argType : argType;
 		}).join(",");
-		return this._undefined ? "function" : `~${this._retType.toString()}(${argTypes})`;
+		return this._undefined ? "function" : `~(${argTypes}):${this._retType.toString()}`;
 	}
 
 }
