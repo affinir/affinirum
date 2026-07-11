@@ -1,12 +1,12 @@
-import { funcOr, funcAnd, funcNot } from "./constant/Boolean.js";
-import { parseBuffer } from "./constant/Buffer.js";
-import { funcAdd } from "./constant/Aggregable.js";
+import { funcOr, funcAnd, funcNot } from "./native/Boolean.js";
+import { parseBuffer } from "./native/Buffer.js";
+import { funcAdd } from "./native/Aggregable.js";
 import { isSignSymbol, isTokenStartSymbol, isNumericSymbol, isTokenSymbol, isDateSymbol, isTimeSymbol, isDateTimeSeparatorSymbol,
-	replaceWith } from "./constant/String.js";
+	replaceWith } from "./native/String.js";
 import { Constant } from "./Constant.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from "./constant/Number.js";
-import { funcCoalesce, funcEqual, funcNotEqual } from "./constant/Unknown.js";
+	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from "./native/Number.js";
+import { funcCoalesce, funcEqual, funcNotEqual } from "./native/Unknown.js";
 import { Value } from "./Value.js";
 import { Type } from "./Type.js";
 import { ParserFrame } from "./ParserFrame.js";

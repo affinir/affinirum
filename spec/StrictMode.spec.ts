@@ -1,6 +1,6 @@
 import { Affinirum, Type } from "../src/index.js";
 
-describe("Strict Mode test", ()=> {
+describe("Strict mode test", ()=> {
 	it("defines variables in strict mode and evaluates", ()=> {
 		const script = new Affinirum("predefined1*2 + predefined2 + 26 * 13",
 			{ strict: true, variables: { predefined1: Type.Integer, predefined2: Type.Integer, myvar: Type.String } });

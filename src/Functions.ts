@@ -1,18 +1,18 @@
 import { Constant } from "./Constant.js";
-import { funcAdd } from "./constant/Aggregable.js";
+import { funcAdd } from "./native/Aggregable.js";
 import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
-	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose, funcPrepend, funcAppend } from "./constant/Array.js";
-import { funcByte } from "./constant/Buffer.js";
-import { funcSlice, funcSplice, funcInject } from "./constant/Enumerable.js";
-import { funcLength, funcContains, funcAt, funcHas } from "./constant/Iterable.js";
+	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose, funcPrepend, funcAppend } from "./native/Array.js";
+import { funcByte } from "./native/Buffer.js";
+import { funcSlice, funcSplice, funcInject } from "./native/Enumerable.js";
+import { funcLength, funcContains, funcAt, funcHas } from "./native/Iterable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
-	funcPower, funcRoot, funcNegate, funcCast, funcCastToFloat, funcCastToInteger } from "./constant/Number.js";
-import { funcEntries, funcKeys, funcValues } from "./constant/Object.js";
+	funcPower, funcRoot, funcNegate, funcCast, funcCastToFloat, funcCastToInteger } from "./native/Number.js";
+import { funcEntries, funcKeys, funcValues } from "./native/Object.js";
 import { funcLike, funcUnlike, funcStartsWith, funcEndsWith,
-	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit, funcReplaceWith } from "./constant/String.js";
+	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit, funcReplaceWith } from "./native/String.js";
 import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay, funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime,
-	funcDaysSince, funcHoursSince, funcMinutesSince, funcSecondsSince } from "./constant/Timestamp.js";
-import { funcCoalesce, funcEqual, funcNotEqual, funcEncode, funcFormat } from "./constant/Unknown.js";
+	funcDaysSince, funcHoursSince, funcMinutesSince, funcSecondsSince } from "./native/Timestamp.js";
+import { funcCoalesce, funcEqual, funcNotEqual, funcEncode, funcFormat } from "./native/Unknown.js";
 
 export const Functions: [string, Constant][] = [
 	// Aggregable

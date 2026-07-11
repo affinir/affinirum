@@ -1,10 +1,10 @@
-import { formatAN } from "./constant/notation/AN.js";
-import { funcOr, funcAnd, funcNot } from "./constant/Boolean.js";
-import { funcAdd } from "./constant/Aggregable.js";
-import { funcAt, funcHas } from "./constant/Iterable.js";
+import { formatAN } from "./native/notation/AN.js";
+import { funcOr, funcAnd, funcNot } from "./native/Boolean.js";
+import { funcAdd } from "./native/Aggregable.js";
+import { funcAt, funcHas } from "./native/Iterable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from "./constant/Number.js";
-import { funcCoalesce, funcEqual, funcNotEqual } from "./constant/Unknown.js";
+	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from "./native/Number.js";
+import { funcCoalesce, funcEqual, funcNotEqual } from "./native/Unknown.js";
 import { Constant } from "./Constant.js";
 import { Variable } from "./Variable.js";
 import { Value } from "./Value.js";

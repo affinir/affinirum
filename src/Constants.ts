@@ -1,14 +1,14 @@
 import { Constant } from "./Constant.js";
-import { constArray } from "./constant/Array.js";
-import { constBoolean } from "./constant/Boolean.js";
-import { constBuffer } from "./constant/Buffer.js";
-import { constInteger } from "./constant/Integer.js";
-import { constFloat } from "./constant/Float.js";
-import { constObject } from "./constant/Object.js";
-import { constString } from "./constant/String.js";
-import { constTimestamp } from "./constant/Timestamp.js";
-import { constAN } from "./constant/notation/AN.js";
-import { constJSON } from "./constant/notation/JSON.js";
+import { constArray } from "./native/Array.js";
+import { constBoolean } from "./native/Boolean.js";
+import { constBuffer } from "./native/Buffer.js";
+import { constInteger } from "./native/Integer.js";
+import { constFloat } from "./native/Float.js";
+import { constObject } from "./native/Object.js";
+import { constString } from "./native/String.js";
+import { constTimestamp } from "./native/Timestamp.js";
+import { constAN } from "./native/notation/AN.js";
+import { constJSON } from "./native/notation/JSON.js";
 
 export const Constants: [string, Record<string, Constant>][] = [
 	["Array", constArray],

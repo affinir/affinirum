@@ -1,6 +1,6 @@
 import { Affinirum } from "../src/index.js";
 
-describe("Function Argument test", ()=> {
+describe("Function argument test", ()=> {
 	it("parses and evaluates full script", ()=> {
 		const script = new Affinirum(`
 val cnum = 1000 + myvr;

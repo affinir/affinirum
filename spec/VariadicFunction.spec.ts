@@ -1,13 +1,19 @@
-import { Affinirum } from "../src/index.js";
+import { runAffinirumTests } from "./helpers/AffinirumTest.js";
 
-describe("Variadic Function test", ()=> {
-	it("parses and evaluates variadic function", ()=> {
-		const script = new Affinirum(`
+describe("Variadic function test", ()=> {
+	runAffinirumTests([
+		{
+			script: `
 val f = ~integer(x: integer, a: ...[integer]) {
 	x * Integer.Sum(a)
 };
-f(x, 11, 2, 3, 4)
-		`);
-		expect(script.evaluate({ x: 10n }) as bigint).toBe(200n);
-	});
+f(x, 1, 2, 3, 4)
+			`,
+			cases: [
+				{ values: { x: 0n }, result: 0n },
+				{ values: { x: 10n }, result: 100n },
+				{ values: { x: -10n }, result: -100n },
+			],
+		},
+	]);
 });

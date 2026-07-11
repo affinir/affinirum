@@ -1,6 +1,6 @@
 import { Affinirum } from "../src/index.js";
 
-describe("Compiled Type test", ()=> {
+describe("Compiled type test", ()=> {
 	([
 		["null", "void"],
 		["true", "boolean"],

@@ -1,6 +1,6 @@
 import { Affinirum } from "../src/index.js";
 
-describe("Jump Evaluation test", ()=> {
+describe("Jump command test", ()=> {
 	it("parses and evaluates expression with exit operator inside loop", ()=> {
 		const script = new Affinirum(`
 var i = a;
