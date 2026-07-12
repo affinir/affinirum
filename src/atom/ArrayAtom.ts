@@ -4,19 +4,19 @@ import { Type } from "../Type.js";
 export class ArrayAtom implements IAtom {
 
 	constructor(
-		protected readonly _itemTypes: Type[] = [],
+		protected readonly _valTypes: Type[] = [],
 	) {}
 
 	private get _undefined(): boolean {
-		return this._itemTypes.length === 0;
+		return this._valTypes.length === 0;
 	}
 
 	subtypes(): Type[] {
-		return this._itemTypes;
+		return this._valTypes;
 	}
 
-	itemType(index: number): Type | undefined {
-		return this._itemTypes[index];
+	valueType(index: number): Type | undefined {
+		return this._valTypes[index];
 	}
 
 	match(atom: IAtom): boolean {
@@ -24,11 +24,9 @@ export class ArrayAtom implements IAtom {
 			if (this._undefined || atom._undefined) {
 				return true;
 			}
-			if (this.subtypes().length !== atom.subtypes().length) {
-				return false;
-			}
-			for (let i = 0; i < this._itemTypes.length; ++i) {
-				if (!this._itemTypes[i].match(atom._itemTypes[i])) {
+			for (let i = 0; i < this._valTypes.length; ++i) {
+				const vtype = atom.valueType(i);
+				if (!vtype || !this._valTypes[i].match(vtype)) {
 					return false;
 				}
 			}
@@ -42,7 +40,10 @@ export class ArrayAtom implements IAtom {
 	}
 
 	toString(): string {
-		return this._undefined ? "array" : `[${this._itemTypes.join(",")}]`;
+		if (this._undefined) {
+			return "array";
+		}
+		return `[${this._valTypes.join(",")}]`;
 	}
 
 }

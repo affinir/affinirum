@@ -12,9 +12,12 @@ export class ObjectNode extends Node {
 	constructor(
 		frame: ParserFrame,
 		protected _subnodes: [Node, Node][],
+		generic: boolean = false,
 	) {
 		super(frame);
-		this._type = Type.Object;
+		this._type = generic
+			? Type.Object
+			: Type.objectType(Object.fromEntries(_subnodes.filter(([i])=> i instanceof ConstantNode && i.constant).map(([k, v])=> [k.evaluate(), v.type])));
 	}
 
 	override get type(): Type {

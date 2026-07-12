@@ -7,7 +7,7 @@ import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { JumpException } from "../JumpException.js";
 
-export class FunctionNode extends Node {
+export class CallNode extends Node {
 
 	protected _type: Type;
 
@@ -38,7 +38,8 @@ export class FunctionNode extends Node {
 		if (this._fnode.constant) {
 			let constant = true;
 			for (let i = 0; i < this._subnodes.length; ++i) {
-				const argType = Type.union(...functionAtoms.map((a)=> a.argType(i)));
+				const argTypes = functionAtoms.map((a)=> a.argType(i));
+				const argType = Type.union(...argTypes.filter((t)=> t != null));
 				this._subnodes[i] = this._subnodes[i].compile(argType);
 				constant &&= this._subnodes[i].constant;
 			}

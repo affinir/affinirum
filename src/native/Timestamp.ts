@@ -25,25 +25,25 @@ export const formatTimestamp = (value?: Date, template?: string)=> {
 	}
 	const map = template.includes("Z")
 		? {
-				YYYY: value.getUTCFullYear(),
-				YY: value.getUTCFullYear() % 100,
-				MM: value.getUTCMonth() + 1,
-				DD: value.getUTCDate(),
-				hh: value.getUTCHours(),
-				mm: value.getUTCMinutes(),
-				ss: value.getUTCSeconds(),
-				fff: value.getUTCMilliseconds(),
-		  }
+			YYYY: value.getUTCFullYear(),
+			YY: value.getUTCFullYear() % 100,
+			MM: value.getUTCMonth() + 1,
+			DD: value.getUTCDate(),
+			hh: value.getUTCHours(),
+			mm: value.getUTCMinutes(),
+			ss: value.getUTCSeconds(),
+			fff: value.getUTCMilliseconds(),
+		}
 		: {
-				YYYY: value.getFullYear(),
-				YY: value.getFullYear() % 100,
-				MM: value.getMonth() + 1,
-				DD: value.getDate(),
-				hh: value.getHours(),
-				mm: value.getMinutes(),
-				ss: value.getSeconds(),
-				fff: value.getMilliseconds(),
-		  };
+			YYYY: value.getFullYear(),
+			YY: value.getFullYear() % 100,
+			MM: value.getMonth() + 1,
+			DD: value.getDate(),
+			hh: value.getHours(),
+			mm: value.getMinutes(),
+			ss: value.getSeconds(),
+			fff: value.getMilliseconds(),
+		};
 	return template.replaceAll("Z", "")
 		.replace("YYYY", map.YYYY.toString())
 		.replace("YY", map.YY.toString().padStart(2, "0"))

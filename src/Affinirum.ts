@@ -15,8 +15,8 @@ import { Functions } from "./Functions.js";
 import { Node } from "./Node.js";
 import { ArrayNode } from "./node/ArrayNode.js";
 import { BlockNode } from "./node/BlockNode.js";
+import { CallNode } from "./node/CallNode.js";
 import { ConstantNode } from "./node/ConstantNode.js";
-import { FunctionNode } from "./node/FunctionNode.js";
 import { JumpNode } from "./node/JumpNode.js";
 import { LoopNode } from "./node/LoopNode.js";
 import { ObjectNode } from "./node/ObjectNode.js";
@@ -168,7 +168,7 @@ export class Affinirum {
 		let node = this._disjunction(state, scope);
 		while (state.operator === funcCoalesce) {
 			const fnode = new ConstantNode(state, state.operator);
-			node = new FunctionNode(state, fnode, [node, this._disjunction(state.next(), scope)]);
+			node = new CallNode(state, fnode, [node, this._disjunction(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -177,7 +177,7 @@ export class Affinirum {
 		let node = this._conjunction(state, scope);
 		while (state.operator === funcOr) {
 			const fnode = new ConstantNode(state, state.operator);
-			node = new FunctionNode(state, fnode, [node, this._conjunction(state.next(), scope)]);
+			node = new CallNode(state, fnode, [node, this._conjunction(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -186,7 +186,7 @@ export class Affinirum {
 		let node = this._negation(state, scope);
 		while (state.operator === funcAnd) {
 			const fnode = new ConstantNode(state, state.operator);
-			node = new FunctionNode(state, fnode, [node, this._negation(state.next(), scope)]);
+			node = new CallNode(state, fnode, [node, this._negation(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -202,7 +202,7 @@ export class Affinirum {
 		let node = this._comparison(state, scope);
 		if (negate) {
 			const fnode = new ConstantNode(frame, funcNot);
-			node = new FunctionNode(frame, fnode, [node]);
+			node = new CallNode(frame, fnode, [node]);
 		}
 		return node;
 	}
@@ -213,7 +213,7 @@ export class Affinirum {
 			|| state.operator === funcGreaterOrEqual || state.operator === funcLessOrEqual
 			|| state.operator === funcEqual || state.operator === funcNotEqual) {
 			const fnode = new ConstantNode(state, state.operator);
-			node = new FunctionNode(state, fnode, [node, this._aggregate(state.next(), scope)]);
+			node = new CallNode(state, fnode, [node, this._aggregate(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -222,7 +222,7 @@ export class Affinirum {
 		let node = this._product(state, scope);
 		while (state.operator === funcAdd || state.operator === funcSubtract) {
 			const fnode = new ConstantNode(state, state.operator);
-			node = new FunctionNode(state, fnode, [node, this._product(state.next(), scope)]);
+			node = new CallNode(state, fnode, [node, this._product(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -231,7 +231,7 @@ export class Affinirum {
 		let node = this._signum(state, scope);
 		while (state.operator === funcMultiply || state.operator === funcDivide || state.operator === funcRemainder) {
 			const fnode = new ConstantNode(state, state.operator);
-			node = new FunctionNode(state, fnode, [node, this._signum(state.next(), scope)]);
+			node = new CallNode(state, fnode, [node, this._signum(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -249,7 +249,7 @@ export class Affinirum {
 		let node = this._factor(state, scope);
 		if (negate) {
 			const fnode = new ConstantNode(frame, funcNegate);
-			node = new FunctionNode(frame, fnode, [node]);
+			node = new CallNode(frame, fnode, [node]);
 		}
 		return node;
 	}
@@ -258,7 +258,7 @@ export class Affinirum {
 		let node = this._accessor(state, scope);
 		while (state.operator === funcPower) {
 			const fnode = new ConstantNode(state, state.operator);
-			node = new FunctionNode(state, fnode, [node, this._accessor(state.next(), scope)]);
+			node = new CallNode(state, fnode, [node, this._accessor(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -271,7 +271,7 @@ export class Affinirum {
 				const operator = state.isDot ? funcAt : funcHas;
 				if (state.next().isLiteral && (typeof state.literal.value === "string" || typeof state.literal.value === "bigint")) {
 					const fnode = new ConstantNode(frame.ends(state), operator);
-					node = new FunctionNode(frame, fnode, [node, new ConstantNode(state, new Constant(state.literal.value))]);
+					node = new CallNode(frame, fnode, [node, new ConstantNode(state, new Constant(state.literal.value))]);
 					state.next();
 				}
 				else if (state.isToken) {
@@ -286,17 +286,17 @@ export class Affinirum {
 								}
 							}
 							const fnode = new ConstantNode(frame.ends(state), func);
-							node = new FunctionNode(frame, fnode, subnodes);
+							node = new CallNode(frame, fnode, subnodes);
 							state.closeParentheses().next();
 						}
 						else {
 							const fnode = new ConstantNode(frame.ends(state), func);
-							node = new FunctionNode(frame, fnode, [node]);
+							node = new CallNode(frame, fnode, [node]);
 						}
 					}
 					else {
 						const fnode = new ConstantNode(frame.ends(), operator);
-						node = new FunctionNode(frame, fnode, [node, new ConstantNode(state, new Constant(state.token))]);
+						node = new CallNode(frame, fnode, [node, new ConstantNode(state, new Constant(state.token))]);
 						state.next();
 					}
 				}
@@ -312,12 +312,12 @@ export class Affinirum {
 						break;
 					}
 				}
-				node = new FunctionNode(frame.ends(state), node, subnodes);
+				node = new CallNode(frame.ends(state), node, subnodes);
 				state.closeParentheses().next();
 			}
 			else if (state.isBracketsOpen) { // index access operator
 				const fnode = new ConstantNode(frame, funcAt);
-				node = new FunctionNode(frame, fnode, [node, this._unit(state.next(), scope)]);
+				node = new CallNode(frame, fnode, [node, this._unit(state.next(), scope)]);
 				state.closeBrackets().next();
 			}
 		}
@@ -371,7 +371,7 @@ export class Affinirum {
 				if (state.assignment.operator) {
 					const operator = state.assignment.operator;
 					const fnode = new ConstantNode(frame, operator);
-					const subnode = new FunctionNode(frame, fnode, [new VariableNode(frame, variable), this._unit(state.next(), scope)]);
+					const subnode = new CallNode(frame, fnode, [new VariableNode(frame, variable), this._unit(state.next(), scope)]);
 					return new VariableNode(frame, variable, subnode);
 				}
 				else {

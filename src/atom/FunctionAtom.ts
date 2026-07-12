@@ -49,8 +49,8 @@ export class FunctionAtom implements IAtom {
 		return this._argTypes.length;
 	}
 
-	argType(index: number): Type {
-		return this._argTypes[index] ?? this._argTypes[this._argTypes.length - 1] ?? Type.Unknown;
+	argType(index: number): Type | undefined {
+		return this._argTypes[index] ?? (this._isVariadic ? this._argTypes[this._argTypes.length - 1] : undefined);
 	}
 
 	match(atom: IAtom): boolean {
@@ -61,8 +61,10 @@ export class FunctionAtom implements IAtom {
 			if (!this._retType.match(atom._retType) || this.minArity > atom.maxArity || this.maxArity < atom.minArity) {
 				return false;
 			}
-			for (let i = 0, argc = Math.max(this.minArity, atom.minArity); i < argc; ++i) {
-				if (!this.argType(i).match(atom.argType(i))) {
+			const argc = Math.max(this.minArity, atom.minArity);
+			for (let i = 0; i < argc; ++i) {
+				const atype = atom.argType(i);
+				if (!atype || !this.argType(i)?.match(atype)) {
 					return false;
 				}
 			}
@@ -76,11 +78,11 @@ export class FunctionAtom implements IAtom {
 	}
 
 	toString(): string {
-		const argTypes = this._argTypes.map((i, ix)=> {
-			const argType = i.toString();
-			return (ix === (this._argTypes.length - 1) && this.isVariadic) ? "..." + argType : argType;
-		}).join(",");
-		return this._undefined ? "function" : `~(${argTypes}):${this._retType.toString()}`;
+		if (this._undefined) {
+			return "function";
+		}
+		const argTypes = this._argTypes.map((i, ix)=> ix === this._argTypes.length - 1 && this.isVariadic ? `...${i.toString()}` : i.toString()).join(",");
+		return `~(${argTypes}):${this._retType.toString()}`;
 	}
 
 }

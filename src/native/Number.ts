@@ -25,7 +25,7 @@ export const formatNumber = (value: bigint | number, formatting?: string)=> {
 		}
 	}
 	return typeof value === "number" && Number.isInteger(value)
-		? `${value.toString()}.0` 
+		? `${value.toString()}.0`
 		: value.toString();
 }
 

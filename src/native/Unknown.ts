@@ -72,8 +72,8 @@ export const encode = (value: Value, encoding?: FloatEncoding | IntegerEncoding 
 									? value.map((i)=> encode(i, encoding)).reduce((acc, val)=> concatBuffers(acc, val))
 									: typeof value === "object"
 										? Object.entries(value)
-												.map(([k, v])=> concatBuffers(encode(k, encoding), encode(v, encoding)))
-												.reduce((acc, val)=> concatBuffers(acc, val))
+											.map(([k, v])=> concatBuffers(encode(k, encoding), encode(v, encoding)))
+											.reduce((acc, val)=> concatBuffers(acc, val))
 										: new Uint8Array(0).buffer;
 
 export const format = (value: Value, formatting?: string): string=>
@@ -95,8 +95,8 @@ export const format = (value: Value, formatting?: string): string=>
 									? value.map((i)=> format(i, formatting)).reduce((acc, val)=> acc + val)
 									: typeof value === "object"
 										? Object.entries(value)
-												.map(([k, v])=> format(k, formatting) + format(v, formatting))
-												.reduce((acc, val)=> acc + val)
+											.map(([k, v])=> format(k, formatting) + format(v, formatting))
+											.reduce((acc, val)=> acc + val)
 										: "function";
 
 const typeEquator = Type.functionType(Type.Boolean, [Type.Unknown, Type.Unknown]);

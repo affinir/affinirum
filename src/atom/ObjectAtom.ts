@@ -4,19 +4,19 @@ import { Type } from "../Type.js";
 export class ObjectAtom implements IAtom {
 
 	constructor(
-		protected readonly _propTypes: Record<string, Type> = {},
+		protected readonly _valTypes: Record<string, Type> = {},
 	) {}
 
 	private get _undefined(): boolean {
-		return Object.keys(this._propTypes).length === 0;
+		return Object.keys(this._valTypes).length === 0;
 	}
 
 	subtypes(): Type[] {
-		return Object.values(this._propTypes);
+		return Object.values(this._valTypes);
 	}
 
-	propType(property: string) {
-		return this._propTypes[property];
+	valueType(key: string): Type | undefined {
+		return this._valTypes[key];
 	}
 
 	match(atom: IAtom): boolean {
@@ -24,16 +24,9 @@ export class ObjectAtom implements IAtom {
 			if (this._undefined || atom._undefined) {
 				return true;
 			}
-			for (const prop in this._propTypes) {
-				if (!atom.propType(prop)) {
-					return false;
-				}
-				if (!this._propTypes[prop].match(atom._propTypes[prop])) {
-					return false;
-				}
-			}
-			for (const prop in atom._propTypes) {
-				if (!this.propType(prop)) {
+			for (const key in this._valTypes) {
+				const vtype = atom.valueType(key);
+				if (!vtype || !this._valTypes[key].match(vtype)) {
 					return false;
 				}
 			}
@@ -47,7 +40,10 @@ export class ObjectAtom implements IAtom {
 	}
 
 	toString(): string {
-		return this._undefined ? "object" : `[${Object.entries(this._propTypes).map((i)=> `"${i[0]}":${i[1]}`).join(",")}]`;
+		if (this._undefined) {
+			return "object";
+		}
+		return `[${Object.entries(this._valTypes).map(([k, v])=> `"${k}":${v}`).join(",")}]`;
 	}
 
 }

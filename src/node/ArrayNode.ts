@@ -7,19 +7,25 @@ import { Type } from "../Type.js";
 
 export class ArrayNode extends Node {
 
+	protected _type: Type;
+
 	constructor(
 		frame: ParserFrame,
 		protected _subnodes: Node[],
+		generic: boolean = false,
 	) {
 		super(frame);
+		this._type = generic
+			? Type.Array
+			: Type.arrayType(_subnodes.map((i)=> i.type));
 	}
 
 	override get type(): Type {
-		return Type.Array;
+		return this._type;
 	}
 
 	override compile(type: Type): Node {
-		this.reduceType(type);
+		this._type = this.reduceType(type);
 		let constant = true;
 		for (let i = 0; i < this._subnodes.length; ++i) {
 			this._subnodes[i] = this._subnodes[i].compile(Type.Unknown);

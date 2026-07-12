@@ -335,7 +335,7 @@ export class ParserState extends ParserFrame {
 					switch (this._expr.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcDivideAssignment; break;
 						case "/":
-							if (this._expr.charAt(++this._end) === '/') {
+							if (this._expr.charAt(++this._end) === "/") {
 								++this._end;
 								while (this._expr.charAt(this._end) !== ""
 									&& (this._expr.charAt(this._end) !== c
@@ -345,7 +345,7 @@ export class ParserState extends ParserFrame {
 								}
 								if (this._end >= this._expr.length) {
 									this._start = this._expr.length;
-									throw new Error(`missing closing comment mark`);
+									throw new Error("missing closing comment mark");
 								}
 								++this._end;
 							}
