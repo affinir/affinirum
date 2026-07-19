@@ -30,7 +30,7 @@ export class FunctionAtom implements IAtom {
 	}
 
 	get retType() {
-		return Type.Unknown;
+		return this._retType;
 	}
 
 	get minArity() {

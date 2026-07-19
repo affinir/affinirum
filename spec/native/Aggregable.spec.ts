@@ -1,4 +1,4 @@
-import { runAffinirumTests } from "./helpers/AffinirumTest.js";
+import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
 describe("Aggregable function test", ()=> {
 	runAffinirumTests([

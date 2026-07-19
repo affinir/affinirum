@@ -1,4 +1,4 @@
-import { runAffinirumTests } from "./helpers/AffinirumTest.js";
+import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
 describe("Integer function test", ()=> {
 	runAffinirumTests([
@@ -53,6 +53,8 @@ describe("Integer function test", ()=> {
 				{ values: { v: new Uint8Array([0x00, 0xff]).buffer, enc: "i8", offset: 1n }, result: -1n },
 				{ values: { v: new Uint8Array([0x00, 0x01, 0x00]).buffer, enc: "i16", offset: 1n }, result: 256n },
 				{ values: { v: new Uint8Array([0x00, 0xff]).buffer, enc: "n8", offset: 1n }, result: 255n },
+				{ values: { v: undefined, enc: undefined, offset: undefined }, result: undefined },
+				{ values: { v: null, enc: undefined, offset: undefined }, result: undefined },
 			],
 		},
 		{
@@ -61,6 +63,22 @@ describe("Integer function test", ()=> {
 				{ values: { v: "123" }, result: 123n },
 				{ values: { v: "-45" }, result: -45n },
 				{ values: { v: "" }, result: undefined },
+				{ values: { v: undefined }, result: undefined },
+				{ values: { v: null }, result: undefined },
+			],
+		},
+		{
+			script: "v.Format()",
+			cases: [
+				{ values: { v: undefined }, result: "" },
+				{ values: { v: null }, result: "" },
+			],
+		},
+		{
+			script: "v.Encode().Length",
+			cases: [
+				{ values: { v: undefined }, result: 0n },
+				{ values: { v: null }, result: 0n },
 			],
 		},
 		{

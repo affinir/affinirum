@@ -23,20 +23,22 @@ export const funcNot = new Constant(
 );
 
 const funcDecodeBoolean = new Constant(
-	(value: ArrayBuffer, byteOffset?: bigint)=>
-		value ? Boolean(new Uint8Array(value)[byteOffset == null ? 0 : Number(byteOffset)]) : undefined,
-	Type.functionType(Type.OptionalBoolean, [Type.Buffer, Type.OptionalInteger]),
+	(value: ArrayBuffer | undefined, byteOffset?: bigint)=> {
+		const offset = byteOffset == null ? 0 : Number(byteOffset);
+		return value && offset >= 0 && value.byteLength > offset ? Boolean(new Uint8Array(value)[offset]) : undefined
+	},
+	Type.functionType(Type.OptionalBoolean, [Type.OptionalBuffer, Type.OptionalInteger]),
 );
 
 const funcParseBoolean = new Constant(
-	(value: string)=> {
+	(value: string | undefined)=> {
 		if (value == null) {
 			return undefined;
 		}
 		const v = value.toLowerCase();
 		return v === "true" ? true : v === "false" ? false : undefined;
 	},
-	Type.functionType(Type.OptionalBoolean, [Type.String]),
+	Type.functionType(Type.OptionalBoolean, [Type.OptionalString]),
 );
 
 export const constBoolean = {

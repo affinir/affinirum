@@ -1,4 +1,4 @@
-import { runAffinirumTests } from "./helpers/AffinirumTest.js";
+import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
 describe("Iterable function test", ()=> {
 	runAffinirumTests([

@@ -1,4 +1,4 @@
-import { runAffinirumTests } from "./helpers/AffinirumTest.js";
+import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
 describe("Timestamp function test", ()=> {
 	runAffinirumTests([
@@ -18,6 +18,8 @@ describe("Timestamp function test", ()=> {
 			script: "Timestamp.Parse(v)",
 			cases: [
 				{ values: { v: "not a timestamp" }, result: undefined },
+				{ values: { v: undefined }, result: undefined },
+				{ values: { v: null }, result: undefined },
 			],
 		},
 		{
@@ -36,7 +38,14 @@ describe("Timestamp function test", ()=> {
 		{
 			script: "Timestamp.Decode(v, enc, offset).EpochTime",
 			cases: [
-				{ values: { v: new Uint8Array([0xff, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]).buffer, enc: "int64le", offset: 1n }, result: 1000n },
+				{ values: { v: new Uint8Array([0xff, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]).buffer, enc: "i64le", offset: 1n }, result: 1000n },
+			],
+		},
+		{
+			script: "Timestamp.Decode(v)",
+			cases: [
+				{ values: { v: undefined }, result: undefined },
+				{ values: { v: null }, result: undefined },
 			],
 		},
 		{
@@ -44,6 +53,15 @@ describe("Timestamp function test", ()=> {
 			cases: [
 				{ values: { v: new Date("2025-01-10"), f: "MM" }, result: "01" },
 				{ values: { v: new Date("2025-01-10"), f: "YY" }, result: "25" },
+				{ values: { v: undefined, f: undefined }, result: "" },
+				{ values: { v: null, f: undefined }, result: "" },
+			],
+		},
+		{
+			script: "v.Encode().Length",
+			cases: [
+				{ values: { v: undefined }, result: 0n },
+				{ values: { v: null }, result: 0n },
 			],
 		},
 		{

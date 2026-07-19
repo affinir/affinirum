@@ -3,10 +3,7 @@ import { Type } from "../Type.js";
 
 export type FloatEncoding = "f32" | "f32le" | "f64" | "f64le";
 
-export const encodeFloat = (value?: number, encoding: FloatEncoding = "f64")=> {
-	if (value == null) {
-		return new Uint8Array(0).buffer;
-	}
+export const encodeFloat = (value: number, encoding: FloatEncoding = "f64")=> {
 	let bits = "";
 	for (let i = 0; i < encoding.length; ++i) {
 		const c = encoding[i];
@@ -111,15 +108,15 @@ const funcRandomFloat = new Constant(
 );
 
 const funcDecodeFloat = new Constant(
-	(value: ArrayBuffer, encoding: FloatEncoding = "f64", byteOffset?: bigint)=>
+	(value: ArrayBuffer | undefined, encoding: FloatEncoding = "f64", byteOffset?: bigint)=>
 		decodeFloat(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
-	Type.functionType(Type.OptionalFloat, [Type.Buffer, Type.OptionalString, Type.OptionalInteger]),
+	Type.functionType(Type.OptionalFloat, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]),
 );
 
 const funcParseFloat = new Constant(
-	(value: string)=>
+	(value: string | undefined)=>
 		value ? Number.parseFloat(value) : undefined,
-	Type.functionType(Type.OptionalFloat, [Type.String]),
+	Type.functionType(Type.OptionalFloat, [Type.OptionalString]),
 );
 
 export const constFloat = {

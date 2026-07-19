@@ -4,10 +4,7 @@ import { Type } from "../Type.js";
 export type IntegerEncoding = "i8" | "i16" | "i16le" | "i32" | "i32le" | "i64" | "i64le"
 	| "n8" | "n16" | "n16le" | "n32" | "n32le" | "n64" | "n64le";
 
-export const encodeInteger = (value?: bigint, encoding: IntegerEncoding = "i64")=> {
-	if (value == null) {
-		return new Uint8Array(0).buffer;
-	}
+export const encodeInteger = (value: bigint, encoding: IntegerEncoding = "i64")=> {
 	let bits = "";
 	for (let i = 0; i < encoding.length; ++i) {
 		const c = encoding[i];
@@ -89,15 +86,20 @@ const funcRandomInteger = new Constant(
 );
 
 const funcDecodeInteger = new Constant(
-	(value: ArrayBuffer, encoding: IntegerEncoding = "i64", byteOffset?: bigint)=>
+	(value: ArrayBuffer | undefined, encoding: IntegerEncoding = "i64", byteOffset?: bigint)=>
 		decodeInteger(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
-	Type.functionType(Type.OptionalInteger, [Type.Buffer, Type.OptionalString, Type.OptionalInteger]),
+	Type.functionType(Type.OptionalInteger, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]),
 );
 
 const funcParseInteger = new Constant(
-	(value: string)=>
-		value ? BigInt.asIntN(64, BigInt(value)) : undefined,
-	Type.functionType(Type.OptionalInteger, [Type.String]),
+	(value: string | undefined)=> {
+		try {
+			return value ? BigInt.asIntN(64, BigInt(value)) : undefined
+		}
+		catch {}
+		return undefined;
+	},
+	Type.functionType(Type.OptionalInteger, [Type.OptionalString]),
 );
 
 export const constInteger = {

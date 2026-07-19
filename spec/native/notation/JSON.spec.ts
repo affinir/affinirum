@@ -1,4 +1,4 @@
-import { runAffinirumTests } from "./helpers/AffinirumTest.js";
+import { runAffinirumTests } from "../../helpers/AffinirumTest.js";
 
 describe("JSON function test", ()=> {
 	runAffinirumTests([
@@ -15,6 +15,13 @@ describe("JSON function test", ()=> {
 			],
 		},
 		{
+			script: "JSON.Parse(str1)",
+			cases: [
+				{ values: { str1: undefined }, result: undefined },
+				{ values: { str1: null }, result: undefined },
+			],
+		},
+		{
 			script: "JSON.Format(obj1)+JSON.Format(obj2)",
 			cases: [
 				{ values: { obj1: { p1: "a" }, obj2: { p2: "b" } }, result: "{\"p1\":\"a\"}{\"p2\":\"b\"}" }],
@@ -22,6 +29,8 @@ describe("JSON function test", ()=> {
 		{
 			script: "JSON.Format(obj1)",
 			cases: [
+				{ values: { obj1: undefined }, result: "" },
+				{ values: { obj1: null }, result: "" },
 				{ values: { obj1: { p1: "a" } }, result: "{\"p1\":\"a\"}" },
 			],
 		},

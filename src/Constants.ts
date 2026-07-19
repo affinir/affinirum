@@ -8,6 +8,7 @@ import { constObject } from "./native/Object.js";
 import { constString } from "./native/String.js";
 import { constTimestamp } from "./native/Timestamp.js";
 import { constAN } from "./native/notation/AN.js";
+import { constIP } from "./native/notation/IP.js"
 import { constJSON } from "./native/notation/JSON.js";
 
 export const Constants: [string, Record<string, Constant>][] = [
@@ -20,5 +21,6 @@ export const Constants: [string, Record<string, Constant>][] = [
 	["String", constString],
 	["Timestamp", constTimestamp],
 	["AN", constAN],
+	["IP", constIP],
 	["JSON", constJSON],
 ];

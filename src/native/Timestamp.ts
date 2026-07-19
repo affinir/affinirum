@@ -1,25 +1,38 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
-export type TimestampEncoding = "int64" | "int64le";
+export type TimestampEncoding = "i64" | "i64le";
 
 const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
 const typeTimestampSince = Type.functionType(Type.Float, [Type.Timestamp, Type.Timestamp]);
 
-export const encodeTimestamp = (value?: Date, encoding: TimestampEncoding = "int64")=> {
-	const buf = new ArrayBuffer(8);
-	const dv = new DataView(buf);
-	dv.setBigInt64(0, BigInt(value?.getTime() ?? 0), encoding === "int64le");
-	return buf;
+export const encodeTimestamp = (value: Date, encoding: TimestampEncoding = "i64")=> {
+	switch (encoding) {
+		case "i64": break;
+		case "i64le": break;
+		default: throw new Error(`${encoding} encoding not supported`);
+	}
+	const dv = new DataView(new BigInt64Array(1).buffer);
+	const littleEndian = encoding.endsWith("le");
+	dv.setBigInt64(0, BigInt(value?.getTime() ?? 0), littleEndian);
+	return dv.buffer;
 };
 
-export const decodeTimestamp = (value?: ArrayBuffer, encoding: TimestampEncoding = "int64", byteOffset?: bigint)=>
-	value ? new Date(Number(new DataView(value).getBigInt64(byteOffset == null ? 0 : Number(byteOffset), encoding === "int64le"))) : undefined;
-
-export const formatTimestamp = (value?: Date, template?: string)=> {
-	if (value == null) {
-		return "";
+export const decodeTimestamp = (value?: ArrayBuffer, encoding: TimestampEncoding = "i64", byteOffset?: bigint)=> {
+	switch (encoding) {
+		case "i64": break;
+		case "i64le": break;
+		default: throw new Error(`${encoding} encoding not supported`);
 	}
+	const offset = byteOffset == null ? 0 : Number(byteOffset);
+	if (!value || offset < 0 || value.byteLength < offset + 8) {
+		return undefined;
+	}
+	const littleEndian = encoding.endsWith("le");
+	return new Date(Number(new DataView(value).getBigInt64(offset, littleEndian)));
+};
+
+export const formatTimestamp = (value: Date, template?: string)=> {
 	if (!template || typeof template !== "string") {
 		return value.toISOString();
 	}
@@ -161,15 +174,15 @@ const funcEpochTimestamp = new Constant(
 );
 
 const funcDecodeTimestamp = new Constant(
-	(value: ArrayBuffer, encoding: "int64" | "int64le" = "int64", byteOffset?: bigint)=>
+	(value: ArrayBuffer, encoding: TimestampEncoding = "i64", byteOffset?: bigint)=>
 		decodeTimestamp(value, encoding, byteOffset),
-	Type.functionType(Type.OptionalTimestamp, [Type.Buffer, Type.OptionalString, Type.OptionalInteger]),
+	Type.functionType(Type.OptionalTimestamp, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]),
 );
 
 const funcParseTimestamp = new Constant(
-	(value: string)=>
+	(value: string | undefined)=>
 		parseTimestamp(value),
-	Type.functionType(Type.OptionalTimestamp, [Type.String]),
+	Type.functionType(Type.OptionalTimestamp, [Type.OptionalString]),
 );
 
 export const constTimestamp = {

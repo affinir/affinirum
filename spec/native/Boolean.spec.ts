@@ -1,4 +1,4 @@
-import { runAffinirumTests } from "./helpers/AffinirumTest.js";
+import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
 describe("Boolean function test", ()=> {
 	runAffinirumTests([
@@ -58,6 +58,8 @@ describe("Boolean function test", ()=> {
 			cases: [
 				{ values: { v: new Uint8Array([0, 255]).buffer, offset: 0n }, result: false },
 				{ values: { v: new Uint8Array([0, 255]).buffer, offset: 1n }, result: true },
+				{ values: { v: undefined, offset: undefined }, result: undefined },
+				{ values: { v: null, offset: undefined }, result: undefined },
 			],
 		},
 		{
@@ -66,6 +68,22 @@ describe("Boolean function test", ()=> {
 				{ values: { v: "true" }, result: true },
 				{ values: { v: "FALSE" }, result: false },
 				{ values: { v: "yes" }, result: undefined },
+				{ values: { v: undefined }, result: undefined },
+				{ values: { v: null }, result: undefined },
+			],
+		},
+		{
+			script: "v.Format()",
+			cases: [
+				{ values: { v: undefined }, result: "" },
+				{ values: { v: null }, result: "" },
+			],
+		},
+		{
+			script: "v.Encode().Length",
+			cases: [
+				{ values: { v: undefined }, result: 0n },
+				{ values: { v: null }, result: 0n },
 			],
 		},
 		{

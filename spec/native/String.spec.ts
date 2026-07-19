@@ -1,7 +1,21 @@
-import { runAffinirumTests } from "./helpers/AffinirumTest.js";
+import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
 describe("String function test", ()=> {
 	runAffinirumTests([
+		{
+			script: "v.Format()",
+			cases: [
+				{ values: { v: undefined }, result: "" },
+				{ values: { v: null }, result: "" },
+			],
+		},
+		{
+			script: "v.Encode().Length",
+			cases: [
+				{ values: { v: undefined }, result: 0n },
+				{ values: { v: null }, result: 0n },
+			],
+		},
 		{
 			script: "a.Like(b)",
 			cases: [
@@ -62,6 +76,8 @@ describe("String function test", ()=> {
 		{
 			script: "String.Decode(v, enc, offset, length)",
 			cases: [
+				{ values: { v: undefined, enc: undefined, offset: undefined, length: undefined }, result: undefined },
+				{ values: { v: null, enc: undefined, offset: undefined, length: undefined }, result: undefined },
 				{ values: { v: new Uint8Array([0x61, 0x62, 0x63, 0x64]).buffer, enc: "utf8", offset: 1n, length: 2n }, result: "bc" },
 				{ values: { v: new Uint8Array([0x00, 0x61, 0x00, 0x62]).buffer, enc: "ucs2", offset: 2n, length: 2n }, result: "b" },
 			],

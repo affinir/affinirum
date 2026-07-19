@@ -1,11 +1,12 @@
-import { runAffinirumTests } from "./helpers/AffinirumTest.js";
+import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
 describe("Unknown function test", ()=> {
 	runAffinirumTests([
 		{
 			script: "a.Format()",
 			cases: [
-				{ values: { a: undefined }, result: "null" },
+				{ values: { a: undefined }, result: "" },
+				{ values: { a: null }, result: "" },
 				{ values: { a: true }, result: "true" },
 				{ values: { a: new Date("2020-01-02T03:04:05.006Z") }, result: "2020-01-02T03:04:05.006Z" },
 				{ values: { a: 5 }, result: "5.0" },
@@ -15,7 +16,7 @@ describe("Unknown function test", ()=> {
 				{ values: { a: "abc" }, result: "abc" },
 				{ values: { a: [1n, "a", false] }, result: "1afalse" },
 				{ values: { a: { a: 1n, b: "x" } }, result: "a1bx" },
-				{ values: { a: ()=> 0n }, result: "function" },
+				{ values: { a: ()=> 0n }, result: "" },
 			],
 		},
 		{
@@ -108,12 +109,19 @@ describe("Unknown function test", ()=> {
 			],
 		},
 		{
+			script: "a.Encode().Length",
+			cases: [
+				{ values: { a: undefined }, result: 0n },
+				{ values: { a: null }, result: 0n },
+			],
+		},
+		{
 			script: "a.Encode(enc).Format()",
 			cases: [
 				{ values: { a: "A", enc: "utf8" }, result: "41" },
 				{ values: { a: 10n, enc: "i16" }, result: "000a" },
 				{ values: { a: 1.5, enc: "f32" }, result: "3fc00000" },
-				{ values: { a: new Date("1970-01-01T00:00:01.000Z"), enc: "int64le" }, result: "e803000000000000" },
+				{ values: { a: new Date("1970-01-01T00:00:01.000Z"), enc: "i64le" }, result: "e803000000000000" },
 			],
 		},
 	]);

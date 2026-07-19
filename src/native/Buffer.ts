@@ -2,6 +2,39 @@ import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
 export type BufferFormatting = "hex" | "base64";
+export const EmptyBuffer = new ArrayBuffer(0);
+
+const ZERO = "0".charCodeAt(0), NINE = "9".charCodeAt(0);
+const UPPER_A = "A".charCodeAt(0), UPPER_F = "F".charCodeAt(0);
+const LOWER_A = "a".charCodeAt(0), LOWER_F = "f".charCodeAt(0);
+
+export const parseBoundedInteger = (input: string, base: 10 | 16, min: number, max: number): number=> {
+	if (input.length === 0) {
+		throw new Error(`Invalid IP component: ${input}`);
+	}
+	let value = 0;
+	for (let i = 0; i < input.length; i++) {
+		const code = input.charCodeAt(i);
+		let digit: number;
+		if (code >= ZERO && code <= NINE) {
+			digit = code - ZERO;
+		}
+		else if (base === 16 && code >= UPPER_A && code <= UPPER_F) {
+			digit = code - UPPER_A + 10;
+		}
+		else if (base === 16 && code >= LOWER_A && code <= LOWER_F) {
+			digit = code - LOWER_A + 10;
+		}
+		else {
+			throw new Error(`Invalid IP component: ${input}`);
+		}
+		value = value * base + digit;
+	}
+	if (value < min || value > max) {
+		throw new Error(`Invalid IP component: ${input}`);
+	}
+	return value;
+}
 
 export const equateBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	if (value1.byteLength !== value2.byteLength) {
@@ -72,10 +105,7 @@ export const concatBuffers = (value1: ArrayBuffer, value2: ArrayBuffer)=> {
 	return bytes.buffer;
 };
 
-export const formatBuffer = (value?: ArrayBuffer, formatting: BufferFormatting = "hex")=> {
-	if (value == null) {
-		return "";
-	}
+export const formatBuffer = (value: ArrayBuffer, formatting: BufferFormatting = "hex")=> {
 	if (formatting === "base64") {
 		let binary = "";
 		const bytes = new Uint8Array(value);
@@ -86,12 +116,15 @@ export const formatBuffer = (value?: ArrayBuffer, formatting: BufferFormatting =
 		}
 		return btoa(binary);
 	}
-	const bytes = new Uint8Array(value);
-	let str = "";
-	for (let i = 0; i < bytes.byteLength; ++i) {
-		str += bytes[i].toString(16).padStart(2, "0");
+	else if (formatting === "hex") {
+		const bytes = new Uint8Array(value);
+		let str = "";
+		for (let i = 0; i < bytes.byteLength; ++i) {
+			str += bytes[i].toString(16).padStart(2, "0");
+		}
+		return str;
 	}
-	return str;
+	throw new Error(`${formatting} formatting not supported`);
 };
 
 export const parseBuffer = (value?: string)=> {
@@ -100,7 +133,7 @@ export const parseBuffer = (value?: string)=> {
 	}
 	const bytes = new Uint8Array(Math.ceil(value.length / 2));
 	for (let i = 0, c = 0; c < value.length; ++i) {
-		bytes[i] = Number.parseInt(value.slice(c, c += 2), 16);
+		bytes[i] = parseBoundedInteger(value.slice(c, c += 2), 16, 0, 0xff);
 	}
 	return bytes.buffer;
 };
@@ -121,9 +154,9 @@ const funcRandomBuffer = new Constant(
 );
 
 const funcParseBuffer = new Constant(
-	(value: string)=>
+	(value: string | undefined)=>
 		parseBuffer(value),
-	Type.functionType(Type.OptionalBuffer, [Type.String]),
+	Type.functionType(Type.OptionalBuffer, [Type.OptionalString]),
 );
 
 export const constBuffer = {

@@ -1,7 +1,21 @@
-import { runAffinirumTests } from "./helpers/AffinirumTest.js";
+import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
 describe("Buffer function test", ()=> {
 	runAffinirumTests([
+		{
+			script: "v.Format()",
+			cases: [
+				{ values: { v: undefined }, result: "" },
+				{ values: { v: null }, result: "" },
+			],
+		},
+		{
+			script: "v.Encode().Length",
+			cases: [
+				{ values: { v: undefined }, result: 0n },
+				{ values: { v: null }, result: 0n },
+			],
+		},
 		{
 			script: "a.Byte(b).Format()",
 			cases: [
@@ -16,6 +30,13 @@ describe("Buffer function test", ()=> {
 				{ values: { v: "ff0001" }, result: "ff0001" },
 				{ values: { v: "AAAA" }, result: "aaaa" },
 				{ values: { v: "0" }, result: "00" },
+			],
+		},
+		{
+			script: "Buffer.Parse(v)",
+			cases: [
+				{ values: { v: undefined }, result: undefined },
+				{ values: { v: null }, result: undefined },
 			],
 		},
 		{

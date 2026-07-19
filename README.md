@@ -129,71 +129,85 @@ Whitespace characters are ignored.
 
 ### Native Global Functions
 
+Native conversions use the following null handling:
+
+- `Format` returns an empty string for a **null**.
+- `Encode` returns a zero-length buffer for a **null**.
+- `Decode` and `Parse` return **null** when their input value is **null**.
+
+Empty strings and zero-length buffers remain ordinary values; they are not serialized null markers.
+Invalid non-null inputs are function-specific and may raise an evaluation error.
+
 #### Boolean
-- **Boolean.Or(values:...array):boolean** — Boolean disjunction
-- **Boolean.And(values: ...array):boolean** — Boolean conjunction
+- **Boolean.Or(values: ...(boolean | array)):boolean** — Boolean disjunction of booleans and arrays of booleans
+- **Boolean.And(values: ...(boolean | array)):boolean** — Boolean conjunction of booleans and arrays of booleans
 - **Boolean.Not(value: boolean):boolean** — Boolean negation
-- **Boolean.Decode(value: buffer, offset: integer?):boolean?** — Decode boolean from buffer
-- **Boolean.Parse():boolean?** — Parse boolean from string
+- **Boolean.Decode(value: buffer?, offset: integer?):boolean?** — Decode a byte at the optional offset; missing or out-of-range input returns **void**
+- **Boolean.Parse(value: string?):boolean?** — Parse case-insensitive `true` or `false`; other values return **void**
 
 #### Timestamp
 - **Timestamp.Now():timestamp** — Current date and time
 - **Timestamp.Epoch(value: float | integer, epoch: timestamp?):timestamp** — Create timestamp from milliseconds
-- **Timestamp.Decode(value: buffer, offset: integer?):timestamp?** — Decode timestamp from buffer
-- **Timestamp.Parse(value: string):timestamp?** — Parse string to timestamp
+- **Timestamp.Decode(value: buffer?, encoding: string?, offset: integer?):timestamp?** — Decode a timestamp using `i64` (default) or `i64le`
+- **Timestamp.Parse(value: string?):timestamp?** — Parse a string as a timestamp
 
 #### Float
 - **Float.NAN** — Not-a-number
 - **Float.PositiveInfinity** — Positive infinity
 - **Float.NegativeInfinity** — Negative infinity
 - **Float.Epsilon** — Smallest positive float
-- **Float.Sum(values: ...array):float** — Numeric sum
-- **Float.Min(values: ...array):float** — Numeric minimum
-- **Float.Max(values: ...array):float** — Numeric maximum
-- **Float.Exponent():float** — Exponent
-- **Float.Logarithm():float** — Logarithm
-- **Float.Abs():float** — Absolute value
-- **Float.Ceil():float** — Ceil
-- **Float.Floor():float** — Floor
-- **Float.Round():float** — Rounded value
-- **Float.Truncate():float** — Truncated value
+- **Float.Sum(values: ...(float | array)):float** — Numeric sum
+- **Float.Min(values: ...(float | array)):float** — Numeric minimum
+- **Float.Max(values: ...(float | array)):float** — Numeric maximum
+- **Float.Exponent(value: float):float** — Natural exponential
+- **Float.Logarithm(value: float):float** — Natural logarithm
+- **Float.Abs(value: float):float** — Absolute value
+- **Float.Ceil(value: float):float** — Smallest integer greater than or equal to the value
+- **Float.Floor(value: float):float** — Largest integer less than or equal to the value
+- **Float.Round(value: float):float** — Rounded value
+- **Float.Truncate(value: float):float** — Integer portion of the value
 - **Float.Random(exclusiveTo: float):float** — Random float up to value
-- **Float.Decode(value: buffer, encoding: string, offset: integer?):float?** — Decode float from buffer
-- **Float.Parse(value: string):float?** — Parse float from string
+- **Float.Decode(value: buffer?, encoding: string?, offset: integer?):float?** — Decode using `f64` (default), `f64le`, `f32`, or `f32le`
+- **Float.Parse(value: string?):float?** — Parse a string as a float
 
 #### Integer
-- **Integer.Sum(values: ...array):integer** — Numeric sum
-- **Integer.Min(values: ...array):integer** — Numeric minimum
-- **Integer.Max(values: ...array):integer** — Numeric maximum
+- **Integer.Sum(values: ...(integer | array)):integer** — Numeric sum
+- **Integer.Min(values: ...(integer | array)):integer** — Numeric minimum
+- **Integer.Max(values: ...(integer | array)):integer** — Numeric maximum
 - **Integer.Random(exclusiveTo: integer):integer** — Random integer up to value
-- **Integer.Decode(value: buffer, encoding: string, offset: integer?):integer?** — Decode integer from buffer
-- **Integer.Parse(value: string):integer?** — Parse integer from string
+- **Integer.Decode(value: buffer?, encoding: string?, offset: integer?):integer?** — Decode using signed `i8`, `i16`, `i16le`, `i32`, `i32le`, `i64` (default), or `i64le`, or unsigned `n8`, `n16`, `n16le`, `n32`, `n32le`, `n64`, or `n64le`
+- **Integer.Parse(value: string?):integer?** — Parse a string as an integer
 
 #### String
+- **String.Alphanum(value: string):string** — Keep only ASCII letters and digits
 - **String.Random(length: integer):string** — Random alphanumeric string
-- **String.Decode(value: buffer, encoding: string?, offset: integer?, length: integer?):string?** — Decode buffer to string
+- **String.Decode(value: buffer?, encoding: string?, offset: integer?, length: integer?):string?** — Decode using `utf8` (default), `sbcs`, `ucs2`, or `ucs2le`
 
 #### Buffer
 - **Buffer.Random(length: integer):buffer** — Buffer of given length filled with random bytes
-- **Buffer.Parse(value: string):buffer?** — Parse buffer from hexadecimal string
+- **Buffer.Parse(value: string?):buffer?** — Parse a hexadecimal string as a buffer
 
 #### Array
 - **Array.Join(values: ...array):array** — Join arrays of any depths into a single array
 - **Array.Range(inclusiveFrom: integer, exclusiveTo: integer):array** — New array filled with integers in range
-- **Array.Unique():array** — Array of unique values
+- **Array.Unique(value: array):array** — Array of unique values
 - **Array.Intersection(a1: array, a2: array):array** — Common values from two arrays
 - **Array.Difference(a1: array, a2: array):array** — Symmetrical difference between arrays
 
 #### Object
-- **Object.Merge(values: ...array):object** — Merge multiple objects
+- **Object.Merge(values: ...(object | array)):object** — Merge objects and arrays of objects
 
 #### AN
-- **AN.Format(value: ??, whitespace: string?):string** — Format string as AN
+- **AN.Format(value: ??, whitespace: string?):string** — Format a value as AN notation
 
 #### JSON
-- **JSON.Format(value: (void | boolean | float | string | array | object), whitespace: string?):string** — Format as JSON string
-- **JSON.Parse(value: string):(void | boolean | float | string | array | object)** — Parse JSON-formatted string
+- **JSON.Format(value: (void | boolean | timestamp | float | integer | string | array | object), whitespace: string?):string** — Format a value as JSON
+- **JSON.Parse(value: string?):(void | boolean | timestamp | float | integer | string | array | object)** — Parse a JSON-formatted string; standard JSON values are not revived as timestamps or integers
 
+#### IP
+- **IP.Match(values: array, search: ...(string | array)):boolean** — Check whether any searched IPv4 or IPv6 address belongs to the supplied addresses or CIDR ranges
+- **IP.Encode(value: string?):buffer** — Encode an IPv4, IPv6, or CIDR string as a network-byte-order buffer; malformed or **void** input returns a zero-length buffer
+- **IP.Decode(value: buffer?):string?** — Decode a 4-, 5-, 16-, or 17-byte buffer as canonical IPv4, IPv6, or CIDR notation; malformed or **void** input returns **void**
 
 ### Native Method Functions
 
@@ -202,36 +216,36 @@ Whitespace characters are ignored.
 - **??.Equal(value: ??):boolean** — Equals to
 - **??.Unequal(value: ??):boolean** — Not equals to
 - **(boolean | buffer | function).Encode():buffer** — Encode value to buffer
-- **(timestamp | float | integer | string | array | object).Encode(encoding: string?):buffer** — Encode value to buffer
+- **(void | timestamp | float | integer | string | array | object).Encode(encoding: string?):buffer** — Encode a value; defaults are `i64` for timestamps and integers, `f64` for floats, and `utf8` for strings
 - **(boolean | string | function).Format():string** — Format value to string
-- **(timestamp | float | integer | buffer | array | object).Format(formatting: string?):string** — Format value to string
+- **(void | timestamp | float | integer | buffer | array | object).Format(formatting: string?):string** — Format a value; buffers use `hex` by default and also support `base64`
 
 #### Aggregable Functions
-- **float.Add(values: ...array):float** — Add or concatenate values
-- **integer.Add(values: ...array):integer** — Add or concatenate values
-- **buffer.Add(values: ...array):buffer** — Add or concatenate values
-- **string.Add(values: ...array):string** — Add or concatenate values
-- **array.Add(values: ...array):array** — Add or concatenate values
+- **float.Add(value: integer):float** — Add an integer
+- **integer.Add(value: float):float** — Add a float
+- **integer.Add(value: integer):integer** — Add an integer
+- **buffer.Add(value: buffer):buffer** — Concatenate buffers
+- **string.Add(value: string):string** — Concatenate strings
+- **array.Add(value: array):array** — Concatenate arrays
 
 #### Array Functions
 - **array.First(condition: function):??** — First item satisfying condition
 - **array.Last(condition: function):??** — Last item satisfying condition
-- **array.FirstIndex(condition: function):integer** — First index satisfying condition
-- **array.LastIndex(condition: function):integer** — Last index satisfying condition
+- **array.FirstIndex(condition: function):integer?** — First index satisfying condition, or **void** if none does
+- **array.LastIndex(condition: function):integer?** — Last index satisfying condition, or **void** if none does
 - **array.Every(condition: function):boolean** — All items satisfy condition
 - **array.Any(condition: function):boolean** — Any item satisfies condition
 - **array.Reverse():array** — Reversed array
 - **array.Flatten(depth: integer = 1):array** — Flatten array
 - **array.Derive(transformation: function):array** — Derived array
 - **array.Filter(condition: function):array** — Filtered array
-- **array.Reduce(reducer: function):??** — Reduced value
+- **array.Reduce(reducer: function, initial: ?? = void):??** — Reduced value
 - **array.Compose(generator: function):object** — Compose object from array
-- **array.Prepend(items: ...array):array** — Prepend items
-- **array.Append(items: ...array):array** — Append items
+- **array.Prepend(items: ...??):array** — Prepend items
+- **array.Append(items: ...??):array** — Append items
 
 #### Buffer Functions
-- **buffer.Byte(pos: integer):buffer** — Byte at position
-- **Buffer.FormatBuffer(value: buffer):string** — Hexadecimal string from buffer
+- **buffer.Byte(pos: integer):buffer?** — Byte at position, or **void** when unavailable
 
 #### Enumerable Functions
 - **buffer.Slice(start: integer?, end: integer?):buffer** — Slice section
@@ -264,8 +278,9 @@ Whitespace characters are ignored.
 - **integer.Subtract(subtrahend):integer** — Subtract value
 - **float.Negate():float** — Negate number
 - **integer.Negate():integer** — Negate number
-- **float.Multiply(values: ...array):float** — Multiply values
-- **integer.Multiply(values: ...array):integer** — Multiply values
+- **float.Multiply(value: integer):float** — Multiply by an integer
+- **integer.Multiply(value: float):float** — Multiply by a float
+- **integer.Multiply(value: integer):integer** — Multiply by an integer
 - **float.Divide(divisor):float** — Divide value
 - **integer.Divide(divisor):integer** — Divide value
 - **float.Remainder(divisor):float** — Remainder
@@ -293,14 +308,13 @@ Whitespace characters are ignored.
 - **string.EndsWith(search: string, endPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Suffix check
 - **string.Char(pos: integer):string** — Character at position
 - **string.CharCode(pos: integer):integer** — Character code
-- **string.Alphanum():string** — Alphanumeric digest
 - **string.Trim():string** — Trim whitespace
 - **string.TrimStart():string** — Trim leading whitespace
 - **string.TrimEnd():string** — Trim trailing whitespace
 - **string.LowerCase():string** — To lowercase
 - **string.UpperCase():string** — To uppercase
 - **string.Split(separator: string = ' '):array** — Split into array
-- **string.ReplaceWith(replacement: string, search: ...array):string** — Replace all instances of substring with another
+- **string.ReplaceWith(replacement: string, search: ...(string | array)):string** — Replace all instances of the searched strings
 
 #### Timestamp Functions
 - **timestamp.Year(utc: boolean?):integer** — Get year
@@ -313,6 +327,10 @@ Whitespace characters are ignored.
 - **timestamp.Second(utc: boolean?):integer** — Second
 - **timestamp.Millisecond(utc: boolean?):integer** — Millisecond
 - **timestamp.EpochTime(epoch: timestamp?):integer** — Milliseconds since epoch or 1970-01-01 00:00:00 UTC
+- **timestamp.DaysSince(value: timestamp):float** — Difference from another timestamp in days
+- **timestamp.HoursSince(value: timestamp):float** — Difference from another timestamp in hours
+- **timestamp.MinutesSince(value: timestamp):float** — Difference from another timestamp in minutes
+- **timestamp.SecondsSince(value: timestamp):float** — Difference from another timestamp in seconds
 
 ## Reference
 

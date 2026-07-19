@@ -1,7 +1,7 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
-export type StringEncoding = "utf8" | "ucs2" | "ucs2le";
+export type StringEncoding = "utf8" | "sbcs" | "ucs2" | "ucs2le";
 
 export const isSignSymbol = (c: string)=> c === "+" || c === "-";
 export const isNumericSymbol = (c: string)=>  c >= "0" && c <= "9" ;
@@ -151,17 +151,25 @@ export const endsWithString = (value?: string, search?: string, endPos?: number,
 	return true;
 };
 
-export const encodeString = (value?: string, encoding: StringEncoding = "utf8")=> {
-	if (value == null) {
-		return new Uint8Array(0).buffer;
+export const encodeString = (value: string, encoding: StringEncoding = "utf8")=> {
+	switch (encoding) {
+		case "utf8": return new TextEncoder().encode(value).buffer;
+		case "sbcs": break;
+		case "ucs2": break;
+		case "ucs2le": break;
+		default: throw new Error(`${encoding} encoding not supported`);
 	}
-	if (encoding === "utf8") {
-		return new TextEncoder().encode(value).buffer;
+	if (encoding === "sbcs") {
+		const dv = new Uint8Array(value.length);
+		for (let i = 0; i < value.length; ++i) {
+			dv[i] = value.charCodeAt(i);
+		}
+		return dv.buffer;
 	}
 	const dv = new DataView(new Uint16Array(value.length).buffer);
-	const lessOrEqual = encoding.endsWith("le");
+	const littleEndian = encoding.endsWith("le");
 	for (let i = 0; i < value.length; ++i) {
-		dv.setUint16(i << 1, value.charCodeAt(i), lessOrEqual);
+		dv.setUint16(i << 1, value.charCodeAt(i), littleEndian);
 	}
 	return dv.buffer;
 };
@@ -170,18 +178,27 @@ const decodeString = (value?: ArrayBuffer, encoding: StringEncoding = "utf8", by
 	if (value == null) {
 		return undefined;
 	}
-	if (encoding === "utf8") {
-		return new TextDecoder().decode(new DataView(value, byteOffset, byteLength));
+	switch (encoding) {
+		case "utf8": return new TextDecoder().decode(new DataView(value, byteOffset, byteLength));
+		case "sbcs": break;
+		case "ucs2": break;
+		case "ucs2le": break;
+		default: throw new Error(`${encoding} encoding not supported`);
 	}
-	else {
-		const dv = new DataView(value, byteOffset, byteLength);
-		const lessOrEqual = encoding.endsWith("le");
+	const dv = new DataView(value, byteOffset, byteLength);
+	if (encoding === "sbcs") {
 		let str = "";
-		for (let i = 0; i < dv.byteLength; i += 2) {
-			str += String.fromCharCode(dv.getUint16(i, lessOrEqual));
+		for (let i = 0; i < dv.byteLength; ++i) {
+			str += String.fromCharCode(dv.getUint8(i));
 		}
 		return str;
 	}
+	const littleEndian = encoding.endsWith("le");
+	let str = "";
+	for (let i = 0; i < dv.byteLength; i += 2) {
+		str += String.fromCharCode(dv.getUint16(i, littleEndian));
+	}
+	return str;
 };
 
 const typeStringEquator = Type.functionType(Type.Boolean, [Type.String, Type.String]);
@@ -302,9 +319,9 @@ const funcRandomString = new Constant(
 );
 
 const funcDecodeString = new Constant(
-	(value: ArrayBuffer, encoding: StringEncoding = "utf8", byteOffset?: bigint, byteLength?: bigint)=>
+	(value: ArrayBuffer | undefined, encoding: StringEncoding = "utf8", byteOffset?: bigint, byteLength?: bigint)=>
 		decodeString(value, encoding, byteOffset == null ? undefined : Number(byteOffset), byteLength == null ? undefined : Number(byteLength)),
-	Type.functionType(Type.OptionalString, [Type.Buffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]),
+	Type.functionType(Type.OptionalString, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]),
 );
 
 export const constString = {

@@ -1,4 +1,4 @@
-import { runAffinirumTests } from "./helpers/AffinirumTest.js";
+import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
 describe("Float function test", ()=> {
 	runAffinirumTests([
@@ -100,6 +100,8 @@ describe("Float function test", ()=> {
 			script: "Float.Decode(v, enc, offset)",
 			cases: [
 				{ values: { v: new Uint8Array([0xff, 0x40, 0x20, 0x00, 0x00]).buffer, enc: "f32", offset: 1n }, result: 2.5 },
+				{ values: { v: undefined, enc: undefined, offset: undefined }, result: undefined },
+				{ values: { v: null, enc: undefined, offset: undefined }, result: undefined },
 			],
 		},
 		{
@@ -108,6 +110,22 @@ describe("Float function test", ()=> {
 				{ values: { v: "10.5" }, result: 10.5 },
 				{ values: { v: "-2.25x" }, result: -2.25 },
 				{ values: { v: "" }, result: undefined },
+				{ values: { v: undefined }, result: undefined },
+				{ values: { v: null }, result: undefined },
+			],
+		},
+		{
+			script: "v.Format()",
+			cases: [
+				{ values: { v: undefined }, result: "" },
+				{ values: { v: null }, result: "" },
+			],
+		},
+		{
+			script: "v.Encode().Length",
+			cases: [
+				{ values: { v: undefined }, result: 0n },
+				{ values: { v: null }, result: 0n },
 			],
 		},
 		{

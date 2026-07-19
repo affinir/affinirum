@@ -1,11 +1,12 @@
-import { runAffinirumTests } from "./helpers/AffinirumTest.js";
+import { runAffinirumTests } from "../../helpers/AffinirumTest.js";
 
 describe("AN function test", ()=> {
 	runAffinirumTests([
 		{
 			script: "AN.Format(obj0)",
 			cases: [
-				{ values: { obj0: undefined }, result: "null" },
+				{ values: { obj0: undefined }, result: "" },
+				{ values: { obj0: null }, result: "" },
 				{ values: { obj0: false }, result: "false" },
 				{ values: { obj0: true }, result: "true" },
 				{ values: { obj0: 0 }, result: "0.0" },
@@ -28,7 +29,8 @@ describe("AN function test", ()=> {
 		{
 			script: "AN.Format(obj0, \" \")",
 			cases: [
-				{ values: { obj0: undefined }, result: "null" },
+				{ values: { obj0: undefined }, result: "" },
+				{ values: { obj0: null }, result: "" },
 				{
 					values: {
 						obj0: { xbool: [[[true]]], xbuf: new Uint8Array([10, 20, 30, 0, 4]).buffer, xstr: "string", xfunc: ()=> "1234", xarr: [1n, 2n, 3n], xobj: { a: 1, b: 2 } },
