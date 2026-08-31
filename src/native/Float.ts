@@ -119,7 +119,7 @@ const funcParseFloat = new Constant(
 	Type.functionType(Type.OptionalFloat, [Type.OptionalString]),
 );
 
-export const constFloat = {
+export const constFloat = Object.assign(Object.create(null), {
 	NAN: new Constant(Number.NaN),
 	PositiveInfinity: new Constant(Number.POSITIVE_INFINITY),
 	NegativeInfinity: new Constant(Number.NEGATIVE_INFINITY),
@@ -137,4 +137,4 @@ export const constFloat = {
 	Random: funcRandomFloat,
 	Decode: funcDecodeFloat,
 	Parse: funcParseFloat,
-};
+});

@@ -174,7 +174,7 @@ export class Type {
 		return new Type([new ArrayAtom(itemTypes)]);
 	}
 
-	static objectType(propTypes: Record<string, Type> = {}) {
+	static objectType(propTypes: Record<string, Type> = Object.create(null)) {
 		return new Type([new ObjectAtom(propTypes)]);
 	}
 

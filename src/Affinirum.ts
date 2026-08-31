@@ -54,8 +54,8 @@ export class Affinirum {
 		this._script = script;
 		this._strict = config?.strict ?? false;
 		if (config?.variables) {
-			for (const v in config.variables) {
-				this._variables.set(v, new Variable(config.variables[v]));
+			for (const [vname, vtype] of Object.entries(config.variables)) {
+				this._variables.set(vname, new Variable(vtype));
 			}
 		}
 		const state = new ParserState(this._script);
@@ -93,7 +93,7 @@ export class Affinirum {
 		@returns Record with variable names and types.
 	*/
 	variables(): Record<string, Type> {
-		const types: Record<string, Type> = {};
+		const types: Record<string, Type> = Object.create(null);
 		const variables = this._scope.variables();
 		for (const name in variables) {
 			types[name] = variables[name].type;

@@ -102,11 +102,11 @@ const funcParseInteger = new Constant(
 	Type.functionType(Type.OptionalInteger, [Type.OptionalString]),
 );
 
-export const constInteger = {
+export const constInteger = Object.assign(Object.create(null), {
 	Sum: funcSum,
 	Min: funcMin,
 	Max: funcMax,
 	Random: funcRandomInteger,
 	Decode: funcDecodeInteger,
 	Parse: funcParseInteger,
-};
+});

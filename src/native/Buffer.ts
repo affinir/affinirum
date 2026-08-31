@@ -159,7 +159,7 @@ const funcParseBuffer = new Constant(
 	Type.functionType(Type.OptionalBuffer, [Type.OptionalString]),
 );
 
-export const constBuffer = {
+export const constBuffer = Object.assign(Object.create(null), {
 	Random: funcRandomBuffer,
 	Parse: funcParseBuffer,
-};
+});

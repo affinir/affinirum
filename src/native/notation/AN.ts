@@ -49,6 +49,6 @@ const funcFormatAN = new Constant(
 	Type.functionType(Type.String, [Type.Unknown, Type.OptionalString]),
 );
 
-export const constAN = {
+export const constAN = Object.assign(Object.create(null), {
 	Format: funcFormatAN,
-};
+});

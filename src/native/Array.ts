@@ -106,7 +106,7 @@ export const funcCompose = new Constant(
 		if (value == null) {
 			return undefined;
 		}
-		const obj: Record<string, any> = {};
+		const obj: Record<string, any> = Object.create(null);
 		for (let i = 0; i < value.length; ++i) {
 			const key =  value[i];
 			obj[key] = callback(obj, key, BigInt(i), value);
@@ -172,10 +172,10 @@ const funcDifference = new Constant(
 	typeArrayOperator,
 );
 
-export const constArray = {
+export const constArray = Object.assign(Object.create(null), {
 	Join: funcJoin,
 	Range: funcRange,
 	Unique: funcUnique,
 	Intersection: funcIntersection,
 	Difference: funcDifference,
-};
+});

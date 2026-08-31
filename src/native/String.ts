@@ -324,8 +324,8 @@ const funcDecodeString = new Constant(
 	Type.functionType(Type.OptionalString, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]),
 );
 
-export const constString = {
+export const constString = Object.assign(Object.create(null), {
 	Alphanum: funcAlphanum,
 	Random: funcRandomString,
 	Decode: funcDecodeString,
-};
+});

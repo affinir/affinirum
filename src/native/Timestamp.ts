@@ -185,9 +185,9 @@ const funcParseTimestamp = new Constant(
 	Type.functionType(Type.OptionalTimestamp, [Type.OptionalString]),
 );
 
-export const constTimestamp = {
+export const constTimestamp = Object.assign(Object.create(null), {
 	Now: funcNow,
 	Epoch: funcEpochTimestamp,
 	Decode: funcDecodeTimestamp,
 	Parse: funcParseTimestamp,
-};
+});

@@ -40,7 +40,7 @@ export class ObjectNode extends Node {
 	}
 
 	override evaluate(): Value {
-		const result: { [ key: string ]: Value } = {};
+		const result: { [ key: string ]: Value } = Object.create(null);
 		for (const [key, value] of this._subnodes) {
 			result[key.evaluate() as string] = value.evaluate();
 		}

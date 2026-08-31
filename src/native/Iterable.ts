@@ -44,7 +44,8 @@ export const funcAt = new Constant(
 			const ix = Number(index);
 			return value[ix < 0 ? value.length + ix : ix];
 		}
-		return value[String(index)];
+		const key = String(index);
+		return Object.hasOwn(value, key) ? value[key] : undefined;
 	},
 	Type.union(
 		Type.functionType(Type.Unknown, [Type.Array, Type.Integer]),

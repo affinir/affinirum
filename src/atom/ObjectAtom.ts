@@ -4,7 +4,7 @@ import { Type } from "../Type.js";
 export class ObjectAtom implements IAtom {
 
 	constructor(
-		protected readonly _valTypes: Record<string, Type> = {},
+		protected readonly _valTypes: Record<string, Type> = Object.create(null),
 	) {}
 
 	private get _undefined(): boolean {

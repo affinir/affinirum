@@ -24,10 +24,10 @@ export const funcValues = new Constant(
 
 const funcMerge = new Constant(
 	(...values: ({ [ key: string ]: Value } | { [ key: string ]: Value }[])[])=>
-		values.flat().reduce((acc, val)=> Object.assign(acc, val), {}),
+		values.flat().reduce((acc, val)=> Object.assign(acc, val), Object.create(null) as { [ key: string ]: Value }),
 	Type.functionType(Type.Object, [Type.union(Type.arrayType([Type.Object]), Type.Object)], true),
 );
 
-export const constObject = {
+export const constObject = Object.assign(Object.create(null), {
 	Merge: funcMerge,
-};
+});

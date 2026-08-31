@@ -41,10 +41,10 @@ const funcParseBoolean = new Constant(
 	Type.functionType(Type.OptionalBoolean, [Type.OptionalString]),
 );
 
-export const constBoolean = {
+export const constBoolean = Object.assign(Object.create(null), {
 	Or: funcOr,
 	And: funcAnd,
 	Not: funcNot,
 	Decode: funcDecodeBoolean,
 	Parse: funcParseBoolean,
-};
+});
