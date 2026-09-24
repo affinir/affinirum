@@ -1,5 +1,7 @@
 export interface IAtom {
-	match(atom: IAtom): boolean;
+	equate(atom: IAtom): boolean;
+	accept(atom: IAtom): boolean;
+	intersect(atom: IAtom): boolean;
 	weight(): number;
 	toString(): string;
 }

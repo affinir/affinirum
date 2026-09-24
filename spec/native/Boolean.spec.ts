@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Boolean function test", ()=> {
+describe("Boolean function test", () => {
 	runAffinirumTests([
 		{
 			script: "!b",
@@ -14,6 +14,18 @@ describe("Boolean function test", ()=> {
 			cases: [
 				{ values: { b: true }, result: false },
 				{ values: { b: false }, result: true },
+			],
+		},
+		{
+			script: "a.Boolean()",
+			cases: [
+				{ values: { a: new Date(0) }, result: false },
+				{ values: { a: new Date(123) }, result: true },
+				{ values: { a: Number.NaN }, result: false },
+				{ values: { a: 0 }, result: false },
+				{ values: { a: -1.5 }, result: true },
+				{ values: { a: 0n }, result: false },
+				{ values: { a: 1n }, result: true },
 			],
 		},
 		{

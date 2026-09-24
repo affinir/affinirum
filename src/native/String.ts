@@ -1,21 +1,22 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
+import { createInteger } from "./Integer.js";
 
 export type StringEncoding = "utf8" | "sbcs" | "ucs2" | "ucs2le";
 
-export const isSignSymbol = (c: string)=> c === "+" || c === "-";
-export const isNumericSymbol = (c: string)=>  c >= "0" && c <= "9" ;
-export const isAlphanumericSymbol = (c: string)=> c >= "a" && c <= "z" || c >= "0" && c <= "9";
-export const isTokenStartSymbol = (c: string)=>  c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_" || c === "#" || c === "$";
-export const isTokenSymbol = (c: string)=> isTokenStartSymbol(c) || isNumericSymbol(c);
-export const isDateSeparatorSymbol = (c: string)=> c === "-";
-export const isTimeSeparatorSymbol = (c: string)=> c === ":";
-export const isDateTimeSeparatorSymbol = (c: string)=> c === "T" || c === " " || c === "@";
-export const isDateSymbol = (c: string)=> isNumericSymbol(c) || isDateSeparatorSymbol(c);
-export const isTimeSymbol = (c: string)=> isNumericSymbol(c) || isTimeSeparatorSymbol(c);
-export const isHexadecimalSymbol = (c: string)=> isNumericSymbol(c) || c >= "a" && c <= "f" || c >= "A" && c <= "F";
+export const isSignSymbol = (c: string) => c === "+" || c === "-";
+export const isNumericSymbol = (c: string) =>  c >= "0" && c <= "9" ;
+export const isAlphanumericSymbol = (c: string) => c >= "a" && c <= "z" || c >= "0" && c <= "9";
+export const isTokenStartSymbol = (c: string) =>  c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_" || c === "#" || c === "$";
+export const isTokenSymbol = (c: string) => isTokenStartSymbol(c) || isNumericSymbol(c);
+export const isDateSeparatorSymbol = (c: string) => c === "-";
+export const isTimeSeparatorSymbol = (c: string) => c === ":";
+export const isDateTimeSeparatorSymbol = (c: string) => c === "T" || c === " " || c === "@";
+export const isDateSymbol = (c: string) => isNumericSymbol(c) || isDateSeparatorSymbol(c);
+export const isTimeSymbol = (c: string) => isNumericSymbol(c) || isTimeSeparatorSymbol(c);
+export const isHexadecimalSymbol = (c: string) => isNumericSymbol(c) || c >= "a" && c <= "f" || c >= "A" && c <= "F";
 
-export const replaceWith = (value?: string, replacement?: string, ...search: string[])=> {
+export const replaceWith = (value?: string, replacement?: string, ...search: string[]) => {
 	if (value == null) {
 		return undefined;
 	}
@@ -26,7 +27,7 @@ export const replaceWith = (value?: string, replacement?: string, ...search: str
 	return str;
 };
 
-export const equateStrings = (value1?: string, value2?: string, ignoreCaseSpaceEtc?: boolean)=> {
+export const equateStrings = (value1?: string, value2?: string, ignoreCaseSpaceEtc?: boolean) => {
 	if (value1 == null && value2 == null) {
 		return true;
 	}
@@ -52,7 +53,7 @@ export const equateStrings = (value1?: string, value2?: string, ignoreCaseSpaceE
 	return true;
 };
 
-export const containsString = (value?: string, search?: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+export const containsString = (value?: string, search?: string, startPos?: number, ignoreCaseSpaceEtc?: boolean) => {
 	if (value == null) {
 		return false;
 	}
@@ -91,7 +92,7 @@ export const containsString = (value?: string, search?: string, startPos?: numbe
 	return true;
 };
 
-export const startsWithString = (value?: string, search?: string, startPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+export const startsWithString = (value?: string, search?: string, startPos?: number, ignoreCaseSpaceEtc?: boolean) => {
 	if (value == null) {
 		return false;
 	}
@@ -121,7 +122,7 @@ export const startsWithString = (value?: string, search?: string, startPos?: num
 	return true;
 };
 
-export const endsWithString = (value?: string, search?: string, endPos?: number, ignoreCaseSpaceEtc?: boolean)=> {
+export const endsWithString = (value?: string, search?: string, endPos?: number, ignoreCaseSpaceEtc?: boolean) => {
 	if (value == null) {
 		return false;
 	}
@@ -151,7 +152,7 @@ export const endsWithString = (value?: string, search?: string, endPos?: number,
 	return true;
 };
 
-export const encodeString = (value: string, encoding: StringEncoding = "utf8")=> {
+export const encodeString = (value: string, encoding: StringEncoding = "utf8") => {
 	switch (encoding) {
 		case "utf8": return new TextEncoder().encode(value).buffer;
 		case "sbcs": break;
@@ -174,7 +175,7 @@ export const encodeString = (value: string, encoding: StringEncoding = "utf8")=>
 	return dv.buffer;
 };
 
-const decodeString = (value?: ArrayBuffer, encoding: StringEncoding = "utf8", byteOffset?: number, byteLength?: number)=> {
+const decodeString = (value?: ArrayBuffer, encoding: StringEncoding = "utf8", byteOffset?: number, byteLength?: number) => {
 	if (value == null) {
 		return undefined;
 	}
@@ -207,31 +208,31 @@ const typeStringMutator = Type.functionType(Type.String, [Type.String]);
 const typeStringOrArray = Type.union(Type.String, Type.arrayType([Type.String]));
 
 export const funcLike = new Constant(
-	(value1: string, value2: string)=>
+	(value1: string, value2: string) =>
 		equateStrings(value1, value2, true),
 	typeStringEquator,
 );
 
 export const funcUnlike = new Constant(
-	(value1: string, value2: string)=>
+	(value1: string, value2: string) =>
 		!equateStrings(value1, value2, true),
 	typeStringEquator,
 );
 
 export const funcStartsWith = new Constant(
-	(value: string, search: string, start?: bigint, ignoreCaseSpaceEtc?: boolean)=>
+	(value: string, search: string, start?: bigint, ignoreCaseSpaceEtc?: boolean) =>
 		startsWithString(value, search, start == null ? undefined : Number(start), ignoreCaseSpaceEtc),
 	typeStringComparator,
 );
 
 export const funcEndsWith = new Constant(
-	(value: string, search: string, end?: bigint, ignoreCaseSpaceEtc?: boolean)=>
+	(value: string, search: string, end?: bigint, ignoreCaseSpaceEtc?: boolean) =>
 		endsWithString(value, search, end == null ? undefined : Number(end), ignoreCaseSpaceEtc),
 	typeStringComparator,
 );
 
 export const funcChar = new Constant(
-	(value: string, pos: bigint)=>
+	(value: string, pos: bigint) =>
 		value == null
 			? undefined
 			: value.charAt(pos < 0 ? value.length + Number(pos) : Number(pos)),
@@ -239,57 +240,57 @@ export const funcChar = new Constant(
 );
 
 export const funcCharCode = new Constant(
-	(value: string, pos: bigint)=>
+	(value: string, pos: bigint) =>
 		value == null
 			? undefined
-			: value.charCodeAt(pos < 0 ? value.length + Number(pos) : Number(pos)),
-	Type.functionType(Type.OptionalInteger, [Type.String, Type.Float]),
+			: createInteger(value.charCodeAt(pos < 0 ? value.length + Number(pos) : Number(pos))),
+	Type.functionType(Type.OptionalInteger, [Type.String, Type.Integer]),
 );
 
 export const funcTrim = new Constant(
-	(value: string)=>
+	(value: string) =>
 		value?.trim(),
 	typeStringMutator,
 );
 
 export const funcTrimStart = new Constant(
-	(value: string)=>
+	(value: string) =>
 		value?.trimStart(),
 	typeStringMutator,
 );
 
 export const funcTrimEnd = new Constant(
-	(value: string)=>
+	(value: string) =>
 		value?.trimEnd(),
 	typeStringMutator,
 );
 
 export const funcLowerCase = new Constant(
-	(value: string)=>
+	(value: string) =>
 		value?.toLowerCase(),
 	typeStringMutator,
 );
 
 export const funcUpperCase = new Constant(
-	(value: string)=>
+	(value: string) =>
 		value?.toUpperCase(),
 	typeStringMutator,
 );
 
 export const funcSplit = new Constant(
-	(value: string, separator: string = " ")=>
+	(value: string, separator: string = " ") =>
 		value?.split(separator) ?? [],
 	Type.functionType(Type.arrayType([Type.String]), [Type.String, Type.OptionalString]),
 );
 
 export const funcReplaceWith = new Constant(
-	(value: string, replacement: string, ...search: (string | string[])[])=>
+	(value: string, replacement: string, search: (string | string[])[]) =>
 		replaceWith(value, replacement, ...search.flat()),
-	Type.functionType(Type.String, [Type.String, Type.String, typeStringOrArray], true),
+	Type.functionType(Type.String, [Type.String, Type.String, Type.arrayType([typeStringOrArray])], true),
 );
 
 const funcAlphanum = new Constant(
-	(value: string)=> {
+	(value: string) => {
 		if (!value) {
 			return undefined;
 		}
@@ -306,7 +307,7 @@ const funcAlphanum = new Constant(
 );
 
 const funcRandomString = new Constant(
-	(value: bigint)=> {
+	(value: bigint) => {
 		let str = "";
 		const length = Number(value ?? 0);
 		while (str.length < length) {
@@ -319,7 +320,7 @@ const funcRandomString = new Constant(
 );
 
 const funcDecodeString = new Constant(
-	(value: ArrayBuffer | undefined, encoding: StringEncoding = "utf8", byteOffset?: bigint, byteLength?: bigint)=>
+	(value: ArrayBuffer | undefined, encoding: StringEncoding = "utf8", byteOffset?: bigint, byteLength?: bigint) =>
 		decodeString(value, encoding, byteOffset == null ? undefined : Number(byteOffset), byteLength == null ? undefined : Number(byteLength)),
 	Type.functionType(Type.OptionalString, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]),
 );

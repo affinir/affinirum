@@ -1,23 +1,24 @@
 import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
+import { boundInteger } from "./Integer.js";
 import { equate } from "./Unknown.js";
 
 const typePredicate = Type.functionType(Type.Boolean, [Type.Unknown, Type.OptionalInteger, Type.OptionalArray]);
 const typeItemFinder = Type.functionType(Type.Unknown, [Type.Array, typePredicate]);
 const typeIndexFinder = Type.functionType(Type.OptionalInteger, [Type.Array, typePredicate]);
 const typeConditionSet = Type.functionType(Type.Boolean, [Type.Array, typePredicate]);
-const typeVariadicInsert = Type.functionType(Type.Array, [Type.Array, Type.Unknown], true);
+const typeVariadicInsert = Type.functionType(Type.Array, [Type.Array, Type.Array], true);
 const typeArrayOperator = Type.functionType(Type.Array, [Type.Array, Type.Array]);
 
 export const funcFirst = new Constant(
-	(value: Value[], predicate: (v: Value, i: bigint, a: Value[])=> boolean)=>
-		value?.find((v, i, a)=> predicate(v, BigInt(i), a)),
+	(value: Value[], predicate: (v: Value, i: bigint, a: Value[]) => boolean) =>
+		value?.find((v, i, a) => predicate(v, BigInt(i), a)),
 	typeItemFinder,
 );
 
 export const funcLast = new Constant(
-	(value: Value[], predicate: (v: Value, i: bigint, a: Value[])=> boolean)=> {
+	(value: Value[], predicate: (v: Value, i: bigint, a: Value[]) => boolean) => {
 		if (value == null) {
 			return undefined;
 		}
@@ -32,24 +33,24 @@ export const funcLast = new Constant(
 );
 
 export const funcFirstIndex = new Constant(
-	(value: Value[], predicate: (v: Value, i: bigint, a: Value[])=> boolean)=> {
+	(value: Value[], predicate: (v: Value, i: bigint, a: Value[]) => boolean) => {
 		if (value == null) {
 			return undefined;
 		}
-		const ix = value.findIndex((v, i, a)=> predicate(v, BigInt(i), a));
-		return ix < 0 ? undefined : BigInt.asIntN(64, BigInt(ix));
+		const ix = value.findIndex((v, i, a) => predicate(v, BigInt(i), a));
+		return ix < 0 ? undefined : boundInteger(BigInt(ix));
 	},
 	typeIndexFinder,
 );
 
 export const funcLastIndex = new Constant(
-	(value: Value[], predicate: (v: Value, i: bigint, a: Value[])=> boolean)=> {
+	(value: Value[], predicate: (v: Value, i: bigint, a: Value[]) => boolean) => {
 		if (value == null) {
 			return undefined;
 		}
 		for (let i = value.length - 1; i >= 0; i--) {
 			if (predicate(value[i], BigInt(i), value)) {
-				return BigInt.asIntN(64, BigInt(i));
+				return boundInteger(BigInt(i));
 			}
 		}
 		return undefined;
@@ -58,51 +59,51 @@ export const funcLastIndex = new Constant(
 );
 
 export const funcEvery = new Constant(
-	(value: Value[], predicate: (v: Value, i: bigint, a: Value[])=> boolean)=>
-		value?.every((v, i, a)=> predicate(v, BigInt(i), a)) ?? false,
+	(value: Value[], predicate: (v: Value, i: bigint, a: Value[]) => boolean) =>
+		value?.every((v, i, a) => predicate(v, BigInt(i), a)) ?? false,
 	typeConditionSet,
 );
 
 export const funcAny = new Constant(
-	(value: Value[], predicate: (v: Value, i: bigint, a: Value[])=> boolean)=>
-		value?.some((v, i, a)=> predicate(v, BigInt(i), a)) ?? false,
+	(value: Value[], predicate: (v: Value, i: bigint, a: Value[]) => boolean) =>
+		value?.some((v, i, a) => predicate(v, BigInt(i), a)) ?? false,
 	typeConditionSet,
 );
 
 export const funcFlatten = new Constant(
-	(values: Value[], depth: bigint = 1n)=>
+	(values: Value[], depth: bigint = 1n) =>
 		values ? (values as [])?.flat(Number(depth)) as Value : undefined,
 	Type.functionType(Type.Array, [Type.Array, Type.OptionalInteger]),
 );
 
 export const funcReverse = new Constant(
-	(value: Value[])=>
+	(value: Value[]) =>
 		value ? [...value].reverse() : undefined,
 	Type.functionType(Type.Array, [Type.Array]),
 );
 
 export const funcDerive = new Constant(
-	(value: Value[], transform: (v: Value, i: bigint, a: Value[])=> Value)=>
-		value?.map((v, i, a)=> transform(v, BigInt(i), a)),
+	(value: Value[], transform: (v: Value, i: bigint, a: Value[]) => Value) =>
+		value?.map((v, i, a) => transform(v, BigInt(i), a)),
 	Type.functionType(Type.Array, [Type.Array, Type.functionType(Type.Unknown, [Type.Unknown, Type.OptionalInteger, Type.OptionalArray])]),
 );
 
 export const funcFilter = new Constant(
-	(value: Value[], predicate: (v: Value, i: bigint, a: Value[])=> boolean)=>
-		value?.filter((v, i, a)=> predicate(v, BigInt(i), a)),
+	(value: Value[], predicate: (v: Value, i: bigint, a: Value[]) => boolean) =>
+		value?.filter((v, i, a) => predicate(v, BigInt(i), a)),
 	Type.functionType(Type.Array, [Type.Array, typePredicate]),
 );
 
 export const funcReduce = new Constant(
-	(value: Value[], reducer: (acc: Value, v: Value, i: bigint, arr: Value[])=> Value, initial?: Value)=>
+	(value: Value[], reducer: (acc: Value, v: Value, i: bigint, arr: Value[]) => Value, initial?: Value) =>
 		initial != null
-			? value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a), initial)
-			: value?.reduce((p, v, i, a)=> reducer(p, v, BigInt(i), a)),
+			? value?.reduce((p, v, i, a) => reducer(p, v, BigInt(i), a), initial)
+			: value?.reduce((p, v, i, a) => reducer(p, v, BigInt(i), a)),
 	Type.functionType(Type.Unknown, [Type.Array, Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown, Type.OptionalInteger, Type.OptionalArray]), Type.Unknown]),
 );
 
 export const funcCompose = new Constant(
-	(value: string[], callback: (acc: { [ key: string ]: Value }, v: string, i: bigint, arr: string[])=> { [ key: string ]: Value })=> {
+	(value: string[], callback: (acc: { [ key: string ]: Value }, v: string, i: bigint, arr: string[]) => { [ key: string ]: Value }) => {
 		if (value == null) {
 			return undefined;
 		}
@@ -117,7 +118,7 @@ export const funcCompose = new Constant(
 );
 
 export const funcPrepend = new Constant(
-	(value: Value[], ...items: Value[])=> {
+	(value: Value[], items: Value[]) => {
 		value?.unshift(items);
 		return value;
 	},
@@ -125,7 +126,7 @@ export const funcPrepend = new Constant(
 );
 
 export const funcAppend = new Constant(
-	(value: Value[], ...items: Value[])=> {
+	(value: Value[], items: Value[]) => {
 		value?.push(items);
 		return value;
 	},
@@ -133,25 +134,26 @@ export const funcAppend = new Constant(
 );
 
 const funcJoin = new Constant(
-	(...values: (Value[] | Value[][])[])=>
+	(values: (Value[] | Value[][])[]) =>
 		(values as []).flat(Infinity),
-	Type.functionType(Type.Array, [Type.Array], true),
+	Type.functionType(Type.Array, [Type.arrayType([Type.Array])], true),
 );
 
 const funcRange = new Constant(
-	(value1: bigint, value2: bigint)=> {
-		const min = value1 < value2 ? value1 : value2;
-		const max = value1 > value2 ? value1 : value2;
-		return [...Array(Number(max - min)).keys()].map((i)=> BigInt(i) + min);
+	(value1: bigint, value2: bigint) => {
+		const v1 = boundInteger(value1);
+		const v2 = boundInteger(value2);
+		const [min, max] = v1 < v2 ? [v1, v2] : [v2, v1];
+		return [...Array(Number(max - min)).keys()].map((i) => BigInt(i) + min);
 	},
 	Type.functionType(Type.Array, [Type.Integer, Type.Integer]),
 );
 
 const funcUnique = new Constant(
-	(value: Value[])=> {
+	(value: Value[]) => {
 		const result: Value[] = [];
-		value?.forEach((i)=> {
-			if (result.every((v)=> !equate(v, i))) {
+		value?.forEach((i) => {
+			if (result.every((v) => !equate(v, i))) {
 				result.push(i);
 			}
 		});
@@ -161,14 +163,14 @@ const funcUnique = new Constant(
 );
 
 const funcIntersection = new Constant(
-	(value1: Value[], value2: Value[])=>
-		value1?.filter((i)=> value2?.some((v)=> equate(v, i))) ?? [],
+	(value1: Value[], value2: Value[]) =>
+		value1?.filter((i) => value2?.some((v) => equate(v, i))) ?? [],
 	typeArrayOperator,
 );
 
 const funcDifference = new Constant(
-	(value1: Value[], value2: Value[])=>
-		[...value1?.filter((i)=> value2?.every((v)=> !equate(v, i))) ?? [], ...value2?.filter((i)=> value1?.every((v)=> !equate(v, i))) ?? []],
+	(value1: Value[], value2: Value[]) =>
+		[...value1?.filter((i) => value2?.every((v) => !equate(v, i))) ?? [], ...value2?.filter((i) => value1?.every((v) => !equate(v, i))) ?? []],
 	typeArrayOperator,
 );
 

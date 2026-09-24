@@ -1,7 +1,31 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Integer function test", ()=> {
+describe("Integer function test", () => {
 	runAffinirumTests([
+		{
+			script: "9223372036854775807 + 1",
+			cases: [
+				{ values: {}, result: -9223372036854775808n },
+			],
+		},
+		{
+			script: "a.Integer()",
+			cases: [
+				{ values: { a: false }, result: 0n },
+				{ values: { a: true }, result: 1n },
+				{ values: { a: new Date(123) }, result: 123n },
+				{ values: { a: 5.9 }, result: 5n },
+				{ values: { a: -5.9 }, result: -5n },
+				{ values: { a: 6.7 }, result: 6n },
+				{ values: { a: -6.7 }, result: -6n },
+			],
+		},
+		{
+			script: "Float.NAN.Integer() + Float.PositiveInfinity.Integer() + Float.NegativeInfinity.Integer()",
+			cases: [
+				{ values: {}, result: -1n },
+			],
+		},
 		{
 			script: "Integer.Sum(values)",
 			cases: [
@@ -43,8 +67,6 @@ describe("Integer function test", ()=> {
 				{ values: { v: 15n, enc: "n16le" }, result: 15n },
 				{ values: { v: 105500n, enc: "n32" }, result: 105500n },
 				{ values: { v: 1055n, enc: "n32le" }, result: 1055n },
-				{ values: { v: 1055000n, enc: "n64" }, result: 1055000n },
-				{ values: { v: 11055n, enc: "n64le" }, result: 11055n },
 			],
 		},
 		{

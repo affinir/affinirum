@@ -12,12 +12,9 @@ export class ObjectNode extends Node {
 	constructor(
 		frame: ParserFrame,
 		protected _subnodes: [Node, Node][],
-		generic: boolean = false,
 	) {
 		super(frame);
-		this._type = generic
-			? Type.Object
-			: Type.objectType(Object.fromEntries(_subnodes.filter(([i])=> i instanceof ConstantNode && i.constant).map(([k, v])=> [k.evaluate(), v.type])));
+		this._type = Type.objectType(_subnodes.filter(([i]) => i instanceof ConstantNode && i.constant).map(([k, v]) => [k.evaluate() as string, v.type]));
 	}
 
 	override get type(): Type {
@@ -48,7 +45,7 @@ export class ObjectNode extends Node {
 	}
 
 	override toString(ident: number = 0): string {
-		const subnodes = this._subnodes.map(([k, v])=> `${k.toString(ident + 1)}:\n${v.toString(ident + 1)}`).join("\n");
+		const subnodes = this._subnodes.map(([k, v]) => `${k.toString(ident + 1)}:\n${v.toString(ident + 1)}`).join("\n");
 		return `${super.toString(ident)} object node subnodes:\n${subnodes}`;
 	}
 

@@ -2,9 +2,24 @@ import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
 export type IntegerEncoding = "i8" | "i16" | "i16le" | "i32" | "i32le" | "i64" | "i64le"
-	| "n8" | "n16" | "n16le" | "n32" | "n32le" | "n64" | "n64le";
+	| "n8" | "n16" | "n16le" | "n32" | "n32le";
 
-export const encodeInteger = (value: bigint, encoding: IntegerEncoding = "i64")=> {
+export const boundInteger = (value: bigint) => BigInt.asIntN(64, value);
+
+export const createInteger = (value?: number) => {
+	if (value == null || Number.isNaN(value)) {
+		return undefined;
+	}
+	if (value === Number.NEGATIVE_INFINITY) {
+		return -0x8000000000000000n;
+	}
+	if (value === Number.POSITIVE_INFINITY) {
+		return 0x7FFFFFFFFFFFFFFFn;
+	}
+	return boundInteger(BigInt(Math.trunc(value)));
+};
+
+export const encodeInteger = (value: bigint, encoding: IntegerEncoding = "i64") => {
 	let bits = "";
 	for (let i = 0; i < encoding.length; ++i) {
 		const c = encoding[i];
@@ -26,14 +41,12 @@ export const encodeInteger = (value: bigint, encoding: IntegerEncoding = "i64")=
 		case "n32le": dv.setUint32(0, Number(value), true); break;
 		case "i64": dv.setBigInt64(0, value); break;
 		case "i64le": dv.setBigInt64(0, value, true); break;
-		case "n64": dv.setBigUint64(0, value); break;
-		case "n64le": dv.setBigUint64(0, value, true); break;
 		default: throw new Error(`${encoding} encoding not supported`);
 	}
 	return dv.buffer;
 };
 
-const decodeInteger = (value?: ArrayBuffer, encoding: IntegerEncoding = "i64", byteOffset?: number)=> {
+const decodeInteger = (value?: ArrayBuffer, encoding: IntegerEncoding = "i64", byteOffset?: number) => {
 	if (value == null) {
 		return undefined;
 	}
@@ -51,55 +64,63 @@ const decodeInteger = (value?: ArrayBuffer, encoding: IntegerEncoding = "i64", b
 		case "n16le": return BigInt(dv.getUint16(0, true));
 		case "n32": return BigInt(dv.getUint32(0));
 		case "n32le": return BigInt(dv.getUint32(0, true));
-		case "n64": return dv.getBigUint64(0);
-		case "n64le": return dv.getBigUint64(0, true);
 		default: throw new Error(`${encoding} encoding not supported`);
 	}
 };
 
 const typeIntegerOrArray = Type.union(Type.Integer, Type.arrayType([Type.Integer]));
-const typeAggregator = Type.functionType(Type.Integer, [typeIntegerOrArray], true);
+const typeAggregator = Type.functionType(Type.Integer, [Type.arrayType([typeIntegerOrArray])], true);
 
 const funcSum = new Constant(
-	(...values: (bigint | bigint[])[])=>
-		BigInt.asIntN(64, values.flat().reduce((acc, val)=> acc + val, 0n)),
+	(values: (bigint | bigint[])[]) =>
+		boundInteger(values.flat().reduce((acc, val) => acc + val, 0n)),
 	typeAggregator,
 );
 
 const funcMin = new Constant(
-	(...values: (bigint | bigint[])[])=>
-		BigInt.asIntN(64, values.flat().reduce((min, val)=> val < min ? val : min)),
+	(values: (bigint | bigint[])[]) =>
+		boundInteger(values.flat().reduce((min, val) => val < min ? val : min)),
 	typeAggregator,
 );
 
 const funcMax = new Constant(
-	(...values: (bigint | bigint[])[])=>
-		BigInt.asIntN(64, values.flat().reduce((max, val)=> val > max ? val : max)),
+	(values: (bigint | bigint[])[]) =>
+		boundInteger(values.flat().reduce((max, val) => val > max ? val : max)),
 	typeAggregator,
 );
 
 const funcRandomInteger = new Constant(
-	(value: bigint)=>
-		value == null ? undefined : BigInt.asIntN(64, BigInt(Math.floor(Math.random() * Number(value)))),
+	(value: bigint) =>
+		value == null ? undefined : boundInteger(BigInt(Math.floor(Math.random() * Number(value)))),
 	Type.functionType(Type.Integer, [Type.Integer]),
 	false,
 );
 
 const funcDecodeInteger = new Constant(
-	(value: ArrayBuffer | undefined, encoding: IntegerEncoding = "i64", byteOffset?: bigint)=>
+	(value: ArrayBuffer | undefined, encoding: IntegerEncoding = "i64", byteOffset?: bigint) =>
 		decodeInteger(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
 	Type.functionType(Type.OptionalInteger, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]),
 );
 
 const funcParseInteger = new Constant(
-	(value: string | undefined)=> {
+	(value: string | undefined) => {
 		try {
-			return value ? BigInt.asIntN(64, BigInt(value)) : undefined
+			return value ? boundInteger(BigInt(value)) : undefined
 		}
 		catch {}
 		return undefined;
 	},
 	Type.functionType(Type.OptionalInteger, [Type.OptionalString]),
+);
+
+export const funcInteger = new Constant(
+	(value: boolean | Date | number) =>
+		createInteger(Number(value)) ?? 0n,
+	Type.union(
+		Type.functionType(Type.Integer, [Type.Boolean]),
+		Type.functionType(Type.Integer, [Type.Timestamp]),
+		Type.functionType(Type.Integer, [Type.Float]),
+	),
 );
 
 export const constInteger = Object.assign(Object.create(null), {

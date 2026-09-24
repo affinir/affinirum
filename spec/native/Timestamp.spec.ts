@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Timestamp function test", ()=> {
+describe("Timestamp function test", () => {
 	runAffinirumTests([
 		{
 			script: "Timestamp.Now().EpochTime > 0",
@@ -29,14 +29,14 @@ describe("Timestamp function test", ()=> {
 			],
 		},
 		{
-			script: "Timestamp.Decode(Timestamp.Epoch(v).Encode).EpochTime",
+			script: "val t = Timestamp.Decode(Timestamp.Epoch(v).Encode); if t != null t.EpochTime",
 			cases: [
 				{ values: { v: 60n }, result: 60n },
 				{ values: { v: 1055n }, result: 1055n },
 			],
 		},
 		{
-			script: "Timestamp.Decode(v, enc, offset).EpochTime",
+			script: "val t = Timestamp.Decode(v, enc, offset); if t != null t.EpochTime",
 			cases: [
 				{ values: { v: new Uint8Array([0xff, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]).buffer, enc: "i64le", offset: 1n }, result: 1000n },
 			],

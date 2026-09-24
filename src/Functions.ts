@@ -2,11 +2,14 @@ import { Constant } from "./Constant.js";
 import { funcAdd } from "./native/Aggregable.js";
 import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
 	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose, funcPrepend, funcAppend } from "./native/Array.js";
+import { funcBoolean } from "./native/Boolean.js";
 import { funcByte } from "./native/Buffer.js";
 import { funcSlice, funcSplice, funcInject } from "./native/Enumerable.js";
+import { funcFloat } from "./native/Float.js";
+import { funcInteger } from "./native/Integer.js";
 import { funcLength, funcContains, funcAt, funcHas } from "./native/Iterable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
-	funcPower, funcRoot, funcNegate, funcCast, funcCastToFloat, funcCastToInteger } from "./native/Number.js";
+	funcPower, funcRoot, funcNegate } from "./native/Number.js";
 import { funcEntries, funcKeys, funcValues } from "./native/Object.js";
 import { funcLike, funcUnlike, funcStartsWith, funcEndsWith,
 	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit, funcReplaceWith } from "./native/String.js";
@@ -56,9 +59,9 @@ export const Functions: [string, Constant][] = [
 	["Power", funcPower],
 	["Root", funcRoot],
 	["Negate", funcNegate],
-	["Cast", funcCast],
-	["CastToFloat", funcCastToFloat],
-	["CastToInteger", funcCastToInteger],
+	["Boolean", funcBoolean],
+	["Float", funcFloat],
+	["Integer", funcInteger],
 	// Object
 	["Entries", funcEntries],
 	["Keys", funcKeys],

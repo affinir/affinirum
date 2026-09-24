@@ -2,28 +2,28 @@ import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
 const typeBooleanOrArray = Type.union(Type.Boolean, Type.arrayType([Type.Boolean]));
-const typeBooleanLogic = Type.functionType(Type.Boolean, [typeBooleanOrArray], true);
+const typeBooleanLogic = Type.functionType(Type.Boolean, [Type.arrayType([typeBooleanOrArray])], true);
 
 export const funcOr = new Constant(
-	(...values: (boolean | boolean[])[])=>
-		values.flat().some((v)=> v),
+	(values: (boolean | boolean[])[]) =>
+		values.flat().some((v) => v),
 	typeBooleanLogic,
 );
 
 export const funcAnd = new Constant(
-	(...values: (boolean | boolean[])[])=>
-		values.flat().every((v)=> v),
+	(values: (boolean | boolean[])[]) =>
+		values.flat().every((v) => v),
 	typeBooleanLogic,
 );
 
 export const funcNot = new Constant(
-	(value: boolean)=>
+	(value: boolean) =>
 		!value,
 	Type.functionType(Type.Boolean, [Type.Boolean]),
 );
 
 const funcDecodeBoolean = new Constant(
-	(value: ArrayBuffer | undefined, byteOffset?: bigint)=> {
+	(value: ArrayBuffer | undefined, byteOffset?: bigint) => {
 		const offset = byteOffset == null ? 0 : Number(byteOffset);
 		return value && offset >= 0 && value.byteLength > offset ? Boolean(new Uint8Array(value)[offset]) : undefined
 	},
@@ -31,7 +31,7 @@ const funcDecodeBoolean = new Constant(
 );
 
 const funcParseBoolean = new Constant(
-	(value: string | undefined)=> {
+	(value: string | undefined) => {
 		if (value == null) {
 			return undefined;
 		}
@@ -39,6 +39,16 @@ const funcParseBoolean = new Constant(
 		return v === "true" ? true : v === "false" ? false : undefined;
 	},
 	Type.functionType(Type.OptionalBoolean, [Type.OptionalString]),
+);
+
+export const funcBoolean = new Constant(
+	(value: Date | number | bigint) =>
+		typeof value === "bigint" ? value !== 0n : Boolean(Number(value)),
+	Type.union(
+		Type.functionType(Type.Boolean, [Type.Timestamp]),
+		Type.functionType(Type.Boolean, [Type.Float]),
+		Type.functionType(Type.Boolean, [Type.Integer]),
+	),
 );
 
 export const constBoolean = Object.assign(Object.create(null), {

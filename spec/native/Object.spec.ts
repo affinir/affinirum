@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Object function test", ()=> {
+describe("Object function test", () => {
 	runAffinirumTests([
 		{
 			script: "v.Format()",

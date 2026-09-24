@@ -7,6 +7,7 @@ import { Constant } from "./Constant.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from "./native/Number.js";
 import { funcCoalesce, funcEqual, funcNotEqual } from "./native/Unknown.js";
+import { boundInteger } from "./native/Integer.js";
 import { Value } from "./Value.js";
 import { Type } from "./Type.js";
 import { ParserFrame } from "./ParserFrame.js";
@@ -33,10 +34,11 @@ const idBracesClose = Symbol();
 const idSemicolon = Symbol();
 const idColon = Symbol();
 const idComma = Symbol();
+const idTilda = Symbol();
 const idDot = Symbol();
 const idQuestion = Symbol();
 const idEllipsis = Symbol();
-const idTilda = Symbol();
+const idCast = Symbol();
 const idVar = Symbol();
 const idVal = Symbol();
 const idIf = Symbol();
@@ -133,6 +135,10 @@ export class ParserState extends ParserFrame {
 		return this._fragment === idComma;
 	}
 
+	get isTilda(): boolean {
+		return this._fragment === idTilda;
+	}
+
 	get isDot(): boolean {
 		return this._fragment === idDot;
 	}
@@ -145,8 +151,8 @@ export class ParserState extends ParserFrame {
 		return this._fragment === idEllipsis;
 	}
 
-	get isTilda(): boolean {
-		return this._fragment === idTilda;
+	get isCast(): boolean {
+		return this._fragment === idCast;
 	}
 
 	get isVar(): boolean {
@@ -261,7 +267,12 @@ export class ParserState extends ParserFrame {
 				case "{": this._fragment = idBracesOpen; break;
 				case "}": this._fragment = idBracesClose; break;
 				case ";": this._fragment = idSemicolon; break;
-				case ":": this._fragment = idColon; break;
+				case ":":
+					switch (this._expr.charAt(this._end)) {
+						case ":": ++this._end; this._fragment = idCast; break;
+						default: this._fragment = idColon; break;
+					}
+					break;
 				case ",": this._fragment = idComma; break;
 				case "~":
 					switch (this._expr.charAt(this._end)) {
@@ -439,10 +450,10 @@ export class ParserState extends ParserFrame {
 							case "false": this._fragment = valueFalse; break;
 							case "null": this._fragment = valueNull; break;
 							case "void": this._fragment = Type.Void; break;
-							case "boolean": this._fragment = Type.Boolean; break;
-							case "timestamp": this._fragment = Type.Timestamp; break;
-							case "float": this._fragment = Type.Float; break;
-							case "integer": this._fragment = Type.Integer; break;
+							case "bool": case "boolean": this._fragment = Type.Boolean; break;
+							case "time": case "timestamp": this._fragment = Type.Timestamp; break;
+							case "f64": case "float": this._fragment = Type.Float; break;
+							case "i64": case "integer": this._fragment = Type.Integer; break;
 							case "buffer": this._fragment = Type.Buffer; break;
 							case "string": this._fragment = Type.String; break;
 							case "array": this._fragment = Type.Array; break;
@@ -488,7 +499,7 @@ export class ParserState extends ParserFrame {
 							integer = false;
 						}
 						this._fragment = integer
-							? new Literal(BigInt(this._expr.substring(this._start, this._end)))
+							? new Literal(boundInteger(BigInt(this._expr.substring(this._start, this._end))))
 							: new Literal(parseFloat(this._expr.substring(this._start, this._end)));
 					}
 					else {

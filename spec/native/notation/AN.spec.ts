@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../../helpers/AffinirumTest.js";
 
-describe("AN function test", ()=> {
+describe("AN function test", () => {
 	runAffinirumTests([
 		{
 			script: "AN.Format(obj0)",
@@ -20,7 +20,7 @@ describe("AN function test", ()=> {
 				{ values: { obj0: { a: "a", b: "b", c: "c" } }, result: "[\"a\":\"a\",\"b\":\"b\",\"c\":\"c\"]" },
 				{
 					values: {
-						obj0: { xbool: true, xbuf: new Uint8Array([10, 20, 30, 0, 4]).buffer, xstr: "string", xfunc: ()=> "1234", xarr: [1n, 2n, 3n], xobj: { a: 1, b: 2 } },
+						obj0: { xbool: true, xbuf: new Uint8Array([10, 20, 30, 0, 4]).buffer, xstr: "string", xfunc: () => "1234", xarr: [1n, 2n, 3n], xobj: { a: 1, b: 2 } },
 					},
 					result: "[\"xbool\":true,\"xbuf\":#0a141e0004,\"xstr\":\"string\",\"xfunc\":function,\"xarr\":[1,2,3],\"xobj\":[\"a\":1.0,\"b\":2.0]]",
 				},
@@ -33,7 +33,7 @@ describe("AN function test", ()=> {
 				{ values: { obj0: null }, result: "" },
 				{
 					values: {
-						obj0: { xbool: [[[true]]], xbuf: new Uint8Array([10, 20, 30, 0, 4]).buffer, xstr: "string", xfunc: ()=> "1234", xarr: [1n, 2n, 3n], xobj: { a: 1, b: 2 } },
+						obj0: { xbool: [[[true]]], xbuf: new Uint8Array([10, 20, 30, 0, 4]).buffer, xstr: "string", xfunc: () => "1234", xarr: [1n, 2n, 3n], xobj: { a: 1, b: 2 } },
 					},
 					result: `[
  "xbool": [

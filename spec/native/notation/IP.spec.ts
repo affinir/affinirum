@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../../helpers/AffinirumTest.js";
 
-describe("IP parsing test", ()=> {
+describe("IP parsing test", () => {
 	runAffinirumTests([
 		{
 			script: "IP.Encode(ip).Format()",
@@ -187,44 +187,44 @@ describe("IP parsing test", ()=> {
 	]);
 });
 
-describe("IP formatting test", ()=> {
+describe("IP formatting test", () => {
 	runAffinirumTests([
 		{
-			script: "IP.Decode(buf)",
+			script: "IP.Decode(buf1)",
 			cases: [
 				// Null
-				{ values: { buf: undefined }, result: undefined },
-				{ values: { buf: null }, result: undefined },
+				{ values: { buf1: undefined }, result: undefined },
+				{ values: { buf1: null }, result: undefined },
 				// IPv4
-				{ values: { buf: new Uint8Array([0, 0, 0, 0]).buffer }, result: "0.0.0.0" },
-				{ values: { buf: new Uint8Array([10, 20, 30, 40]).buffer }, result: "10.20.30.40" },
-				{ values: { buf: new Uint8Array([255, 255, 255, 255]).buffer }, result: "255.255.255.255" },
+				{ values: { buf1: new Uint8Array([0, 0, 0, 0]).buffer }, result: "0.0.0.0" },
+				{ values: { buf1: new Uint8Array([10, 20, 30, 40]).buffer }, result: "10.20.30.40" },
+				{ values: { buf1: new Uint8Array([255, 255, 255, 255]).buffer }, result: "255.255.255.255" },
 				// IPv4 with CIDR
-				{ values: { buf: new Uint8Array([192, 168, 1, 1, 0]).buffer }, result: "192.168.1.1/0" },
-				{ values: { buf: new Uint8Array([192, 168, 1, 1, 24]).buffer }, result: "192.168.1.1/24" },
-				{ values: { buf: new Uint8Array([192, 168, 1, 1, 32]).buffer }, result: "192.168.1.1/32" },
+				{ values: { buf1: new Uint8Array([192, 168, 1, 1, 0]).buffer }, result: "192.168.1.1/0" },
+				{ values: { buf1: new Uint8Array([192, 168, 1, 1, 24]).buffer }, result: "192.168.1.1/24" },
+				{ values: { buf1: new Uint8Array([192, 168, 1, 1, 32]).buffer }, result: "192.168.1.1/32" },
 				// IPv6 zero compression
-				{ values: { buf: new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).buffer }, result: "::" },
-				{ values: { buf: new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).buffer }, result: "::1" },
-				{ values: { buf: new Uint8Array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).buffer }, result: "1::" },
-				{ values: { buf: new Uint8Array([0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0xff, 0, 0, 0x42, 0x83, 0x29]).buffer }, result: "2001:db8::ff00:42:8329" },
+				{ values: { buf1: new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).buffer }, result: "::" },
+				{ values: { buf1: new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).buffer }, result: "::1" },
+				{ values: { buf1: new Uint8Array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).buffer }, result: "1::" },
+				{ values: { buf1: new Uint8Array([0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0xff, 0, 0, 0x42, 0x83, 0x29]).buffer }, result: "2001:db8::ff00:42:8329" },
 				// A single zero is not compressed
-				{ values: { buf: new Uint8Array([0, 1, 0, 0, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7]).buffer }, result: "1:0:2:3:4:5:6:7" },
+				{ values: { buf1: new Uint8Array([0, 1, 0, 0, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7]).buffer }, result: "1:0:2:3:4:5:6:7" },
 				// The longest run is compressed; the leftmost run wins a tie
-				{ values: { buf: new Uint8Array([0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 3, 0, 4]).buffer }, result: "1::2:0:0:3:4" },
-				{ values: { buf: new Uint8Array([0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3]).buffer }, result: "1:0:0:2::3" },
+				{ values: { buf1: new Uint8Array([0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 3, 0, 4]).buffer }, result: "1::2:0:0:3:4" },
+				{ values: { buf1: new Uint8Array([0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3]).buffer }, result: "1:0:0:2::3" },
 				// IPv4 bytes embedded in an IPv6 buffer remain IPv6 text
-				{ values: { buf: new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 192, 168, 1, 1]).buffer }, result: "::ffff:c0a8:101" },
+				{ values: { buf1: new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 192, 168, 1, 1]).buffer }, result: "::ffff:c0a8:101" },
 				// IPv6 with CIDR
-				{ values: { buf: new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).buffer }, result: "::/0" },
-				{ values: { buf: new Uint8Array([0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 64]).buffer }, result: "2001:db8::1/64" },
-				{ values: { buf: new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 128]).buffer }, result: "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/128" },
+				{ values: { buf1: new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).buffer }, result: "::/0" },
+				{ values: { buf1: new Uint8Array([0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 64]).buffer }, result: "2001:db8::1/64" },
+				{ values: { buf1: new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 128]).buffer }, result: "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/128" },
 			],
 		},
 	]);
 });
 
-describe("IP matching test", ()=> {
+describe("IP matching test", () => {
 	runAffinirumTests([
 		{
 			script: "IP.Match([\"192.0.2.1\", \"198.51.100.2\", \"2001:db8::3\"], ip)",

@@ -1,15 +1,15 @@
 import { runAffinirumTests } from "../../helpers/AffinirumTest.js";
 
-describe("JSON function test", ()=> {
+describe("JSON function test", () => {
 	runAffinirumTests([
 		{
-			script: "JSON.Parse(str1).prop1+JSON.Parse(str2).prop2",
+			script: "JSON.Parse(str1)::object.prop1+JSON.Parse(str2)::object.prop2",
 			cases: [
 				{ values: { str1: "{\"prop1\":1}", str2: "{\"prop2\":20}" }, result: 21 },
 			],
 		},
 		{
-			script: "JSON.Parse(str1)+JSON.Parse(str2)",
+			script: "JSON.Parse(str1)::string+JSON.Parse(str2)::string",
 			cases: [
 				{ values: { str1: "\"p1\"", str2: "\"p2\"" }, result: "p1p2" },
 			],

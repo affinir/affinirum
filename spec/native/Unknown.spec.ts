@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Unknown function test", ()=> {
+describe("Unknown function test", () => {
 	runAffinirumTests([
 		{
 			script: "a.Format()",
@@ -16,7 +16,7 @@ describe("Unknown function test", ()=> {
 				{ values: { a: "abc" }, result: "abc" },
 				{ values: { a: [1n, "a", false] }, result: "1afalse" },
 				{ values: { a: { a: 1n, b: "x" } }, result: "a1bx" },
-				{ values: { a: ()=> 0n }, result: "" },
+				{ values: { a: () => 0n }, result: "" },
 			],
 		},
 		{
@@ -105,7 +105,7 @@ describe("Unknown function test", ()=> {
 				{ values: { a: new Uint8Array([0xaa, 0xbb]).buffer }, result: "aabb" },
 				{ values: { a: [true, "A"] }, result: "ff41" },
 				{ values: { a: { a: 1n } }, result: "610000000000000001" },
-				{ values: { a: ()=> 0n }, result: "" },
+				{ values: { a: () => 0n }, result: "" },
 			],
 		},
 		{

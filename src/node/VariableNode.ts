@@ -25,7 +25,9 @@ export class VariableNode extends Node {
 	}
 
 	override evaluate(): Value {
-		return this._subnode ? this._variable.value = this._subnode.evaluate() : this._variable.value;
+		return this._subnode
+			? this._variable.value = this._subnode.evaluate()
+			: this._variable.value;
 	}
 
 	override toString(ident: number = 0): string {

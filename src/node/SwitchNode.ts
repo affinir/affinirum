@@ -18,11 +18,11 @@ export class SwitchNode extends Node {
 		if (_subnodes.length !== 2) {
 			this.throwError(`switch requires 2 subnodes not ${_subnodes.length}`);
 		}
-		this._type = Type.union(...this._subnodes.map((i)=> i.type));
+		this._type = Type.union(...this._subnodes.map((i) => i.type));
 	}
 
 	override get type(): Type {
-		return Type.union(...this._subnodes.map((i)=> i.type));
+		return Type.union(...this._subnodes.map((i) => i.type));
 	}
 
 	override compile(type: Type): Node {
@@ -42,11 +42,13 @@ export class SwitchNode extends Node {
 	}
 
 	override evaluate(): Value {
-		return this._cnode.evaluate() ? this._subnodes[0].evaluate() : this._subnodes[1].evaluate();
+		return this._cnode.evaluate()
+			? this._subnodes[0].evaluate()
+			: this._subnodes[1].evaluate();
 	}
 
 	override toString(ident: number = 0): string {
-		const subnodes = this._subnodes.map((s)=> s.toString(ident + 1)).join("\n");
+		const subnodes = this._subnodes.map((s) => s.toString(ident + 1)).join("\n");
 		return `${super.toString(ident)} switch node cnode:\n${this._cnode.toString(ident + 1)}\n`
 			+ `${super.toString(ident)} switch node subnodes:\n${subnodes}`;
 	}

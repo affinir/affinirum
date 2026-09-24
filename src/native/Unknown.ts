@@ -8,7 +8,7 @@ import { BufferFormatting, formatBuffer, concatBuffers, equateBuffers, EmptyBuff
 import { StringEncoding, encodeString } from "./String.js";
 import { TimestampEncoding, encodeTimestamp, formatTimestamp } from "./Timestamp.js";
 
-export const equate = (value1: Value, value2: Value)=> {
+export const equate = (value1: Value, value2: Value) => {
 	if (value1 == null || value2 == null) {
 		return value1 == value2;
 	}
@@ -53,7 +53,7 @@ export const equate = (value1: Value, value2: Value)=> {
 	return true;
 };
 
-export const encode = (value: Value, encoding?: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding): ArrayBuffer=>
+export const encode = (value: Value, encoding?: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding): ArrayBuffer =>
 	value == null
 		? EmptyBuffer
 		: typeof value === "boolean"
@@ -69,14 +69,14 @@ export const encode = (value: Value, encoding?: FloatEncoding | IntegerEncoding 
 							: typeof value === "string"
 								? encodeString(value, encoding as StringEncoding ?? "utf8")
 								: Array.isArray(value)
-									? value.map((i)=> encode(i, encoding)).reduce((acc, val)=> concatBuffers(acc, val), EmptyBuffer)
+									? value.map((i) => encode(i, encoding)).reduce((acc, val) => concatBuffers(acc, val), EmptyBuffer)
 									: typeof value === "object"
 										? Object.entries(value)
-											.map(([k, v])=> concatBuffers(encode(k, encoding), encode(v, encoding)))
-											.reduce((acc, val)=> concatBuffers(acc, val), EmptyBuffer)
+											.map(([k, v]) => concatBuffers(encode(k, encoding), encode(v, encoding)))
+											.reduce((acc, val) => concatBuffers(acc, val), EmptyBuffer)
 										: EmptyBuffer;
 
-export const format = (value: Value, formatting?: string): string=>
+export const format = (value: Value, formatting?: string): string =>
 	value == null
 		? ""
 		: typeof value === "boolean"
@@ -92,17 +92,17 @@ export const format = (value: Value, formatting?: string): string=>
 							: typeof value === "string"
 								? value
 								: Array.isArray(value)
-									? value.map((i)=> format(i, formatting)).reduce((acc, val)=> acc + val, "")
+									? value.map((i) => format(i, formatting)).reduce((acc, val) => acc + val, "")
 									: typeof value === "object"
 										? Object.entries(value)
-											.map(([k, v])=> format(k, formatting) + format(v, formatting))
-											.reduce((acc, val)=> acc + val, "")
+											.map(([k, v]) => format(k, formatting) + format(v, formatting))
+											.reduce((acc, val) => acc + val, "")
 										: "";
 
 const typeEquator = Type.functionType(Type.Boolean, [Type.Unknown, Type.Unknown]);
 
 export const funcCoalesce = new Constant(
-	(value: Value, valueOtherwise: Value)=>
+	(value: Value, valueOtherwise: Value) =>
 		value ?? valueOtherwise,
 	Type.union(
 		Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown]),
@@ -119,19 +119,19 @@ export const funcCoalesce = new Constant(
 );
 
 export const funcEqual = new Constant(
-	(value1: Value, value2: Value)=>
+	(value1: Value, value2: Value) =>
 		equate(value1, value2),
 	typeEquator,
 );
 
 export const funcNotEqual = new Constant(
-	(value1: Value, value2: Value)=>
+	(value1: Value, value2: Value) =>
 		!equate(value1, value2),
 	typeEquator,
 );
 
 export const funcEncode = new Constant(
-	(value: Value, encoding: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding)=>
+	(value: Value, encoding: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding) =>
 		encode(value, encoding),
 	Type.union(
 		Type.functionType(Type.Buffer, [Type.Void, Type.OptionalString]),
@@ -148,7 +148,7 @@ export const funcEncode = new Constant(
 );
 
 export const funcFormat = new Constant(
-	(value: Value, formatting?: string)=>
+	(value: Value, formatting?: string) =>
 		format(value, formatting),
 	Type.union(
 		Type.functionType(Type.String, [Type.Void, Type.OptionalString]),

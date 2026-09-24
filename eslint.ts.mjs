@@ -1,4 +1,5 @@
 const rules = {
+	"@stylistic/arrow-spacing": ["error", { "before": true, "after": true }],
 	"@typescript-eslint/ban-types": "off",
 	"@typescript-eslint/consistent-type-assertions": [ "error", { "assertionStyle": "as" } ],
 	"@typescript-eslint/consistent-type-definitions": "error",
@@ -14,7 +15,6 @@ const rules = {
 	"@typescript-eslint/no-wrapper-object-types": "off",
 	"@typescript-eslint/restrict-template-expressions": "off",
 	"arrow-parens": "error",
-	"arrow-spacing": [ "error", { "before": false, "after": true } ],
 	"array-bracket-spacing": [ "error", "never" ],
 	"block-spacing": [ "error", "always" ],
 	"brace-style": [ "error", "stroustrup", { "allowSingleLine": true } ],

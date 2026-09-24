@@ -7,7 +7,7 @@ import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 import { funcCoalesce, funcEqual, funcNotEqual } from "./native/Unknown.js";
 import { Constant } from "./Constant.js";
 import { Variable } from "./Variable.js";
-import { Value } from "./Value.js";
+import { Value, normalize } from "./Value.js";
 import { Type } from "./Type.js";
 import { Keywords } from "./Keywords.js";
 import { Constants } from "./Constants.js";
@@ -16,6 +16,7 @@ import { Node } from "./Node.js";
 import { ArrayNode } from "./node/ArrayNode.js";
 import { BlockNode } from "./node/BlockNode.js";
 import { CallNode } from "./node/CallNode.js";
+import { CastNode } from "./node/CastNode.js";
 import { ConstantNode } from "./node/ConstantNode.js";
 import { JumpNode } from "./node/JumpNode.js";
 import { LoopNode } from "./node/LoopNode.js";
@@ -29,7 +30,7 @@ import { JumpException } from "./JumpException.js";
 
 export class Affinirum {
 
-	static readonly keywords = [...Keywords, ...Constants.map((c)=> c[0])];
+	static readonly keywords = [...Keywords, ...Constants.map((c) => c[0])];
 	protected readonly _script: string;
 	protected readonly _strict: boolean;
 	protected readonly _root: Node;
@@ -109,23 +110,23 @@ export class Affinirum {
 	evaluate(values?: Record<string, Value>): Value {
 		const variables = this._scope.variables();
 		for (const name in variables) {
-			if (!Object.prototype.hasOwnProperty.call(values, name)) {
+			if (!values || !Object.hasOwn(values, name)) {
 				this._varframes.get(name)?.throwError(`undefined variable ${name}:\n`);
 			}
 			const variable = variables[name];
-			const value = values?.[name] ?? undefined;
-			if (!variable.type.match(Type.of(value))) {
+			const value = normalize(values?.[name] ?? undefined);
+			if (!variable.type.acceptValue(value)) {
 				this._varframes.get(name)?.throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
 			}
 			variable.value = value;
 		}
 		try {
-			return this._root.evaluate();
+			return normalize(this._root.evaluate() ?? undefined);
 		}
 		catch (e) {
 			if (e instanceof JumpException) {
 				if (e.jump === "exit") {
-					return e.value;
+					return normalize(e.value ?? undefined);
 				}
 				else {
 					throw this._root.throwError(`unexpected ${e.jump} jump`);
@@ -264,9 +265,9 @@ export class Affinirum {
 	}
 
 	protected _accessor(state: ParserState, scope: StaticScope): Node {
+		const frame = state.starts();
 		let node = this._term(state, scope);
-		while (state.isDot || state.isQuestion || state.isParenthesesOpen || state.isBracketsOpen) {
-			const frame = state.starts();
+		while (state.isDot || state.isQuestion || state.isParenthesesOpen || state.isBracketsOpen || state.isCast) {
 			if (state.isDot || state.isQuestion) { // property access or property existance operator
 				const operator = state.isDot ? funcAt : funcHas;
 				if (state.next().isLiteral && (typeof state.literal.value === "string" || typeof state.literal.value === "bigint")) {
@@ -312,13 +313,20 @@ export class Affinirum {
 						break;
 					}
 				}
+				state.closeParentheses();
 				node = new CallNode(frame.ends(state), node, subnodes);
-				state.closeParentheses().next();
+				state.next();
 			}
 			else if (state.isBracketsOpen) { // index access operator
-				const fnode = new ConstantNode(frame, funcAt);
-				node = new CallNode(frame, fnode, [node, this._unit(state.next(), scope)]);
-				state.closeBrackets().next();
+				const subnodes = [node, this._unit(state.next(), scope)];
+				state.closeBrackets();
+				const fnode = new ConstantNode(frame.ends(state), funcAt);
+				node = new CallNode(frame, fnode, subnodes);
+				state.next();
+			}
+			else if (state.isCast) { // type cast operator
+				const type = this._type(state.next(), scope);
+				node = new CastNode(frame.ends(state), node, type);
 			}
 		}
 		return node;
@@ -430,11 +438,11 @@ export class Affinirum {
 			frame.ends(state);
 			state.closeBrackets().next();
 			if (colon) {
-				return new ObjectNode(frame, subnodes.map(([k, v])=>
+				return new ObjectNode(frame, subnodes.map(([k, v]) =>
 					[typeof k === "number" ? new ConstantNode(v, new Constant(String(k))) : k, v] as const
 				));
 			}
-			return new ArrayNode(frame, subnodes.map(([, v])=> v));
+			return new ArrayNode(frame, subnodes.map(([, v]) => v));
 		}
 		else if (state.isBracketsClose) {
 			state.throwError("unexpected closing brackets");
@@ -495,8 +503,8 @@ export class Affinirum {
 	}
 
 	protected _function(state: ParserState, scope: StaticScope): Node {
-		state.next().openParentheses();
 		const frame = state.starts();
+		state.next().openParentheses();
 		let variadic = false;
 		const variables = new Map<string, Variable>();
 		while (!state.next().isParenthesesClose) {
@@ -533,11 +541,11 @@ export class Affinirum {
 		frame.ends(state);
 		const args = Array.from(variables.values());
 		const subnode =  this._unit(state, scope.subscope(variables));
-		const func = (...values: Value[])=> {
-			args.forEach((arg, ix)=> arg.value = values[ix]);
-			return subnode.evaluate();
+		const func = (...values: Value[]) => {
+			args.forEach((arg, ix) => arg.value = normalize(values[ix]));
+			return normalize(subnode.evaluate());
 		};
-		const constant = new Constant(func, Type.functionType(retType, args.map((v)=> v.type), variadic));
+		const constant = new Constant(func, Type.functionType(retType, args.map((v) => v.type), variadic));
 		return new ConstantNode(frame, constant, subnode);
 	}
 
@@ -590,8 +598,8 @@ export class Affinirum {
 			}
 			state.closeBrackets().next();
 			return colon
-				? Type.objectType(Object.fromEntries(itemKeyTypes.map(([key, type])=> [key as string, type])))
-				: Type.arrayType(itemKeyTypes.map(([, v])=> v));
+				? Type.objectType(itemKeyTypes.map(([key, type]) => [key as string, type]))
+				: Type.arrayType(itemKeyTypes.map(([, v]) => v));
 		}
 		else if (state.isTilda) { // function type
 			state.next().openParentheses();

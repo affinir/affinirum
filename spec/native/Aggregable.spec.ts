@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Aggregable function test", ()=> {
+describe("Aggregable function test", () => {
 	runAffinirumTests([
 		{
 			script: "a.Add(b)",

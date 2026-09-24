@@ -97,7 +97,7 @@ function decodeIP(value: ArrayBuffer) {
 		if (prefix != null && prefix > 32) {
 			throw new Error(`Invalid IPv4 prefix length: ${prefix}`);
 		}
-		const address = Array.from({ length: 4 }, (_value, i)=> dv.getUint8(i)).join(".");
+		const address = Array.from({ length: 4 }, (_value, i) => dv.getUint8(i)).join(".");
 		return prefix == null ? address : `${address}/${prefix}`;
 	}
 	if (dv.byteLength === 16 || dv.byteLength === 17) {
@@ -105,7 +105,7 @@ function decodeIP(value: ArrayBuffer) {
 		if (prefix != null && prefix > 128) {
 			throw new Error(`Invalid IPv6 prefix length: ${prefix}`);
 		}
-		const parts = Array.from({ length: 8 }, (_value, i)=> dv.getUint16(i << 1));
+		const parts = Array.from({ length: 8 }, (_value, i) => dv.getUint16(i << 1));
 		let longestStart = -1;
 		let longestLength = 0;
 		for (let start = 0; start < parts.length;) {
@@ -125,12 +125,12 @@ function decodeIP(value: ArrayBuffer) {
 		}
 		let address: string;
 		if (longestLength > 1) {
-			const begin = parts.slice(0, longestStart).map((part)=> part.toString(16)).join(":");
-			const end = parts.slice(longestStart + longestLength).map((part)=> part.toString(16)).join(":");
+			const begin = parts.slice(0, longestStart).map((part) => part.toString(16)).join(":");
+			const end = parts.slice(longestStart + longestLength).map((part) => part.toString(16)).join(":");
 			address = `${begin}::${end}`;
 		}
 		else {
-			address = parts.map((part)=> part.toString(16)).join(":");
+			address = parts.map((part) => part.toString(16)).join(":");
 		}
 		return prefix == null ? address : `${address}/${prefix}`;
 	}
@@ -182,7 +182,7 @@ class IPSet {
 		const prefix = dv.byteLength & 1 ? dv.getUint8(dv.byteLength - 1) : dv.byteLength << 3;
 		if (dv.byteLength < 16) {
 			const address = BigInt(dv.getUint32(0));
-			const shift = (p: number)=> address >> BigInt(32 - p);
+			const shift = (p: number) => address >> BigInt(32 - p);
 			return {
 				array: this._ipv4Sets,
 				prefix,
@@ -191,7 +191,7 @@ class IPSet {
 		}
 		else {
 			const address = dv.getBigUint64(0) << 64n | dv.getBigUint64(8);
-			const shift = (p: number)=> address >> BigInt(128 - p);
+			const shift = (p: number) => address >> BigInt(128 - p);
 			return {
 				array: this._ipv6Sets,
 				prefix,
@@ -202,8 +202,10 @@ class IPSet {
 
 }
 
+const typeStringOrArray = Type.union(Type.String, Type.arrayType([Type.String]));
+
 const funcMatchIP = new Constant(
-	(values: string[], ...search: (string | string[])[])=> {
+	(values: string[], search: (string | string[])[]) => {
 		try {
 			const ipset = new IPSet().add(values);
 			for (const ip of search.flat()) {
@@ -218,11 +220,11 @@ const funcMatchIP = new Constant(
 		catch {}
 		return false;
 	},
-	Type.functionType(Type.Boolean, [Type.Array, Type.union(Type.String, Type.Array)], true),
+	Type.functionType(Type.Boolean, [Type.arrayType([Type.String]), Type.arrayType([typeStringOrArray])], true),
 );
 
 const funcEncodeIP = new Constant(
-	(value?: string)=> {
+	(value?: string) => {
 		if (value == null) {
 			return EmptyBuffer;
 		}
@@ -237,7 +239,7 @@ const funcEncodeIP = new Constant(
 );
 
 const funcDecodeIP = new Constant(
-	(value?: ArrayBuffer)=> {
+	(value?: ArrayBuffer) => {
 		if (value == null) {
 			return undefined;
 		}

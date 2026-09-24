@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("String function test", ()=> {
+describe("String function test", () => {
 	runAffinirumTests([
 		{
 			script: "v.Format()",
@@ -122,8 +122,8 @@ describe("String function test", ()=> {
 		{
 			script: "s.CharCode(p) == c",
 			cases: [
-				{ values: { s: "abc", p: 1, c: 98 }, result: true },
-				{ values: { s: "abc", p: -1, c: 99 }, result: true },
+				{ values: { s: "abc", p: 1n, c: 98 }, result: true },
+				{ values: { s: "abc", p: -1n, c: 99 }, result: true },
 			],
 		},
 		{

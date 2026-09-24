@@ -1,6 +1,7 @@
+import { Affinirum } from "../src/index.js";
 import { runAffinirumTests } from "./helpers/AffinirumTest.js";
 
-describe("Constant value test", ()=> {
+describe("Constant value test", () => {
 	runAffinirumTests([
 		{ script: "null", cases: [{ result: undefined }] },
 		{ script: "false", cases: [{ result: false }] },
@@ -23,10 +24,11 @@ describe("Constant value test", ()=> {
 		{ script: "Float.PositiveInfinity", cases: [{ result: Number.POSITIVE_INFINITY }] },
 		{ script: "Float.NegativeInfinity", cases: [{ result: Number.NEGATIVE_INFINITY }] },
 		{ script: "Float.Epsilon", cases: [{ result: Number.EPSILON }] },
-		{ script: "Float.NAN.Cast", cases: [{ result: 0n }] },
-		{ script: "Float.PositiveInfinity.Cast", cases: [{ result: 0x7FFFFFFFFFFFFFFFn }] },
-		{ script: "Float.NegativeInfinity.Cast", cases: [{ result: -0x8000000000000000n }] },
-		{ script: "Float.Epsilon.Cast", cases: [{ result: 0n }] },
+		{ script: "Float.NAN.Boolean", cases: [{ result: false }] },
+		{ script: "Float.NAN.Integer", cases: [{ result: 0n }] },
+		{ script: "Float.PositiveInfinity.Integer", cases: [{ result: 0x7FFFFFFFFFFFFFFFn }] },
+		{ script: "Float.NegativeInfinity.Integer", cases: [{ result: -0x8000000000000000n }] },
+		{ script: "Float.Epsilon.Integer", cases: [{ result: 0n }] },
 		{ script: "0.5", cases: [{ result: 0.5 }] },
 		{ script: "-0.5", cases: [{ result: -0.5 }] },
 		{ script: "+0.5", cases: [{ result: +0.5 }] },
@@ -56,4 +58,14 @@ describe("Constant value test", ()=> {
 		{ script: "var a=[0,10,200,3000,40000]; a[1] + a.At(2)", cases: [{ result: 210n }] },
 		{ script: "[1,2,3,4].Reduce(\n~ (a:float, b : float):float{a.Subtract(b)}\n)", cases: [{ result: -8n }] },
 	]);
+	it("converts injected null values into undefined", () => {
+		const expression = new Affinirum("value");
+		expect(expression.evaluate({ value: null })).toBeUndefined();
+	});
+	it("converts evaluated null values into undefined", () => {
+		expect(new Affinirum("JSON.Parse(\"null\")").evaluate({})).toBeUndefined();
+	});
+	it("converts null exit values into undefined", () => {
+		expect(new Affinirum("=>JSON.Parse(\"null\")").evaluate({})).toBeUndefined();
+	});
 });

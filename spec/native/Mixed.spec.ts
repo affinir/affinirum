@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Mixed function test", ()=> {
+describe("Mixed function test", () => {
 	runAffinirumTests([
 		{
 			script: "_var",

@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Float function test", ()=> {
+describe("Float function test", () => {
 	runAffinirumTests([
 		{
 			script: "Float.NAN == Float.NAN",
@@ -12,6 +12,16 @@ describe("Float function test", ()=> {
 			script: "Float.PositiveInfinity > x & Float.NegativeInfinity < x & Float.Epsilon > 0",
 			cases: [
 				{ values: { x: 0 }, result: true },
+			],
+		},
+		{
+			script: "a.Float()",
+			cases: [
+				{ values: { a: false }, result: 0 },
+				{ values: { a: true }, result: 1 },
+				{ values: { a: new Date(123) }, result: 123 },
+				{ values: { a: 5n }, result: 5 },
+				{ values: { a: 6n }, result: 6 },
 			],
 		},
 		{

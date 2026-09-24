@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Array function test", ()=> {
+describe("Array function test", () => {
 	runAffinirumTests([
 		{
 			script: "v.Format()",
@@ -65,17 +65,17 @@ describe("Array function test", ()=> {
 			],
 		},
 		{
-			script: "arr.Flatten(depth)[i]",
+			script: "arr1.Flatten(depth)[i]",
 			cases: [
-				{ values: { arr: [[1], [2, [3]]], depth: 1n, i: 1n }, result: 2 },
-				{ values: { arr: [[1], [2, [3]]], depth: 2n, i: 2n }, result: 3 },
+				{ values: { arr1: [[1], [2, [3]]], depth: 1n, i: 1n }, result: 2 },
+				{ values: { arr1: [[1], [2, [3]]], depth: 2n, i: 2n }, result: 3 },
 			],
 		},
 		{
-			script: "arr.Reverse()[i]",
+			script: "arr1.Reverse()[i]",
 			cases: [
-				{ values: { arr: [1, 2, 3], i: 0n }, result: 3 },
-				{ values: { arr: ["a", "b", "c"], i: 2n }, result: "a" },
+				{ values: { arr1: [1, 2, 3], i: 0n }, result: 3 },
+				{ values: { arr1: ["a", "b", "c"], i: 2n }, result: "a" },
 			],
 		},
 		{
@@ -128,17 +128,17 @@ describe("Array function test", ()=> {
 			],
 		},
 		{
-			script: "arr.Prepend(a, b)[i][j]",
+			script: "arr1.Prepend(a, b)[i][j]",
 			cases: [
-				{ values: { arr: [3, 4], a: 1, b: 2, i: 0n, j: 1n }, result: 2 },
-				{ values: { arr: ["c"], a: "a", b: "b", i: 0n, j: 0n }, result: "a" },
+				{ values: { arr1: [3, 4], a: 1, b: 2, i: 0n, j: 1n }, result: 2 },
+				{ values: { arr1: ["c"], a: "a", b: "b", i: 0n, j: 0n }, result: "a" },
 			],
 		},
 		{
-			script: "arr.Append(a, b)[i][j]",
+			script: "arr1.Append(a, b)[i][j]",
 			cases: [
-				{ values: { arr: [1, 2], a: 3, b: 4, i: 2n, j: 1n }, result: 4 },
-				{ values: { arr: ["a"], a: "b", b: "c", i: 1n, j: 0n }, result: "b" },
+				{ values: { arr1: [1, 2], a: 3, b: 4, i: 2n, j: 1n }, result: 4 },
+				{ values: { arr1: ["a"], a: "b", b: "c", i: 1n, j: 0n }, result: "b" },
 			],
 		},
 		{

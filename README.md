@@ -67,10 +67,10 @@ Whitespace characters are ignored.
 
 ### Types
 - **void** for value **null**
-- **boolean** for values **true** and **false**
-- **timestamp** for date-time values, millisecons since Unix epoch
-- **float** for 64-bit floating point values in binary64, IEEE 754 binary floating-point format
-- **integer** for 64-bit integer values
+- **boolean** (alias **bool**) for values **true** and **false**
+- **timestamp** (alias **time**) for date-time values, millisecons since Unix epoch
+- **float** (alias **f64**) for 64-bit floating point values in binary64, IEEE 754 binary floating-point format
+- **integer** (alias **i64**) for 64-bit integer values
 - **buffer** for ordered sequences of bytes
 - **string** for ordered sequences of characters, text strings
 - **array** for ordered sequences of values
@@ -80,6 +80,39 @@ Whitespace characters are ignored.
 - Type grouping: **(...)**
 - Type union: **|**
 - Type optionality modifier: **?**
+
+Canonical type names and their aliases are reserved and cannot be used as variable or function names.
+
+### Type-checking policy
+Affinirum uses intentionally permissive type checking. Type information helps reject clearly incompatible expressions,
+select function overloads, and report useful compilation errors; it is not intended to enforce strict static
+substitutability or prove that every accepted expression is safe for every possible runtime value.
+
+- **??** is the unknown or variant type and is compatible with every type. It includes **void**, so a **??**
+  function parameter may receive **null** or be omitted.
+- An optional type such as **integer?** is the union **void | integer**. Optional parameters may receive **null**
+  or be omitted.
+- Function compatibility is deliberately flexible. The accepted argument-count ranges only need to overlap;
+  one function's complete arity range does not need to contain the other's.
+- A callback may declare fewer parameters than the caller provides. Additional arguments are ignored at runtime,
+  following JavaScript function-call behavior.
+- Function parameter types are checked contravariantly where both signatures declare a parameter, while **??**
+  remains compatible with any parameter type. Return types are checked covariantly.
+- Fixed and variadic signatures are not interchangeable. Variadic arguments use a distinct packed-array calling
+  convention and are only compatible with corresponding variadic signatures.
+
+For example, a callback declared as `~(value: float):boolean` is compatible with an expected callback type such as
+`~(value: ??, index: integer?, values: array?):boolean`: the arities overlap, **??** accepts the concrete value type,
+and the callback may ignore the additional arguments. This behavior is intentional. Affinirum does not enforce strict
+function subtyping.
+
+### Type casting
+A postfix type cast declares the expected type of an expression using **::type**,
+like `value::object` or `JSON.Parse(json)::object.property`.
+
+A cast does not convert the value. The source and target types must be compatible at compile time,
+and the evaluated value must satisfy the target type at runtime. An incompatible cast raises an error.
+Casts can be followed by property access, index access, function calls, or another cast.
 
 ### Definitions
 - Unit grouping: **{...}**
@@ -109,7 +142,6 @@ Whitespace characters are ignored.
 - Less than or equals to: **<=**
 - Equals to: **==**
 - Not equals to: **!=**
-- Null coalescence: **?:**
 - Arithmetic addition, or buffer, string, and array concatination: **+**
 - Arithmetic subtraction or negation: **-**
 - Arithmetic multiplication: **\***
@@ -118,6 +150,8 @@ Whitespace characters are ignored.
 - Exponentiation operator: **^**
 - Property access operator: **.**
 - Property existance operator: **?**
+- Null coalescence operator: **?:**
+- Type cast operator: **::**
 - Assignment: **=**
 - Boolean disjunction (Logical OR) assignment: **|=**
 - Boolean conjunction (Logical AND) assignment: **&=**
@@ -156,17 +190,17 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 - **Float.PositiveInfinity** — Positive infinity
 - **Float.NegativeInfinity** — Negative infinity
 - **Float.Epsilon** — Smallest positive float
-- **Float.Sum(values: ...(float | array)):float** — Numeric sum
-- **Float.Min(values: ...(float | array)):float** — Numeric minimum
-- **Float.Max(values: ...(float | array)):float** — Numeric maximum
-- **Float.Exponent(value: float):float** — Natural exponential
-- **Float.Logarithm(value: float):float** — Natural logarithm
-- **Float.Abs(value: float):float** — Absolute value
-- **Float.Ceil(value: float):float** — Smallest integer greater than or equal to the value
-- **Float.Floor(value: float):float** — Largest integer less than or equal to the value
-- **Float.Round(value: float):float** — Rounded value
-- **Float.Truncate(value: float):float** — Integer portion of the value
-- **Float.Random(exclusiveTo: float):float** — Random float up to value
+- **Float.Sum(values: ...(float | integer | array)):float** — Numeric sum
+- **Float.Min(values: ...(float | integer | array)):float** — Numeric minimum
+- **Float.Max(values: ...(float | integer | array)):float** — Numeric maximum
+- **Float.Exponent(value: float | integer):float** — Natural exponential
+- **Float.Logarithm(value: float | integer):float** — Natural logarithm
+- **Float.Abs(value: float | integer):float** — Absolute value
+- **Float.Ceil(value: float | integer):float** — Smallest integer greater than or equal to the value
+- **Float.Floor(value: float | integer):float** — Largest integer less than or equal to the value
+- **Float.Round(value: float | integer):float** — Rounded value
+- **Float.Truncate(value: float | integer):float** — Integer portion of the value
+- **Float.Random(exclusiveTo: float | integer):float** — Random float up to value
 - **Float.Decode(value: buffer?, encoding: string?, offset: integer?):float?** — Decode using `f64` (default), `f64le`, `f32`, or `f32le`
 - **Float.Parse(value: string?):float?** — Parse a string as a float
 
@@ -175,7 +209,7 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 - **Integer.Min(values: ...(integer | array)):integer** — Numeric minimum
 - **Integer.Max(values: ...(integer | array)):integer** — Numeric maximum
 - **Integer.Random(exclusiveTo: integer):integer** — Random integer up to value
-- **Integer.Decode(value: buffer?, encoding: string?, offset: integer?):integer?** — Decode using signed `i8`, `i16`, `i16le`, `i32`, `i32le`, `i64` (default), or `i64le`, or unsigned `n8`, `n16`, `n16le`, `n32`, `n32le`, `n64`, or `n64le`
+- **Integer.Decode(value: buffer?, encoding: string?, offset: integer?):integer?** — Decode using signed `i8`, `i16`, `i16le`, `i32`, `i32le`, `i64` (default), or `i64le`, or unsigned `n8`, `n16`, `n16le`, `n32`, `n32le`
 - **Integer.Parse(value: string?):integer?** — Parse a string as an integer
 
 #### String
@@ -291,10 +325,9 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 - **integer.Power(exponent):integer** — Power
 - **float.Root(index):float** — Root
 - **integer.Root(index):integer** — Root
-- **float.Cast():integer** — Cast to integer
-- **integer.Cast():float** — Cast to float
-- **integer.CastToFloat():float** — Cast to float
-- **float.CastToInteger():integer** — Cast to integer
+- **(boolean | timestamp | integer).Float():float** — Convert to a float; timestamps use milliseconds since the Unix epoch
+- **(boolean | timestamp | float).Integer():integer** — Convert to an integer; timestamps use milliseconds since the Unix epoch
+- **(timestamp | float | integer).Boolean():boolean** — Convert to a boolean by testing whether the numeric or epoch value is non-zero
 
 #### Object Functions
 - **object.Entries():array** — Key-value pairs

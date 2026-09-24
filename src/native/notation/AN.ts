@@ -4,7 +4,7 @@ import { Type } from "../../Type.js";
 import { formatNumber } from "../Number.js";
 import { formatBuffer } from "../Buffer.js";
 
-export const formatAN = (value: Value, whitespace?: string): string=> {
+export const formatAN = (value: Value, whitespace?: string): string => {
 	if (value == null) {
 		return "";
 	}
@@ -28,14 +28,14 @@ export const formatAN = (value: Value, whitespace?: string): string=> {
 	}
 	if (Array.isArray(value)) {
 		const [prefix, suffix] = whitespace ? ["\n" + whitespace, "\n"] : ["", ""];
-		const lines = value.map((i)=>
+		const lines = value.map((i) =>
 			`${prefix}${formatAN(i, whitespace)?.split("\n").join(prefix) ?? ""}`
 		);
 		return lines.length ? `[${lines.join(",")}${suffix}]` : "[]";
 	}
 	if (typeof value === "object") {
 		const [prefix, suffix, separator] = whitespace ? ["\n" + whitespace, "\n", ": "] : ["", "", ":"];
-		const lines = Object.entries(value).map(([k, v])=>
+		const lines = Object.entries(value).map(([k, v]) =>
 			`${prefix}"${k}"${separator}${formatAN(v, whitespace).split("\n").join(prefix) ?? ""}`
 		);
 		return lines.length ? `[${lines.join(",")}${suffix}]` : "[:]";
@@ -44,7 +44,7 @@ export const formatAN = (value: Value, whitespace?: string): string=> {
 };
 
 const funcFormatAN = new Constant(
-	(value: Value, whitespace?: string)=>
+	(value: Value, whitespace?: string) =>
 		formatAN(value, whitespace),
 	Type.functionType(Type.String, [Type.Unknown, Type.OptionalString]),
 );

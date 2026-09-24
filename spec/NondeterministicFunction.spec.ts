@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "./helpers/AffinirumTest.js";
 
-describe("Nondeterministic function test", ()=> {
+describe("Nondeterministic function test", () => {
 	runAffinirumTests([
 		{
 			script: "Integer.Random(1000000) == Integer.Random(1000000)",

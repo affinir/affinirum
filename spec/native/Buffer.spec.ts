@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Buffer function test", ()=> {
+describe("Buffer function test", () => {
 	runAffinirumTests([
 		{
 			script: "v.Format()",
@@ -47,7 +47,7 @@ describe("Buffer function test", ()=> {
 			],
 		},
 		{
-			script: "Buffer.Parse(v).Length",
+			script: "(Buffer.Parse(v)?:``).Length",
 			cases: [
 				{ values: { v: "" }, result: 0n },
 				{ values: { v: "abcd" }, result: 2n },

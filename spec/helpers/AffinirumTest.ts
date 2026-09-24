@@ -9,16 +9,16 @@ export interface AffinirumTest {
 	}[];
 }
 
-export const runAffinirumTests = (tests: AffinirumTest[])=> {
-	tests.forEach(({ script, cases })=> {
+export const runAffinirumTests = (tests: AffinirumTest[]) => {
+	tests.forEach(({ script, cases }) => {
 		const evaluation = cases.length > 1 ? ` ${cases.length} cases` : "";
-		it(`compiles script '${script}' and evaluates${evaluation}`, ()=> {
+		it(`compiles script '${script}' and evaluates${evaluation}`, () => {
 			try {
 				const affinirum = new Affinirum(script);
 				if (!affinirum) {
 					throw new Error();
 				}
-				const failures = cases.map(({ values, result })=> {
+				const failures = cases.map(({ values, result }) => {
 					try {
 						const value = affinirum.evaluate(values);
 						if (value !== result) {
@@ -29,7 +29,7 @@ export const runAffinirumTests = (tests: AffinirumTest[])=> {
 						return `arguments ${formatJSON(values)}\nevaluation error\n${(err as Error).message}`;
 					}
 					return undefined;
-				}).filter((s)=> s != null);
+				}).filter((s) => s != null);
 				if (failures.length) {
 					fail(`${failures.length}\n\n${failures.join("\n\n")}`);
 				}

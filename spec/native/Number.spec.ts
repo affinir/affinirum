@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Number function test", ()=> {
+describe("Number function test", () => {
 	runAffinirumTests([
 		{
 			script: "a > b",
@@ -132,33 +132,6 @@ describe("Number function test", ()=> {
 			cases: [
 				{ values: { a: 5n }, result: -5n },
 				{ values: { a: -2.5 }, result: 2.5 },
-			],
-		},
-		{
-			script: "a.Cast()",
-			cases: [
-				{ values: { a: 5n }, result: 5 },
-				{ values: { a: 5.9 }, result: 5n },
-				{ values: { a: -5.9 }, result: -5n },
-			],
-		},
-		{
-			script: "a.CastToFloat()",
-			cases: [
-				{ values: { a: 6n }, result: 6 },
-			],
-		},
-		{
-			script: "a.CastToInteger()",
-			cases: [
-				{ values: { a: 6.7 }, result: 6n },
-				{ values: { a: -6.7 }, result: -6n },
-			],
-		},
-		{
-			script: "Float.NAN.CastToInteger() + Float.PositiveInfinity.CastToInteger() + Float.NegativeInfinity.CastToInteger()",
-			cases: [
-				{ values: {}, result: -1n },
 			],
 		},
 		{

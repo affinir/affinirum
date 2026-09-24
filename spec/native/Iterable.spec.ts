@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Iterable function test", ()=> {
+describe("Iterable function test", () => {
 	runAffinirumTests([
 		{
 			script: "v.Contains(s)",

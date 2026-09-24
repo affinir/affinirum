@@ -3,10 +3,11 @@ import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { containsBuffer } from "./Buffer.js";
 import { containsString } from "./String.js";
+import { boundInteger } from "./Integer.js";
 
 export const funcLength = new Constant(
-	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value })=>
-		BigInt.asIntN(64, BigInt(value == null
+	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value }) =>
+		boundInteger(BigInt(value == null
 			? 0
 			:	value instanceof ArrayBuffer
 				? value.byteLength
@@ -17,7 +18,7 @@ export const funcLength = new Constant(
 );
 
 export const funcContains = new Constant(
-	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value }, search: Value, start?: bigint, ignoreCaseSpaceEtc?: boolean)=>
+	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value }, search: Value, start?: bigint, ignoreCaseSpaceEtc?: boolean) =>
 		value == null
 			? false
 			: value instanceof ArrayBuffer
@@ -36,7 +37,7 @@ export const funcContains = new Constant(
 );
 
 export const funcAt = new Constant(
-	(value: Value[] | { [ key: string ]: Value } | null | undefined, index: bigint | string)=> {
+	(value: Value[] | { [ key: string ]: Value } | null | undefined, index: bigint | string) => {
 		if (value == null) {
 			return undefined;
 		}
@@ -54,7 +55,7 @@ export const funcAt = new Constant(
 );
 
 export const funcHas = new Constant(
-	(value: Value[] | { [ key: string ]: Value } | null | undefined, index: bigint | string)=> {
+	(value: Value[] | { [ key: string ]: Value } | null | undefined, index: bigint | string) => {
 		if (value == null) {
 			return false;
 		}

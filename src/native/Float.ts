@@ -3,7 +3,7 @@ import { Type } from "../Type.js";
 
 export type FloatEncoding = "f32" | "f32le" | "f64" | "f64le";
 
-export const encodeFloat = (value: number, encoding: FloatEncoding = "f64")=> {
+export const encodeFloat = (value: number, encoding: FloatEncoding = "f64") => {
 	let bits = "";
 	for (let i = 0; i < encoding.length; ++i) {
 		const c = encoding[i];
@@ -22,7 +22,7 @@ export const encodeFloat = (value: number, encoding: FloatEncoding = "f64")=> {
 	return dv.buffer;
 };
 
-const decodeFloat = (value?: ArrayBuffer, encoding: FloatEncoding = "f64", byteOffset?: number)=> {
+const decodeFloat = (value?: ArrayBuffer, encoding: FloatEncoding = "f64", byteOffset?: number) => {
 	if (value == null) {
 		return undefined;
 	}
@@ -36,87 +36,97 @@ const decodeFloat = (value?: ArrayBuffer, encoding: FloatEncoding = "f64", byteO
 	}
 };
 
-const typeNumberOrArray = Type.union(Type.Float, Type.arrayType([Type.Float]));
-const typeAggregator = Type.functionType(Type.Float, [typeNumberOrArray], true);
-const typeTransform = Type.functionType(Type.Float, [Type.Float]);
+const typeNumberOrArray = Type.union(Type.Number, Type.arrayType([Type.Number]));
+const typeAggregator = Type.functionType(Type.Float, [Type.arrayType([typeNumberOrArray])], true);
+const typeTransform = Type.functionType(Type.Float, [Type.Number]);
 
 const funcSum = new Constant(
-	(...values: (number | number[])[])=>
-		values.flat().reduce((acc, val)=> acc + Number(val), 0),
+	(values: (number | number[] | bigint | bigint[])[]) =>
+		values.flat().reduce((acc: number, val) => acc + Number(val), 0),
 	typeAggregator,
 );
 
 const funcMin = new Constant(
-	(...values: (number | number[])[])=>
-		Math.min(Number.POSITIVE_INFINITY, ...values.flat().map((i)=> Number(i))),
+	(values: (number | number[] | bigint | bigint[])[]) =>
+		Math.min(Number.POSITIVE_INFINITY, ...values.flat().map((i) => Number(i))),
 	typeAggregator,
 );
 
 const funcMax = new Constant(
-	(...values: (number | number[])[])=>
-		Math.max(Number.NEGATIVE_INFINITY, ...values.flat().map((i)=> Number(i))),
+	(values: (number | number[] | bigint | bigint[])[]) =>
+		Math.max(Number.NEGATIVE_INFINITY, ...values.flat().map((i) => Number(i))),
 	typeAggregator,
 );
 
 const funcExponent = new Constant(
-	(value: number)=>
+	(value: number | bigint) =>
 		Math.exp(Number(value)),
 	typeTransform,
 );
 
 const funcLogarithm = new Constant(
-	(value: number)=>
+	(value: number | bigint) =>
 		Math.log(Number(value)),
 	typeTransform,
 );
 
 const funcAbs = new Constant(
-	(value: number)=>
+	(value: number | bigint) =>
 		Math.abs(Number(value)),
 	typeTransform,
 );
 
 const funcCeil = new Constant(
-	(value: number)=>
+	(value: number | bigint) =>
 		Math.ceil(Number(value)),
 	typeTransform,
 );
 
 const funcFloor = new Constant(
-	(value: number)=>
+	(value: number | bigint) =>
 		Math.floor(Number(value)),
 	typeTransform,
 );
 
 const funcRound = new Constant(
-	(value: number)=>
+	(value: number | bigint) =>
 		Math.round(Number(value)),
 	typeTransform,
 );
 
 const funcTruncate = new Constant(
-	(value: number)=>
+	(value: number | bigint) =>
 		Math.trunc(Number(value)),
 	typeTransform,
 );
 
 const funcRandomFloat = new Constant(
-	(value: number)=>
+	(value: number | bigint) =>
 		value == null ? undefined : Math.random() * Number(value),
-	Type.functionType(Type.Float, [Type.Float]),
+	typeTransform,
 	false,
 );
 
 const funcDecodeFloat = new Constant(
-	(value: ArrayBuffer | undefined, encoding: FloatEncoding = "f64", byteOffset?: bigint)=>
+	(value: ArrayBuffer | undefined, encoding: FloatEncoding = "f64", byteOffset?: bigint) =>
 		decodeFloat(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
 	Type.functionType(Type.OptionalFloat, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]),
 );
 
 const funcParseFloat = new Constant(
-	(value: string | undefined)=>
+	(value: string | undefined) =>
 		value ? Number.parseFloat(value) : undefined,
 	Type.functionType(Type.OptionalFloat, [Type.OptionalString]),
+);
+
+export const funcFloat = new Constant(
+	(value: boolean | Date | bigint) =>
+		Number(value),
+	Type.union(
+		Type.functionType(Type.Float, [Type.Boolean]),
+		Type.functionType(Type.Float, [Type.Timestamp]),
+		Type.functionType(Type.Float, [Type.Integer]),
+	),
 );
 
 export const constFloat = Object.assign(Object.create(null), {

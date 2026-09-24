@@ -1,6 +1,6 @@
 import { runAffinirumTests } from "../helpers/AffinirumTest.js";
 
-describe("Enumerable function test", ()=> {
+describe("Enumerable function test", () => {
 	runAffinirumTests([
 		{
 			script: "a.Slice(start, end)",

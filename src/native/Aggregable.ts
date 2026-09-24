@@ -2,11 +2,12 @@ import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { concatBuffers } from "./Buffer.js";
+import { boundInteger } from "./Integer.js";
 
 export const aggregate = (
 	value1: ArrayBuffer | string | Value[] | null | undefined,
 	value2: ArrayBuffer | string | Value[] | null | undefined
-)=> {
+) => {
 	if (value1 == null || value2 == null) {
 		return undefined;
 	}
@@ -22,9 +23,9 @@ export const aggregate = (
 const add = (
 	value1: number | bigint | ArrayBuffer | string | Value[] | null | undefined,
 	value2: number | bigint | ArrayBuffer | string | Value[] | null | undefined
-)=> {
+) => {
 	if (typeof value1 === "bigint" && typeof value2 === "bigint") {
-		return BigInt.asIntN(64, value1 + value2);
+		return boundInteger(value1 + value2);
 	}
 	if ((typeof value1 === "number" || typeof value1 === "bigint") && (typeof value2 === "number" || typeof value2 === "bigint")) {
 		return Number(value1) + Number(value2);
@@ -33,7 +34,7 @@ const add = (
 };
 
 export const funcAdd = new Constant(
-	(value1: number | bigint | ArrayBuffer | string | Value[], value2: number | bigint | ArrayBuffer | string | Value[])=>
+	(value1: number | bigint | ArrayBuffer | string | Value[], value2: number | bigint | ArrayBuffer | string | Value[]) =>
 		add(value1, value2),
 	Type.union(
 		Type.functionType(Type.Float, [Type.Float, Type.Integer]),
