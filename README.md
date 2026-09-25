@@ -1,21 +1,21 @@
 # Affinirum
 A fast, embeddable scripting language powered by a lightweight recursive descent parser,
  designed to evaluate complex algorithmic logic with precision and flexibility.
-Ideal for embedding in host applications, it offers clear syntax, dynamic typing,
- and extensibility for custom operations—enabling rapid prototyping, advanced rule evaluation,
- and safe script execution in constrained environments.
+Ideal for embedding in host applications, it offers clear syntax, type inference, permissive type checking,
+ and support for host-provided values and functions—enabling rapid prototyping and advanced rule evaluation
+ in applications that control which capabilities are exposed to scripts.
 
 Supports algebraic and boolean expressions, variables, conditionals, loops, and a rich standard library for working with numbers, buffers, strings, arrays, and objects.
 
-Runs in browser and NodeJS.
+Runs in browsers and Node.js.
 
-Target: ES2022 [browser+NodeJS][ESM+CJS].
+Target: ES2022 [browser+Node.js][ESM+CJS].
 
 ## Features
 
 - Efficient execution: Parse once, execute many times with different variable values.
 - Variable support: Input and statement-scoped variables.
-- Function support: Variadic and first-order function support for expressive scripting.
+- Function support: Variadic and first-class functions for expressive scripting.
 - Optimized evaluation: Constant expression folding with type checks.
 - Comprehensive set of operators: Boolean, arithmetic, buffer, string, comparison, and indexing support.
 - Built-in functions: Rich set of mathematical and composition utilities.
@@ -39,24 +39,24 @@ It is defined by comma-separated values enclosed in brackets (**[]**),
 Array elements can be accessed using the access operator (**.**),
  or using brackets with a zero-based numeric index, like *theArray.23*, *theArray[0]*, *theArray[10]*, *theArray[indexVar]*.
 
-Easy way to check if array contains an index is to use presence operator (**?**), like *theArray?50*.
+An easy way to check whether an array contains an index is to use the presence operator (**?**), like *theArray?50*.
 
 ### Objects
 Object is a container of named values of any type.
-It is defined by comma-separated key-value pair enclosed in brackets (**[]**) where key is separated from value by colon (**:**),
- like *["key1":100, "key2":"abc"]*, *["a":0,"b":"str":"c":valueVar]*.
+It is defined by comma-separated key-value pairs enclosed in brackets (**[]**), where each key is separated from its value by a colon (**:**),
+ like *["key1":100, "key2":"abc"]*, *["a":0, "b":"str", "c":valueVar]*.
 <br>An empty object is represented as **[\:]**.
 
 Object properties can be accessed using the access operator (**.**) with a string literal, token,
  or with brackets containing a string key,
  like *theObject."key"*, *theObject.key*, or *theObject["key"]*.
 
-Easy way to check if object contains a key is to use presence operator (**?**), like *theObject?myKey*.
+An easy way to check whether an object contains a key is to use the presence operator (**?**), like *theObject?myKey*.
 
 ### Functions
 A function is a callable code unit that produces a value.
-The set of built-in functions can be extended through configuration entries.
-Additionally, subroutines (functions defined in code) can be created.
+The standard library provides built-in functions. Host functions can be supplied as typed input variables,
+and subroutines can be defined in Affinirum code.
 
 ### Variables
 Valid variable and function names must start with a letter, number sign (**\#**), dollar sign (**\$**), or underscore (**\_**)
@@ -66,16 +66,18 @@ Valid variable and function names must start with a letter, number sign (**\#**)
 Whitespace characters are ignored.
 
 ### Types
-- **void** for value **null**
+- **void** for the absence of a value; the **null** literal and injected JavaScript `null` or `undefined` values have this type, and a **void** result is returned as JavaScript `undefined`
 - **boolean** (alias **bool**) for values **true** and **false**
-- **timestamp** (alias **time**) for date-time values, millisecons since Unix epoch
+- **timestamp** (alias **time**) for date-time values backed by JavaScript `Date` objects
 - **float** (alias **f64**) for 64-bit floating point values in binary64, IEEE 754 binary floating-point format
-- **integer** (alias **i64**) for 64-bit integer values
+- **integer** (alias **i64**) for signed 64-bit integer values; arithmetic overflow wraps to the signed 64-bit range
 - **buffer** for ordered sequences of bytes
 - **string** for ordered sequences of characters, text strings
 - **array** for ordered sequences of values
 - **object** for collections of named values
 - **function** for built-in, injected or script-defined subroutines
+- **[type]** for a homogeneous array whose items have the specified type, such as **[string]**
+- **[type1, type2, ...]** for a tuple whose items have the corresponding types
 - **??** for unknown or variant type
 - Type grouping: **(...)**
 - Type union: **|**
@@ -89,8 +91,8 @@ select function overloads, and report useful compilation errors; it is not inten
 substitutability or prove that every accepted expression is safe for every possible runtime value.
 
 - **??** is the unknown or variant type and is compatible with every type. It includes **void**, so a **??**
-  function parameter may receive **null** or be omitted.
-- An optional type such as **integer?** is the union **void | integer**. Optional parameters may receive **null**
+  function parameter may receive **null**, `undefined`, or be omitted.
+- An optional type such as **integer?** is the union **void | integer**. Optional parameters may receive **null**, `undefined`,
   or be omitted.
 - Function compatibility is deliberately flexible. The accepted argument-count ranges only need to overlap;
   one function's complete arity range does not need to contain the other's.
@@ -121,11 +123,11 @@ Casts can be followed by property access, index access, function calls, or anoth
 - Value separator: **,**
 - Array element at numeric index, or object property by string key: **[]**
 - Object property by string key or method function call: **.**
-- Array definiton: **[item1, ...]**
-- Object definition: **[propery1-key: property1-value, ...]**
+- Array definition: **[item1, ...]**
+- Object definition: **[property1-key: property1-value, ...]**
 - Subroutine definition: **~(argument1-name: argument1-type, ...):return-type {...}**
 - Conditional switch definition, returns first or second value if prefix is true or false: **if condition {value1} else {value2}**,
- and if **else** clause is ommited second value deemed *null*
+ and if the **else** clause is omitted, the second value is **void**
 - Loop definition, iteratively evaluates suffix while prefix is true, returns last evaluated value: **while condition {...}**
 - Stop iteration: **stop**
 - Proceed to next iteration: **next**
@@ -142,14 +144,14 @@ Casts can be followed by property access, index access, function calls, or anoth
 - Less than or equals to: **<=**
 - Equals to: **==**
 - Not equals to: **!=**
-- Arithmetic addition, or buffer, string, and array concatination: **+**
+- Arithmetic addition, or buffer, string, and array concatenation: **+**
 - Arithmetic subtraction or negation: **-**
 - Arithmetic multiplication: **\***
 - Arithmetic division: **/**
 - Arithmetic remainder: **%**
 - Exponentiation operator: **^**
 - Property access operator: **.**
-- Property existance operator: **?**
+- Property existence operator: **?**
 - Null coalescence operator: **?:**
 - Type cast operator: **::**
 - Assignment: **=**
@@ -163,18 +165,18 @@ Casts can be followed by property access, index access, function calls, or anoth
 
 ### Native Global Functions
 
-Native conversions use the following null handling:
+Native conversions use the following **void** handling:
 
-- `Format` returns an empty string for a **null**.
-- `Encode` returns a zero-length buffer for a **null**.
-- `Decode` and `Parse` return **null** when their input value is **null**.
+- `Format` returns an empty string for **void**.
+- `Encode` returns a zero-length buffer for **void**.
+- `Decode` and `Parse` return **void** when their input value is **void**.
 
-Empty strings and zero-length buffers remain ordinary values; they are not serialized null markers.
-Invalid non-null inputs are function-specific and may raise an evaluation error.
+Empty strings and zero-length buffers remain ordinary values; they are not serialized void markers.
+Invalid non-void inputs are function-specific and may raise an evaluation error.
 
 #### Boolean
-- **Boolean.Or(values: ...(boolean | array)):boolean** — Boolean disjunction of booleans and arrays of booleans
-- **Boolean.And(values: ...(boolean | array)):boolean** — Boolean conjunction of booleans and arrays of booleans
+- **Boolean.Or(values: ...(boolean | [boolean])):boolean** — Boolean disjunction of booleans and arrays of booleans
+- **Boolean.And(values: ...(boolean | [boolean])):boolean** — Boolean conjunction of booleans and arrays of booleans
 - **Boolean.Not(value: boolean):boolean** — Boolean negation
 - **Boolean.Decode(value: buffer?, offset: integer?):boolean?** — Decode a byte at the optional offset; missing or out-of-range input returns **void**
 - **Boolean.Parse(value: string?):boolean?** — Parse case-insensitive `true` or `false`; other values return **void**
@@ -190,9 +192,9 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 - **Float.PositiveInfinity** — Positive infinity
 - **Float.NegativeInfinity** — Negative infinity
 - **Float.Epsilon** — Smallest positive float
-- **Float.Sum(values: ...(float | integer | array)):float** — Numeric sum
-- **Float.Min(values: ...(float | integer | array)):float** — Numeric minimum
-- **Float.Max(values: ...(float | integer | array)):float** — Numeric maximum
+- **Float.Sum(values: ...(float | integer | [float | integer])):float** — Numeric sum
+- **Float.Min(values: ...(float | integer | [float | integer])):float** — Numeric minimum
+- **Float.Max(values: ...(float | integer | [float | integer])):float** — Numeric maximum
 - **Float.Exponent(value: float | integer):float** — Natural exponential
 - **Float.Logarithm(value: float | integer):float** — Natural logarithm
 - **Float.Abs(value: float | integer):float** — Absolute value
@@ -205,9 +207,9 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 - **Float.Parse(value: string?):float?** — Parse a string as a float
 
 #### Integer
-- **Integer.Sum(values: ...(integer | array)):integer** — Numeric sum
-- **Integer.Min(values: ...(integer | array)):integer** — Numeric minimum
-- **Integer.Max(values: ...(integer | array)):integer** — Numeric maximum
+- **Integer.Sum(values: ...(integer | [integer])):integer** — Numeric sum
+- **Integer.Min(values: ...(integer | [integer])):integer** — Numeric minimum
+- **Integer.Max(values: ...(integer | [integer])):integer** — Numeric maximum
 - **Integer.Random(exclusiveTo: integer):integer** — Random integer up to value
 - **Integer.Decode(value: buffer?, encoding: string?, offset: integer?):integer?** — Decode using signed `i8`, `i16`, `i16le`, `i32`, `i32le`, `i64` (default), or `i64le`, or unsigned `n8`, `n16`, `n16le`, `n32`, `n32le`
 - **Integer.Parse(value: string?):integer?** — Parse a string as an integer
@@ -229,7 +231,7 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 - **Array.Difference(a1: array, a2: array):array** — Symmetrical difference between arrays
 
 #### Object
-- **Object.Merge(values: ...(object | array)):object** — Merge objects and arrays of objects
+- **Object.Merge(values: ...(object | [object])):object** — Merge objects and arrays of objects
 
 #### AN
 - **AN.Format(value: ??, whitespace: string?):string** — Format a value as AN notation
@@ -239,7 +241,7 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 - **JSON.Parse(value: string?):(void | boolean | timestamp | float | integer | string | array | object)** — Parse a JSON-formatted string; standard JSON values are not revived as timestamps or integers
 
 #### IP
-- **IP.Match(values: array, search: ...(string | array)):boolean** — Check whether any searched IPv4 or IPv6 address belongs to the supplied addresses or CIDR ranges
+- **IP.Match(values: [string], search: ...(string | [string])):boolean** — Check whether any searched IPv4 or IPv6 address belongs to the supplied addresses or CIDR ranges
 - **IP.Encode(value: string?):buffer** — Encode an IPv4, IPv6, or CIDR string as a network-byte-order buffer; malformed or **void** input returns a zero-length buffer
 - **IP.Decode(value: buffer?):string?** — Decode a 4-, 5-, 16-, or 17-byte buffer as canonical IPv4, IPv6, or CIDR notation; malformed or **void** input returns **void**
 
@@ -263,18 +265,18 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 - **array.Add(value: array):array** — Concatenate arrays
 
 #### Array Functions
-- **array.First(condition: function):??** — First item satisfying condition
-- **array.Last(condition: function):??** — Last item satisfying condition
-- **array.FirstIndex(condition: function):integer?** — First index satisfying condition, or **void** if none does
-- **array.LastIndex(condition: function):integer?** — Last index satisfying condition, or **void** if none does
-- **array.Every(condition: function):boolean** — All items satisfy condition
-- **array.Any(condition: function):boolean** — Any item satisfies condition
+- **array.First(condition: ~(??, integer?, array?):boolean):??** — First item satisfying condition
+- **array.Last(condition: ~(??, integer?, array?):boolean):??** — Last item satisfying condition
+- **array.FirstIndex(condition: ~(??, integer?, array?):boolean):integer?** — First index satisfying condition, or **void** if none does
+- **array.LastIndex(condition: ~(??, integer?, array?):boolean):integer?** — Last index satisfying condition, or **void** if none does
+- **array.Every(condition: ~(??, integer?, array?):boolean):boolean** — All items satisfy condition
+- **array.Any(condition: ~(??, integer?, array?):boolean):boolean** — Any item satisfies condition
 - **array.Reverse():array** — Reversed array
 - **array.Flatten(depth: integer = 1):array** — Flatten array
-- **array.Derive(transformation: function):array** — Derived array
-- **array.Filter(condition: function):array** — Filtered array
-- **array.Reduce(reducer: function, initial: ?? = void):??** — Reduced value
-- **array.Compose(generator: function):object** — Compose object from array
+- **array.Derive(transformation: ~(??, integer?, array?):??):array** — Derived array
+- **array.Filter(condition: ~(??, integer?, array?):boolean):array** — Filtered array
+- **array.Reduce(reducer: ~(??, ??, integer?, array?):??, initial: ?? = void):??** — Reduced value
+- **array.Compose(generator: ~(object, string, integer?, array?):??):object** — Compose object from array
 - **array.Prepend(items: ...??):array** — Prepend items
 - **array.Append(items: ...??):array** — Append items
 
@@ -285,12 +287,12 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 - **buffer.Slice(start: integer?, end: integer?):buffer** — Slice section
 - **string.Slice(start: integer?, end: integer?):string** — Slice section
 - **array.Slice(start: integer?, end: integer?):array** — Slice section
-- **buffer.Splice(start: integer, remove: integer, inject: ...array):buffer** — Splice section
-- **string.Splice(start: integer, remove: integer, inject: ...array):string** — Splice section
-- **array.Splice(start: integer, remove: integer, inject: ...array):array** — Splice section
-- **buffer.Inject(start: integer, inject: ...array):buffer** — Inject section
-- **string.Inject(start: integer, inject: ...array):string** — Inject section
-- **array.Inject(start: integer, inject: ...array):array** — Inject section
+- **buffer.Splice(start: integer, remove: integer, inject: ...(buffer | string | array)):buffer** — Splice section
+- **string.Splice(start: integer, remove: integer, inject: ...(buffer | string | array)):string** — Splice section
+- **array.Splice(start: integer, remove: integer, inject: ...(buffer | string | array)):array** — Splice section
+- **buffer.Inject(start: integer, inject: ...(buffer | string | array)):buffer** — Inject section
+- **string.Inject(start: integer, inject: ...(buffer | string | array)):string** — Inject section
+- **array.Inject(start: integer, inject: ...(buffer | string | array)):array** — Inject section
 
 #### Iterable Functions
 - **(buffer | string | array | object).Length():integer** — Get length
@@ -304,34 +306,40 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 - **object.Has(index: string):boolean** — Identify if object has key
 
 #### Number Functions
-- **(float | integer).GreaterThan(value):boolean** — Greater than
-- **(float | integer).LessThan(value):boolean** — Less than
-- **(float | integer).GreaterOrEqual(value):boolean** — Greater or equal
-- **(float | integer).LessOrEqual(value):boolean** — Less or equal
-- **float.Subtract(subtrahend):float** — Subtract value
-- **integer.Subtract(subtrahend):integer** — Subtract value
+- **(float | integer).GreaterThan(value: float | integer):boolean** — Greater than
+- **(float | integer).LessThan(value: float | integer):boolean** — Less than
+- **(float | integer).GreaterOrEqual(value: float | integer):boolean** — Greater or equal
+- **(float | integer).LessOrEqual(value: float | integer):boolean** — Less or equal
+- **float.Subtract(subtrahend: integer):float** — Subtract an integer
+- **integer.Subtract(subtrahend: float):float** — Subtract a float
+- **integer.Subtract(subtrahend: integer):integer** — Subtract an integer
 - **float.Negate():float** — Negate number
 - **integer.Negate():integer** — Negate number
 - **float.Multiply(value: integer):float** — Multiply by an integer
 - **integer.Multiply(value: float):float** — Multiply by a float
 - **integer.Multiply(value: integer):integer** — Multiply by an integer
-- **float.Divide(divisor):float** — Divide value
-- **integer.Divide(divisor):integer** — Divide value
-- **float.Remainder(divisor):float** — Remainder
-- **integer.Remainder(divisor):integer** — Remainder
-- **float.Modulo(divisor):float** — Modulo
-- **integer.Modulo(divisor):integer** — Modulo
-- **float.Power(exponent):float** — Power
-- **integer.Power(exponent):integer** — Power
-- **float.Root(index):float** — Root
-- **integer.Root(index):integer** — Root
+- **float.Divide(divisor: integer):float** — Divide by an integer
+- **integer.Divide(divisor: float):float** — Divide by a float
+- **integer.Divide(divisor: integer):integer** — Divide by an integer
+- **float.Remainder(divisor: integer):float** — Remainder after division by an integer
+- **integer.Remainder(divisor: float):float** — Remainder after division by a float
+- **integer.Remainder(divisor: integer):integer** — Remainder after division by an integer
+- **float.Modulo(divisor: integer):float** — Modulo by an integer
+- **integer.Modulo(divisor: float):float** — Modulo by a float
+- **integer.Modulo(divisor: integer):integer** — Modulo by an integer
+- **float.Power(exponent: integer):float** — Raise to an integer power
+- **integer.Power(exponent: float):float** — Raise to a float power
+- **integer.Power(exponent: integer):integer** — Raise to an integer power
+- **float.Root(index: integer):float** — Take an integer root
+- **integer.Root(index: float):float** — Take a float root
+- **integer.Root(index: integer):integer** — Take an integer root
 - **(boolean | timestamp | integer).Float():float** — Convert to a float; timestamps use milliseconds since the Unix epoch
 - **(boolean | timestamp | float).Integer():integer** — Convert to an integer; timestamps use milliseconds since the Unix epoch
 - **(timestamp | float | integer).Boolean():boolean** — Convert to a boolean by testing whether the numeric or epoch value is non-zero
 
 #### Object Functions
 - **object.Entries():array** — Key-value pairs
-- **object.Keys():array** — Object keys
+- **object.Keys():[string]** — Object keys
 - **object.Values():array** — Object values
 
 #### String Functions
@@ -339,15 +347,15 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 - **string.Unlike(value: string):boolean** — Alphanumeric inequality
 - **string.StartsWith(search: string, startPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Prefix check
 - **string.EndsWith(search: string, endPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Suffix check
-- **string.Char(pos: integer):string** — Character at position
-- **string.CharCode(pos: integer):integer** — Character code
+- **string.Char(pos: integer):string?** — Character at position, or **void** when unavailable
+- **string.CharCode(pos: integer):integer?** — Character code, or **void** when unavailable
 - **string.Trim():string** — Trim whitespace
 - **string.TrimStart():string** — Trim leading whitespace
 - **string.TrimEnd():string** — Trim trailing whitespace
 - **string.LowerCase():string** — To lowercase
 - **string.UpperCase():string** — To uppercase
-- **string.Split(separator: string = ' '):array** — Split into array
-- **string.ReplaceWith(replacement: string, search: ...(string | array)):string** — Replace all instances of the searched strings
+- **string.Split(separator: string = ' '):[string]** — Split into an array of strings
+- **string.ReplaceWith(replacement: string, search: ...(string | [string])):string** — Replace all instances of the searched strings
 
 #### Timestamp Functions
 - **timestamp.Year(utc: boolean?):integer** — Get year
@@ -367,33 +375,55 @@ Invalid non-null inputs are function-specific and may raise an evaluation error.
 
 ## Reference
 
-Create instance of Affinirum class with a string containing script and optional compilation configuration.
-During the parsing any alphanumeric sequence not identified as
-number value, string value, operator, or a function name is assumed to be variable.
-Evaluate the expression by providing variable values.
+Install the package:
+
+```sh
+npm install affinirum
+```
+
+Create an `Affinirum` instance with a script and optional compilation configuration, then call `evaluate`
+with the script's input variables:
+
+```ts
+import { Affinirum } from "affinirum";
+
+const expression = new Affinirum("a + b");
+const result = expression.evaluate({ a: 10n, b: 20n }); // 30n
+```
+
+During parsing, any valid name that is not recognized as a keyword, constant, or built-in function is treated as an input variable.
+Use the optional constructor configuration to specify the expected result `type`, enable `strict` handling of undeclared variables,
+or declare input `variables` and their types. An instance exposes the original `script`, its inferred result `type`,
+the inferred input types through `variables()`, and the parsed tree through `toString()`. `Affinirum.format()` formats
+a JavaScript value using Affinirum Notation.
+
+JavaScript `number` values map to **float**, while **integer** values map to `bigint`. Timestamps use `Date`, buffers use
+`ArrayBuffer`, and a **void** result is returned as `undefined`. Arrays, objects, and functions use their corresponding
+JavaScript values. Injected values are checked against the types inferred or declared during compilation.
+
+Use **val** for a local value that cannot be reassigned and **var** for a reassignable local variable. Statements are
+separated with semicolons.
 
 Sample code:
 
 ```ts
-...
-const expr = new Affinirum( 'x * (y + abc / 5) > 10' );
-const value1 = expr.evaluate( { x: 10, y: 20, abc: 10 } ); // true
-const value2 = expr.evaluate( { x: 1, y: 4, abc: 5 } ); // false
-...
-const arrExpr = new Affinirum( 'Integer.Sum([ 1, 2, 3, a, b, c ])' );
-const valueSum = arrExpr.evaluate( { a: 10, b: 20, c: 30 } ); // 66
-...
-const objExpr = new Affinirum( '[`prop1`:a,`prop2`:`abc`].prop1+10' );
-const oValue = objExpr.evaluate( { a: 50 } ); // 60
-...
+const expr = new Affinirum("x * (y + abc / 5) > 10");
+const value1 = expr.evaluate({ x: 10, y: 20, abc: 10 }); // true
+const value2 = expr.evaluate({ x: 1, y: 4, abc: 5 }); // false
+
+const arrExpr = new Affinirum("Integer.Sum([1, 2, 3, a, b, c])");
+const valueSum = arrExpr.evaluate({ a: 10n, b: 20n, c: 30n }); // 66n
+
+const objExpr = new Affinirum('["prop1":a, "prop2":"abc"].prop1 + 10');
+const oValue = objExpr.evaluate({ a: 50n }); // 60n
+
 const iteratorExpr = new Affinirum(
-	'Float.Sum(arr1.Derive(~(a:float):float{a*2}).Filter(~(a:float):boolean{a>3}))'
+	"Float.Sum(arr1.Derive(~(a:float):float{a*2}).Filter(~(a:float):boolean{a>3}))"
 );
-const iValue = iteratorExpr.evaluate( { arr1: [ 1, 2, 3 ] } ); // 10
-...
+const iValue = iteratorExpr.evaluate({ arr1: [1, 2, 3] }); // 10
+
 const complexExpr = new Affinirum(
-	'var a=myvar1/10, val b=myvar2-100, a/b + b*a + 600'
+	"var a = myvar1 / 10; val b = myvar2 - 100; a / b + b * a + 600"
 );
-const value = complexExpr.evaluate( { myvar1: 40, myvar2: 104 } ); // 4761
-...
+const value = complexExpr.evaluate({ myvar1: 40, myvar2: 104 }); // 617
 ```
