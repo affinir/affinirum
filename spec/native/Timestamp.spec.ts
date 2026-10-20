@@ -36,9 +36,34 @@ describe("Timestamp function test", () => {
 			],
 		},
 		{
+			script: "v.Encode(enc).Format",
+			cases: [
+				{ values: { v: new Date(15360000), enc: "i32" }, result: "00000100" },
+				{ values: { v: new Date(15360000), enc: "i32le" }, result: "00010000" },
+				{ values: { v: new Date(1000), enc: "i64" }, result: "00000000000003e8" },
+				{ values: { v: new Date(1000), enc: "i64le" }, result: "e803000000000000" },
+			],
+		},
+		{
+			script: "val t = Timestamp.Decode(v.Encode(enc), enc); if t != null t.EpochTime",
+			cases: [
+				{ values: { v: new Date(90999), enc: "i32" }, result: 60000n },
+				{ values: { v: new Date(-1), enc: "i32" }, result: 0n },
+				{ values: { v: new Date(90999), enc: "i32le" }, result: 60000n },
+				{ values: { v: new Date(90999), enc: "i64" }, result: 90999n },
+				{ values: { v: new Date(90999), enc: "i64le" }, result: 90999n },
+				{ values: { v: new Date(2147483647 * 60000), enc: "i32" }, result: 128849018820000n },
+				{ values: { v: new Date(-2147483648 * 60000), enc: "i32" }, result: -128849018880000n },
+			],
+		},
+		{
 			script: "val t = Timestamp.Decode(v, enc, offset); if t != null t.EpochTime",
 			cases: [
+				{ values: { v: new Uint8Array([0xff, 0x00, 0x00, 0x01, 0x00]).buffer, enc: "i32", offset: 1n }, result: 15360000n },
+				{ values: { v: new Uint8Array([0xff, 0x00, 0x01, 0x00, 0x00]).buffer, enc: "i32le", offset: 1n }, result: 15360000n },
 				{ values: { v: new Uint8Array([0xff, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]).buffer, enc: "i64le", offset: 1n }, result: 1000n },
+				{ values: { v: new Uint8Array(3).buffer, enc: "i32", offset: 0n }, result: undefined },
+				{ values: { v: new Uint8Array(7).buffer, enc: "i64", offset: 0n }, result: undefined },
 			],
 		},
 		{

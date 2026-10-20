@@ -9,7 +9,7 @@ val cstr = "thestring";
 var $vnum = cnum + cstr.Length;
 var #vnum = $vnum + 1;
 var vint = if myvr > 1000 {cint + cnum} else {cint - cnum};
-var vstr = cstr + cnum; // test comment
+var vstr = cstr + cnum.Format; // test comment
 val carr1 = [1, 2, 3, 4];
 var varr2 = [5, 6, 7, 8] + carr1;
 val cobj = [ "a": 1, "b": 2 ];
@@ -70,6 +70,17 @@ vfunc(cfunc)
 			[Type.arrayType([Type.Integer])],
 			true,
 		))).toBeTrue();
+	});
+
+	it("does not combine arguments from separate overloads", () => {
+		const type = Type.union(
+			Type.functionType(Type.Integer, [Type.Integer, Type.String]),
+			Type.functionType(Type.Integer, [Type.String, Type.Integer]),
+		);
+		expect(() => new Affinirum("f(1,1)", { variables: { f: type } }))
+			.toThrowError(/cannot be called with 2 argument/);
+		expect(() => new Affinirum("f(1,\"x\")", { variables: { f: type } })).not.toThrow();
+		expect(() => new Affinirum("f(\"x\",1)", { variables: { f: type } })).not.toThrow();
 	});
 
 	it("rejects a callback with a narrower argument type", () => {

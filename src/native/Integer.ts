@@ -50,20 +50,48 @@ const decodeInteger = (value?: ArrayBuffer, encoding: IntegerEncoding = "i64", b
 	if (value == null) {
 		return undefined;
 	}
-	const dv = new DataView(value, byteOffset == null ? undefined : Number(byteOffset));
+	const offset = byteOffset ?? 0;
+	if (offset < 0) {
+		return undefined;
+	}
+	const dv = new DataView(value);
 	switch (encoding) {
-		case "i8": return BigInt(dv.getInt8(0));
-		case "i16": return BigInt(dv.getInt16(0));
-		case "i16le": return BigInt(dv.getInt16(0, true));
-		case "i32": return BigInt(dv.getInt32(0));
-		case "i32le": return BigInt(dv.getInt32(0, true));
-		case "i64": return dv.getBigInt64(0);
-		case "i64le": return dv.getBigInt64(0, true);
-		case "n8": return BigInt(dv.getUint8(0));
-		case "n16": return BigInt(dv.getUint16(0));
-		case "n16le": return BigInt(dv.getUint16(0, true));
-		case "n32": return BigInt(dv.getUint32(0));
-		case "n32le": return BigInt(dv.getUint32(0, true));
+		case "i8": return value.byteLength < offset + 1
+			? undefined
+			: BigInt(dv.getInt8(offset));
+		case "i16": return value.byteLength < offset + 2
+			? undefined
+			: BigInt(dv.getInt16(offset));
+		case "i16le": return value.byteLength < offset + 2
+			? undefined
+			: BigInt(dv.getInt16(offset, true));
+		case "i32": return value.byteLength < offset + 4
+			? undefined
+			: BigInt(dv.getInt32(offset));
+		case "i32le": return value.byteLength < offset + 4
+			? undefined
+			: BigInt(dv.getInt32(offset, true));
+		case "i64": return value.byteLength < offset + 8
+			? undefined
+			: dv.getBigInt64(offset);
+		case "i64le": return value.byteLength < offset + 8
+			? undefined
+			: dv.getBigInt64(offset, true);
+		case "n8": return value.byteLength < offset + 1
+			? undefined
+			: BigInt(dv.getUint8(offset));
+		case "n16": return value.byteLength < offset + 2
+			? undefined
+			: BigInt(dv.getUint16(offset));
+		case "n16le": return value.byteLength < offset + 2
+			? undefined
+			: BigInt(dv.getUint16(offset, true));
+		case "n32": return value.byteLength < offset + 4
+			? undefined
+			: BigInt(dv.getUint32(offset));
+		case "n32le": return value.byteLength < offset + 4
+			? undefined
+			: BigInt(dv.getUint32(offset, true));
 		default: throw new Error(`${encoding} encoding not supported`);
 	}
 };

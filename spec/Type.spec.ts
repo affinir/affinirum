@@ -43,6 +43,20 @@ describe("Type acceptance test", () => {
 		]).accept(source)).toBeTrue();
 	});
 
+	it("accepts omitted optional tuple items", () => {
+		const source = Type.arrayType([Type.Integer, Type.String]);
+		expect(Type.arrayType([
+			Type.Integer,
+			Type.String,
+			Type.OptionalBoolean,
+		]).accept(source)).toBeTrue();
+		expect(Type.arrayType([
+			Type.Integer,
+			Type.String,
+			Type.Boolean,
+		]).accept(source)).toBeFalse();
+	});
+
 	it("rejects missing required object properties", () => {
 		const source = Type.objectType([
 			["items", Type.arrayType([Type.Integer])],

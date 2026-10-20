@@ -95,10 +95,10 @@ describe("Iterable function test", () => {
 			],
 		},
 		{
-			script: "arr0[1] + obj0[1]",
+			script: "arr0[x] + obj0[y]",
 			cases: [
-				{ values: { arr0: [undefined, 10, 20], obj0: { a: undefined, "1": 100 } }, result: 110 },
-				{ values: { arr0: [1, 2], obj0: { a: 1, "1": 1 } }, result: 3 },
+				{ values: { arr0: [undefined, 10, 20], x: 1n, obj0: { a: undefined, "1": 100 }, y: "1" }, result: 110 },
+				{ values: { arr0: [1, 2], x: 0n, obj0: { a: 1, "1": 1 }, y: "1" }, result: 2 },
 			],
 		},
 		{

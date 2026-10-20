@@ -2,6 +2,9 @@ import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 import { boundInteger } from "./Integer.js";
 
+export const isSignSymbol = (c: string) => c === "+" || c === "-";
+export const isNumericSymbol = (c: string) =>  c >= "0" && c <= "9" ;
+
 export interface NumberFormatting {
 	min_integer_digits?: number;
 	min_fraction_digits?: number;
@@ -10,6 +13,46 @@ export interface NumberFormatting {
 	max_significant_digits?: number;
 	notation?: "standard" | "scientific";
 }
+
+export const formatLiteralNumber = (value: bigint | number) => {
+	return typeof value === "number" && Number.isInteger(value)
+		? `${value.toString()}.0`
+		: value.toString();
+};
+
+export const parseLiteralNumber = (value: string, offset = 0) => {
+	let i = offset;
+	let integer = true;
+	while (isNumericSymbol(value.charAt(i))) {
+		++i;
+	}
+	if (value.charAt(i) === ".") {
+		++i;
+		if (isNumericSymbol(value.charAt(i))) {
+			++i;
+			while (isNumericSymbol(value.charAt(i))) {
+				++i;
+			}
+			integer = false;
+		}
+		else {
+			--i;
+		}
+	}
+	if (value.charAt(i) === "e") {
+		++i;
+		if (isNumericSymbol(value.charAt(i))
+			|| isSignSymbol(value.charAt(i))) {
+			++i;
+			while (isNumericSymbol(value.charAt(i))) {
+				++i;
+			}
+		}
+		integer = false;
+	}
+	const str = value.slice(offset, i);
+	return [integer ? boundInteger(BigInt(str)) : parseFloat(str), i] as const;
+};
 
 export const formatNumber = (value: bigint | number, formatting?: string) => {
 	if (formatting) {
@@ -28,7 +71,7 @@ export const formatNumber = (value: bigint | number, formatting?: string) => {
 	return typeof value === "number" && Number.isInteger(value)
 		? `${value.toString()}.0`
 		: value.toString();
-}
+};
 
 const typeComparator = Type.functionType(Type.Boolean, [Type.Number, Type.Number]);
 const typeOperator = Type.union(

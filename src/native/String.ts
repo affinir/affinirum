@@ -4,17 +4,65 @@ import { createInteger } from "./Integer.js";
 
 export type StringEncoding = "utf8" | "sbcs" | "ucs2" | "ucs2le";
 
-export const isSignSymbol = (c: string) => c === "+" || c === "-";
-export const isNumericSymbol = (c: string) =>  c >= "0" && c <= "9" ;
 export const isAlphanumericSymbol = (c: string) => c >= "a" && c <= "z" || c >= "0" && c <= "9";
 export const isTokenStartSymbol = (c: string) =>  c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_" || c === "#" || c === "$";
-export const isTokenSymbol = (c: string) => isTokenStartSymbol(c) || isNumericSymbol(c);
-export const isDateSeparatorSymbol = (c: string) => c === "-";
-export const isTimeSeparatorSymbol = (c: string) => c === ":";
-export const isDateTimeSeparatorSymbol = (c: string) => c === "T" || c === " " || c === "@";
-export const isDateSymbol = (c: string) => isNumericSymbol(c) || isDateSeparatorSymbol(c);
-export const isTimeSymbol = (c: string) => isNumericSymbol(c) || isTimeSeparatorSymbol(c);
-export const isHexadecimalSymbol = (c: string) => isNumericSymbol(c) || c >= "a" && c <= "f" || c >= "A" && c <= "F";
+export const isTokenSymbol = (c: string) => isTokenStartSymbol(c) || c >= "0" && c <= "9";
+export const isHexadecimalSymbol = (c: string) => c >= "0" && c <= "9" || c >= "a" && c <= "f" || c >= "A" && c <= "F";
+
+export const formatLiteralString = (value: string) => {
+	let str = "\"";
+	for (let i = 0; i < value.length; ++i) {
+		const c = value.charAt(i);
+		if (c === "\r") {
+			str += "\\r";
+		}
+		else if (c === "\n") {
+			str += "\\n";
+		}
+		else if (c === "\t") {
+			str += "\\t";
+		}
+		else if (c === "\\" || c === "\"") {
+			str += `\\${c}`;
+		}
+		else {
+			str += c;
+		}
+	}
+	return str + "\"";
+};
+
+export const parseLiteralString = (value: string, offset = 0) => {
+	const q = value.charAt(offset);
+	for (let i = offset + 1, str = ""; i < value.length; ++i) {
+		const c = value.charAt(i);
+		if (c === q) {
+			return [str, i + 1] as const;
+		}
+		if (c === "\\") {
+			if (++i === value.length) {
+				break;
+			}
+			const nc = value.charAt(i);
+			if (nc === "r") {
+				str += "\r";
+			}
+			else if (nc === "n") {
+				str += "\n";
+			}
+			else if (nc === "t") {
+				str += "\t";
+			}
+			else {
+				str += nc;
+			}
+		}
+		else {
+			str += c;
+		}
+	}
+	throw new Error(`missing closing string quotation mark ${q}`);
+};
 
 export const replaceWith = (value?: string, replacement?: string, ...search: string[]) => {
 	if (value == null) {
@@ -176,7 +224,12 @@ export const encodeString = (value: string, encoding: StringEncoding = "utf8") =
 };
 
 const decodeString = (value?: ArrayBuffer, encoding: StringEncoding = "utf8", byteOffset?: number, byteLength?: number) => {
-	if (value == null) {
+	if (
+		value == null ||
+		byteOffset != null && byteOffset < 0 ||
+		byteLength != null && byteLength < 0 ||
+		value.byteLength < (byteOffset ?? 0) + (byteLength ?? 0)
+	) {
 		return undefined;
 	}
 	switch (encoding) {
@@ -197,7 +250,9 @@ const decodeString = (value?: ArrayBuffer, encoding: StringEncoding = "utf8", by
 	const littleEndian = encoding.endsWith("le");
 	let str = "";
 	for (let i = 0; i < dv.byteLength; i += 2) {
-		str += String.fromCharCode(dv.getUint16(i, littleEndian));
+		if (dv.byteLength > i + 1) {
+			str += String.fromCharCode(dv.getUint16(i, littleEndian));
+		}
 	}
 	return str;
 };
@@ -294,10 +349,10 @@ const funcAlphanum = new Constant(
 		if (!value) {
 			return undefined;
 		}
-		const lowerCase = value.toLowerCase();
+		const str = value.toLowerCase();
 		let result = "";
-		for (let i = 0; i < lowerCase.length; ++i) {
-			if (isAlphanumericSymbol(value[i])) {
+		for (let i = 0; i < str.length; ++i) {
+			if (isAlphanumericSymbol(str[i])) {
 				result += value[i];
 			}
 		}

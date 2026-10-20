@@ -1,3 +1,4 @@
+import { Affinirum } from "../../../src/index.js";
 import { runAffinirumTests } from "../../helpers/AffinirumTest.js";
 
 describe("AN function test", () => {
@@ -22,7 +23,7 @@ describe("AN function test", () => {
 					values: {
 						obj0: { xbool: true, xbuf: new Uint8Array([10, 20, 30, 0, 4]).buffer, xstr: "string", xfunc: () => "1234", xarr: [1n, 2n, 3n], xobj: { a: 1, b: 2 } },
 					},
-					result: "[\"xbool\":true,\"xbuf\":#0a141e0004,\"xstr\":\"string\",\"xfunc\":function,\"xarr\":[1,2,3],\"xobj\":[\"a\":1.0,\"b\":2.0]]",
+					result: "[\"xbool\":true,\"xbuf\":`0a141e0004`,\"xstr\":\"string\",\"xfunc\":function,\"xarr\":[1,2,3],\"xobj\":[\"a\":1.0,\"b\":2.0]]",
 				},
 			],
 		},
@@ -43,7 +44,7 @@ describe("AN function test", () => {
    ]
   ]
  ],
- "xbuf": #0a141e0004,
+ "xbuf": \`0a141e0004\`,
  "xstr": "string",
  "xfunc": function,
  "xarr": [
@@ -60,4 +61,14 @@ describe("AN function test", () => {
 			],
 		},
 	]);
+
+	it("parses nested AN literals", () => {
+		const literal = "[\"bool\":true,\"time\":@2020-01-02T16:10:00.000Z,\"float\":-1.25,\"integer\":-2,\"buffer\":`0aff`,\"string\":\"line\\n\",\"array\":[,false],\"object\":[:]]";
+		const expression = new Affinirum("AN.Format(AN.Parse(value))");
+		expect(expression.evaluate({ value: literal }) as string).toBe(literal);
+	});
+
+	it("does not evaluate expressions while parsing AN literals", () => {
+		expect(() => new Affinirum("AN.Parse(\"Integer(1.2)\")")).toThrowError(/invalid value Integer/);
+	});
 });

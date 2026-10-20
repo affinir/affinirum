@@ -1,10 +1,10 @@
 import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
+import { BufferFormatting, formatBuffer, concatBuffers, equateBuffers, EmptyBuffer } from "./Buffer.js";
 import { FloatEncoding, encodeFloat } from "./Float.js";
 import { IntegerEncoding, encodeInteger } from "./Integer.js";
 import { formatNumber } from "./Number.js";
-import { BufferFormatting, formatBuffer, concatBuffers, equateBuffers, EmptyBuffer } from "./Buffer.js";
 import { StringEncoding, encodeString } from "./String.js";
 import { TimestampEncoding, encodeTimestamp, formatTimestamp } from "./Timestamp.js";
 

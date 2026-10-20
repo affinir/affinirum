@@ -134,7 +134,7 @@ function decodeIP(value: ArrayBuffer) {
 		}
 		return prefix == null ? address : `${address}/${prefix}`;
 	}
-	throw new Error(`Invalid IP buffer length: ${dv.byteLength}`);
+	throw new RangeError(`Invalid IP buffer length: ${dv.byteLength}`);
 }
 
 class IPSet {

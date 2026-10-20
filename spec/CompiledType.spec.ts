@@ -38,7 +38,7 @@ describe("Compiled type test", () => {
 		["~ (arg: float|string):void|float|string {null}", "~(float|string):void|float|string"],
 		["~ (arg: [float|string]):void|[float|string]{null}", "~([float|string]):void|[float|string]"],
 		["~ (i:float):boolean{i==0}", "~(float):boolean"],
-		["~ (x:string, y:...[string]):string{y.Append(x); y.Join()}", "~(string,...[string]):string"],
+		["~ (x:string, y:...[string]):[string]{y.Append(x);}", "~(string,...[string]):[string]"],
 		["~ (x:integer, y:...[integer]):integer{y.Prepend(x); y.Length}", "~(integer,...[integer]):integer"],
 		["var a:[integer, integer] = [0,1];a", "[integer,integer]"],
 		["val a:[[integer,integer],[integer,integer]] = [[0,1],[2,3]];a", "[[integer,integer],[integer,integer]]"],
@@ -61,6 +61,14 @@ describe("Compiled type test", () => {
 	it("parses pure constant expression and tests return type", () => {
 		const script = new Affinirum("(\"ABC\" + Timestamp.Parse(\"2000-01-01\").Format('YY')).Length");
 		expect(script.type.toString()).toBe("integer");
+	});
+	it("rejects an empty block for a function declared to return integer", () => {
+		expect(() => new Affinirum("val f=~():integer {}; f()"))
+			.toThrowError(/type void mismatch with expected type integer/);
+	});
+	it("infers float when adding an integer and a float", () => {
+		const script = new Affinirum("a + b", { variables: { a: Type.Integer, b: Type.Float } });
+		expect(script.type.equate(Type.Float)).toBeTrue();
 	});
 	it("parses expression and tests undefined variable types", () => {
 		const script = new Affinirum("(a*b)*c.prop/d.UpperCase.Length-100");

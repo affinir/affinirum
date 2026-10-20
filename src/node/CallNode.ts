@@ -31,15 +31,19 @@ export class CallNode extends Node {
 	override compile(type: Type): Node {
 		this._fnode = this._fnode.compile(this._fnode.type);
 		const functionAtoms_ = this._fnode.type.functionAtoms(type, this._subnodes.length);
-		let functionAtoms = functionAtoms_.filter((atom) => !atom.isVariadic);
-		if (!functionAtoms.length || !this._subnodes.every((node, index) =>
-			node.type.intersect(Type.union(...functionAtoms.map((atom) => atom.paramType(index) ?? Type.Unknown)))
-		)) {
-			functionAtoms = functionAtoms_.filter((atom) => atom.isVariadic);
+		let functionAtoms = functionAtoms_.filter((atom) =>
+			!atom.isVariadic && this._subnodes.every((node, index) =>
+				node.type.intersect(atom.paramType(index) ?? Type.Unknown)
+			)
+		);
+		if (!functionAtoms.length) {
+			functionAtoms = functionAtoms_.filter((atom) =>
+				atom.isVariadic && this._subnodes.every((node, index) =>
+					node.type.intersect(atom.paramType(index) ?? Type.Unknown)
+				)
+			);
 		}
-		if (!functionAtoms.length || !this._subnodes.every((node, index) =>
-			node.type.intersect(Type.union(...functionAtoms.map((atom) => atom.paramType(index) ?? Type.Unknown)))
-		)) {
+		if (!functionAtoms.length) {
 			this.throwError(`value of type ${this._fnode.type} cannot be called with ${this._subnodes.length} argument(s) and return a type compatible with ${type}`);
 		}
 		this._type = Type.union(...functionAtoms.map((i) => i.retType));
@@ -54,7 +58,9 @@ export class CallNode extends Node {
 		let constant = this._fnode.constant;
 		for (let i = 0; i < this._subnodes.length; ++i) {
 			const argTypes = functionAtoms.map((a) => a.argType(i));
-			const argType = Type.union(...argTypes.filter((t) => t != null));
+			const argType = arity > 0 && i === arity - 1
+				? Type.arrayType([Type.union(...functionAtoms.map((a) => a.paramType(i) ?? Type.Unknown))])
+				: Type.union(...argTypes.filter((t) => t != null));
 			this._subnodes[i] = this._subnodes[i].compile(argType);
 			constant &&= this._subnodes[i].constant;
 		}

@@ -110,6 +110,11 @@ describe("Float function test", () => {
 			script: "Float.Decode(v, enc, offset)",
 			cases: [
 				{ values: { v: new Uint8Array([0xff, 0x40, 0x20, 0x00, 0x00]).buffer, enc: "f32", offset: 1n }, result: 2.5 },
+				{ values: { v: new Uint8Array(3).buffer, enc: "f32", offset: 0n }, result: undefined },
+				{ values: { v: new Uint8Array(3).buffer, enc: "f32le", offset: 0n }, result: undefined },
+				{ values: { v: new Uint8Array(7).buffer, enc: "f64", offset: 0n }, result: undefined },
+				{ values: { v: new Uint8Array(7).buffer, enc: "f64le", offset: 0n }, result: undefined },
+				{ values: { v: new Uint8Array(8).buffer, enc: "f64", offset: -1n }, result: undefined },
 				{ values: { v: undefined, enc: undefined, offset: undefined }, result: undefined },
 				{ values: { v: null, enc: undefined, offset: undefined }, result: undefined },
 			],

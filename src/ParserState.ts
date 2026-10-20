@@ -1,13 +1,12 @@
 import { funcOr, funcAnd, funcNot } from "./native/Boolean.js";
-import { parseBuffer } from "./native/Buffer.js";
+import { parseLiteralBuffer } from "./native/Buffer.js";
 import { funcAdd } from "./native/Aggregable.js";
-import { isSignSymbol, isTokenStartSymbol, isNumericSymbol, isTokenSymbol, isDateSymbol, isTimeSymbol, isDateTimeSeparatorSymbol,
-	replaceWith } from "./native/String.js";
-import { Constant } from "./Constant.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower } from "./native/Number.js";
+	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, isNumericSymbol, parseLiteralNumber } from "./native/Number.js";
 import { funcCoalesce, funcEqual, funcNotEqual } from "./native/Unknown.js";
-import { boundInteger } from "./native/Integer.js";
+import { isTokenStartSymbol, isTokenSymbol, parseLiteralString } from "./native/String.js";
+import { parseLiteralTimestamp } from "./native/Timestamp.js";
+import { Constant } from "./Constant.js";
 import { Value } from "./Value.js";
 import { Type } from "./Type.js";
 import { ParserFrame } from "./ParserFrame.js";
@@ -393,52 +392,24 @@ export class ParserState extends ParserFrame {
 							break;
 					}
 					break;
-				case "@":
-					while (isDateSymbol(this._expr.charAt(this._end))) {
-						++this._end;
-					}
-					if (isDateTimeSeparatorSymbol(this._expr.charAt(this._end))) {
-						++this._end;
-						while (isTimeSymbol(this._expr.charAt(this._end))) {
-							++this._end;
-						}
-						if (this._expr.charAt(this._end) === "."
-							&& isNumericSymbol(this._expr.charAt(this._end + 1))) {
-							++this._end;
-							while (isNumericSymbol(this._expr.charAt(this._end))) {
-								++this._end;
-							}
-							if (this._expr.charAt(this._end) === "Z") {
-								++this._end;
-							}
-						}
-					}
-					this._fragment = new Literal(new Date(this._expr.substring(this._start + 1, this._end)));
+				case "@": {
+					const [ts, tsEnd] = parseLiteralTimestamp(this._expr, this._start);
+					this._fragment = new Literal(ts);
+					this._end = tsEnd;
 					break;
-				case "`":
-					while (this._expr.charAt(this._end) !== ""
-						&& this._expr.charAt(this._end) !== c) {
-						++this._end;
-					}
-					if (this._end >= this._expr.length) {
-						this._start = this._expr.length;
-						throw new Error(`missing closing buffer quotation mark ${c}`);
-					}
-					this._fragment = new Literal(parseBuffer(replaceWith(this._expr.substring(this._start + 1, this._end), "", " ", "\t", "\n")));
-					++this._end;
+				}
+				case "`": {
+					const [buf, bufEnd] = parseLiteralBuffer(this._expr, this._start);
+					this._fragment = new Literal(buf);
+					this._end = bufEnd;
 					break;
-				case "\"": case "'":
-					while (this._expr.charAt(this._end) !== ""
-						&& this._expr.charAt(this._end) !== c) {
-						++this._end;
-					}
-					if (this._end >= this._expr.length) {
-						this._start = this._expr.length;
-						throw new Error(`missing closing string quotation mark ${c}`);
-					}
-					this._fragment = new Literal(replaceWith(this._expr.substring(this._start + 1, this._end), "", "\\\n"));
-					++this._end;
+				}
+				case "\"": case "'": {
+					const [str, strEnd] = parseLiteralString(this._expr, this._start);
+					this._fragment = new Literal(str);
+					this._end = strEnd;
 					break;
+				}
 				default:
 					if (isTokenStartSymbol(c)) {
 						while (isTokenSymbol(this._expr.charAt(this._end))) {
@@ -470,37 +441,9 @@ export class ParserState extends ParserFrame {
 						}
 					}
 					else if (isNumericSymbol(c)) {
-						let integer = true;
-						while (isNumericSymbol(this._expr.charAt(this._end))) {
-							++this._end;
-						}
-						if (this._expr.charAt(this._end) === ".") {
-							++this._end;
-							if (isNumericSymbol(this._expr.charAt(this._end))) {
-								++this._end;
-								while (isNumericSymbol(this._expr.charAt(this._end))) {
-									++this._end;
-								}
-								integer = false;
-							}
-							else {
-								--this._end;
-							}
-						}
-						if (this._expr.charAt(this._end) === "e") {
-							++this._end;
-							if (isNumericSymbol(this._expr.charAt(this._end))
-								|| isSignSymbol(this._expr.charAt(this._end))) {
-								++this._end;
-								while (isNumericSymbol(this._expr.charAt(this._end))) {
-									++this._end;
-								}
-							}
-							integer = false;
-						}
-						this._fragment = integer
-							? new Literal(boundInteger(BigInt(this._expr.substring(this._start, this._end))))
-							: new Literal(parseFloat(this._expr.substring(this._start, this._end)));
+						const [num, numEnd] = parseLiteralNumber(this._expr, this._start);
+						this._fragment = new Literal(num);
+						this._end = numEnd;
 					}
 					else {
 						throw new Error(`unknown symbol ${c}`);

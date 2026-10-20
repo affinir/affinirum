@@ -26,12 +26,24 @@ const decodeFloat = (value?: ArrayBuffer, encoding: FloatEncoding = "f64", byteO
 	if (value == null) {
 		return undefined;
 	}
-	const dv = new DataView(value, byteOffset);
+	const offset = byteOffset ?? 0;
+	if (offset < 0) {
+		return undefined;
+	}
+	const dv = new DataView(value);
 	switch (encoding) {
-		case "f32": return dv.getFloat32(0);
-		case "f32le": return dv.getFloat32(0, true);
-		case "f64": return dv.getFloat64(0);
-		case "f64le": return dv.getFloat64(0, true);
+		case "f32": return value.byteLength < offset + 4
+			? undefined
+			: dv.getFloat32(offset);
+		case "f32le": return value.byteLength < offset + 4
+			? undefined
+			: dv.getFloat32(offset, true);
+		case "f64": return value.byteLength < offset + 8
+			? undefined
+			: dv.getFloat64(offset);
+		case "f64le": return value.byteLength < offset + 8
+			? undefined
+			: dv.getFloat64(offset, true);
 		default: throw new Error(`${encoding} encoding not supported`);
 	}
 };

@@ -15,10 +15,14 @@ export class BlockNode extends Node {
 	}
 
 	override get type(): Type {
-		return this._subnodes[this._subnodes.length - 1].type;
+		return this._subnodes.length ? this._subnodes[this._subnodes.length - 1].type : Type.Void;
 	}
 
 	override compile(type: Type): Node {
+		if (this._subnodes.length === 0) {
+			this.reduceType(type);
+			return new ConstantNode(this, Constant.Null);
+		}
 		let constant = true;
 		for (let i = 0, last = this._subnodes.length - 1; i < this._subnodes.length; ++i) {
 			this._subnodes[i] = this._subnodes[i].compile(i < last ? Type.Unknown : type);
@@ -26,9 +30,6 @@ export class BlockNode extends Node {
 		}
 		if (constant) {
 			return new ConstantNode(this, new Constant(this.evaluate(), this.type));
-		}
-		if (this._subnodes.length === 0) {
-			return new ConstantNode(this, Constant.Null);
 		}
 		if (this._subnodes.length === 1) {
 			return this._subnodes[0];

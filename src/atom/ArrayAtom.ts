@@ -40,7 +40,9 @@ export class ArrayAtom implements IAtom {
 			}
 			if (this.isTuple) {
 				for (let i = 0; i < this._valTypes.length; ++i) {
-					const vtype = atom.isTuple ? atom.valType(i) : atom.valType(0);
+					const vtype = atom.isTuple
+						? atom.valType(i) ?? Type.Void
+						: atom.valType(0);
 					if (!vtype || !this._valTypes[i].accept(vtype)) {
 						return false;
 					}

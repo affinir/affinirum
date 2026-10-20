@@ -42,8 +42,9 @@ export const funcAt = new Constant(
 			return undefined;
 		}
 		else if (Array.isArray(value)) {
-			const ix = Number(index);
-			return value[ix < 0 ? value.length + ix : ix];
+			const num = Number(index);
+			const ix = num < 0 ? value.length + num : num;
+			return ix >= 0 && ix < value.length ? value[ix] : undefined;
 		}
 		const key = String(index);
 		return Object.hasOwn(value, key) ? value[key] : undefined;
@@ -60,8 +61,9 @@ export const funcHas = new Constant(
 			return false;
 		}
 		else if (Array.isArray(value)) {
-			const ix = Number(index);
-			return ix < value.length;
+			const num = Number(index);
+			const ix = num < 0 ? value.length + num : num;
+			return ix >= 0 && ix < value.length;
 		}
 		return Object.hasOwn(value, String(index));
 	},

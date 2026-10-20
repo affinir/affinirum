@@ -3,7 +3,9 @@ import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { aggregate } from "./Aggregable.js";
 
-const typeEnumerableArray = Type.arrayType([Type.Enumerable]);
+const typeBufferArray = Type.arrayType([Type.Buffer]);
+const typeStringArray = Type.arrayType([Type.String]);
+const typeArrayArray = Type.arrayType([Type.Array]);
 
 export const funcSlice = new Constant(
 	(value: ArrayBuffer | string | Value[], start: bigint = 0n, end?: bigint) =>
@@ -26,9 +28,9 @@ export const funcSplice = new Constant(
 				value.slice(Number(start + remove)),
 			),
 	Type.union(
-		Type.functionType(Type.Buffer, [Type.Buffer, Type.Integer, Type.Integer, typeEnumerableArray], true),
-		Type.functionType(Type.String, [Type.String, Type.Integer, Type.Integer, typeEnumerableArray], true),
-		Type.functionType(Type.Array, [Type.Array, Type.Integer, Type.Integer, typeEnumerableArray], true),
+		Type.functionType(Type.Buffer, [Type.Buffer, Type.Integer, Type.Integer, typeBufferArray], true),
+		Type.functionType(Type.String, [Type.String, Type.Integer, Type.Integer, typeStringArray], true),
+		Type.functionType(Type.Array, [Type.Array, Type.Integer, Type.Integer, typeArrayArray], true),
 	),
 );
 
@@ -41,8 +43,8 @@ export const funcInject	= new Constant(
 				value.slice(Number(start)),
 			),
 	Type.union(
-		Type.functionType(Type.Buffer, [Type.Buffer, Type.Integer, typeEnumerableArray], true),
-		Type.functionType(Type.String, [Type.String, Type.Integer, typeEnumerableArray], true),
-		Type.functionType(Type.Array, [Type.Array, Type.Integer, typeEnumerableArray], true),
+		Type.functionType(Type.Buffer, [Type.Buffer, Type.Integer, typeBufferArray], true),
+		Type.functionType(Type.String, [Type.String, Type.Integer, typeStringArray], true),
+		Type.functionType(Type.Array, [Type.Array, Type.Integer, typeArrayArray], true),
 	),
 );

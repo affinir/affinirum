@@ -1,4 +1,4 @@
-import { formatAN } from "./native/notation/AN.js";
+import { formatAN } from "./native/notation/AN.js"
 import { funcOr, funcAnd, funcNot } from "./native/Boolean.js";
 import { funcAdd } from "./native/Aggregable.js";
 import { funcAt, funcHas } from "./native/Iterable.js";

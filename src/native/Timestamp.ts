@@ -1,36 +1,91 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 import { boundInteger } from "./Integer.js";
+import { isNumericSymbol } from "./Number.js";
 
-export type TimestampEncoding = "i64" | "i64le";
+export type TimestampEncoding = "i32" | "i32le" | "i64" | "i64le";
 
+const minuteMilliseconds = 60000;
 const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
 const typeTimestampSince = Type.functionType(Type.Float, [Type.Timestamp, Type.Timestamp]);
 
-export const encodeTimestamp = (value: Date, encoding: TimestampEncoding = "i64") => {
-	switch (encoding) {
-		case "i64": break;
-		case "i64le": break;
-		default: throw new Error(`${encoding} encoding not supported`);
+const isDateSeparatorSymbol = (c: string) => c === "-";
+const isTimeSeparatorSymbol = (c: string) => c === ":";
+const isDateTimeSeparatorSymbol = (c: string) => c === "T" || c === " " || c === "@";
+const isDateSymbol = (c: string) => isNumericSymbol(c) || isDateSeparatorSymbol(c);
+const isTimeSymbol = (c: string) => isNumericSymbol(c) || isTimeSeparatorSymbol(c);
+
+export const formatLiteralTimestamp = (value: Date) => `@${formatTimestamp(value)}`;
+
+export const parseLiteralTimestamp = (value: string, offset = 0) => {
+	let i = offset + 1;
+	while (isDateSymbol(value.charAt(i))) {
+		++i;
 	}
-	const dv = new DataView(new BigInt64Array(1).buffer);
-	const littleEndian = encoding.endsWith("le");
-	dv.setBigInt64(0, BigInt(value?.getTime() ?? 0), littleEndian);
-	return dv.buffer;
+	if (isDateTimeSeparatorSymbol(value.charAt(i))) {
+		++i;
+		while (isTimeSymbol(value.charAt(i))) {
+			++i;
+		}
+		if (value.charAt(i) === "."
+			&& isNumericSymbol(value.charAt(i + 1))) {
+			++i;
+			while (isNumericSymbol(value.charAt(i))) {
+				++i;
+			}
+			if (value.charAt(i) === "Z") {
+				++i;
+			}
+		}
+	}
+	return [new Date(value.slice(offset + 1, i)), i] as const;
 };
 
-export const decodeTimestamp = (value?: ArrayBuffer, encoding: TimestampEncoding = "i64", byteOffset?: bigint) => {
+export const encodeTimestamp = (value: Date, encoding: TimestampEncoding = "i64") => {
+	const littleEndian = encoding.endsWith("le");
 	switch (encoding) {
-		case "i64": break;
-		case "i64le": break;
+		case "i32":
+		case "i32le": {
+			const dv = new DataView(new Int32Array(1).buffer);
+			const timer = value?.getTime() ?? 0;
+			dv.setInt32(0, (Number.isNaN(timer) ? 0 : timer) / minuteMilliseconds, littleEndian);
+			return dv.buffer;
+		}
+		case "i64":
+		case "i64le": {
+			const dv = new DataView(new BigInt64Array(1).buffer);
+			const timer = value?.getTime() ?? 0;
+			dv.setBigInt64(0, BigInt(Number.isNaN(timer) ? 0 : timer), littleEndian);
+			return dv.buffer;
+		}
 		default: throw new Error(`${encoding} encoding not supported`);
 	}
-	const offset = byteOffset == null ? 0 : Number(byteOffset);
-	if (!value || offset < 0 || value.byteLength < offset + 8) {
+};
+
+export const decodeTimestamp = (value?: ArrayBuffer, encoding: TimestampEncoding = "i64", byteOffset?: number) => {
+	const littleEndian = encoding.endsWith("le");
+	const offset = byteOffset ?? 0;
+	if (!value || offset < 0) {
 		return undefined;
 	}
-	const littleEndian = encoding.endsWith("le");
-	return new Date(Number(new DataView(value).getBigInt64(offset, littleEndian)));
+	const dv = new DataView(value);
+	switch (encoding) {
+		case "i32":
+		case "i32le": {
+			const ts = value.byteLength < offset + 4
+				? undefined
+				: new Date(dv.getInt32(offset, littleEndian) * minuteMilliseconds);
+			return !ts || Number.isNaN(ts.getTime()) ? undefined : ts;
+		}
+		case "i64":
+		case "i64le": {
+			const ts = value.byteLength < offset + 8
+				? undefined
+				: new Date(Number(dv.getBigInt64(offset, littleEndian)));
+			return !ts || Number.isNaN(ts.getTime()) ? undefined : ts;
+		}
+		default: throw new Error(`${encoding} encoding not supported`);
+	}
 };
 
 export const formatTimestamp = (value: Date, template?: string) => {
@@ -169,14 +224,16 @@ export const funcSecondsSince = new Constant(
 );
 
 const funcEpochTimestamp = new Constant(
-	(value: number | bigint, epoch = new Date(0)) =>
-		new Date(Number(value ?? 0) + epoch?.getTime()),
+	(value: number | bigint, epoch = new Date(0)) => {
+		const ts = new Date(Number(value ?? 0) + epoch?.getTime());
+		return Number.isNaN(ts.getTime()) ? undefined : ts;
+	},
 	Type.functionType(Type.Timestamp, [Type.Number, Type.OptionalTimestamp]),
 );
 
 const funcDecodeTimestamp = new Constant(
-	(value: ArrayBuffer, encoding: TimestampEncoding = "i64", byteOffset?: bigint) =>
-		decodeTimestamp(value, encoding, byteOffset),
+	(value: ArrayBuffer | undefined, encoding: TimestampEncoding = "i64", byteOffset?: bigint) =>
+		decodeTimestamp(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
 	Type.functionType(Type.OptionalTimestamp, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]),
 );
 

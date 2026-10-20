@@ -23,7 +23,7 @@ Target: ES2022 [browser+Node.js][ESM+CJS].
 ## Specifications
 
 A script may contain multiple expressions separated by semicolons, as well as blocks of statements.
-The value of a block is defined by the value of its last expression.
+The value of a block is defined by the value of its last expression. An empty block has type **void** and evaluates to JavaScript `undefined`.
 - Scientific notation is supported for floating point numbers, like *0.1281e+2*.
 - ISO Timestamps prefixed with **@**, like *@2025-05-11T19:09:21.320Z*.
 - Hexadecimal buffer values are enclosed in backticks (**\`**), like *\`10ab0901\`*.
@@ -94,6 +94,12 @@ substitutability or prove that every accepted expression is safe for every possi
   function parameter may receive **null**, `undefined`, or be omitted.
 - An optional type such as **integer?** is the union **void | integer**. Optional parameters may receive **null**, `undefined`,
   or be omitted.
+- A call with known argument types must match one complete function overload. Parameter matches from separate overloads
+  are not combined to accept a call.
+- Object types are open structural constraints: required properties and their values are checked, while additional
+  properties are allowed.
+- Tuple types are prefix constraints: the declared item types are checked in order, optional trailing items may be
+  omitted, and additional items are allowed.
 - Function compatibility is deliberately flexible. The accepted argument-count ranges only need to overlap;
   one function's complete arity range does not need to contain the other's.
 - A callback may declare fewer parameters than the caller provides. Additional arguments are ignored at runtime,
@@ -159,7 +165,7 @@ Casts can be followed by property access, index access, function calls, or anoth
 - Boolean conjunction (Logical AND) assignment: **&=**
 - Arithmetic addition assignment: **+=**
 - Arithmetic subtraction assignment: **-=**
-- Arithmetic multiplication assignment: ***=**
+- Arithmetic multiplication assignment: **\*=**
 - Arithmetic division assignment: **/=**
 - Arithmetic remainder assignment: **%=**
 
@@ -184,7 +190,7 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 #### Timestamp
 - **Timestamp.Now():timestamp** — Current date and time
 - **Timestamp.Epoch(value: float | integer, epoch: timestamp?):timestamp** — Create timestamp from milliseconds
-- **Timestamp.Decode(value: buffer?, encoding: string?, offset: integer?):timestamp?** — Decode a timestamp using `i64` (default) or `i64le`
+- **Timestamp.Decode(value: buffer?, encoding: string?, offset: integer?):timestamp?** — Decode a timestamp using `i32` or `i32le` minutes, or `i64` (default) or `i64le` milliseconds since the Unix epoch
 - **Timestamp.Parse(value: string?):timestamp?** — Parse a string as a timestamp
 
 #### Float
@@ -225,7 +231,7 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 
 #### Array
 - **Array.Join(values: ...array):array** — Join arrays of any depths into a single array
-- **Array.Range(inclusiveFrom: integer, exclusiveTo: integer):array** — New array filled with integers in range
+- **Array.Range(a: integer, b: integer):array** — Integers from the lower endpoint (inclusive) to the higher endpoint (exclusive)
 - **Array.Unique(value: array):array** — Array of unique values
 - **Array.Intersection(a1: array, a2: array):array** — Common values from two arrays
 - **Array.Difference(a1: array, a2: array):array** — Symmetrical difference between arrays
@@ -252,11 +258,12 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **??.Equal(value: ??):boolean** — Equals to
 - **??.Unequal(value: ??):boolean** — Not equals to
 - **(boolean | buffer | function).Encode():buffer** — Encode value to buffer
-- **(void | timestamp | float | integer | string | array | object).Encode(encoding: string?):buffer** — Encode a value; defaults are `i64` for timestamps and integers, `f64` for floats, and `utf8` for strings
+- **(void | timestamp | float | integer | string | array | object).Encode(encoding: string?):buffer** — Encode a value; timestamps support `i32` and `i32le` minutes or `i64` and `i64le` milliseconds, while defaults are `i64` for timestamps and integers, `f64` for floats, and `utf8` for strings
 - **(boolean | string | function).Format():string** — Format value to string
 - **(void | timestamp | float | integer | buffer | array | object).Format(formatting: string?):string** — Format a value; buffers use `hex` by default and also support `base64`
 
 #### Aggregable Functions
+- **float.Add(value: float):float** — Add a float
 - **float.Add(value: integer):float** — Add an integer
 - **integer.Add(value: float):float** — Add a float
 - **integer.Add(value: integer):integer** — Add an integer
@@ -287,12 +294,12 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **buffer.Slice(start: integer?, end: integer?):buffer** — Slice section
 - **string.Slice(start: integer?, end: integer?):string** — Slice section
 - **array.Slice(start: integer?, end: integer?):array** — Slice section
-- **buffer.Splice(start: integer, remove: integer, inject: ...(buffer | string | array)):buffer** — Splice section
-- **string.Splice(start: integer, remove: integer, inject: ...(buffer | string | array)):string** — Splice section
-- **array.Splice(start: integer, remove: integer, inject: ...(buffer | string | array)):array** — Splice section
-- **buffer.Inject(start: integer, inject: ...(buffer | string | array)):buffer** — Inject section
-- **string.Inject(start: integer, inject: ...(buffer | string | array)):string** — Inject section
-- **array.Inject(start: integer, inject: ...(buffer | string | array)):array** — Inject section
+- **buffer.Splice(start: integer, remove: integer, inject: ...buffer):buffer** — Splice section
+- **string.Splice(start: integer, remove: integer, inject: ...string):string** — Splice section
+- **array.Splice(start: integer, remove: integer, inject: ...array):array** — Splice section
+- **buffer.Inject(start: integer, inject: ...buffer):buffer** — Inject section
+- **string.Inject(start: integer, inject: ...string):string** — Inject section
+- **array.Inject(start: integer, inject: ...array):array** — Inject section
 
 #### Iterable Functions
 - **(buffer | string | array | object).Length():integer** — Get length
@@ -399,7 +406,9 @@ a JavaScript value using Affinirum Notation.
 
 JavaScript `number` values map to **float**, while **integer** values map to `bigint`. Timestamps use `Date`, buffers use
 `ArrayBuffer`, and a **void** result is returned as `undefined`. Arrays, objects, and functions use their corresponding
-JavaScript values. Injected values are checked against the types inferred or declared during compilation.
+JavaScript values. Injected non-function values are checked against the types inferred or declared during compilation.
+Injected functions are checked to be callable; their JavaScript parameter behavior and return values are trusted according
+to their declared Affinirum types.
 
 Use **val** for a local value that cannot be reassigned and **var** for a reassignable local variable. Statements are
 separated with semicolons.

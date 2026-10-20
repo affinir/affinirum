@@ -44,10 +44,10 @@ describe("Array function test", () => {
 			],
 		},
 		{
-			script: "var s:integer=0;Array.Range(start, end).Derive(~(x:float):void{s=s+x});s",
+			script: "var s:float=0.0;Array.Range(start, end).Derive(~(x:integer):void{s=s+x});s",
 			cases: [
-				{ values: { start: 1n, end: 11n }, result: 55n },
-				{ values: { start: -1n, end: -11n }, result: -65n },
+				{ values: { start: 1n, end: 11n }, result: 55 },
+				{ values: { start: -1n, end: -11n }, result: -65 },
 			],
 		},
 		{
