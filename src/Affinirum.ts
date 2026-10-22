@@ -1,4 +1,4 @@
-import { formatAN } from "./native/notation/AN.js"
+import { parseAN, formatAN } from "./native/notation/AN.js"
 import { funcOr, funcAnd, funcNot } from "./native/Boolean.js";
 import { funcAdd } from "./native/Aggregable.js";
 import { funcAt, funcHas } from "./native/Iterable.js";
@@ -25,7 +25,7 @@ import { SwitchNode } from "./node/SwitchNode.js";
 import { VariableNode } from "./node/VariableNode.js";
 import { ParserFrame } from "./ParserFrame.js";
 import { ParserState } from "./ParserState.js";
-import { StaticScope } from "./StaticScope.js";
+import { Scope } from "./Scope.js";
 import { JumpException } from "./JumpException.js";
 
 export class Affinirum {
@@ -34,11 +34,13 @@ export class Affinirum {
 	protected readonly _script: string;
 	protected readonly _strict: boolean;
 	protected readonly _root: Node;
-	protected readonly _varframes = new Map<string, ParserFrame>();
+
+	protected readonly _vartypes = new Map<string, Type>();
+	protected readonly _varframes: Map<string, ParserFrame> = new Map();
 	protected readonly _variables = new Map<string, Variable>();
 	protected readonly _constants = new Map<string, Record<string, Constant>>(Constants);
 	protected readonly _functions = new Map<string, Constant>(Functions);
-	protected readonly _scope = new StaticScope();
+	protected readonly _scope = new Scope();
 
 	/**
 		Creates compiled expression. Any parsed token not recognized as a constant or a function will be compiled as a variable.
@@ -56,7 +58,7 @@ export class Affinirum {
 		this._strict = config?.strict ?? false;
 		if (config?.variables) {
 			for (const [vname, vtype] of Object.entries(config.variables)) {
-				this._variables.set(vname, new Variable(vtype));
+				this._vartypes.set(vname, vtype);
 			}
 		}
 		const state = new ParserState(this._script);
@@ -95,32 +97,30 @@ export class Affinirum {
 	*/
 	variables(): Record<string, Type> {
 		const types: Record<string, Type> = Object.create(null);
-		const variables = this._scope.variables();
-		for (const name in variables) {
-			types[name] = variables[name].type;
+		for (const [name, variable] of this._variables) {
+			types[name] = variable.type;
 		}
 		return types;
 	}
 
 	/**
-		Evaluates compiled expression using provided variable values.
-		@param values Record with variable names and values.
-		@returns Calculated value.
+		Evaluates the compiled expression using the provided input values.
+		@param values Values for the expression's input variables. Omitted when there are no input variables.
+		@returns The evaluated result.
+		@throws If an input value is missing or evaluation fails.
 	*/
 	evaluate(values?: Record<string, Value>): Value {
-		const variables = this._scope.variables();
-		for (const name in variables) {
-			if (!values || !Object.hasOwn(values, name)) {
-				this._varframes.get(name)?.throwError(`undefined variable ${name}:\n`);
-			}
-			const variable = variables[name];
-			const value = normalize(values?.[name] ?? undefined);
-			if (!variable.type.acceptValue(value)) {
-				this._varframes.get(name)?.throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
-			}
-			variable.value = value;
-		}
 		try {
+			for (const [name, variable] of this._variables) {
+				if (!values || !Object.hasOwn(values, name)) {
+					this._varframes.get(name)?.throwError(`undefined variable ${name}:\n`);
+				}
+				const value = normalize(values?.[name] ?? undefined);
+				if (!variable.type.acceptValue(value)) {
+					this._varframes.get(name)?.throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
+				}
+				variable.value = value;
+			}
 			return normalize(this._root.evaluate() ?? undefined);
 		}
 		catch (e) {
@@ -134,19 +134,33 @@ export class Affinirum {
 			}
 			throw e;
 		}
+		finally {
+			for (const variable of this._variables.values()) {
+				variable.value = undefined;
+			}
+			this._scope.clear();
+		}
 	}
 
-	/**
-		Produces string in Affinirum Notation.
+	/** Parses an Affinirum Notation string into a JavaScript value.
+		@param value Affinirum Notation string to parse.
+		@returns The parsed value.
+		@throws If string is not a valid Affinirum Notation string.
+	*/
+	static parse(value: string | undefined): Value {
+		return parseAN(value);
+	}
+
+	/** Formats a JavaScript value as an Affinirum Notation string.
 		@param value Value to format.
-		@param whitespace Optional white space characters for readability.
-		@returns String formatted in Affinirum Notation.
+		@param whitespace Optional whitespace used for each indentation level.
+		@returns Affinirum Notation formatted string.
 	*/
 	static format(value: Value, whitespace?: string): string {
 		return formatAN(value, whitespace);
 	}
 
-	protected _list(state: ParserState, scope: StaticScope): Node {
+	protected _list(state: ParserState, scope: Scope): Node {
 		const frame = state.starts();
 		const subnodes: Node[] = [];
 		while (!state.isEmpty) {
@@ -161,11 +175,11 @@ export class Affinirum {
 		return new BlockNode(frame.ends(state), subnodes);
 	}
 
-	protected _unit(state: ParserState, scope: StaticScope): Node {
+	protected _unit(state: ParserState, scope: Scope): Node {
 		return this._coalescence(state, scope);
 	}
 
-	protected _coalescence(state: ParserState, scope: StaticScope): Node {
+	protected _coalescence(state: ParserState, scope: Scope): Node {
 		let node = this._disjunction(state, scope);
 		while (state.operator === funcCoalesce) {
 			const fnode = new ConstantNode(state, state.operator);
@@ -174,7 +188,7 @@ export class Affinirum {
 		return node;
 	}
 
-	protected _disjunction(state: ParserState, scope: StaticScope): Node {
+	protected _disjunction(state: ParserState, scope: Scope): Node {
 		let node = this._conjunction(state, scope);
 		while (state.operator === funcOr) {
 			const fnode = new ConstantNode(state, state.operator);
@@ -183,7 +197,7 @@ export class Affinirum {
 		return node;
 	}
 
-	protected _conjunction(state: ParserState, scope: StaticScope): Node {
+	protected _conjunction(state: ParserState, scope: Scope): Node {
 		let node = this._negation(state, scope);
 		while (state.operator === funcAnd) {
 			const fnode = new ConstantNode(state, state.operator);
@@ -192,7 +206,7 @@ export class Affinirum {
 		return node;
 	}
 
-	protected _negation(state: ParserState, scope: StaticScope): Node {
+	protected _negation(state: ParserState, scope: Scope): Node {
 		const frame = state.starts();
 		let negate = false;
 		while (state.operator === funcNot) {
@@ -208,7 +222,7 @@ export class Affinirum {
 		return node;
 	}
 
-	protected _comparison(state: ParserState, scope: StaticScope): Node {
+	protected _comparison(state: ParserState, scope: Scope): Node {
 		let node = this._aggregate(state, scope);
 		while (state.operator === funcGreaterThan || state.operator === funcLessThan
 			|| state.operator === funcGreaterOrEqual || state.operator === funcLessOrEqual
@@ -219,7 +233,7 @@ export class Affinirum {
 		return node;
 	}
 
-	protected _aggregate(state: ParserState, scope: StaticScope): Node {
+	protected _aggregate(state: ParserState, scope: Scope): Node {
 		let node = this._product(state, scope);
 		while (state.operator === funcAdd || state.operator === funcSubtract) {
 			const fnode = new ConstantNode(state, state.operator);
@@ -228,7 +242,7 @@ export class Affinirum {
 		return node;
 	}
 
-	protected _product(state: ParserState, scope: StaticScope): Node {
+	protected _product(state: ParserState, scope: Scope): Node {
 		let node = this._signum(state, scope);
 		while (state.operator === funcMultiply || state.operator === funcDivide || state.operator === funcRemainder) {
 			const fnode = new ConstantNode(state, state.operator);
@@ -237,7 +251,7 @@ export class Affinirum {
 		return node;
 	}
 
-	protected _signum(state: ParserState, scope: StaticScope): Node {
+	protected _signum(state: ParserState, scope: Scope): Node {
 		const frame = state.starts();
 		let negate = false;
 		while (state.operator === funcAdd || state.operator === funcSubtract) {
@@ -255,7 +269,7 @@ export class Affinirum {
 		return node;
 	}
 
-	protected _factor(state: ParserState, scope: StaticScope): Node {
+	protected _factor(state: ParserState, scope: Scope): Node {
 		let node = this._accessor(state, scope);
 		while (state.operator === funcPower) {
 			const fnode = new ConstantNode(state, state.operator);
@@ -264,7 +278,7 @@ export class Affinirum {
 		return node;
 	}
 
-	protected _accessor(state: ParserState, scope: StaticScope): Node {
+	protected _accessor(state: ParserState, scope: Scope): Node {
 		const frame = state.starts();
 		let node = this._term(state, scope);
 		while (state.isDot || state.isQuestion || state.isParenthesesOpen || state.isBracketsOpen || state.isCast) {
@@ -332,7 +346,7 @@ export class Affinirum {
 		return node;
 	}
 
-	protected _term(state: ParserState, scope: StaticScope): Node {
+	protected _term(state: ParserState, scope: Scope): Node {
 		if (state.isLiteral) { // literal constant
 			const frame = state.starts();
 			const constant = new Constant(state.literal.value);
@@ -356,20 +370,14 @@ export class Affinirum {
 				state.next();
 				return new ConstantNode(frame, constant);
 			}
-			let variable = scope.get(state.token);
+			let variable = scope.get(state.token) ?? this._variables.get(state.token);
 			if (variable == null) {
-				variable = this._variables.get(state.token);
-				if (variable == null) {
-					if (this._strict) {
-						state.throwError(`undefined variable ${state.token} in strict mode`);
-					}
-					else {
-						variable = new Variable();
-					}
+				const type = this._vartypes.get(state.token);
+				if (type == null && this._strict) {
+					state.throwError(`undefined variable ${state.token} in strict mode`);
 				}
-				scope.global(state.token, variable);
-			}
-			if (!this._varframes.has(state.token)) {
+				variable = new Variable(type);
+				this._variables.set(state.token, variable);
 				this._varframes.set(state.token, state.starts());
 			}
 			if (state.next().isAssignment) {
@@ -391,9 +399,10 @@ export class Affinirum {
 		}
 		else if (state.isBracesOpen) { // code block
 			const frame = state.starts();
+			const subscope = scope.subscope();
 			const subnodes: Node[] = [];
 			while (!state.next().isBracesClose) {
-				subnodes.push(this._unit(state, scope));
+				subnodes.push(this._unit(state, subscope));
 				if (!state.isSemicolon) {
 					break;
 				}
@@ -462,7 +471,7 @@ export class Affinirum {
 				type = this._type(state.next(), scope);
 			}
 			const variable = new Variable(type, assignable);
-			scope.local(token, variable);
+			scope.set(token, variable);
 			if (state.isAssignment) {
 				if (state.assignment.operator) {
 					state.throwError(`illegal assignment operator with variable ${token}`);
@@ -502,7 +511,7 @@ export class Affinirum {
 		state.throwError("unexpected expression token");
 	}
 
-	protected _function(state: ParserState, scope: StaticScope): Node {
+	protected _function(state: ParserState, scope: Scope): Node {
 		const frame = state.starts();
 		state.next().openParentheses();
 		let variadic = false;
@@ -512,7 +521,7 @@ export class Affinirum {
 				state.throwError("missing function argument name");
 			}
 			const token = state.token;
-			if (scope.get(token)) {
+			if (scope.has(token)) {
 				state.throwError("variable redefinition");
 			}
 			let argType = Type.Unknown;
@@ -540,23 +549,30 @@ export class Affinirum {
 		const retType = state.isColon ? this._type(state.next(), scope) : Type.Unknown;
 		frame.ends(state);
 		const args = Array.from(variables.values());
-		const subnode =  this._unit(state, scope.subscope(variables));
+		const subscope = scope.subscope(variables);
+		const subnode =  this._unit(state, subscope);
 		const func = (...values: Value[]) => {
-			args.forEach((arg, ix) => arg.value = normalize(values[ix]));
-			return normalize(subnode.evaluate());
+			const previous = subscope.enter();
+			try {
+				args.forEach((arg, ix) => arg.value = normalize(values[ix]));
+				return normalize(subnode.evaluate());
+			}
+			finally {
+				subscope.leave(previous);
+			}
 		};
 		const constant = new Constant(func, Type.functionType(retType, args.map((v) => v.type), variadic));
 		return new ConstantNode(frame, constant, subnode);
 	}
 
-	protected _loop(state: ParserState, scope: StaticScope) {
+	protected _loop(state: ParserState, scope: Scope) {
 		const frame = state.starts();
 		const cnode = this._unit(state.next(), scope);
 		frame.ends(state);
 		return new LoopNode(frame, cnode, this._unit(state, scope));
 	}
 
-	protected _switch(state: ParserState, scope: StaticScope) {
+	protected _switch(state: ParserState, scope: Scope) {
 		const frame = state.starts();
 		const cnode = this._unit(state.next(), scope);
 		frame.ends(state);
@@ -567,7 +583,7 @@ export class Affinirum {
 		return new SwitchNode(frame, cnode, [cthen, celse]);
 	}
 
-	protected _type(state: ParserState, scope: StaticScope): Type {
+	protected _type(state: ParserState, scope: Scope): Type {
 		if (state.isType) { // literal type
 			let type = state.type;
 			if (state.next().isQuestion) {

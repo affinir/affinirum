@@ -401,8 +401,15 @@ const result = expression.evaluate({ a: 10n, b: 20n }); // 30n
 During parsing, any valid name that is not recognized as a keyword, constant, or built-in function is treated as an input variable.
 Use the optional constructor configuration to specify the expected result `type`, enable `strict` handling of undeclared variables,
 or declare input `variables` and their types. An instance exposes the original `script`, its inferred result `type`,
-the inferred input types through `variables()`, and the parsed tree through `toString()`. `Affinirum.format()` formats
-a JavaScript value using Affinirum Notation.
+the inferred input types through `variables()`, and the parsed tree through `toString()`.
+
+`Affinirum.parse()` parses a single Affinirum Notation value into a JavaScript value. Empty or `undefined` input returns
+`undefined`; invalid input throws an error. `Affinirum.format()` formats a JavaScript value as an Affinirum Notation string:
+
+```ts
+const value = Affinirum.parse('["answer":42,"enabled":true]');
+const notation = Affinirum.format(value);
+```
 
 JavaScript `number` values map to **float**, while **integer** values map to `bigint`. Timestamps use `Date`, buffers use
 `ArrayBuffer`, and a **void** result is returned as `undefined`. Arrays, objects, and functions use their corresponding

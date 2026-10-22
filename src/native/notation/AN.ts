@@ -181,7 +181,7 @@ const parseLiteral = (state: ParserState): Value => {
 	state.throwError("missing value");
 };
 
-export const parseAN = (value?: string): Value => {
+export const parseAN = (value: string | undefined): Value => {
 	if (value == null) {
 		return undefined;
 	}

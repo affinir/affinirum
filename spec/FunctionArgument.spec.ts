@@ -24,6 +24,14 @@ vfunc(cfunc)
 		`);
 		expect(script.evaluate({ myvr: 100 }) as string).toBe("2116.0");
 	});
+	it("restores function arguments across recursive calls", () => {
+		const script = new Affinirum("val f=~(n:integer):integer{if n<=1{1}else{f(n-1)*n}};f(5)");
+		expect(script.evaluate() as bigint).toBe(120n);
+	});
+	it("restores block-local variables across recursive calls", () => {
+		const script = new Affinirum("val f=~(n:integer):integer{if n<=1{1}else{val x=n;f(n-1)*x}};f(5)");
+		expect(script.evaluate() as bigint).toBe(120n);
+	});
 	it("compares optional function argument types", () => {
 		const expected = Type.functionType(
 			Type.Boolean,
