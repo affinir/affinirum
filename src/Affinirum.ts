@@ -517,8 +517,11 @@ export class Affinirum {
 				state.throwError("missing function argument name");
 			}
 			const token = state.token;
+			if (variables.has(token)) {
+				state.throwError(`duplicate function argument name ${token}`);
+			}
 			if (scope.has(token)) {
-				state.throwError("variable redefinition");
+				state.throwError(`variable ${token} redefinition`);
 			}
 			let argType = Type.Unknown;
 			if (state.next().isColon) {

@@ -267,9 +267,9 @@ describe("Number function test", () => {
 
 		it("preserves negative zero for odd floating-point roots", () => {
 			const literal = new Affinirum("(-0.0).Root(3)");
-			expect(Object.is(literal.evaluate(), -0)).toBeTrue();
+			expect(Object.is(literal.evaluate(), -0)).toBe(true);
 			const input = new Affinirum("a.Root(3)");
-			expect(Object.is(input.evaluate({ a: -0 }), -0)).toBeTrue();
+			expect(Object.is(input.evaluate({ a: -0 }), -0)).toBe(true);
 		});
 
 		it("computes non-perfect odd floating-point roots", () => {

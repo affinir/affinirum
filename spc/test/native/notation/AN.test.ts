@@ -105,8 +105,40 @@ describe("AN function test", () => {
 		}
 	});
 
+	it.each([1e21, -1e21, 1.25e21, Number.MAX_VALUE, -Number.MAX_VALUE, Number.MIN_VALUE])(
+		"round-trips the scientific-notation float %s through AN",
+		(value) => {
+			const notation = Affinirum.format(value);
+			expect(notation).toBe(value.toString());
+			expect(Affinirum.parse(notation)).toBe(value);
+		},
+	);
+
+	it("preserves the float type below the scientific-notation threshold", () => {
+		const value = 1e20;
+		const notation = Affinirum.format(value);
+		expect(notation).toBe("100000000000000000000.0");
+		expect(Affinirum.parse(notation)).toBe(value);
+	});
+
+	it("round-trips scientific-notation floats in nested AN values", () => {
+		const value = { positive: 1e21, negative: -1e21, limits: [Number.MAX_VALUE, -Number.MAX_VALUE] };
+		for (const whitespace of [undefined, " "]) {
+			expect<unknown>(Affinirum.parse(Affinirum.format(value, whitespace))).toEqual(value);
+		}
+	});
+
+	it("formats scientific-notation floats through constant and runtime AN calls", () => {
+		const constant = new Affinirum("AN.Format(1e21)");
+		expect(constant.evaluate() as string).toBe("1e+21");
+		const runtime = new Affinirum("AN.Parse(AN.Format(value))");
+		for (const value of [1e21, -1e21, Number.MAX_VALUE, -Number.MAX_VALUE]) {
+			expect(runtime.evaluate({ value })).toBe(value);
+		}
+	});
+
 	it("does not evaluate expressions while parsing AN literals", () => {
 		const expression = new Affinirum("AN.Parse(\"Integer(1.2)\")");
-		expect(() => expression.evaluate()).toThrowError(/invalid value Integer/);
+		expect(() => expression.evaluate()).toThrow(/invalid value Integer/);
 	});
 });

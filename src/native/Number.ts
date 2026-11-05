@@ -15,9 +15,10 @@ export interface NumberFormatting {
 }
 
 export const formatLiteralNumber = (value: bigint | number) => {
-	return typeof value === "number" && Number.isInteger(value)
-		? `${value.toString()}.0`
-		: value.toString();
+	const str = value.toString();
+	return typeof value === "number" && Number.isInteger(value) && !str.includes("e")
+		? `${str}.0`
+		: str;
 };
 
 export const parseLiteralNumber = (value: string, offset = 0) => {

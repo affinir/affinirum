@@ -3,28 +3,28 @@ import { Affinirum, Type, Value } from "../../src/index.js";
 describe("Type equality test", () => {
 	it("compares array atoms structurally and positionally", () => {
 		const type = Type.arrayType([Type.Integer, Type.String]);
-		expect(type.equate(Type.arrayType([Type.Integer, Type.String]))).toBeTrue();
-		expect(type.equate(Type.arrayType([Type.String, Type.Integer]))).toBeFalse();
-		expect(type.equate(Type.arrayType([Type.Integer]))).toBeFalse();
+		expect(type.equate(Type.arrayType([Type.Integer, Type.String]))).toBe(true);
+		expect(type.equate(Type.arrayType([Type.String, Type.Integer]))).toBe(false);
+		expect(type.equate(Type.arrayType([Type.Integer]))).toBe(false);
 	});
 
 	it("compares object atoms independently of property order", () => {
 		const type = Type.objectType([["a", Type.Integer], ["b", Type.String]]);
-		expect(type.equate(Type.objectType([["b", Type.String], ["a", Type.Integer]]))).toBeTrue();
-		expect(type.equate(Type.objectType([["a", Type.Integer]]))).toBeFalse();
-		expect(type.equate(Type.objectType([["a", Type.String], ["b", Type.String]]))).toBeFalse();
+		expect(type.equate(Type.objectType([["b", Type.String], ["a", Type.Integer]]))).toBe(true);
+		expect(type.equate(Type.objectType([["a", Type.Integer]]))).toBe(false);
+		expect(type.equate(Type.objectType([["a", Type.String], ["b", Type.String]]))).toBe(false);
 	});
 
 	it("compares function atoms including return, arguments, and variadicity", () => {
 		const type = Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], true);
-		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], true))).toBeTrue();
-		expect(type.equate(Type.functionType(Type.Integer, [Type.Integer, Type.OptionalString], true))).toBeFalse();
-		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalBoolean], true))).toBeFalse();
-		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], false))).toBeFalse();
+		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], true))).toBe(true);
+		expect(type.equate(Type.functionType(Type.Integer, [Type.Integer, Type.OptionalString], true))).toBe(false);
+		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalBoolean], true))).toBe(false);
+		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], false))).toBe(false);
 	});
 
 	it("compares union members independently of order", () => {
-		expect(Type.union(Type.Float, Type.Integer).equate(Type.union(Type.Integer, Type.Float))).toBeTrue();
+		expect(Type.union(Type.Float, Type.Integer).equate(Type.union(Type.Integer, Type.Float))).toBe(true);
 	});
 });
 
@@ -36,11 +36,11 @@ describe("Type acceptance test", () => {
 		expect(Type.objectType([
 			["items", Type.arrayType([Type.Integer])],
 			["label", Type.OptionalString],
-		]).accept(source)).toBeTrue();
+		]).accept(source)).toBe(true);
 		expect(Type.objectType([
 			["items", Type.arrayType([Type.Integer])],
 			["label", Type.Unknown],
-		]).accept(source)).toBeTrue();
+		]).accept(source)).toBe(true);
 	});
 
 	it("accepts omitted optional tuple items", () => {
@@ -49,12 +49,12 @@ describe("Type acceptance test", () => {
 			Type.Integer,
 			Type.String,
 			Type.OptionalBoolean,
-		]).accept(source)).toBeTrue();
+		]).accept(source)).toBe(true);
 		expect(Type.arrayType([
 			Type.Integer,
 			Type.String,
 			Type.Boolean,
-		]).accept(source)).toBeFalse();
+		]).accept(source)).toBe(false);
 	});
 
 	it("rejects missing required object properties", () => {
@@ -64,19 +64,19 @@ describe("Type acceptance test", () => {
 		expect(Type.objectType([
 			["items", Type.arrayType([Type.Integer])],
 			["label", Type.String],
-		]).accept(source)).toBeFalse();
+		]).accept(source)).toBe(false);
 	});
 });
 
 describe("Type intersect test", () => {
 	it("recognizes overlapping primitive unions", () => {
-		expect(Type.Number.intersect(Type.Integer)).toBeTrue();
-		expect(Type.Integer.intersect(Type.Void)).toBeFalse();
+		expect(Type.Number.intersect(Type.Integer)).toBe(true);
+		expect(Type.Integer.intersect(Type.Void)).toBe(false);
 		expect(
 			Type.union(Type.Integer, Type.String).intersect(
 				Type.union(Type.String, Type.Boolean),
 			)
-		).toBeTrue();
+		).toBe(true);
 	});
 
 	it("recognizes overlapping structured types", () => {
@@ -84,48 +84,48 @@ describe("Type intersect test", () => {
 			Type.arrayType([Type.Number]).intersect(
 				Type.arrayType([Type.Integer]),
 			)
-		).toBeTrue();
+		).toBe(true);
 	});
 
 	it("recognizes partially overlapping array element unions", () => {
 		const left = Type.arrayType([Type.union(Type.Integer, Type.String)]);
 		const right = Type.arrayType([Type.union(Type.String, Type.Boolean)]);
-		expect(left.intersect(right)).toBeTrue();
-		expect(right.intersect(left)).toBeTrue();
-		expect(left.intersect(Type.arrayType([Type.Boolean]))).toBeFalse();
+		expect(left.intersect(right)).toBe(true);
+		expect(right.intersect(left)).toBe(true);
+		expect(left.intersect(Type.arrayType([Type.Boolean]))).toBe(false);
 	});
 
 	it("recognizes overlapping tuple constraints", () => {
 		const type = Type.arrayType([Type.Integer, Type.String]);
-		expect(type.intersect(Type.arrayType([Type.Number, Type.String, Type.Boolean]))).toBeTrue();
-		expect(type.intersect(Type.arrayType([Type.Integer, Type.Boolean]))).toBeFalse();
-		expect(type.intersect(Type.arrayType([Type.Number]))).toBeFalse();
+		expect(type.intersect(Type.arrayType([Type.Number, Type.String, Type.Boolean]))).toBe(true);
+		expect(type.intersect(Type.arrayType([Type.Integer, Type.Boolean]))).toBe(false);
+		expect(type.intersect(Type.arrayType([Type.Number]))).toBe(false);
 	});
 
 	it("permits an incompatible optional tuple tail to be omitted", () => {
 		const homogeneous = Type.arrayType([Type.Integer]);
 		const optionalTuple = Type.arrayType([Type.Integer, Type.OptionalString]);
 		const requiredTuple = Type.arrayType([Type.Integer, Type.String]);
-		expect(homogeneous.intersect(optionalTuple)).toBeTrue();
-		expect(optionalTuple.intersect(homogeneous)).toBeTrue();
-		expect(homogeneous.intersect(requiredTuple)).toBeFalse();
-		expect(requiredTuple.intersect(homogeneous)).toBeFalse();
+		expect(homogeneous.intersect(optionalTuple)).toBe(true);
+		expect(optionalTuple.intersect(homogeneous)).toBe(true);
+		expect(homogeneous.intersect(requiredTuple)).toBe(false);
+		expect(requiredTuple.intersect(homogeneous)).toBe(false);
 	});
 
 	it("permits incompatible optional tails in overlapping tuples", () => {
 		const strings = Type.arrayType([Type.Integer, Type.OptionalString]);
 		const booleans = Type.arrayType([Type.Integer, Type.OptionalBoolean]);
-		expect(strings.intersect(booleans)).toBeTrue();
-		expect(booleans.intersect(strings)).toBeTrue();
+		expect(strings.intersect(booleans)).toBe(true);
+		expect(booleans.intersect(strings)).toBe(true);
 	});
 
 	it("recognizes compatible object constraints", () => {
 		const left = Type.objectType([["a", Type.Integer]]);
 		const right = Type.objectType([["b", Type.String]]);
-		expect(left.intersect(right)).toBeTrue();
-		expect(right.intersect(left)).toBeTrue();
-		expect(left.intersect(Type.objectType([["a", Type.Number]]))).toBeTrue();
-		expect(left.intersect(Type.objectType([["a", Type.String]]))).toBeFalse();
+		expect(left.intersect(right)).toBe(true);
+		expect(right.intersect(left)).toBe(true);
+		expect(left.intersect(Type.objectType([["a", Type.Number]]))).toBe(true);
+		expect(left.intersect(Type.objectType([["a", Type.String]]))).toBe(false);
 	});
 
 	it("recognizes partially overlapping function types", () => {
@@ -137,15 +137,15 @@ describe("Type intersect test", () => {
 			Type.union(Type.String, Type.Boolean),
 			[Type.union(Type.String, Type.Boolean)],
 		);
-		expect(left.intersect(right)).toBeTrue();
-		expect(right.intersect(left)).toBeTrue();
+		expect(left.intersect(right)).toBe(true);
+		expect(right.intersect(left)).toBe(true);
 	});
 
 	it("ignores incompatible optional trailing function parameters", () => {
 		const left = Type.functionType(Type.Boolean, [Type.Integer, Type.OptionalString]);
 		const right = Type.functionType(Type.Boolean, [Type.Integer, Type.OptionalBoolean]);
-		expect(left.intersect(right)).toBeTrue();
-		expect(right.intersect(left)).toBeTrue();
+		expect(left.intersect(right)).toBe(true);
+		expect(right.intersect(left)).toBe(true);
 	});
 
 	it("rejects function types without a compatible call", () => {
@@ -153,29 +153,29 @@ describe("Type intersect test", () => {
 		const acceptsString = Type.functionType(Type.Boolean, [Type.String]);
 		const requiresTwo = Type.functionType(Type.Boolean, [Type.Integer, Type.String]);
 		const variadic = Type.functionType(Type.Boolean, [Type.arrayType([Type.Integer])], true);
-		expect(acceptsInteger.intersect(acceptsString)).toBeFalse();
-		expect(acceptsInteger.intersect(requiresTwo)).toBeFalse();
-		expect(acceptsInteger.intersect(variadic)).toBeFalse();
+		expect(acceptsInteger.intersect(acceptsString)).toBe(false);
+		expect(acceptsInteger.intersect(requiresTwo)).toBe(false);
+		expect(acceptsInteger.intersect(variadic)).toBe(false);
 	});
 });
 
 describe("Type value acceptance test", () => {
 	it("checks every value in a homogeneous array", () => {
 		const type = Type.arrayType([Type.Number]);
-		expect(type.acceptValue([1, 2n])).toBeTrue();
-		expect(type.acceptValue([1, "2"])).toBeFalse();
-		expect(type.acceptValue([])).toBeTrue();
+		expect(type.acceptValue([1, 2n])).toBe(true);
+		expect(type.acceptValue([1, "2"])).toBe(false);
+		expect(type.acceptValue([])).toBe(true);
 	});
 
 	it("checks tuple prefixes and permits additional values", () => {
 		const type = Type.arrayType([Type.Integer, Type.String]);
 		const optionalType = Type.arrayType([Type.Integer, Type.OptionalString]);
 		const unknownType = Type.arrayType([Type.Integer, Type.Unknown]);
-		expect(type.acceptValue([1n, "two", true])).toBeTrue();
-		expect(type.acceptValue([1n])).toBeFalse();
-		expect(type.acceptValue([1n, false])).toBeFalse();
-		expect(optionalType.acceptValue([1n])).toBeTrue();
-		expect(unknownType.acceptValue([1n])).toBeTrue();
+		expect(type.acceptValue([1n, "two", true])).toBe(true);
+		expect(type.acceptValue([1n])).toBe(false);
+		expect(type.acceptValue([1n, false])).toBe(false);
+		expect(optionalType.acceptValue([1n])).toBe(true);
+		expect(unknownType.acceptValue([1n])).toBe(true);
 	});
 
 	it("checks object properties recursively and permits additional properties", () => {
@@ -183,17 +183,17 @@ describe("Type value acceptance test", () => {
 			["items", Type.arrayType([Type.Integer])],
 			["label", Type.OptionalString],
 		]);
-		expect(type.acceptValue({ items: [1n, 2n], extra: true })).toBeTrue();
-		expect(type.acceptValue({ items: [1n], label: "one" })).toBeTrue();
-		expect(type.acceptValue({ items: [1n], label: false })).toBeFalse();
-		expect(type.acceptValue({ items: [1n, "two"] })).toBeFalse();
-		expect(type.acceptValue({ label: "missing items" })).toBeFalse();
+		expect(type.acceptValue({ items: [1n, 2n], extra: true })).toBe(true);
+		expect(type.acceptValue({ items: [1n], label: "one" })).toBe(true);
+		expect(type.acceptValue({ items: [1n], label: false })).toBe(false);
+		expect(type.acceptValue({ items: [1n, "two"] })).toBe(false);
+		expect(type.acceptValue({ label: "missing items" })).toBe(false);
 	});
 
 	it("does not use inherited properties to satisfy object constraints", () => {
 		const type = Type.objectType([["value", Type.Integer]]);
 		const value = Object.create({ value: 1n }) as { value: bigint };
-		expect(type.acceptValue(value)).toBeFalse();
+		expect(type.acceptValue(value)).toBe(false);
 	});
 
 	it("does not use inherited array slots to satisfy tuple constraints", () => {
@@ -201,21 +201,21 @@ describe("Type value acceptance test", () => {
 		const value = Array<string>(2);
 		value[1] = "two";
 		Object.setPrototypeOf(value, { 0: 1n });
-		expect(type.acceptValue(value)).toBeFalse();
+		expect(type.acceptValue(value)).toBe(false);
 	});
 
 	it("treats sparse homogeneous items as undefined", () => {
 		const value = Array<bigint>(2);
 		value[1] = 1n;
-		expect(Type.arrayType([Type.OptionalInteger]).acceptValue(value)).toBeTrue();
-		expect(Type.arrayType([Type.Integer]).acceptValue(value)).toBeFalse();
+		expect(Type.arrayType([Type.OptionalInteger]).acceptValue(value)).toBe(true);
+		expect(Type.arrayType([Type.Integer]).acceptValue(value)).toBe(false);
 	});
 
 	it("preserves unknown and broad structured types", () => {
-		expect(Type.Unknown.acceptValue({ value: [1, "two"] })).toBeTrue();
-		expect(Type.Array.acceptValue([1, "two", true])).toBeTrue();
-		expect(Type.Object.acceptValue({ value: 1 })).toBeTrue();
-		expect(Type.Function.acceptValue(() => undefined)).toBeTrue();
+		expect(Type.Unknown.acceptValue({ value: [1, "two"] })).toBe(true);
+		expect(Type.Array.acceptValue([1, "two", true])).toBe(true);
+		expect(Type.Object.acceptValue({ value: 1 })).toBe(true);
+		expect(Type.Function.acceptValue(() => undefined)).toBe(true);
 	});
 });
 
@@ -226,10 +226,10 @@ describe("Value normalization test", () => {
 		const object: Record<string, Value> = { integer, value };
 		value.push(object);
 		const result = new Affinirum("value").evaluate({ value }) as Value[];
-		expect(result === value).toBeTrue();
+		expect(result === value).toBe(true);
 		expect(result[0] as bigint).toBe(0n);
 		expect((result[1] as Record<string, Value>).integer as bigint).toBe(0n);
-		expect((result[1] as Record<string, Value>).value === result).toBeTrue();
+		expect((result[1] as Record<string, Value>).value === result).toBe(true);
 	});
 
 	it("normalizes integers recursively in function results", () => {

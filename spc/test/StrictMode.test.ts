@@ -10,13 +10,13 @@ describe("Strict mode test", () => {
 		expect(() => new Affinirum(
 			"undefined1*2 + undefined2",
 			{ strict: true, variables: { defined: Type.Float } },
-		)).toThrowError(/undefined variable undefined1/);
+		)).toThrow(/undefined variable undefined1/);
 	});
 	it("validates injected structured values recursively", () => {
 		const script = new Affinirum("items", {
 			strict: true,
 			variables: { items: Type.arrayType([Type.Integer]) },
 		});
-		expect(() => script.evaluate({ items: [1n, "two"] })).toThrowError(/unexpected type array/);
+		expect(() => script.evaluate({ items: [1n, "two"] })).toThrow(/unexpected type array/);
 	});
 });

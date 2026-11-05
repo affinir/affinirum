@@ -46,16 +46,9 @@ describe("Compiled type test", () => {
 		["val o:['a':['c':integer],'b':string] = ['a':['c':0],'b':'1'];o", "[\"a\":[\"c\":integer],\"b\":string]"],
 	] as [string, string][]).forEach(([expr, expected]) => {
 		it(`parses expression ${expr} and determines value type`, () => {
-			try {
-				const script = new Affinirum(expr);
-				script.evaluate({});
-				if (script.type.toString() !== expected) {
-					fail(`value ${script.type.toString()} not matching expectation ${expected}`)
-				}
-			}
-			catch (err) {
-				fail(`parsing error\n${(err as Error).message}`);
-			}
+			const script = new Affinirum(expr);
+			script.evaluate({});
+			expect(script.type.toString()).toBe(expected);
 		});
 	});
 	it("parses pure constant expression and tests return type", () => {
@@ -64,23 +57,23 @@ describe("Compiled type test", () => {
 	});
 	it("rejects an empty block for a function declared to return integer", () => {
 		expect(() => new Affinirum("val f=~():integer {}; f()"))
-			.toThrowError(/type void mismatch with expected type integer/);
+			.toThrow(/type void mismatch with expected type integer/);
 	});
 	it("infers float when adding an integer and a float", () => {
 		const script = new Affinirum("a + b", { variables: { a: Type.Integer, b: Type.Float } });
-		expect(script.type.equate(Type.Float)).toBeTrue();
+		expect(script.type.equate(Type.Float)).toBe(true);
 	});
 	it("parses expression and tests undefined variable types", () => {
 		const script = new Affinirum("(a*b)*c.prop/d.UpperCase.Length-100");
 		const variables = script.variables();
-		expect(variables.a.equate(Type.Number)).toBeTrue();
-		expect(variables.b.equate(Type.Number)).toBeTrue();
-		expect(variables.d.isString).toBeTrue();
+		expect(variables.a.equate(Type.Number)).toBe(true);
+		expect(variables.b.equate(Type.Number)).toBe(true);
+		expect(variables.d.isString).toBe(true);
 	});
 	it("uses the last duplicate object key for its value and type", () => {
 		const script = new Affinirum("[\"a\":1,\"a\":\"two\"]");
 		const value = script.evaluate({}) as { a: string };
-		expect(script.type.equate(Type.objectType([["a", Type.String]]))).toBeTrue();
+		expect(script.type.equate(Type.objectType([["a", Type.String]]))).toBe(true);
 		expect(value.a).toBe("two");
 	});
 });

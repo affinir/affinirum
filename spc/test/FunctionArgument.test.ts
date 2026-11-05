@@ -32,6 +32,19 @@ vfunc(cfunc)
 		const script = new Affinirum("val f=~(n:integer):integer{if n<=1{1}else{val x=n;f(n-1)*x}};f(5)");
 		expect(script.evaluate() as bigint).toBe(120n);
 	});
+	it.each([
+		"~(n,n){n}",
+		"~(n:integer,n:integer):integer{n}",
+		"~(n:integer,n:string):string{n}",
+		"~(n:integer,m:integer,n:integer):integer{n}",
+		"~(n:integer,n:...[integer]):integer{n.Length}",
+	])("rejects duplicate function arguments in %s", (definition) => {
+		expect(() => new Affinirum(definition)).toThrow(/duplicate function argument name n/);
+	});
+	it("allows separate functions to reuse the same argument name", () => {
+		const script = new Affinirum("val first=~(n:integer):integer{n};val second=~(n:integer):integer{n+1};[first(1),second(2)]");
+		expect<unknown>(script.evaluate()).toEqual([1n, 3n]);
+	});
 	it("compares optional function argument types", () => {
 		const expected = Type.functionType(
 			Type.Boolean,
@@ -41,20 +54,20 @@ vfunc(cfunc)
 		expect(expected.accept(Type.functionType(
 			Type.Boolean,
 			[Type.Integer, Type.OptionalString],
-		))).toBeTrue();
+		))).toBe(true);
 
 		expect(expected.accept(Type.functionType(
 			Type.Boolean,
 			[Type.Integer, Type.OptionalBoolean],
-		))).toBeFalse();
+		))).toBe(false);
 	});
 
 	it("checks function arguments contravariantly", () => {
 		const acceptsInteger = Type.functionType(Type.Boolean, [Type.Integer]);
 		const acceptsNumber = Type.functionType(Type.Boolean, [Type.Number]);
 
-		expect(acceptsInteger.accept(acceptsNumber)).toBeTrue();
-		expect(acceptsNumber.accept(acceptsInteger)).toBeFalse();
+		expect(acceptsInteger.accept(acceptsNumber)).toBe(true);
+		expect(acceptsNumber.accept(acceptsInteger)).toBe(false);
 	});
 
 	it("checks optional function argument ranges", () => {
@@ -62,22 +75,22 @@ vfunc(cfunc)
 		const acceptsOneOrTwo = Type.functionType(Type.Boolean, [Type.Integer, Type.OptionalString]);
 		const requiresTwo = Type.functionType(Type.Boolean, [Type.Integer, Type.String]);
 
-		expect(acceptsOne.accept(acceptsOneOrTwo)).toBeTrue();
-		expect(acceptsOneOrTwo.accept(acceptsOne)).toBeTrue();
-		expect(acceptsOne.accept(requiresTwo)).toBeFalse();
+		expect(acceptsOne.accept(acceptsOneOrTwo)).toBe(true);
+		expect(acceptsOneOrTwo.accept(acceptsOne)).toBe(true);
+		expect(acceptsOne.accept(requiresTwo)).toBe(false);
 	});
 
 	it("does not mix fixed and variadic calling conventions", () => {
 		const fixed = Type.functionType(Type.Boolean, [Type.Integer]);
 		const variadic = Type.functionType(Type.Boolean, [Type.arrayType([Type.Integer])], true);
 
-		expect(fixed.accept(variadic)).toBeFalse();
-		expect(variadic.accept(fixed)).toBeFalse();
+		expect(fixed.accept(variadic)).toBe(false);
+		expect(variadic.accept(fixed)).toBe(false);
 		expect(variadic.accept(Type.functionType(
 			Type.Boolean,
 			[Type.arrayType([Type.Integer])],
 			true,
-		))).toBeTrue();
+		))).toBe(true);
 	});
 
 	it("does not combine arguments from separate overloads", () => {
@@ -86,7 +99,7 @@ vfunc(cfunc)
 			Type.functionType(Type.Integer, [Type.String, Type.Integer]),
 		);
 		expect(() => new Affinirum("f(1,1)", { variables: { f: type } }))
-			.toThrowError(/cannot be called with 2 argument/);
+			.toThrow(/cannot be called with 2 argument/);
 		expect(() => new Affinirum("f(1,\"x\")", { variables: { f: type } })).not.toThrow();
 		expect(() => new Affinirum("f(\"x\",1)", { variables: { f: type } })).not.toThrow();
 	});
@@ -95,6 +108,6 @@ vfunc(cfunc)
 		expect(() => new Affinirum(`
 val use = ~(f: ~(float | integer):integer):integer { f(1.5) };
 use(~(x:integer):integer { x })
-		`)).toThrowError(/type ~\(integer\):integer mismatch with expected type ~\(float\|integer\):integer/);
+		`)).toThrow(/type ~\(integer\):integer mismatch with expected type ~\(float\|integer\):integer/);
 	});
 });

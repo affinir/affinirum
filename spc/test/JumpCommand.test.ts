@@ -16,7 +16,7 @@ describe("Jump command test", () => {
 	it("rejects loop jumps that escape a function called inside a loop", () => {
 		for (const jump of ["stop", "next"]) {
 			const script = new Affinirum(`val f=~():void{${jump}};var i=0;while i<1{i+=1;f()};i`);
-			expect(() => script.evaluate()).toThrowError(new RegExp(`unexpected ${jump} jump`));
+			expect(() => script.evaluate()).toThrow(new RegExp(`unexpected ${jump} jump`));
 		}
 	});
 	it("propagates exit from a callback to the script boundary", () => {
