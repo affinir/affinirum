@@ -1,22 +1,22 @@
 import { Node } from "../Node.js";
-import { ParserFrame } from "../ParserFrame.js";
+import { ScriptSpan } from "../ScriptSpan.js";
 import { Constant } from "../Constant.js";
 import { ConstantNode } from "./ConstantNode.js";
-import { ArrayNode } from "./ArrayNode.js";
+import { VariadicNode } from "./VariadicNode.js";
 import { Value, normalize } from "../Value.js";
 import { Type } from "../Type.js";
-import { JumpException } from "../JumpException.js";
+import { CallFrame } from "../CallFrame.js";
 
 export class CallNode extends Node {
 
 	protected _type: Type;
 
 	constructor(
-		frame: ParserFrame,
+		span: ScriptSpan,
 		protected _fnode: Node,
 		protected _subnodes: Node[],
 	) {
-		super(frame);
+		super(span);
 		const functionAtoms = this._fnode.type.functionAtoms(Type.Unknown, this._subnodes.length);
 		if (!functionAtoms.length) {
 			this.throwError(`value of type ${this._fnode.type} cannot be called with ${this._subnodes.length} argument(s)`);
@@ -47,48 +47,35 @@ export class CallNode extends Node {
 			this.throwError(`value of type ${this._fnode.type} cannot be called with ${this._subnodes.length} argument(s) and return a type compatible with ${type}`);
 		}
 		this._type = Type.union(...functionAtoms.map((i) => i.retType));
-		const arity = functionAtoms[0].isVariadic
+		const variadicArity = functionAtoms[0].isVariadic
 			? Math.max(...functionAtoms.map((atom) => atom.arity))
 			: 0;
-		if (arity > 0) {
-			const frame = this._subnodes[arity - 1].starts();
-			const vnodes = this._subnodes.splice(arity - 1);
-			this._subnodes.push(new ArrayNode(frame.ends(vnodes[vnodes.length - 1]), vnodes));
+		if (variadicArity > 0) {
+			const span = this._subnodes[variadicArity - 1].start();
+			const vnodes = this._subnodes.splice(variadicArity - 1);
+			this._subnodes.push(new VariadicNode(span.end(vnodes[vnodes.length - 1]), vnodes));
 		}
 		let constant = this._fnode.constant;
 		for (let i = 0; i < this._subnodes.length; ++i) {
 			const argTypes = functionAtoms.map((a) => a.argType(i));
-			const argType = arity > 0 && i === arity - 1
+			const argType = variadicArity > 0 && i === variadicArity - 1
 				? Type.arrayType([Type.union(...functionAtoms.map((a) => a.paramType(i) ?? Type.Unknown))])
 				: Type.union(...argTypes.filter((t) => t != null));
 			this._subnodes[i] = this._subnodes[i].compile(argType);
 			constant &&= this._subnodes[i].constant;
 		}
-		if (constant) {
-			return new ConstantNode(this, new Constant(this.evaluate(), this.type));
+		if (constant && !this.type.intersect(Type.Reference)) {
+			return new ConstantNode(this, new Constant(this.evaluate(new CallFrame()), this.type));
 		}
 		return this;
 	}
 
-	override evaluate(): Value {
-		const func = this._fnode.evaluate() as (...values: any[]) => Value;
+	override evaluate(frame: CallFrame): Value {
+		const func = this._fnode.evaluate(frame) as (...values: any[]) => Value;
 		if (typeof func !== "function") {
 			this.throwError(`function expected not ${Type.of(func)}`);
 		}
-		try {
-			return normalize(func(...this._subnodes.map((node) => node.evaluate())));
-		}
-		catch (e) {
-			if (e instanceof JumpException) {
-				if (e.jump === "return") {
-					return normalize(e.value);
-				}
-				if (e.jump === "stop" || e.jump === "next") {
-					throw this.throwError(`unexpected ${e.jump} jump`);
-				}
-			}
-			throw e;
-		}
+		return normalize(func(...this._subnodes.map((node) => node.evaluate(frame))));
 	}
 
 	override toString(ident: number = 0): string {

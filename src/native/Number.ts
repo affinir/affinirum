@@ -154,23 +154,28 @@ export const funcPower = new Constant(
 
 export const funcRoot = new Constant(
 	(value: number | bigint, exponent: number | bigint) => {
+		if (exponent <= 0) {
+			return undefined;
+		}
 		if (typeof value === "bigint" && typeof exponent === "bigint") {
 			const v = boundInteger(value);
 			const e = boundInteger(exponent);
-			if (v < 0n && e % 2n === 0n) {
+			const negative = v < 0n;
+			if (negative && e % 2n === 0n) {
 				return undefined;
 			}
-			if (v <= 1n || e === 1n) {
+			const magnitude = negative ? -v : v;
+			if (magnitude <= 1n || e === 1n) {
 				return v;
 			}
-			let low = 0n, high = v, result = 0n;
+			let low = 0n, high = magnitude, result = 0n;
 			while (low <= high) {
 				const mid = low + high >> 1n;
 				const midPow = mid ** e;
-				if (midPow === v) {
-					return mid;
+				if (midPow === magnitude) {
+					return negative ? -mid : mid;
 				}
-				else if (midPow < v) {
+				else if (midPow < magnitude) {
 					result = mid;
 					low = mid + 1n;
 				}
@@ -178,9 +183,16 @@ export const funcRoot = new Constant(
 					high = mid - 1n;
 				}
 			}
-			return result;
+			return negative ? -result : result;
 		}
-		return Math.pow(Number(value), 1 / Number(exponent));
+		const v = Number(value);
+		const e = Number(exponent);
+		const odd = typeof exponent === "bigint"
+			? exponent % 2n !== 0n
+			: Number.isInteger(exponent) && exponent % 2 !== 0;
+		return (v < 0 || Object.is(v, -0)) && odd
+			? -Math.pow(-v, 1 / e)
+			: Math.pow(v, 1 / e);
 	},
 	typeOperator,
 );

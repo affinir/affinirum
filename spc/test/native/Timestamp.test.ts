@@ -1,0 +1,152 @@
+import { runAffinirumTests } from "../../util/AffinirumTest.js";
+
+describe("Timestamp function test", () => {
+	runAffinirumTests([
+		{
+			script: "Timestamp.Now().EpochTime > 0",
+			cases: [
+				{ values: {}, result: true },
+			],
+		},
+		{
+			script: "Timestamp.Parse(v).Format(f)",
+			cases: [
+				{ values: { v: "2020-02-20T20:30:40.555Z", f: "ZYYYY/MM/DD hh:mm:ss.fffZ" }, result: "2020/02/20 20:30:40.555" },
+			],
+		},
+		{
+			script: "Timestamp.Parse(v)",
+			cases: [
+				{ values: { v: "not a timestamp" }, result: undefined },
+				{ values: { v: undefined }, result: undefined },
+				{ values: { v: null }, result: undefined },
+			],
+		},
+		{
+			script: "Timestamp.Epoch(v, epoch).EpochTime(epoch)",
+			cases: [
+				{ values: { v: 5000n, epoch: new Date("2020-01-01T00:00:00.000Z") }, result: 5000n },
+			],
+		},
+		{
+			script: "val t = Timestamp.Decode(Timestamp.Epoch(v).Encode); if t != null t.EpochTime",
+			cases: [
+				{ values: { v: 60n }, result: 60n },
+				{ values: { v: 1055n }, result: 1055n },
+			],
+		},
+		{
+			script: "v.Encode(enc).Format",
+			cases: [
+				{ values: { v: new Date(15360000), enc: "i32" }, result: "00000100" },
+				{ values: { v: new Date(15360000), enc: "i32le" }, result: "00010000" },
+				{ values: { v: new Date(1000), enc: "i64" }, result: "00000000000003e8" },
+				{ values: { v: new Date(1000), enc: "i64le" }, result: "e803000000000000" },
+			],
+		},
+		{
+			script: "val t = Timestamp.Decode(v.Encode(enc), enc); if t != null t.EpochTime",
+			cases: [
+				{ values: { v: new Date(90999), enc: "i32" }, result: 60000n },
+				{ values: { v: new Date(-1), enc: "i32" }, result: 0n },
+				{ values: { v: new Date(90999), enc: "i32le" }, result: 60000n },
+				{ values: { v: new Date(90999), enc: "i64" }, result: 90999n },
+				{ values: { v: new Date(90999), enc: "i64le" }, result: 90999n },
+				{ values: { v: new Date(2147483647 * 60000), enc: "i32" }, result: 128849018820000n },
+				{ values: { v: new Date(-2147483648 * 60000), enc: "i32" }, result: -128849018880000n },
+			],
+		},
+		{
+			script: "val t = Timestamp.Decode(v, enc, offset); if t != null t.EpochTime",
+			cases: [
+				{ values: { v: new Uint8Array([0xff, 0x00, 0x00, 0x01, 0x00]).buffer, enc: "i32", offset: 1n }, result: 15360000n },
+				{ values: { v: new Uint8Array([0xff, 0x00, 0x01, 0x00, 0x00]).buffer, enc: "i32le", offset: 1n }, result: 15360000n },
+				{ values: { v: new Uint8Array([0xff, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]).buffer, enc: "i64le", offset: 1n }, result: 1000n },
+				{ values: { v: new Uint8Array(3).buffer, enc: "i32", offset: 0n }, result: undefined },
+				{ values: { v: new Uint8Array(7).buffer, enc: "i64", offset: 0n }, result: undefined },
+			],
+		},
+		{
+			script: "Timestamp.Decode(v)",
+			cases: [
+				{ values: { v: undefined }, result: undefined },
+				{ values: { v: null }, result: undefined },
+			],
+		},
+		{
+			script: "v.Format(f)",
+			cases: [
+				{ values: { v: new Date("2025-01-10"), f: "MM" }, result: "01" },
+				{ values: { v: new Date("2025-01-10"), f: "YY" }, result: "25" },
+				{ values: { v: undefined, f: undefined }, result: "" },
+				{ values: { v: null, f: undefined }, result: "" },
+			],
+		},
+		{
+			script: "v.Encode().Length",
+			cases: [
+				{ values: { v: undefined }, result: 0n },
+				{ values: { v: null }, result: 0n },
+			],
+		},
+		{
+			script: "d.Year(true) == 2025 & d.Month(true) == 4 & d.MonthIndex(true) == 3 & d.WeekdayIndex(true) == 2 & d.Day(true) == 22",
+			cases: [
+				{ values: { d: new Date("2025-04-22T03:04:05.099Z") }, result: true },
+			],
+		},
+		{
+			script: "d.Hour(true) == 3 & d.Minute(true) == 4 & d.Second(true) == 5 & d.Millisecond(true) == 99",
+			cases: [
+				{ values: { d: new Date("2025-04-22T03:04:05.099Z") }, result: true },
+			],
+		},
+		{
+			script: "d.Minute(true)",
+			cases: [
+				{ values: { d: new Date("2025-04-22 03:04:05.99Z") }, result: 4n },
+			],
+		},
+		{
+			script: "Timestamp.Epoch(a.EpochTime).Format(b)",
+			cases: [
+				{ values: { a: new Date("2020-02-25 20:30:45.555Z"), b: "ss" }, result: "45" },
+				{ values: { a: new Date("2020-02-25 20:30:45.555Z"), b: "fff" }, result: "555" },
+			],
+		},
+		{
+			script: "a.Format('ZYYYY/MM/DD hh:mm:ss.fffZ')",
+			cases: [
+				{ values: { a: new Date("2020-02-20 20:30:40.555Z") }, result: "2020/02/20 20:30:40.555" },
+			],
+		},
+		{
+			script: "a.DaysSince(b)",
+			cases: [
+				{ values: { a: new Date("2020-01-02 10:30:33"), b: new Date("2020-01-03 10:30:33") }, result: -1 },
+				{ values: { a: new Date("1970-01-05 00:30:33"), b: new Date("1970-01-10 00:30:33") }, result: -5 },
+			],
+		},
+		{
+			script: "a.HoursSince(b)",
+			cases: [
+				{ values: { a: new Date("2020-01-02 20:30:33"), b: new Date("2020-01-02 10:30:33") }, result: 10 },
+				{ values: { a: new Date("1970-01-05 22:30:33"), b: new Date("1970-01-05 01:30:33") }, result: 21 },
+			],
+		},
+		{
+			script: "a.MinutesSince(b)",
+			cases: [
+				{ values: { a: new Date("2020-01-02 20:30:33"), b: new Date("2020-01-02 10:30:33") }, result: 600 },
+				{ values: { a: new Date("1970-01-05 22:30:33"), b: new Date("1970-01-05 20:30:33") }, result: 120 },
+			],
+		},
+		{
+			script: "a.SecondsSince(b)",
+			cases: [
+				{ values: { a: new Date("2020-01-02 11:30:33"), b: new Date("2020-01-02 10:30:33") }, result: 3600 },
+				{ values: { a: new Date("1970-01-05 22:30:33"), b: new Date("1970-01-05 20:30:33") }, result: 7200 },
+			],
+		},
+	]);
+});

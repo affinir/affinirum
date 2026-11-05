@@ -1,6 +1,6 @@
 {
 	"name": "affinirum",
-	"version": "1.5.2",
+	"version": "1.5.3",
 	"description": "Affinirum Scripting Language",
 	"main": "dst/cjs/index.js",
 	"module": "dst/index.js",
@@ -37,10 +37,10 @@
 		"clean": "rimraf --glob dst/* && rimraf --glob *.tgz",
 		"prebuild": "npm run clean",
 		"build": "tsc --build tsconfig.esm.json && tsc --build tsconfig.cjs.json",
-		"pretest": "npm run clean && tsc --build tsconfig.spec.json",
-		"test": "jasmine",
-		"lint": "eslint ./src ./spec",
-		"lint-fix": "eslint ./src ./spec --fix",
+		"pretest": "npm run clean && tsc --build tsconfig.test.json",
+		"test": "jasmine --config=jasmine.json",
+		"lint": "eslint ./src ./spc",
+		"lint-fix": "eslint ./src ./spc --fix",
 		"prepare": "npm run build && copyfiles ./cjs/package.json ./dst"
 	},
 	"license": "AGPLv3.0",

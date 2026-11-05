@@ -1,7 +1,8 @@
 *.tgz
 eslint*.*
 tsconfig*.*
+jasmine.json
 cjs/
 src/
-spec/
+spc/
 .vscode/

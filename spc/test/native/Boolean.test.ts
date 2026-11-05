@@ -1,0 +1,120 @@
+import { runAffinirumTests } from "../../util/AffinirumTest.js";
+
+describe("Boolean function test", () => {
+	runAffinirumTests([
+		{
+			script: "!b",
+			cases: [
+				{ values: { b: true }, result: false },
+				{ values: { b: false }, result: true },
+			],
+		},
+		{
+			script: "Boolean.Not(b)",
+			cases: [
+				{ values: { b: true }, result: false },
+				{ values: { b: false }, result: true },
+			],
+		},
+		{
+			script: "a.Boolean()",
+			cases: [
+				{ values: { a: new Date(0) }, result: false },
+				{ values: { a: new Date(123) }, result: true },
+				{ values: { a: Number.NaN }, result: false },
+				{ values: { a: 0 }, result: false },
+				{ values: { a: -1.5 }, result: true },
+				{ values: { a: 0n }, result: false },
+				{ values: { a: 1n }, result: true },
+			],
+		},
+		{
+			script: "Boolean.And(values)",
+			cases: [
+				{ values: { values: [true, true, true] }, result: true },
+				{ values: { values: [true, false, true] }, result: false },
+			],
+		},
+		{
+			script: "i==0 & Boolean.And(b, c, true)",
+			cases: [
+				{ values: { i: 1, b: true, c: true }, result: false },
+				{ values: { i: 0, b: true, c: false }, result: false },
+				{ values: { i: 0, b: true, c: true }, result: true },
+			],
+		},
+		{
+			script: "Boolean.Or(values)",
+			cases: [
+				{ values: { values: [false, false, false] }, result: false },
+				{ values: { values: [false, true, false] }, result: true },
+			],
+		},
+		{
+			script: "i==0 | Boolean.Or(b, c, false)",
+			cases: [
+				{ values: { i: 1, b: true, c: false }, result: true },
+				{ values: { i: 0, b: false, c: false }, result: true },
+				{ values: { i: 1, b: false, c: false }, result: false },
+			],
+		},
+		{
+			script: "Boolean.Decode(v.Encode())",
+			cases: [
+				{ values: { v: true }, result: true },
+				{ values: { v: false }, result: false },
+			],
+		},
+		{
+			script: "Boolean.Decode(v, offset)",
+			cases: [
+				{ values: { v: new Uint8Array([0, 255]).buffer, offset: 0n }, result: false },
+				{ values: { v: new Uint8Array([0, 255]).buffer, offset: 1n }, result: true },
+				{ values: { v: undefined, offset: undefined }, result: undefined },
+				{ values: { v: null, offset: undefined }, result: undefined },
+			],
+		},
+		{
+			script: "Boolean.Parse(v)",
+			cases: [
+				{ values: { v: "true" }, result: true },
+				{ values: { v: "FALSE" }, result: false },
+				{ values: { v: "yes" }, result: undefined },
+				{ values: { v: undefined }, result: undefined },
+				{ values: { v: null }, result: undefined },
+			],
+		},
+		{
+			script: "v.Format()",
+			cases: [
+				{ values: { v: undefined }, result: "" },
+				{ values: { v: null }, result: "" },
+			],
+		},
+		{
+			script: "v.Encode().Length",
+			cases: [
+				{ values: { v: undefined }, result: 0n },
+				{ values: { v: null }, result: 0n },
+			],
+		},
+		{
+			script: "a|=b",
+			cases: [
+				{ values: { a: true, b: false }, result: true },
+				{ values: { a: false, b: true }, result: true },
+				{ values: { a: false, b: false }, result: false },
+				{ values: { a: true, b: true }, result: true },
+			],
+		},
+		{
+			script: "a&=b",
+			cases: [
+				{ values: { a: true, b: false }, result: false },
+				{ values: { a: false, b: true }, result: false },
+				{ values: { a: false, b: false }, result: false },
+				{ values: { a: true, b: true }, result: true },
+			],
+		},
+	]);
+});

@@ -23,7 +23,7 @@ const typeAN = Type.union(
 
 export const formatAN = (value: Value, whitespace?: string): string => {
 	if (value == null) {
-		return "";
+		return "null";
 	}
 	if (typeof value === "boolean") {
 		return value ? "true" : "false";
@@ -42,7 +42,7 @@ export const formatAN = (value: Value, whitespace?: string): string => {
 	}
 	if (Array.isArray(value)) {
 		const [prefix, suffix] = whitespace ? ["\n" + whitespace, "\n"] : ["", ""];
-		const lines = value.map((i) =>
+		const lines = Array.from(value, (i) =>
 			`${prefix}${formatAN(i, whitespace)?.split("\n").join(prefix) ?? ""}`
 		);
 		return lines.length ? `[${lines.join(",")}${suffix}]` : "[]";

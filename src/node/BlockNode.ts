@@ -1,17 +1,20 @@
 import { Node } from "../Node.js";
-import { ParserFrame } from "../ParserFrame.js";
+import { ScriptSpan } from "../ScriptSpan.js";
 import { Constant } from "../Constant.js";
 import { ConstantNode } from "./ConstantNode.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
+import { CallFrame } from "../CallFrame.js";
+import { Variable } from "../Variable.js";
 
 export class BlockNode extends Node {
 
 	constructor(
-		frame: ParserFrame,
+		span: ScriptSpan,
 		protected _subnodes: Node[],
+		protected readonly _variables: Variable[] = [],
 	) {
-		super(frame);
+		super(span);
 	}
 
 	override get type(): Type {
@@ -29,18 +32,19 @@ export class BlockNode extends Node {
 			constant &&= this._subnodes[i].constant;
 		}
 		if (constant) {
-			return new ConstantNode(this, new Constant(this.evaluate(), this.type));
+			return new ConstantNode(this, new Constant(this.evaluate(new CallFrame()), this.type));
 		}
-		if (this._subnodes.length === 1) {
+		if (this._subnodes.length === 1 && this._variables.length === 0) {
 			return this._subnodes[0];
 		}
 		return this;
 	}
 
-	override evaluate(): Value {
+	override evaluate(frame: CallFrame): Value {
+		const subframe = this._variables.length ? frame.subframe(this._variables) : frame;
 		let result: Value = undefined;
 		for (const subnode of this._subnodes) {
-			result = subnode.evaluate();
+			result = subnode.evaluate(subframe);
 		}
 		return result;
 	}

@@ -1,0 +1,13 @@
+{
+	"spec_dir": "dst/spc",
+	"spec_files": [
+		"test/**/*.test.?(m)js"
+	],
+	"helpers": [
+		"util/**/*.?(m)js"
+	],
+	"env": {
+		"stopSpecOnExpectationFailure": false,
+		"random": true
+	}
+}

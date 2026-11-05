@@ -173,7 +173,8 @@ Casts can be followed by property access, index access, function calls, or anoth
 
 Native conversions use the following **void** handling:
 
-- `Format` returns an empty string for **void**.
+- General `Format` conversions and `JSON.Format` return an empty string for **void**.
+- `AN.Format` and `Affinirum.format` serialize **void** as the literal `null`, including array elements and object properties.
 - `Encode` returns a zero-length buffer for **void**.
 - `Decode` and `Parse` return **void** when their input value is **void**.
 
@@ -240,7 +241,7 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **Object.Merge(values: ...(object | [object])):object** — Merge objects and arrays of objects
 
 #### AN
-- **AN.Format(value: ??, whitespace: string?):string** — Format a value as AN notation
+- **AN.Format(value: ??, whitespace: string?):string** — Format a value as AN notation; **void** values are written as `null`
 
 #### JSON
 - **JSON.Format(value: (void | boolean | timestamp | float | integer | string | array | object), whitespace: string?):string** — Format a value as JSON
@@ -409,7 +410,16 @@ the inferred input types through `variables()`, and the parsed tree through `toS
 ```ts
 const value = Affinirum.parse('["answer":42,"enabled":true]');
 const notation = Affinirum.format(value);
+
+Affinirum.format(undefined); // "null"
+Affinirum.format(null); // "null"
+Affinirum.format([1n, undefined]); // "[1,null]"
+Affinirum.format({ missing: undefined }); // '["missing":null]'
 ```
+
+Both `Affinirum.format()` and `AN.Format()` write JavaScript `null` and `undefined` as the AN literal `null` at every nesting level.
+Parsing that literal produces JavaScript `undefined`. This preserves array lengths and object properties containing **void** values,
+including trailing array elements. Indented output follows the same rule.
 
 JavaScript `number` values map to **float**, while **integer** values map to `bigint`. Timestamps use `Date`, buffers use
 `ArrayBuffer`, and a **void** result is returned as `undefined`. Arrays, objects, and functions use their corresponding

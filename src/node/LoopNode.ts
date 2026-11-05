@@ -1,17 +1,18 @@
 import { Node } from "../Node.js";
-import { ParserFrame } from "../ParserFrame.js";
+import { ScriptSpan } from "../ScriptSpan.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { JumpException } from "../JumpException.js";
+import { CallFrame } from "../CallFrame.js";
 
 export class LoopNode extends Node {
 
 	constructor(
-		frame: ParserFrame,
+		span: ScriptSpan,
 		protected _cnode: Node,
 		protected _subnode: Node,
 	) {
-		super(frame);
+		super(span);
 	}
 
 	override get type(): Type {
@@ -24,11 +25,11 @@ export class LoopNode extends Node {
 		return this;
 	}
 
-	override evaluate(): Value {
+	override evaluate(frame: CallFrame): Value {
 		let result: Value = undefined;
-		while (this._cnode.evaluate()) {
+		while (this._cnode.evaluate(frame)) {
 			try {
-				result = this._subnode.evaluate();
+				result = this._subnode.evaluate(frame);
 			}
 			catch (e) {
 				if (e instanceof JumpException) {

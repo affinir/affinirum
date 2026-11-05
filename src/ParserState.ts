@@ -9,7 +9,7 @@ import { parseLiteralTimestamp } from "./native/Timestamp.js";
 import { Constant } from "./Constant.js";
 import { Value } from "./Value.js";
 import { Type } from "./Type.js";
-import { ParserFrame } from "./ParserFrame.js";
+import { ScriptSpan } from "./ScriptSpan.js";
 
 class Literal { constructor(public readonly value: Value) {} }
 const valueTrue = new Literal(true);
@@ -48,14 +48,14 @@ const idReturn = Symbol();
 const idStop = Symbol();
 const idNext = Symbol();
 
-export class ParserState extends ParserFrame {
+export class ParserState extends ScriptSpan {
 
 	protected _fragment: Literal | Assignment | Constant | Type | symbol | string | undefined;
 
 	constructor(
-		expr: string,
+		script: string,
 	) {
-		super(expr);
+		super(script);
 	}
 
 	get literal(): Literal {
@@ -244,7 +244,7 @@ export class ParserState extends ParserFrame {
 	}
 
 	clone() {
-		const state = new ParserState(this._expr);
+		const state = new ParserState(this._script);
 		state._start = this._start;
 		state._end = this._end;
 		state._fragment = this._fragment;
@@ -253,9 +253,9 @@ export class ParserState extends ParserFrame {
 
 	next(): ParserState {
 		this._fragment = undefined;
-		while (this._end < this._expr.length && this._fragment == null) {
+		while (this._end < this._script.length && this._fragment == null) {
 			this._start = this._end;
-			const c = this._expr.charAt(this._end);
+			const c = this._script.charAt(this._end);
 			++this._end;
 			switch (c) {
 				case " ": case "\t": case "\n": case "\r": case "\v": case "\f": break;
@@ -267,101 +267,101 @@ export class ParserState extends ParserFrame {
 				case "}": this._fragment = idBracesClose; break;
 				case ";": this._fragment = idSemicolon; break;
 				case ":":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case ":": ++this._end; this._fragment = idCast; break;
 						default: this._fragment = idColon; break;
 					}
 					break;
 				case ",": this._fragment = idComma; break;
 				case "~":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case ">": ++this._end; this._fragment = idReturn; break;
 						default: this._fragment = idTilda; break;
 					}
 					break;
 				case "?":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "?": ++this._end; this._fragment = Type.Unknown; break;
 						case ":": ++this._end; this._fragment = funcCoalesce; break;
 						default: this._fragment = idQuestion; break;
 					}
 					break;
 				case "|":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcOrAssignment; break;
 						default: this._fragment = funcOr; break;
 					}
 					break;
 				case "&":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcAndAssignment; break;
 						default: this._fragment = funcAnd; break;
 					}
 					break;
 				case ">":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcGreaterOrEqual; break;
 						default: this._fragment = funcGreaterThan; break;
 					}
 					break;
 				case "<":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcLessOrEqual; break;
 						default: this._fragment = funcLessThan; break;
 					}
 					break;
 				case "!":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcNotEqual; break;
 						default: this._fragment = funcNot; break;
 					}
 					break;
 				case "=":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcEqual; break;
 						case ">": ++this._end; this._fragment = idExit; break;
 						default: this._fragment = funcAssignment; break;
 					}
 					break;
 				case "+":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcAddAssignment; break;
 						default: this._fragment = funcAdd; break;
 					}
 					break;
 				case "-":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcSubtractAssignment; break;
 						default: this._fragment = funcSubtract; break;
 					}
 					break;
 				case "*":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcMultiplyAssignment; break;
 						default: this._fragment = funcMultiply; break;
 					}
 					break;
 				case "/":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcDivideAssignment; break;
 						case "/":
-							if (this._expr.charAt(++this._end) === "/") {
+							if (this._script.charAt(++this._end) === "/") {
 								++this._end;
-								while (this._expr.charAt(this._end) !== ""
-									&& (this._expr.charAt(this._end) !== c
-									|| this._expr.charAt(this._end - 1) !== c
-									|| this._expr.charAt(this._end - 2) !== c)) {
+								while (this._script.charAt(this._end) !== ""
+									&& (this._script.charAt(this._end) !== c
+									|| this._script.charAt(this._end - 1) !== c
+									|| this._script.charAt(this._end - 2) !== c)) {
 									++this._end;
 								}
-								if (this._end >= this._expr.length) {
-									this._start = this._expr.length;
+								if (this._end >= this._script.length) {
+									this._start = this._script.length;
 									throw new Error("missing closing comment mark");
 								}
 								++this._end;
 							}
 							else {
-								while (this._expr.charAt(this._end) !== ""
-									&& this._expr.charAt(this._end) !== "\n") {
+								while (this._script.charAt(this._end) !== ""
+									&& this._script.charAt(this._end) !== "\n") {
 									++this._end;
 								}
 							}
@@ -370,16 +370,16 @@ export class ParserState extends ParserFrame {
 					}
 					break;
 				case "%":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcRemainderAssignment; break;
 						default: this._fragment = funcRemainder; break;
 					}
 					break;
 				case "^": this._fragment = funcPower; break;
 				case ".":
-					switch (this._expr.charAt(this._end)) {
+					switch (this._script.charAt(this._end)) {
 						case ".":
-							if (this._expr.charAt(++this._end) === ".") {
+							if (this._script.charAt(++this._end) === ".") {
 								++this._end;
 								this._fragment = idEllipsis;
 							}
@@ -393,29 +393,29 @@ export class ParserState extends ParserFrame {
 					}
 					break;
 				case "@": {
-					const [ts, tsEnd] = parseLiteralTimestamp(this._expr, this._start);
+					const [ts, tsEnd] = parseLiteralTimestamp(this._script, this._start);
 					this._fragment = new Literal(ts);
 					this._end = tsEnd;
 					break;
 				}
 				case "`": {
-					const [buf, bufEnd] = parseLiteralBuffer(this._expr, this._start);
+					const [buf, bufEnd] = parseLiteralBuffer(this._script, this._start);
 					this._fragment = new Literal(buf);
 					this._end = bufEnd;
 					break;
 				}
 				case "\"": case "'": {
-					const [str, strEnd] = parseLiteralString(this._expr, this._start);
+					const [str, strEnd] = parseLiteralString(this._script, this._start);
 					this._fragment = new Literal(str);
 					this._end = strEnd;
 					break;
 				}
 				default:
 					if (isTokenStartSymbol(c)) {
-						while (isTokenSymbol(this._expr.charAt(this._end))) {
+						while (isTokenSymbol(this._script.charAt(this._end))) {
 							++this._end;
 						}
-						const token = this._expr.substring(this._start, this._end);
+						const token = this._script.substring(this._start, this._end);
 						switch (token) {
 							case "true": this._fragment = valueTrue; break;
 							case "false": this._fragment = valueFalse; break;
@@ -441,7 +441,7 @@ export class ParserState extends ParserFrame {
 						}
 					}
 					else if (isNumericSymbol(c)) {
-						const [num, numEnd] = parseLiteralNumber(this._expr, this._start);
+						const [num, numEnd] = parseLiteralNumber(this._script, this._start);
 						this._fragment = new Literal(num);
 						this._end = numEnd;
 					}
@@ -451,8 +451,8 @@ export class ParserState extends ParserFrame {
 					break;
 			}
 		}
-		if (this._end > this._expr.length) {
-			this._start = this._end = this._expr.length;
+		if (this._end > this._script.length) {
+			this._start = this._end = this._script.length;
 		}
 		return this;
 	}

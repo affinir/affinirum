@@ -1,20 +1,20 @@
 import { Node } from "../Node.js";
-import { ParserFrame } from "../ParserFrame.js";
-import { Constant } from "../Constant.js";
+import { ScriptSpan } from "../ScriptSpan.js";
 import { ConstantNode } from "./ConstantNode.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
+import { CallFrame } from "../CallFrame.js";
 
 export class ObjectNode extends Node {
 
 	protected _type: Type;
 
 	constructor(
-		frame: ParserFrame,
+		span: ScriptSpan,
 		protected _subnodes: [Node, Node][],
 	) {
-		super(frame);
-		this._type = Type.objectType(_subnodes.filter(([i]) => i instanceof ConstantNode && i.constant).map(([k, v]) => [k.evaluate() as string, v.type]));
+		super(span);
+		this._type = Type.objectType(_subnodes.filter(([i]) => i instanceof ConstantNode && i.constant).map(([k, v]) => [k.evaluate(new CallFrame()) as string, v.type]));
 	}
 
 	override get type(): Type {
@@ -23,23 +23,17 @@ export class ObjectNode extends Node {
 
 	override compile(type: Type): Node {
 		this._type = this.reduceType(type);
-		let constant = true;
 		for (let i = 0; i < this._subnodes.length; ++i) {
 			this._subnodes[i][0] = this._subnodes[i][0].compile(Type.String);
-			constant &&= this._subnodes[i][0].constant;
 			this._subnodes[i][1] = this._subnodes[i][1].compile(Type.Unknown);
-			constant &&= this._subnodes[i][1].constant;
-		}
-		if (constant) {
-			return new ConstantNode(this, new Constant(this.evaluate(), this.type));
 		}
 		return this;
 	}
 
-	override evaluate(): Value {
+	override evaluate(frame: CallFrame): Value {
 		const result: { [ key: string ]: Value } = Object.create(null);
 		for (const [key, value] of this._subnodes) {
-			result[key.evaluate() as string] = value.evaluate();
+			result[key.evaluate(frame) as string] = value.evaluate(frame);
 		}
 		return result;
 	}

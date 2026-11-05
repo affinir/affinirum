@@ -1,20 +1,21 @@
 import { Node } from "../Node.js";
 import { Constant } from "../Constant.js";
 import { ConstantNode } from "./ConstantNode.js";
-import { ParserFrame } from "../ParserFrame.js";
+import { ScriptSpan } from "../ScriptSpan.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
+import { CallFrame } from "../CallFrame.js";
 
 export class SwitchNode extends Node {
 
 	protected _type: Type;
 
 	constructor(
-		frame: ParserFrame,
+		span: ScriptSpan,
 		protected _cnode: Node,
 		protected _subnodes: Node[],
 	) {
-		super(frame);
+		super(span);
 		if (_subnodes.length !== 2) {
 			this.throwError(`switch requires 2 subnodes not ${_subnodes.length}`);
 		}
@@ -34,15 +35,15 @@ export class SwitchNode extends Node {
 			constant &&= this._subnodes[i].constant;
 		}
 		if (constant) {
-			return new ConstantNode(this, new Constant(this.evaluate(), this.type));
+			return new ConstantNode(this, new Constant(this.evaluate(new CallFrame()), this.type));
 		}
 		return this;
 	}
 
-	override evaluate(): Value {
-		return this._cnode.evaluate()
-			? this._subnodes[0].evaluate()
-			: this._subnodes[1].evaluate();
+	override evaluate(frame: CallFrame): Value {
+		return this._cnode.evaluate(frame)
+			? this._subnodes[0].evaluate(frame)
+			: this._subnodes[1].evaluate(frame);
 	}
 
 	override toString(ident: number = 0): string {

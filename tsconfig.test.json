@@ -1,0 +1,18 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"declaration": false,
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"sourceMap": true,
+		"outDir": "./dst",
+		"rootDir": "./",
+		"types": [
+			"jasmine"
+		]
+	},
+	"include": [
+    "src/**/*",
+    "spc/**/*"
+	]
+}

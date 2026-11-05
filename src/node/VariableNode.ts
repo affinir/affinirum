@@ -1,17 +1,18 @@
 import { Node } from "../Node.js";
-import { ParserFrame } from "../ParserFrame.js";
+import { ScriptSpan } from "../ScriptSpan.js";
 import { Variable } from "../Variable.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
+import { CallFrame } from "../CallFrame.js";
 
 export class VariableNode extends Node {
 
 	constructor(
-		frame: ParserFrame,
+		span: ScriptSpan,
 		protected readonly _variable: Variable,
 		protected _subnode?: Node,
 	) {
-		super(frame);
+		super(span);
 	}
 
 	override get type(): Type {
@@ -24,10 +25,10 @@ export class VariableNode extends Node {
 		return this;
 	}
 
-	override evaluate(): Value {
+	override evaluate(frame: CallFrame): Value {
 		return this._subnode
-			? this._variable.value = this._subnode.evaluate()
-			: this._variable.value;
+			? frame.set(this._variable, this._subnode.evaluate(frame))
+			: frame.get(this._variable);
 	}
 
 	override toString(ident: number = 0): string {

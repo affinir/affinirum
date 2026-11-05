@@ -283,6 +283,8 @@ export class Type {
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
 	static readonly Function = Type.functionType(undefined, undefined, true);
 	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
+	static readonly Reference = Type.union(Type.Array, Type.Object, Type.Function);
+	static readonly OptionalReference = Type.union(Type.Void, Type.Array, Type.Object, Type.Function);
 	static readonly Number = Type.union(Type.Float, Type.Integer);
 	static readonly OptionalNumber = Type.union(Type.Void, Type.Float, Type.Integer);
 	static readonly Enumerable = Type.union(Type.Buffer, Type.String, Type.Array);

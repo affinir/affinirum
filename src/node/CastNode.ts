@@ -1,18 +1,19 @@
 import { Node } from "../Node.js";
-import { ParserFrame } from "../ParserFrame.js";
+import { ScriptSpan } from "../ScriptSpan.js";
 import { Type } from "../Type.js";
 import { Value } from "../Value.js";
+import { CallFrame } from "../CallFrame.js";
 
 export class CastNode extends Node {
 
 	protected _type: Type;
 
 	constructor(
-		frame: ParserFrame,
+		span: ScriptSpan,
 		protected _subnode: Node,
 		protected readonly _target: Type,
 	) {
-		super(frame);
+		super(span);
 		this._type = _target;
 	}
 
@@ -30,8 +31,8 @@ export class CastNode extends Node {
 		return this;
 	}
 
-	override evaluate(): Value {
-		const value = this._subnode.evaluate();
+	override evaluate(frame: CallFrame): Value {
+		const value = this._subnode.evaluate(frame);
 		if (!this._type.acceptValue(value)) {
 			this.throwError(`cannot cast value of type ${Type.of(value)} to ${this._type}`);
 		}

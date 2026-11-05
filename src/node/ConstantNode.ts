@@ -1,17 +1,19 @@
 import { Node } from "../Node.js";
-import { ParserFrame } from "../ParserFrame.js";
+import { ScriptSpan } from "../ScriptSpan.js";
 import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
+import { CallFrame } from "../CallFrame.js";
 
 export class ConstantNode extends Node {
 
 	constructor(
-		frame: ParserFrame,
+		span: ScriptSpan,
 		protected readonly _constant: Constant,
 		protected _subnode?: Node,
+		protected readonly _factory?: (frame: CallFrame) => Value,
 	) {
-		super(frame);
+		super(span);
 	}
 
 	override get type(): Type {
@@ -24,12 +26,12 @@ export class ConstantNode extends Node {
 		return this;
 	}
 
-	override evaluate(): Value {
-		return this._constant.value;
+	override evaluate(frame: CallFrame): Value {
+		return this._factory ? this._factory(frame) : this._constant.value;
 	}
 
 	override get constant(): boolean {
-		return !this._subnode && this._constant.deterministic;
+		return !this._factory && !this._subnode && this._constant.deterministic;
 	}
 
 	override toString(ident: number = 0): string {

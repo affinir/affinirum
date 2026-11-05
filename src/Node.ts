@@ -1,18 +1,19 @@
-import { ParserFrame } from "./ParserFrame.js";
+import { ScriptSpan } from "./ScriptSpan.js";
 import { Type } from "./Type.js";
 import { Value } from "./Value.js";
+import { CallFrame } from "./CallFrame.js";
 
-export abstract class Node extends ParserFrame {
+export abstract class Node extends ScriptSpan {
 
 	constructor(
-		frame: ParserFrame,
+		span: ScriptSpan,
 	) {
-		super(frame.expr, frame.start, frame.end);
+		super(span);
 	}
 
 	abstract type: Type;
 	abstract compile(type: Type): Node;
-	abstract evaluate(): Value;
+	abstract evaluate(frame: CallFrame): Value;
 
 	get constant(): boolean {
 		return false;
@@ -31,7 +32,7 @@ export abstract class Node extends ParserFrame {
 	}
 
 	toString(ident: number = 0): string {
-		return "  ".repeat(ident) + `[${this._start}:${this.end}] <${this.type}>`;
+		return "  ".repeat(ident) + `[${this._start}:${this._end}] <${this.type}>`;
 	}
 
 }

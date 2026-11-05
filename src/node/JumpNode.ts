@@ -1,18 +1,19 @@
 import { Node } from "../Node.js";
-import { ParserFrame } from "../ParserFrame.js";
+import { ScriptSpan } from "../ScriptSpan.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { Jump } from "../Jump.js";
 import { JumpException } from "../JumpException.js";
+import { CallFrame } from "../CallFrame.js";
 
 export class JumpNode extends Node {
 
 	constructor(
-		frame: ParserFrame,
+		span: ScriptSpan,
 		protected _jump: Jump,
 		protected _subnode?: Node,
 	) {
-		super(frame);
+		super(span);
 	}
 
 	override get type(): Type {
@@ -24,8 +25,8 @@ export class JumpNode extends Node {
 		return this;
 	}
 
-	override evaluate(): Value {
-		throw new JumpException(this._jump, this._subnode?.evaluate());
+	override evaluate(frame: CallFrame): Value {
+		throw new JumpException(this._jump, this._subnode?.evaluate(frame));
 	}
 
 	override toString(ident: number = 0): string {
