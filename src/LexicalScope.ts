@@ -1,3 +1,4 @@
+import { Type } from "./Type.js";
 import { Variable } from "./Variable.js";
 
 export class LexicalScope {
@@ -5,16 +6,17 @@ export class LexicalScope {
 	protected readonly _superscope?: LexicalScope;
 	protected readonly _subscopes: LexicalScope[] = [];
 	protected readonly _variables: Map<string, Variable>;
-	protected readonly _boundary: boolean;
+	protected readonly _type: Type | undefined;
 
 	constructor(
 		superscope?: LexicalScope,
 		variables?: Map<string, Variable>,
+		type?: Type,
 	) {
 		superscope?._subscopes.push(this);
 		this._superscope = superscope;
 		this._variables = variables ?? new Map();
-		this._boundary = Boolean(variables);
+		this._type = type;
 	}
 
 	has(name: string): boolean {
@@ -29,12 +31,16 @@ export class LexicalScope {
 		this._variables.set(name, variable);
 	}
 
-	subscope(variables?: Map<string, Variable>): LexicalScope {
-		return new LexicalScope(this, variables);
+	subscope(variables?: Map<string, Variable>, type?: Type): LexicalScope {
+		return new LexicalScope(this, variables, type);
 	}
 
 	variables(): IterableIterator<Variable> {
 		return this._variables.values();
+	}
+
+	type(): Type {
+		return this._type ?? this._superscope?.type() ?? Type.Unknown;
 	}
 
 }

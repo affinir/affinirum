@@ -82,23 +82,49 @@ export const equateStrings = (value1?: string, value2?: string, ignoreCaseSpaceE
 	if (value1 == null || value2 == null) {
 		return false;
 	}
-	if (!ignoreCaseSpaceEtc) {
-		return value1 === value2;
+	if (value1 === value2) {
+		return true;
 	}
-	const str1 = value1.toLowerCase();
-	const str2 = value2.toLowerCase();
-	for (let i1 = 0, i2 = 0; i1 < str1.length && i2 < str2.length; ++i1, ++i2) {
-		while (!isAlphanumericSymbol(str1[i1]) && i1 < str1.length) {
-			++i1;
+	if (!ignoreCaseSpaceEtc) {
+		return false;
+	}
+	for (let i1 = 0, i2 = 0; i1 < value1.length || i2 < value2.length;) {
+		let code1 = 0, code2 = 0;
+		while (i1 < value1.length && !code1) {
+			code1 = alphanumericCode(value1, i1++);
 		}
-		while (!isAlphanumericSymbol(str2[i2]) && i2 < str2.length) {
-			++i2;
+		while (i2 < value2.length && !code2) {
+			code2 = alphanumericCode(value2, i2++);
 		}
-		if (str1[i1] != str2[i2]) {
+		if (code1 !== code2) {
 			return false;
 		}
 	}
 	return true;
+};
+
+const alphanumericCode = (value: string, index: number) => {
+	let code = value.charCodeAt(index);
+	if (code > 0x7f) {
+		// Preserve Unicode lowercase mappings to ASCII, such as İ and K.
+		code = value.charAt(index).toLowerCase().charCodeAt(0);
+	}
+	code |= 0x20;
+	return code >= 0x61 && code <= 0x7a || code >= 0x30 && code <= 0x39 ? code : 0;
+};
+
+const createSearchPrefixes = (pattern: number[]) => {
+	const prefixes = new Uint32Array(pattern.length);
+	for (let i = 1, matched = 0; i < pattern.length; ++i) {
+		while (matched > 0 && pattern[i] !== pattern[matched]) {
+			matched = prefixes[matched - 1];
+		}
+		if (pattern[i] === pattern[matched]) {
+			++matched;
+		}
+		prefixes[i] = matched;
+	}
+	return prefixes;
 };
 
 export const containsString = (value?: string, search?: string, startPos?: number, ignoreCaseSpaceEtc?: boolean) => {
@@ -111,33 +137,62 @@ export const containsString = (value?: string, search?: string, startPos?: numbe
 	if (!ignoreCaseSpaceEtc) {
 		return value.includes(search, startPos);
 	}
-	const valueStr = value.toLowerCase();
-	const searchStr = search.toLowerCase();
-	if (valueStr.length < searchStr.length) {
-		return false;
+	const pattern: number[] = [];
+	for (let i = 0; i < search.length; ++i) {
+		const code = alphanumericCode(search, i);
+		if (code) {
+			pattern.push(code);
+		}
 	}
-	if (searchStr.length === 0) {
+	if (pattern.length === 0) {
 		return true;
 	}
 	const pos = startPos == null ? 0 : startPos < 0 ? value.length + startPos : startPos;
-	if (pos > value.length - search.length) {
+	const start = Math.max(0, Math.trunc(pos) || 0);
+	if (pattern.length > value.length - start) {
 		return false;
 	}
-	for (let i1 = pos, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2) {
-		while (!isAlphanumericSymbol(valueStr[i1]) && i1 < valueStr.length) {
-			++i1;
+	// Build KMP fallback lengths only when a partial match first fails.
+	let prefixes: Uint32Array | undefined;
+	const first = pattern[0];
+	for (let i = start, matched = 0; i < value.length; ++i) {
+		if (matched === 0) {
+			while (i < value.length) {
+				const code = value.charCodeAt(i) | 0x20;
+				if (code === first || code > 0x7f && alphanumericCode(value, i) === first) {
+					break;
+				}
+				++i;
+			}
+			if (i === value.length) {
+				return false;
+			}
+			if (pattern.length === 1) {
+				return true;
+			}
+			matched = 1;
+			continue;
 		}
-		while (!isAlphanumericSymbol(searchStr[i2]) && i2 < searchStr.length) {
-			++i2;
+		let code = value.charCodeAt(i) | 0x20;
+		if (code > 0x7f) {
+			code = alphanumericCode(value, i);
 		}
-		while (valueStr[i1] != searchStr[i2] && i1 < valueStr.length) {
-			++i1;
+		if (code === pattern[matched]) {
+			if (++matched === pattern.length) {
+				return true;
+			}
 		}
-		if (valueStr[i1] != searchStr[i2] && i2 < searchStr.length) {
-			return false;
+		else if (matched > 0 && (code >= 0x61 && code <= 0x7a || code >= 0x30 && code <= 0x39)) {
+			prefixes ??= createSearchPrefixes(pattern);
+			do {
+				matched = prefixes[matched - 1];
+			} while (matched > 0 && code !== pattern[matched]);
+			if (code === pattern[matched]) {
+				++matched;
+			}
 		}
 	}
-	return true;
+	return false;
 };
 
 export const startsWithString = (value?: string, search?: string, startPos?: number, ignoreCaseSpaceEtc?: boolean) => {
@@ -150,20 +205,18 @@ export const startsWithString = (value?: string, search?: string, startPos?: num
 	if (!ignoreCaseSpaceEtc) {
 		return value.startsWith(search, startPos);
 	}
-	const valueStr = value.toLowerCase();
-	const searchStr = search.toLowerCase();
-	if (valueStr.length < searchStr.length) {
-		return false;
-	}
 	const pos = startPos == null ? 0 : startPos < 0 ? value.length + startPos : startPos;
-	for (let i1 = pos, i2 = 0; i1 < valueStr.length && i2 < searchStr.length; ++i1, ++i2) {
-		while (!isAlphanumericSymbol(valueStr[i1]) && i1 < valueStr.length) {
-			++i1;
+	let valueIndex = Math.max(0, Math.trunc(pos) || 0);
+	for (let i = 0; i < search.length; ++i) {
+		const searchCode = alphanumericCode(search, i);
+		if (!searchCode) {
+			continue;
 		}
-		while (!isAlphanumericSymbol(searchStr[i2]) && i2 < searchStr.length) {
-			++i2;
+		let valueCode = 0;
+		while (valueIndex < value.length && !valueCode) {
+			valueCode = alphanumericCode(value, valueIndex++);
 		}
-		if (valueStr[i1] != searchStr[i2] && i2 < searchStr.length) {
+		if (valueCode !== searchCode) {
 			return false;
 		}
 	}
@@ -180,20 +233,18 @@ export const endsWithString = (value?: string, search?: string, endPos?: number,
 	if (!ignoreCaseSpaceEtc) {
 		return value.endsWith(search, endPos);
 	}
-	const valueStr = value.toLowerCase();
-	const searchStr = search.toLowerCase();
-	if (valueStr.length < searchStr.length) {
-		return false;
-	}
-	const pos = endPos == null ? valueStr.length : endPos < 0 ? value.length + endPos : endPos;
-	for (let i1 = pos - 1, i2 = searchStr.length - 1; i1 > -1 && i2 > -1; --i1, --i2) {
-		while (!isAlphanumericSymbol(valueStr[i1]) && i1 > -1) {
-			--i1;
+	const pos = endPos == null ? value.length : endPos < 0 ? value.length + endPos : endPos;
+	let valueIndex = Math.min(value.length, Math.max(0, Math.trunc(pos) || 0)) - 1;
+	for (let i = search.length - 1; i >= 0; --i) {
+		const searchCode = alphanumericCode(search, i);
+		if (!searchCode) {
+			continue;
 		}
-		while (!isAlphanumericSymbol(searchStr[i2]) && i2 > -1) {
-			--i2;
+		let valueCode = 0;
+		while (valueIndex >= 0 && !valueCode) {
+			valueCode = alphanumericCode(value, valueIndex--);
 		}
-		if (valueStr[i1] != searchStr[i2] && i2 > -1) {
+		if (valueCode !== searchCode) {
 			return false;
 		}
 	}

@@ -1,4 +1,4 @@
-import { Affinirum } from "../../src/index.js";
+import { Affinirum, Type } from "../../src/index.js";
 
 describe("Jump command test", () => {
 	it("returns from each callback without terminating the array operation", () => {
@@ -22,6 +22,34 @@ describe("Jump command test", () => {
 	it("propagates exit from a callback to the script boundary", () => {
 		const script = new Affinirum("[1,2,3].Derive(~(x:integer):integer{=>x*2});99");
 		expect(script.evaluate() as bigint).toBe(2n);
+	});
+	it("checks return types through nested blocks and function boundaries", () => {
+		const invalidReturns: [string, RegExp][] = [
+			["val f=~():integer{{if true{while true{{~>'bad'}}}};1};f()", /type string mismatch with expected type integer/],
+			["val outer=~():integer{val inner=~():string{{~>1};'fallback'};1};outer()", /type integer mismatch with expected type string/],
+		];
+		for (const [script, error] of invalidReturns) {
+			expect(() => new Affinirum(script)).toThrow(error);
+		}
+		for (const script of [
+			"val outer=~():integer{val inner=~():string{{~>'inner'};'fallback'};inner();{{~>7}};0};outer()",
+			"val outer=~():integer{val inner=~(){{~>'inner'};0};inner();~>7};outer()",
+		]) {
+			expect(new Affinirum(script).evaluate()).toBe(7n);
+		}
+	});
+	it("checks exits against the script type through nested blocks and callbacks", () => {
+		for (const script of [
+			"{{if true{while true{{=>'bad'}}}}};1",
+			"[1,2,3].Derive(~(x:integer):string{{{=>'bad'}}});99",
+		]) {
+			expect(() => new Affinirum(script, { type: Type.Integer }))
+				.toThrow(/type string mismatch with expected type integer/);
+		}
+		expect(new Affinirum("[1,2,3].Derive(~(x:integer):string{{{=>x*2}}});99", { type: Type.Integer }).evaluate())
+			.toBe(2n);
+		expect(new Affinirum("val f=~():integer{{{=>'done'}}};f();'fallback'", { type: Type.String }).evaluate())
+			.toBe("done");
 	});
 	it("parses and evaluates expression with exit operator inside loop", () => {
 		const script = new Affinirum(`

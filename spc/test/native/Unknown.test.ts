@@ -1,3 +1,4 @@
+import { Affinirum, Value } from "../../../src/index.js";
 import { runAffinirumTests } from "../../util/AffinirumTest.js";
 
 describe("Unknown function test", () => {
@@ -125,4 +126,98 @@ describe("Unknown function test", () => {
 			],
 		},
 	]);
+});
+
+describe("Mixed numeric equality", () => {
+	it.each<[number, bigint, boolean]>([
+		[0, 0n, true],
+		[-0, 0n, true],
+		[42, 42n, true],
+		[-42, -42n, true],
+		[1.5, 1n, false],
+		[-1.5, -1n, false],
+		[Number.MIN_VALUE, 0n, false],
+		[Number.MAX_SAFE_INTEGER, 9007199254740991n, true],
+		[9007199254740992, 9007199254740992n, true],
+		[9007199254740992, 9007199254740993n, false],
+		[-9007199254740992, -9007199254740992n, true],
+		[-9007199254740992, -9007199254740993n, false],
+		[-(2 ** 63), -9223372036854775808n, true],
+		[2 ** 63, 9223372036854775807n, false],
+		[2 ** 63, -9223372036854775808n, false],
+		[NaN, 0n, false],
+		[Infinity, 0n, false],
+		[-Infinity, 0n, false],
+	])("compares float %s and integer %s in both operand orders", (float, integer, equal) => {
+		const expression = new Affinirum("[a==b,b==a,a!=b,b!=a,a.Equal(b),b.Equal(a),a.Unequal(b),b.Unequal(a)]");
+		expect(expression.evaluate({ a: float, b: integer }))
+			.toEqual([equal, equal, !equal, !equal, equal, equal, !equal, !equal]);
+	});
+
+	it.each([
+		"9007199254740992.0 == 9007199254740993",
+		"9007199254740993 == 9007199254740992.0",
+	])("folds %s without losing integer precision", (script) => {
+		expect(new Affinirum(script).evaluate()).toBe(false);
+	});
+
+	it("preserves distinct large values in Array.Unique regardless of their order", () => {
+		const expression = new Affinirum("Array.Unique(values)");
+		for (const values of [[9007199254740992, 9007199254740993n], [9007199254740993n, 9007199254740992]]) {
+			expect(expression.evaluate({ values })).toEqual(values);
+		}
+	});
+});
+
+describe("Object category equality", () => {
+	const pairs: { categories: string, a: Value, b: Value }[] = [
+		{ categories: "timestamp and buffer", a: new Date(0), b: new ArrayBuffer(0) },
+		{ categories: "timestamp and array", a: new Date(0), b: [] },
+		{ categories: "timestamp and object", a: new Date(0), b: {} },
+		{ categories: "buffer and array", a: new Uint8Array([1]).buffer, b: [] },
+		{ categories: "buffer and object", a: new Uint8Array([1]).buffer, b: Object.create(null) as Record<string, Value> },
+		{ categories: "empty buffer and object", a: new ArrayBuffer(0), b: {} },
+		{ categories: "empty array and object with matching properties", a: [], b: { length: 0n } },
+		{ categories: "array and object with matching properties", a: [1n], b: { "0": 1n, length: 1n } },
+	];
+	const comparisonScript = "[a==b,b==a,a.Equal(b),b.Equal(a),a!=b,b!=a,a.Unequal(b),b.Unequal(a)]";
+
+	it.each(pairs)("distinguishes $categories in both operand orders", ({ a, b }) => {
+		const expression = new Affinirum(comparisonScript);
+		expect(expression.evaluate({ a, b }))
+			.toEqual([false, false, false, false, true, true, true, true]);
+	});
+
+	it.each(pairs)("distinguishes nested $categories in both operand orders", ({ a, b }) => {
+		const expression = new Affinirum(comparisonScript);
+		for (const values of [
+			{ a: [a], b: [b] },
+			{ a: { item: [a] }, b: { item: [b] } },
+		]) {
+			expect(expression.evaluate(values))
+				.toEqual([false, false, false, false, true, true, true, true]);
+		}
+	});
+
+	it.each(pairs)("keeps $categories distinct in Array.Unique", ({ a, b }) => {
+		const expression = new Affinirum("Array.Unique(values)");
+		for (const values of [
+			[a, b], [b, a],
+			[[a], [b]], [[b], [a]],
+			[{ item: a }, { item: b }], [{ item: b }, { item: a }],
+		]) {
+			expect(expression.evaluate({ values })).toEqual(values);
+		}
+	});
+
+	it("still removes equal values within each category in Array.Unique", () => {
+		const values = [
+			new Date(0), new Date(0),
+			new Uint8Array([1]).buffer, new Uint8Array([1]).buffer,
+			[], [],
+			{}, {},
+		];
+		expect(new Affinirum("Array.Unique(values)").evaluate({ values }))
+			.toEqual([new Date(0), new Uint8Array([1]).buffer, [], {}]);
+	});
 });

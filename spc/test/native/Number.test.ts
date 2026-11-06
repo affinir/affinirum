@@ -1,4 +1,4 @@
-import { Affinirum } from "../../../src/index.js";
+import { Affinirum, Type } from "../../../src/index.js";
 import { runAffinirumTests } from "../../util/AffinirumTest.js";
 
 describe("Number function test", () => {
@@ -207,6 +207,34 @@ describe("Number function test", () => {
 			],
 		},
 	]);
+
+	describe("Float arithmetic", () => {
+		it.each<[string, string, number, number, number]>([
+			["7.5 - 2.5", "a - b", 7.5, 2.5, 5],
+			["7.5.Subtract(2.5)", "a.Subtract(b)", 7.5, 2.5, 5],
+			["1.5 * 2.5", "a * b", 1.5, 2.5, 3.75],
+			["1.5.Multiply(2.5)", "a.Multiply(b)", 1.5, 2.5, 3.75],
+			["7.5 / 2.5", "a / b", 7.5, 2.5, 3],
+			["7.5.Divide(2.5)", "a.Divide(b)", 7.5, 2.5, 3],
+			["7.5 % 2.0", "a % b", 7.5, 2, 1.5],
+			["7.5.Remainder(2.0)", "a.Remainder(b)", 7.5, 2, 1.5],
+			["(-7.5).Modulo(2.0)", "a.Modulo(b)", -7.5, 2, 0.5],
+			["9.0 ^ 0.5", "a ^ b", 9, 0.5, 3],
+			["9.0.Power(0.5)", "a.Power(b)", 9, 0.5, 3],
+			["9.0.Root(2.0)", "a.Root(b)", 9, 2, 3],
+		])("evaluates %s with literals and declared float inputs", (literalScript, inputScript, a, b, expected) => {
+			const literal = new Affinirum(literalScript);
+			expect(literal.type.equate(Type.Float)).toBe(true);
+			expect(literal.evaluate()).toBe(expected);
+
+			const expression = new Affinirum(inputScript, {
+				strict: true,
+				variables: { a: Type.Float, b: Type.Float },
+			});
+			expect(expression.type.equate(Type.Float)).toBe(true);
+			expect(expression.evaluate({ a, b })).toBe(expected);
+		});
+	});
 
 	describe("Root edge cases", () => {
 		runAffinirumTests([

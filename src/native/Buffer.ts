@@ -98,7 +98,7 @@ export const containsBuffer = (value: ArrayBuffer, search: ArrayBuffer, startPos
 		return true;
 	}
 	const pos = startPos == null ? 0 : startPos < 0 ? value.byteLength + startPos : startPos;
-	if (pos > value.byteLength - search.byteLength) {
+	if (pos < 0 || pos > value.byteLength - search.byteLength) {
 		return false;
 	}
 	const dvv = new DataView(value);

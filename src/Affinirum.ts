@@ -41,7 +41,7 @@ export class Affinirum {
 	protected readonly _variables = new Map<string, Variable>();
 	protected readonly _constants = new Map<string, Record<string, Constant>>(Constants);
 	protected readonly _functions = new Map<string, Constant>(Functions);
-	protected readonly _scope = new LexicalScope();
+	protected readonly _scope: LexicalScope;
 
 	/**
 		Creates compiled expression. Any parsed token not recognized as a constant or a function will be compiled as a variable.
@@ -56,6 +56,7 @@ export class Affinirum {
 		variables?: Record<string, Type>,
 	}) {
 		this._script = script;
+		this._scope = new LexicalScope(undefined, undefined, config?.type ?? Type.Unknown);
 		this._strict = config?.strict ?? false;
 		if (config?.variables) {
 			for (const [vname, vtype] of Object.entries(config.variables)) {
@@ -67,7 +68,7 @@ export class Affinirum {
 		if (!state.isEmpty) {
 			state.throwError("unexpected expression token or expression end");
 		}
-		this._root = this._root.compile(config?.type ?? Type.Unknown);
+		this._root = this._root.compile(this._scope.type());
 	}
 
 	/**
@@ -486,10 +487,10 @@ export class Affinirum {
 			return this._loop(state, scope);
 		}
 		else if (state.isExit) {
-			return new JumpNode(state, "exit", this._unit(state.next(), scope));
+			return new JumpNode(state, "exit", this._unit(state.next(), scope), this._scope.type());
 		}
 		else if (state.isReturn) {
-			return new JumpNode(state, "return", this._unit(state.next(), scope));
+			return new JumpNode(state, "return", this._unit(state.next(), scope), scope.type());
 		}
 		else if (state.isStop) {
 			const node = new JumpNode(state, "stop");
@@ -545,10 +546,10 @@ export class Affinirum {
 			}
 		}
 		state.closeParentheses().next();
-		const retType = state.isColon ? this._type(state.next(), scope) : Type.Unknown;
+		const returnType = state.isColon ? this._type(state.next(), scope) : Type.Unknown;
 		span.end(state);
 		const args = Array.from(variables.values());
-		const subscope = scope.subscope(variables);
+		const subscope = scope.subscope(variables, returnType);
 		const subnode =  this._unit(state, subscope);
 		const createFunction = (frame: CallFrame) => (...values: Value[]) => {
 			const subframe = frame.subframe(subscope.variables());
@@ -568,7 +569,7 @@ export class Affinirum {
 				throw e;
 			}
 		};
-		const constant = new Constant(createFunction, Type.functionType(retType, args.map((v) => v.type), variadic));
+		const constant = new Constant(createFunction, Type.functionType(returnType, args.map((v) => v.type), variadic));
 		return new ConstantNode(span, constant, subnode, createFunction);
 	}
 

@@ -21,6 +21,13 @@ describe("String function test", () => {
 			cases: [
 				{ values: { a: "   Abcd  0123  !", b: "abcd-0123 " }, result: true },
 				{ values: { a: "ab", b: "ba" }, result: false },
+				{ values: { a: "ab", b: "abc" }, result: false },
+				{ values: { a: "abc", b: "ab" }, result: false },
+				{ values: { a: "", b: "a" }, result: false },
+				{ values: { a: "a", b: "" }, result: false },
+				{ values: { a: "ab", b: "AB ! " }, result: true },
+				{ values: { a: "", b: " - " }, result: true },
+				{ values: { a: "İ-K", b: "i k" }, result: true },
 			],
 		},
 		{
@@ -28,6 +35,11 @@ describe("String function test", () => {
 			cases: [
 				{ values: { a: "  abcd  0123  !", b: "abcd-00123  " }, result: true },
 				{ values: { a: "  abcd  0123  ! ", b: "Ab cD-0123  " }, result: false },
+				{ values: { a: "ab", b: "abc" }, result: true },
+				{ values: { a: "abc", b: "ab" }, result: true },
+				{ values: { a: "", b: "a" }, result: true },
+				{ values: { a: "ab", b: "AB ! " }, result: false },
+				{ values: { a: "", b: " - " }, result: false },
 			],
 		},
 		{
@@ -37,6 +49,13 @@ describe("String function test", () => {
 				{ values: { v: "", str0: "123", pos: 0n }, result: false },
 				{ values: { v: "  ab CD  0123   ", str0: " A++Bcd ", pos: undefined }, result: true },
 				{ values: { v: "ab CD  0123   ", str0: "abcd", pos: 2n }, result: false },
+				{ values: { v: "abc", str0: "a", pos: 100n }, result: false },
+				{ values: { v: "abc", str0: "cd", pos: 2n }, result: false },
+				{ values: { v: "a", str0: " a ", pos: 0n }, result: true },
+				{ values: { v: "x a-b", str0: "ab", pos: 2n }, result: true },
+				{ values: { v: "abc", str0: "a", pos: -4n }, result: true },
+				{ values: { v: "", str0: " - ", pos: 100n }, result: true },
+				{ values: { v: "İa b", str0: "ab", pos: 1n }, result: true },
 			],
 		},
 		{
@@ -54,6 +73,13 @@ describe("String function test", () => {
 				{ values: { v: "", str0: "123", pos: 0n }, result: false },
 				{ values: { v: " ab CD  01+2+ 3 ", str0: " 0123 ", pos: undefined }, result: true },
 				{ values: { v: " abcdeeeeeef 123", str0: "123", pos: 7n }, result: false },
+				{ values: { v: "abc", str0: "c", pos: 0n }, result: false },
+				{ values: { v: "abc", str0: "za", pos: 1n }, result: false },
+				{ values: { v: "a", str0: " a ", pos: 1n }, result: true },
+				{ values: { v: "x a-b", str0: "a", pos: 3n }, result: true },
+				{ values: { v: "x a-b", str0: "a", pos: -2n }, result: true },
+				{ values: { v: "", str0: " - ", pos: -1n }, result: true },
+				{ values: { v: "İa", str0: "i", pos: 1n }, result: true },
 			],
 		},
 		{

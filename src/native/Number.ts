@@ -76,6 +76,7 @@ export const formatNumber = (value: bigint | number, formatting?: string) => {
 
 const typeComparator = Type.functionType(Type.Boolean, [Type.Number, Type.Number]);
 const typeOperator = Type.union(
+	Type.functionType(Type.Float, [Type.Float, Type.Float]),
 	Type.functionType(Type.Float, [Type.Float, Type.Integer]),
 	Type.functionType(Type.Float, [Type.Integer, Type.Float]),
 	Type.functionType(Type.Integer, [Type.Integer, Type.Integer]),

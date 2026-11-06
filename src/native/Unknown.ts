@@ -14,7 +14,7 @@ export const equate = (value1: Value, value2: Value) => {
 	}
 	if (typeof value1 !== typeof value2) {
 		if (typeof value1 === "number" && typeof value2 === "bigint") {
-			return value1 === Number(value2);
+			return Number.isInteger(value1) && BigInt(value1) === value2;
 		}
 		if (typeof value1 === "bigint" && typeof value2 === "number") {
 			return Number.isInteger(value2) && value1 === BigInt(value2);
@@ -30,8 +30,14 @@ export const equate = (value1: Value, value2: Value) => {
 	if (value1 instanceof Date && value2 instanceof Date) {
 		return value1.getTime() === value2.getTime();
 	}
+	if (value1 instanceof Date || value2 instanceof Date) {
+		return false;
+	}
 	if (value1 instanceof ArrayBuffer && value2 instanceof ArrayBuffer) {
 		return equateBuffers(value1, value2);
+	}
+	if (value1 instanceof ArrayBuffer || value2 instanceof ArrayBuffer) {
+		return false;
 	}
 	if (Array.isArray(value1) && Array.isArray(value2)) {
 		if (value1.length === value2.length) {
@@ -42,6 +48,9 @@ export const equate = (value1: Value, value2: Value) => {
 			}
 			return true;
 		}
+		return false;
+	}
+	if (Array.isArray(value1) || Array.isArray(value2)) {
 		return false;
 	}
 	const props = new Set([...Object.getOwnPropertyNames(value1), ...Object.getOwnPropertyNames(value2)]);
