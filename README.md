@@ -135,8 +135,8 @@ Casts can be followed by property access, index access, function calls, or anoth
 - Conditional switch definition, returns first or second value if prefix is true or false: **if condition {value1} else {value2}**,
  and if the **else** clause is omitted, the second value is **void**
 - Loop definition, iteratively evaluates suffix while prefix is true, returns last evaluated value: **while condition {...}**
-- Stop iteration: **stop**
-- Proceed to next iteration: **next**
+- Leave the loop: **>|**
+- Proceed to next iteration: **>>**
 - Function return operator: **~>value**
 - Execution exit operator: **=>value**
 

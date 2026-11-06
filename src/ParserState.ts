@@ -300,6 +300,8 @@ export class ParserState extends ScriptSpan {
 					break;
 				case ">":
 					switch (this._script.charAt(this._end)) {
+						case ">": ++this._end; this._fragment = idNext; break;
+						case "|": ++this._end; this._fragment = idStop; break;
 						case "=": ++this._end; this._fragment = funcGreaterOrEqual; break;
 						default: this._fragment = funcGreaterThan; break;
 					}
@@ -435,8 +437,6 @@ export class ParserState extends ScriptSpan {
 							case "if": this._fragment = idIf; break;
 							case "else": this._fragment = idElse; break;
 							case "while": this._fragment = idWhile; break;
-							case "stop": this._fragment = idStop; break;
-							case "next": this._fragment = idNext; break;
 							default: this._fragment = token; break;
 						}
 					}

@@ -14,10 +14,16 @@ describe("Jump command test", () => {
 		expect(script.evaluate() as bigint).toBe(120n);
 	});
 	it("rejects loop jumps that escape a function called inside a loop", () => {
-		for (const jump of ["stop", "next"]) {
-			const script = new Affinirum(`val f=~():void{${jump}};var i=0;while i<1{i+=1;f()};i`);
+		for (const [operator, jump] of [[">|", "stop"], [">>", "next"]]) {
+			const script = new Affinirum(`val f=~():void{${operator}};var i=0;while i<1{i+=1;f()};i`);
 			expect(() => script.evaluate()).toThrow(new RegExp(`unexpected ${jump} jump`));
 		}
+	});
+	it("parses compact loop jumps with former keywords as identifiers", () => {
+		expect(Affinirum.keywords).not.toContain("stop");
+		expect(Affinirum.keywords).not.toContain("next");
+		const script = new Affinirum("var stop=0;var next=0;while stop<3{stop+=1;while true{next+=1;>|};if stop>1|stop>=3{>>};next+=10};[stop,next]");
+		expect(script.evaluate()).toEqual([3n, 13n]);
 	});
 	it("propagates exit from a callback to the script boundary", () => {
 		const script = new Affinirum("[1,2,3].Derive(~(x:integer):integer{=>x*2});99");
@@ -87,13 +93,13 @@ f();
 		expect(script.evaluate({ a: 1n }) as bigint).toBe(51000n);
 		expect(script.evaluate({ a: 200n }) as bigint).toBeUndefined();
 	});
-	it("parses and evaluates loop expression with stop operator", () => {
+	it("parses and evaluates loop expression with >| operator", () => {
 		const script = new Affinirum(`
 var i = a;
 val r = while i<100 {
   if i>50 {
 		800;
-		stop;
+		>|;
 	}
 	else {
 		i+=1
@@ -105,13 +111,13 @@ r
 		expect(script.evaluate({ a: 1n }) as bigint).toBe(5100n);
 		expect(script.evaluate({ a: 200n }) as bigint).toBeUndefined();
 	});
-	it("parses and evaluates loop expression with next operator", () => {
+	it("parses and evaluates loop expression with >> operator", () => {
 		const script = new Affinirum(`
 var i = a;
 val r = while i<100 {
   if i==90 {
 		i=555;
-		next;
+		>>;
 	}
 	else
 		i+=1;
