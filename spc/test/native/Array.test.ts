@@ -1,6 +1,43 @@
+import { Affinirum, Value } from "../../../src/index.js";
 import { runAffinirumTests } from "../../util/AffinirumTest.js";
 
 describe("Array function test", () => {
+	it("joins arrays in order while preserving nested arrays", () => {
+		const expression = new Affinirum("Array.Join([1,[2,[3]]],[],[4,[5]])");
+		expect(expression.evaluate()).toEqual([1n, [2n, [3n]], 4n, [5n]]);
+	});
+
+	it("preserves nested items when joining a single array", () => {
+		const expression = new Affinirum("Array.Join([[1,2],[3,[4]]])");
+		expect(expression.evaluate()).toEqual([[1n, 2n], [3n, [4n]]]);
+	});
+
+	it("joins into a fresh array while preserving inputs and nested references", () => {
+		const nested = [1n, 2n];
+		const first = [nested];
+		const second = [3n];
+		const expression = new Affinirum("Array.Join(first,second)");
+		const result = expression.evaluate({ first, second }) as Value[];
+		expect(result).toEqual([nested, 3n]);
+		expect(result).not.toBe(first);
+		expect(result).not.toBe(second);
+		expect(result[0]).toBe(nested);
+		result.push(4n);
+		expect(first).toEqual([[1n, 2n]]);
+		expect(second).toEqual([3n]);
+		const repeated = expression.evaluate({ first, second });
+		expect(repeated).toEqual([nested, 3n]);
+		expect(repeated).not.toBe(result);
+	});
+
+	it("gives composition callbacks immutable snapshots of the accumulated properties", () => {
+		const expression = new Affinirum("var first:object;var second:object;val built=['a','b'].Compose(~(acc:object,key:string):integer{if key=='a'{first=acc}else{second=acc};1});[first,second,built]");
+		const result = expression.evaluate() as Value[];
+		expect(result).toEqual([{}, { a: 1n }, { a: 1n, b: 1n }]);
+		expect(result[0]).not.toBe(result[1]);
+		expect(result[1]).not.toBe(result[2]);
+	});
+
 	runAffinirumTests([
 		{
 			script: "v.Format()",
@@ -32,8 +69,8 @@ describe("Array function test", () => {
 		{
 			script: "Array.Join(a, b, c)[i]",
 			cases: [
-				{ values: { a: [[10]], b: [4], c: [12], i: 0n }, result: 10 },
-				{ values: { a: ["a"], b: [["b"]], c: ["c"], i: 1n }, result: "b" },
+				{ values: { a: [10], b: [4], c: [12], i: 0n }, result: 10 },
+				{ values: { a: ["a"], b: ["b"], c: ["c"], i: 1n }, result: "b" },
 			],
 		},
 		{
@@ -125,20 +162,6 @@ describe("Array function test", () => {
 			cases: [
 				{ values: { keys: ["a", "b", "c"] }, result: "a" },
 				{ values: { keys: ["b", "a"] }, result: "a" },
-			],
-		},
-		{
-			script: "arr1.Prepend(a, b)[i][j]",
-			cases: [
-				{ values: { arr1: [3, 4], a: 1, b: 2, i: 0n, j: 1n }, result: 2 },
-				{ values: { arr1: ["c"], a: "a", b: "b", i: 0n, j: 0n }, result: "a" },
-			],
-		},
-		{
-			script: "arr1.Append(a, b)[i][j]",
-			cases: [
-				{ values: { arr1: [1, 2], a: 3, b: 4, i: 2n, j: 1n }, result: 4 },
-				{ values: { arr1: ["a"], a: "b", b: "c", i: 1n, j: 0n }, result: "b" },
 			],
 		},
 		{

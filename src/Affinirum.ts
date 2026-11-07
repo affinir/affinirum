@@ -18,16 +18,16 @@ import { BlockNode } from "./node/BlockNode.js";
 import { CallNode } from "./node/CallNode.js";
 import { CastNode } from "./node/CastNode.js";
 import { ConstantNode } from "./node/ConstantNode.js";
+import { ReturnNode } from "./node/ReturnNode.js";
 import { JumpNode } from "./node/JumpNode.js";
 import { LoopNode } from "./node/LoopNode.js";
 import { ObjectNode } from "./node/ObjectNode.js";
-import { SwitchNode } from "./node/SwitchNode.js";
+import { TernaryNode } from "./node/TernaryNode.js";
 import { VariableNode } from "./node/VariableNode.js";
 import { ScriptSpan } from "./ScriptSpan.js";
 import { ParserState } from "./ParserState.js";
 import { LexicalScope } from "./LexicalScope.js";
 import { CallFrame } from "./CallFrame.js";
-import { JumpException } from "./JumpException.js";
 
 export class Affinirum {
 
@@ -127,13 +127,16 @@ export class Affinirum {
 			return normalize(this._root.evaluate(frame) ?? undefined);
 		}
 		catch (e) {
-			if (e instanceof JumpException) {
-				if (e.jump === "exit") {
+			if (e instanceof ReturnNode) {
+				if (e.scope === "global") {
 					return normalize(e.value ?? undefined);
 				}
 				else {
-					throw this._root.throwError(`unexpected ${e.jump} jump`);
+					throw this._root.throwError(`unexpected ${e.scope} return`);
 				}
+			}
+			if (e instanceof JumpNode) {
+				this._root.throwError(`unexpected ${e.action} jump`);
 			}
 			throw e;
 		}
@@ -481,19 +484,19 @@ export class Affinirum {
 			return this._function(state, scope);
 		}
 		else if (state.isIf) {
-			return this._switch(state, scope);
+			return this._ternary(state, scope);
 		}
 		else if (state.isWhile) {
 			return this._loop(state, scope);
 		}
-		else if (state.isExit) {
-			return new JumpNode(state, "exit", this._unit(state.next(), scope), this._scope.type());
-		}
 		else if (state.isReturn) {
-			return new JumpNode(state, "return", this._unit(state.next(), scope), scope.type());
+			return new ReturnNode(state, "function", this._unit(state.next(), scope), scope.type());
 		}
-		else if (state.isStop) {
-			const node = new JumpNode(state, "stop");
+		else if (state.isResult) {
+			return new ReturnNode(state, "global", this._unit(state.next(), scope), this._scope.type());
+		}
+		else if (state.isExit) {
+			const node = new JumpNode(state, "exit");
 			state.next();
 			return node;
 		}
@@ -558,13 +561,13 @@ export class Affinirum {
 				return normalize(subnode.evaluate(subframe));
 			}
 			catch (e) {
-				if (e instanceof JumpException) {
-					if (e.jump === "return") {
+				if (e instanceof ReturnNode) {
+					if (e.scope === "function") {
 						return normalize(e.value);
 					}
-					if (e.jump === "stop" || e.jump === "next") {
-						subnode.throwError(`unexpected ${e.jump} jump`);
-					}
+				}
+				if (e instanceof JumpNode) {
+					subnode.throwError(`unexpected ${e.action} jump`);
 				}
 				throw e;
 			}
@@ -580,7 +583,7 @@ export class Affinirum {
 		return new LoopNode(span, cnode, this._unit(state, scope));
 	}
 
-	protected _switch(state: ParserState, scope: LexicalScope) {
+	protected _ternary(state: ParserState, scope: LexicalScope) {
 		const span = state.start();
 		const cnode = this._unit(state.next(), scope);
 		span.end(state);
@@ -588,7 +591,7 @@ export class Affinirum {
 		const celse = state.isElse
 			? this._unit(state.next(), scope)
 			: new ConstantNode(state.start(), Constant.Null);
-		return new SwitchNode(span, cnode, [cthen, celse]);
+		return new TernaryNode(span, cnode, [cthen, celse]);
 	}
 
 	protected _type(state: ParserState, scope: LexicalScope): Type {

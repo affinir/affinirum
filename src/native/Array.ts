@@ -8,7 +8,6 @@ const typePredicate = Type.functionType(Type.Boolean, [Type.Unknown, Type.Option
 const typeItemFinder = Type.functionType(Type.Unknown, [Type.Array, typePredicate]);
 const typeIndexFinder = Type.functionType(Type.OptionalInteger, [Type.Array, typePredicate]);
 const typeConditionSet = Type.functionType(Type.Boolean, [Type.Array, typePredicate]);
-const typeVariadicInsert = Type.functionType(Type.Array, [Type.Array, Type.Array], true);
 const typeArrayOperator = Type.functionType(Type.Array, [Type.Array, Type.Array]);
 
 export const funcFirst = new Constant(
@@ -103,39 +102,24 @@ export const funcReduce = new Constant(
 );
 
 export const funcCompose = new Constant(
-	(value: string[], callback: (acc: { [ key: string ]: Value }, v: string, i: bigint, arr: string[]) => { [ key: string ]: Value }) => {
+	(value: string[], callback: (acc: { [ key: string ]: Value }, v: string, i: bigint, arr: string[]) => Value) => {
 		if (value == null) {
 			return undefined;
 		}
-		const obj: Record<string, any> = Object.create(null);
+		let obj = Object.create(null) as Record<string, Value>;
 		for (let i = 0; i < value.length; ++i) {
 			const key =  value[i];
-			obj[key] = callback(obj, key, BigInt(i), value);
+			const item = callback(obj, key, BigInt(i), value);
+			obj = Object.assign(Object.create(null) as Record<string, Value>, obj, { [key]: item });
 		}
 		return obj;
 	},
 	Type.functionType(Type.Object, [Type.Array, Type.functionType(Type.Unknown, [Type.Object, Type.String, Type.OptionalInteger, Type.OptionalArray])]),
 );
 
-export const funcPrepend = new Constant(
-	(value: Value[], items: Value[]) => {
-		value?.unshift(items);
-		return value;
-	},
-	typeVariadicInsert,
-);
-
-export const funcAppend = new Constant(
-	(value: Value[], items: Value[]) => {
-		value?.push(items);
-		return value;
-	},
-	typeVariadicInsert,
-);
-
 const funcJoin = new Constant(
 	(values: (Value[] | Value[][])[]) =>
-		(values as []).flat(Infinity),
+		values.flat(),
 	Type.functionType(Type.Array, [Type.arrayType([Type.Array])], true),
 );
 

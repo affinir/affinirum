@@ -25,10 +25,10 @@ describe("Variadic function argument test", () => {
 		expect(expression.evaluate({ x: 1n }) as bigint).toBe(3n);
 		expect(expression.evaluate({ x: 5n }) as bigint).toBe(7n);
 	});
-	it("keeps mutations to variadic parameters local to each call", () => {
-		const expression = new Affinirum("val f=~(a:...[integer]):integer{a.Append(9);a.Length};val g=~():integer{f(1,2)};[g(),g()]");
-		expect<unknown>(expression.evaluate()).toEqual([3n, 3n]);
-		expect<unknown>(expression.evaluate()).toEqual([3n, 3n]);
+	it("preserves variadic parameters when producing concatenated results", () => {
+		const expression = new Affinirum("val f=~(a:...[integer]):[integer]{val extended=a+[9];[a.Length,extended.Length]};val g=~():[integer]{f(1,2)};[g(),g()]");
+		expect(expression.evaluate()).toEqual([[2n, 3n], [2n, 3n]]);
+		expect(expression.evaluate()).toEqual([[2n, 3n], [2n, 3n]]);
 	});
 	it("prefers a matching fixed overload over a variadic overload", () => {
 		const overloaded = Type.union(

@@ -2,7 +2,7 @@ import { Node } from "../Node.js";
 import { ScriptSpan } from "../ScriptSpan.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
-import { JumpException } from "../JumpException.js";
+import { JumpNode } from "./JumpNode.js";
 import { CallFrame } from "../CallFrame.js";
 
 export class LoopNode extends Node {
@@ -32,11 +32,11 @@ export class LoopNode extends Node {
 				result = this._subnode.evaluate(frame);
 			}
 			catch (e) {
-				if (e instanceof JumpException) {
-					if (e.jump === "stop") {
+				if (e instanceof JumpNode) {
+					if (e.action === "exit") {
 						break;
 					}
-					if (e.jump === "next") {
+					if (e.action === "next") {
 						continue;
 					}
 				}

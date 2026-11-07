@@ -14,4 +14,5 @@ export const Keywords = [
 	"val",
 	"if", "else",
 	"while",
+	"next", "exit",
 ];

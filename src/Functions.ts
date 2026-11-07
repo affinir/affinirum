@@ -1,7 +1,7 @@
 import { Constant } from "./Constant.js";
 import { funcAdd } from "./native/Aggregable.js";
 import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
-	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose, funcPrepend, funcAppend } from "./native/Array.js";
+	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose } from "./native/Array.js";
 import { funcBoolean } from "./native/Boolean.js";
 import { funcByte } from "./native/Buffer.js";
 import { funcSlice, funcSplice, funcInject } from "./native/Enumerable.js";
@@ -33,8 +33,6 @@ export const Functions: [string, Constant][] = [
 	["Filter", funcFilter],
 	["Reduce", funcReduce],
 	["Compose", funcCompose],
-	["Prepend", funcPrepend],
-	["Append", funcAppend],
 	// Buffer
 	["Byte", funcByte],
 	// Enumerable

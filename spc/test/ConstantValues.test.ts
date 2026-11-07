@@ -51,7 +51,7 @@ describe("Constant value test", () => {
 		{ script: "\"0\"+\"1\"+'2'", cases: [{ result: "012" }] },
 		{ script: "[100,200,300][1]+[1,2,3][0]", cases: [{ result: 201n }] },
 		{ script: "[0,1,2,3].Add([10,20,30,40])[5]", cases: [{ result: 20n }] },
-		{ script: "Array.Join([[10]], [4], [12])[0]", cases: [{ result: 10n }] },
+		{ script: "Array.Join([[10]], [4], [12])[0][0]", cases: [{ result: 10n }] },
 		{ script: "Integer.Sum([1, 2, 3, 4].Add([5]))", cases: [{ result: 15n }] },
 		{ script: "Integer.Sum([0,1,2,3]+[10,20,30,40],100)", cases: [{ result: 206n }] },
 		{ script: "[[[10]]][0][0][0]", cases: [{ result: 10n }] },
@@ -65,7 +65,7 @@ describe("Constant value test", () => {
 	it("converts evaluated null values into undefined", () => {
 		expect(new Affinirum("JSON.Parse(\"null\")").evaluate({})).toBeUndefined();
 	});
-	it("converts null exit values into undefined", () => {
+	it("converts null global return values into undefined", () => {
 		expect(new Affinirum("=>JSON.Parse(\"null\")").evaluate({})).toBeUndefined();
 	});
 });

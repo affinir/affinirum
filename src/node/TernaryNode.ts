@@ -6,7 +6,7 @@ import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
 
-export class SwitchNode extends Node {
+export class TernaryNode extends Node {
 
 	protected _type: Type;
 

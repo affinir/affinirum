@@ -43,9 +43,9 @@ const idVal = Symbol();
 const idIf = Symbol();
 const idElse = Symbol();
 const idWhile = Symbol();
-const idExit = Symbol();
+const idResult = Symbol();
 const idReturn = Symbol();
-const idStop = Symbol();
+const idExit = Symbol();
 const idNext = Symbol();
 
 export class ParserState extends ScriptSpan {
@@ -174,16 +174,16 @@ export class ParserState extends ScriptSpan {
 		return this._fragment === idWhile;
 	}
 
-	get isExit(): boolean {
-		return this._fragment === idExit;
+	get isResult(): boolean {
+		return this._fragment === idResult;
 	}
 
 	get isReturn(): boolean {
 		return this._fragment === idReturn;
 	}
 
-	get isStop(): boolean {
-		return this._fragment === idStop;
+	get isExit(): boolean {
+		return this._fragment === idExit;
 	}
 
 	get isNext(): boolean {
@@ -300,8 +300,6 @@ export class ParserState extends ScriptSpan {
 					break;
 				case ">":
 					switch (this._script.charAt(this._end)) {
-						case ">": ++this._end; this._fragment = idNext; break;
-						case "|": ++this._end; this._fragment = idStop; break;
 						case "=": ++this._end; this._fragment = funcGreaterOrEqual; break;
 						default: this._fragment = funcGreaterThan; break;
 					}
@@ -321,7 +319,7 @@ export class ParserState extends ScriptSpan {
 				case "=":
 					switch (this._script.charAt(this._end)) {
 						case "=": ++this._end; this._fragment = funcEqual; break;
-						case ">": ++this._end; this._fragment = idExit; break;
+						case ">": ++this._end; this._fragment = idResult; break;
 						default: this._fragment = funcAssignment; break;
 					}
 					break;
@@ -437,6 +435,8 @@ export class ParserState extends ScriptSpan {
 							case "if": this._fragment = idIf; break;
 							case "else": this._fragment = idElse; break;
 							case "while": this._fragment = idWhile; break;
+							case "next": this._fragment = idNext; break;
+							case "exit": this._fragment = idExit; break;
 							default: this._fragment = token; break;
 						}
 					}

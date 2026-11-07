@@ -11,7 +11,10 @@ export abstract class Node extends ScriptSpan {
 		super(span);
 	}
 
-	abstract type: Type;
+	get type(): Type {
+		return Type.Void;
+	}
+
 	abstract compile(type: Type): Node;
 	abstract evaluate(frame: CallFrame): Value;
 

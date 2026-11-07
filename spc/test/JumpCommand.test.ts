@@ -1,6 +1,9 @@
 import { Affinirum, Type } from "../../src/index.js";
 
 describe("Jump command test", () => {
+	it("rejects the removed block return operator", () => {
+		expect(() => new Affinirum("{->1;2}")).toThrow();
+	});
 	it("returns from each callback without terminating the array operation", () => {
 		const script = new Affinirum("[1,2,3].Derive(~(x:integer):integer{~>x*2})");
 		expect<unknown>(script.evaluate()).toEqual([2n, 4n, 6n]);
@@ -14,18 +17,37 @@ describe("Jump command test", () => {
 		expect(script.evaluate() as bigint).toBe(120n);
 	});
 	it("rejects loop jumps that escape a function called inside a loop", () => {
-		for (const [operator, jump] of [[">|", "stop"], [">>", "next"]]) {
-			const script = new Affinirum(`val f=~():void{${operator}};var i=0;while i<1{i+=1;f()};i`);
+		for (const jump of ["exit", "next"]) {
+			const script = new Affinirum(`val f=~():void{${jump}};var i=0;while i<1{i+=1;f()};i`);
 			expect(() => script.evaluate()).toThrow(new RegExp(`unexpected ${jump} jump`));
 		}
 	});
-	it("parses compact loop jumps with former keywords as identifiers", () => {
-		expect(Affinirum.keywords).not.toContain("stop");
-		expect(Affinirum.keywords).not.toContain("next");
-		const script = new Affinirum("var stop=0;var next=0;while stop<3{stop+=1;while true{next+=1;>|};if stop>1|stop>=3{>>};next+=10};[stop,next]");
+	it("uses exit and next in nested loops and conditional branches", () => {
+		const script = new Affinirum("var iteration=0;var visits=0;while iteration<3{iteration+=1;while true{visits+=1;exit};if iteration>1|iteration>=3{next};visits+=10};[iteration,visits]");
 		expect(script.evaluate()).toEqual([3n, 13n]);
 	});
-	it("propagates exit from a callback to the script boundary", () => {
+	it("reserves exit and next as loop keywords", () => {
+		for (const keyword of ["exit", "next"]) {
+			expect(Affinirum.keywords).toContain(keyword);
+			expect(() => new Affinirum(`var ${keyword}=0`)).toThrow(/missing variable name/);
+			expect(() => new Affinirum(`val f=~(${keyword}:integer):integer{1};f(0)`)).toThrow(/missing function argument name/);
+		}
+	});
+	it("allows identifiers that contain loop keywords", () => {
+		const script = new Affinirum("val nextCount=2;val exitCount=3;nextCount+exitCount");
+		expect(script.evaluate()).toBe(5n);
+	});
+	it("rejects loop jumps outside a loop", () => {
+		for (const jump of ["exit", "next"]) {
+			expect(() => new Affinirum(jump).evaluate()).toThrow(new RegExp(`unexpected ${jump} jump`));
+		}
+	});
+	it("rejects the removed symbolic loop jumps", () => {
+		for (const operator of [">>", ">|"]) {
+			expect(() => new Affinirum(`while true{${operator}}`)).toThrow();
+		}
+	});
+	it("propagates a global return from a callback to the script boundary", () => {
 		const script = new Affinirum("[1,2,3].Derive(~(x:integer):integer{=>x*2});99");
 		expect(script.evaluate() as bigint).toBe(2n);
 	});
@@ -44,7 +66,7 @@ describe("Jump command test", () => {
 			expect(new Affinirum(script).evaluate()).toBe(7n);
 		}
 	});
-	it("checks exits against the script type through nested blocks and callbacks", () => {
+	it("checks global returns against the script type through nested blocks and callbacks", () => {
 		for (const script of [
 			"{{if true{while true{{=>'bad'}}}}};1",
 			"[1,2,3].Derive(~(x:integer):string{{{=>'bad'}}});99",
@@ -57,7 +79,7 @@ describe("Jump command test", () => {
 		expect(new Affinirum("val f=~():integer{{{=>'done'}}};f();'fallback'", { type: Type.String }).evaluate())
 			.toBe("done");
 	});
-	it("parses and evaluates expression with exit operator inside loop", () => {
+	it("parses and evaluates a global return inside a loop", () => {
 		const script = new Affinirum(`
 var i = a;
 val r = while i<100 {
@@ -75,7 +97,7 @@ r;
 		expect(script.evaluate({ a: 1n }) as bigint).toBe(51000n);
 		expect(script.evaluate({ a: 200n }) as bigint).toBeUndefined();
 	});
-	it("parses and evaluates expression with exit operator inside loop in function", () => {
+	it("parses and evaluates a function return inside a loop", () => {
 		const script = new Affinirum(`
 var i = a;
 val f = ~():integer while i<100 {
@@ -93,13 +115,13 @@ f();
 		expect(script.evaluate({ a: 1n }) as bigint).toBe(51000n);
 		expect(script.evaluate({ a: 200n }) as bigint).toBeUndefined();
 	});
-	it("parses and evaluates loop expression with >| operator", () => {
+	it("parses and evaluates a loop expression with exit", () => {
 		const script = new Affinirum(`
 var i = a;
 val r = while i<100 {
   if i>50 {
 		800;
-		>|;
+		exit;
 	}
 	else {
 		i+=1
@@ -111,13 +133,13 @@ r
 		expect(script.evaluate({ a: 1n }) as bigint).toBe(5100n);
 		expect(script.evaluate({ a: 200n }) as bigint).toBeUndefined();
 	});
-	it("parses and evaluates loop expression with >> operator", () => {
+	it("parses and evaluates a loop expression with next", () => {
 		const script = new Affinirum(`
 var i = a;
 val r = while i<100 {
   if i==90 {
 		i=555;
-		>>;
+		next;
 	}
 	else
 		i+=1;

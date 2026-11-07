@@ -1,12 +1,12 @@
 {
 	"name": "affinirum",
-	"version": "1.5.5",
+	"version": "1.6.0",
 	"description": "Affinirum Scripting Language",
 	"main": "dst/cjs/index.js",
 	"module": "dst/index.js",
 	"types": "dst/index.d.ts",
 	"type": "module",
-	"hopmepage": "https://github.com/affinir/affinirum",
+	"homepage": "https://github.com/affinir/affinirum",
 	"bugs": "https://github.com/affinir/affinirum/issues",
 	"author": "Riad Baghbanli <riadb@affinir.com>",
 	"contributors": [
@@ -43,7 +43,7 @@
 		"lint-fix": "eslint ./src ./spc --fix",
 		"prepare": "npm run build"
 	},
-	"license": "AGPLv3.0",
+	"license": "AGPL-3.0-only",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/affinir/affinirum.git"

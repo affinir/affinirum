@@ -1,175 +1,439 @@
 # Affinirum
-A fast, embeddable scripting language powered by a lightweight recursive descent parser,
- designed to evaluate complex algorithmic logic with precision and flexibility.
-Ideal for embedding in host applications, it offers clear syntax, type inference, permissive type checking,
- and support for host-provided values and functions—enabling rapid prototyping and advanced rule evaluation
- in applications that control which capabilities are exposed to scripts.
 
-Supports algebraic and boolean expressions, variables, conditionals, loops, and a rich standard library for working with numbers, buffers, strings, arrays, and objects.
+Affinirum is an embeddable scripting language for expressions, rules, and algorithmic logic in JavaScript applications.
+It supports variables, conditionals, loops, first-class functions, and a standard library for numbers, timestamps,
+buffers, strings, arrays, and objects. The host application supplies input values and functions.
 
-Runs in browsers and Node.js.
+Runs in browsers and Node.js with an ES2022 runtime. The package provides ESM, CommonJS, and TypeScript declarations.
 
-Target: ES2022 [browser+Node.js][ESM+CJS].
+- Parse once and evaluate repeatedly with different inputs.
+- Infer types and fold constant expressions during compilation.
+- Use immutable data values with reassignable `var` bindings.
+- Define typed functions, callbacks, and variadic parameters.
 
-## Features
+## Contents
 
-- Efficient execution: Parse once, execute many times with different variable values.
-- Variable support: Input and statement-scoped variables.
-- Function support: Variadic and first-class functions for expressive scripting.
-- Optimized evaluation: Constant expression folding with type checks.
-- Comprehensive set of operators: Boolean, arithmetic, buffer, string, comparison, and indexing support.
-- Built-in functions: Rich set of mathematical and composition utilities.
+- [Install and quick start](#install-and-quick-start)
+- [Language basics](#language-basics)
+  - [Statements and literals](#statements-and-literals)
+  - [Variables and immutable values](#variables-and-immutable-values)
+  - [Conditionals](#conditionals)
+  - [Loops](#loops)
+  - [Functions and returns](#functions-and-returns)
+  - [Arrays and objects](#arrays-and-objects)
+  - [Method calls and chaining](#method-calls-and-chaining)
+  - [Types](#types)
+  - [Operators and precedence](#operators-and-precedence)
+- [Embedding API](#embedding-api)
+  - [Typed inputs and strict mode](#typed-inputs-and-strict-mode)
+  - [Host functions](#host-functions)
+  - [JavaScript value mapping](#javascript-value-mapping)
+  - [Errors](#errors)
+  - [Affinirum Notation](#affinirum-notation)
+- [Standard library](#standard-library)
+  - [Global functions](#global-functions)
+  - [Method functions](#method-functions)
+- [Detailed type rules](#detailed-type-rules)
 
-## Specifications
+## Install and quick start
 
-A script may contain multiple expressions separated by semicolons, as well as blocks of statements.
-The value of a block is defined by the value of its last expression. An empty block has type **void** and evaluates to JavaScript `undefined`.
-- Scientific notation is supported for floating point numbers, like *0.1281e+2*.
-- ISO Timestamps prefixed with **@**, like *@2025-05-11T19:09:21.320Z*.
-- Hexadecimal buffer values are enclosed in backticks (**\`**), like *\`10ab0901\`*.
-- String literals may be enclosed in single (**'**), or double (**"**) quotes, like *'string value1'*, or *"string value2"*.
-- Line comments begin with a double slash (**//**), while block comments are enclosed in triple slashes (**///**).
+```sh
+npm install affinirum
+```
 
-### Arrays
-Array is an ordered sequence of values of any type.
-It is defined by comma-separated values enclosed in brackets (**[]**),
- like  *[0,1,2]*, *["a","b","c"]*.
-<br>An empty array is represented as **[]**.
+Create an instance to compile a script, then call `evaluate` with its inputs. Reuse the instance to avoid parsing again:
 
-Array elements can be accessed using the access operator (**.**),
- or using brackets with a zero-based numeric index, like *theArray.23*, *theArray[0]*, *theArray[10]*, *theArray[indexVar]*.
+```js
+import { Affinirum } from "affinirum";
 
-An easy way to check whether an array contains an index is to use the presence operator (**?**), like *theArray?50*.
+const expression = new Affinirum("a + b");
+console.log(expression.evaluate({ a: 10n, b: 20n })); // 30n
+console.log(expression.evaluate({ a: 40n, b: 2n })); // 42n
+```
 
-### Objects
-Object is a container of named values of any type.
-It is defined by comma-separated key-value pairs enclosed in brackets (**[]**), where each key is separated from its value by a colon (**:**),
- like *["key1":100, "key2":"abc"]*, *["a":0, "b":"str", "c":valueVar]*.
-<br>An empty object is represented as **[\:]**.
+The `n` suffix belongs to JavaScript's `bigint` syntax. Inside an Affinirum script, write integers as `10`, not `10n`.
+JavaScript `number` inputs represent Affinirum floats; `bigint` inputs represent integers.
 
-Object properties can be accessed using the access operator (**.**) with a string literal, token,
- or with brackets containing a string key,
- like *theObject."key"*, *theObject.key*, or *theObject["key"]*.
+CommonJS applications can use `require`:
 
-An easy way to check whether an object contains a key is to use the presence operator (**?**), like *theObject?myKey*.
+```js
+const { Affinirum } = require("affinirum");
 
-### Functions
-A function is a callable code unit that produces a value.
-The standard library provides built-in functions. Host functions can be supplied as typed input variables,
-and subroutines can be defined in Affinirum code.
+console.log(new Affinirum("1 + 2").evaluate()); // 3n
+```
 
-### Variables
-Valid variable and function names must start with a letter, number sign (**\#**), dollar sign (**\$**), or underscore (**\_**)
- and can be followed by any combination of alphanumeric characters, number signs, dollar signs, or underscores,
- like *x*, *\_a1$*, *abc25*.
+The examples under **Language basics** contain Affinirum source. Pass them as strings to `new Affinirum(script)`.
+Scripts without external inputs can be evaluated with `evaluate()`.
 
-Whitespace characters are ignored.
+## Language basics
+
+### Statements and literals
+
+Separate statements with semicolons; a newline alone does not separate them. A script or `{ ... }` block returns the
+value of its last expression. An empty block has type `void` and evaluates to JavaScript `undefined`.
+Use parentheses to group expressions and commas to separate arguments or collection items.
+
+```text
+val base = 10;
+val extra = { val factor = 2; factor * 3 };
+base + extra // 16
+```
+
+| Kind | Literal examples |
+| --- | --- |
+| Integer | `42`, `-7` |
+| Float | `42.0`, `0.5`, `1e3`, `0.1281e+2` |
+| Boolean | `true`, `false` |
+| String | `'hello'`, `"hello"` |
+| Timestamp | `@2025-05-11T19:09:21.320Z` |
+| Buffer | `` `10ab0901` `` (hexadecimal bytes) |
+| Void | `null` |
+| Array | `[1, 2, 3]`, `[]` |
+| Object | `["name": "Ada", "score": 10]`, `[:]` |
+
+Integers are signed 64-bit values; overflow wraps to that range. Floats use IEEE 754 binary64.
+Integer division truncates toward zero: `7 / 2` is `3`, while `7.0 / 2` is `3.5`.
+Arithmetic involving a float produces a float.
+
+Whitespace outside literals and comments is ignored. Names are case-sensitive. Line comments start with `//`;
+block comments are enclosed in `/// ... ///`. Strings support escapes such as `\n`, `\r`, `\t`, `\\`, and escaped quotes.
+
+### Variables and immutable values
+
+Use `val` for a binding that cannot be reassigned and `var` for one that can. Types can be inferred or declared after a colon:
+
+```text
+val step = 2;
+var count: integer = 1;
+count += step;
+count // 3
+```
+
+Bindings declared inside a block are local to that block. Names must start with an ASCII letter, `#`, `$`, or `_`,
+followed by any combination of those characters and digits, such as `x`, `_a1$`, or `abc25`.
+Language keywords, including `var`, `val`, `if`, `else`, `while`, `next`, and `exit`, as well as type names and their
+aliases, are reserved.
+
+All values in Affinirum are immutable at the script level. Collection operations produce replacement values while
+preserving their inputs. Reassigning a `var` preserves the value held by other bindings:
+
+```text
+var items = [1];
+val original = items;
+items += [2];
+[items, original] // [[1,2],[1]]
+```
+
+Array items and object properties cannot be assigned in place. Use concatenation, collection methods, or `Object.Merge`
+to create an updated value.
+
+### Conditionals
+
+`if condition { ... } else { ... }` is a conditional expression: it evaluates only the selected branch and returns
+that branch's value. The condition must be boolean. If `else` is omitted and the condition is false, the result is `null`.
+
+```text
+val score = 82;
+val category = if score >= 60 { "pass" } else { "fail" };
+category // "pass"
+```
+
+### Loops
+
+`while condition { ... }` repeats while its boolean condition is true. Use `next` to skip the rest of the current
+iteration and check the condition again, or `exit` to leave the innermost loop:
+
+```text
+var i = 0;
+var total = 0;
+while i < 10 {
+    i += 1;
+    if i == 3 { next };
+    if i == 6 { exit };
+    total += i
+};
+total // 12
+```
+
+A loop returns its last completed iteration's value, or `null` if no iteration completes. An iteration interrupted
+by `next` or `exit` does not replace that result. Neither keyword can jump from a called function into its caller's loop.
+
+### Functions and returns
+
+Define a function with `~(name: type, ...): return-type { ... }`. Its last expression is its result; use `~>value`
+to return from the current function early:
+
+```text
+val absolute = ~(value: integer): integer {
+    if value < 0 { ~> -value };
+    value
+};
+absolute(-5) // 5
+```
+
+Functions are values and can be passed as callbacks. A final variadic parameter collects the remaining arguments into
+an array. Declare it with `...` followed by an array type:
+
+```text
+val sum = ~(values: ...[integer]): integer { Integer.Sum(values) };
+sum(1, 2, 3) // 6
+```
+
+Use the global return operator `=>value` to finish the entire script evaluation, including from inside a function or callback:
+
+```text
+val stop = ~(): integer { =>42 };
+stop();
+0 // The script returns 42 before reaching this expression.
+```
+
+### Arrays and objects
+
+Arrays hold ordered values of any type and use zero-based indexes. Access an item with brackets or a dot followed by
+an integer. The presence operator `?` checks whether an index exists:
+
+```text
+val items = [10, 20, 30];
+[items[0], items.1, items?2, items?3] // [10,20,true,false]
+```
+
+Use `+` to concatenate arrays. Wrap an individual item in an array when adding it:
+
+```text
+[1, 2] + [3, 4]; // [1,2,3,4]
+[0] + [1, 2];    // [0,1,2]
+[1] + [[2, 3]]  // [1,[2,3]]
+```
+
+Objects hold named values. Define them with string keys and colons inside brackets; `[:]` is an empty object.
+Access properties with `record.key`, `record."key"`, or `record["key"]`. Use `record?key` to check for a literal key,
+or `record.Has(keyVariable)` for a computed key.
+
+```text
+val original = ["name": "Ada", "score": 10];
+val updated = Object.Merge(original, ["score": 20, "active": true]);
+[original.score, updated.score, updated.active] // [10,20,true]
+```
+
+`Object.Merge` creates a new object; later arguments take precedence for duplicate keys. Array concatenation and
+object merging are shallow: nested values are shared by reference, with their contents preserved at the script level.
+
+### Method calls and chaining
+
+Built-in methods use `value.Method(arguments)`. Parentheses can be omitted when no explicit arguments are needed:
+`items.Length` and `items.Length()` are equivalent. Method results can be chained:
+
+```text
+" hello ".Trim.UpperCase // "HELLO"
+```
+
+Callbacks make collection transformations composable:
+
+```text
+val values = [1, 2, 3];
+values.Derive(~(item: integer): integer { item * 2 })
+      .Filter(~(item: integer): boolean { item > 3 }) // [4,6]
+```
+
+After a dot, a built-in method name takes precedence over an object property with the same name.
+Use brackets or a quoted key to read such a property, for example `record["Length"]` or `record."Length"`.
 
 ### Types
-- **void** for the absence of a value; the **null** literal and injected JavaScript `null` or `undefined` values have this type, and a **void** result is returned as JavaScript `undefined`
-- **boolean** (alias **bool**) for values **true** and **false**
-- **timestamp** (alias **time**) for date-time values backed by JavaScript `Date` objects
-- **float** (alias **f64**) for 64-bit floating point values in binary64, IEEE 754 binary floating-point format
-- **integer** (alias **i64**) for signed 64-bit integer values; arithmetic overflow wraps to the signed 64-bit range
-- **buffer** for ordered sequences of bytes
-- **string** for ordered sequences of characters, text strings
-- **array** for ordered sequences of values
-- **object** for collections of named values
-- **function** for built-in, injected or script-defined subroutines
-- **[type]** for a homogeneous array whose items have the specified type, such as **[string]**
-- **[type1, type2, ...]** for a tuple whose items have the corresponding types
-- **??** for unknown or variant type
-- Type grouping: **(...)**
-- Type union: **|**
-- Type optionality modifier: **?**
 
-Canonical type names and their aliases are reserved and cannot be used as variable or function names.
+| Type | Meaning |
+| --- | --- |
+| `void` | Absence of a value; the script literal is `null` |
+| `boolean` / `bool` | `true` or `false` |
+| `timestamp` / `time` | Date and time |
+| `float` / `f64` | 64-bit floating-point number |
+| `integer` / `i64` | Signed 64-bit integer |
+| `buffer` | Sequence of bytes |
+| `string` | Text |
+| `array` | Sequence of values |
+| `object` | Named values |
+| `function` | Built-in, host-provided, or script-defined function |
+| `??` | Unknown or variant type, compatible with every type |
+| `[string]` | Array of strings |
+| `[integer, string]` | Tuple with integer and string entries |
+| `["name": string]` | Object with a required string property named `name` |
+| `~(integer): string` | Function taking an integer and returning a string |
+| `integer?` | Optional integer: `void` or `integer` |
+| `integer \| string` | Union of types |
 
-### Type-checking policy
-Affinirum uses intentionally permissive type checking. Type information helps reject clearly incompatible expressions,
-select function overloads, and report useful compilation errors; it is not intended to enforce strict static
-substitutability or prove that every accepted expression is safe for every possible runtime value.
+Parentheses group types, for example `(integer | string)?`. Type checking is intentionally permissive; see
+[Detailed type rules](#detailed-type-rules) for structural types, callback compatibility, and variadic signatures.
 
-- **??** is the unknown or variant type and is compatible with every type. It includes **void**, so a **??**
-  function parameter may receive **null**, `undefined`, or be omitted.
-- An optional type such as **integer?** is the union **void | integer**. Optional parameters may receive **null**, `undefined`,
-  or be omitted.
-- A call with known argument types must match one complete function overload. Parameter matches from separate overloads
-  are not combined to accept a call.
-- Object types are open structural constraints: required properties and their values are checked, while additional
-  properties are allowed.
-- Tuple types are prefix constraints: the declared item types are checked in order, optional trailing items may be
-  omitted, and additional items are allowed.
-- Function compatibility is deliberately flexible. The accepted argument-count ranges only need to overlap;
-  one function's complete arity range does not need to contain the other's.
-- A callback may declare fewer parameters than the caller provides. Additional arguments are ignored at runtime,
-  following JavaScript function-call behavior.
-- Function parameter types are checked contravariantly where both signatures declare a parameter, while **??**
-  remains compatible with any parameter type. Return types are checked covariantly.
-- Fixed and variadic signatures are not interchangeable. Variadic arguments use a distinct packed-array calling
-  convention and are only compatible with corresponding variadic signatures.
+A postfix cast, `expression::type`, checks an expected type without converting the value:
 
-For example, a callback declared as `~(value: float):boolean` is compatible with an expected callback type such as
-`~(value: ??, index: integer?, values: array?):boolean`: the arities overlap, **??** accepts the concrete value type,
-and the callback may ignore the additional arguments. This behavior is intentional. Affinirum does not enforce strict
-function subtyping.
+```text
+val parsed = JSON.Parse('{"answer":42}');
+parsed::object.answer // 42.0
+```
 
-### Type casting
-A postfix type cast declares the expected type of an expression using **::type**,
-like `value::object` or `JSON.Parse(json)::object.property`.
+Standard JSON numbers are floats. Use conversion methods such as `.Integer()` or `.Float()` to convert numeric types.
+An incompatible cast raises an error. Casts can be followed by property access, indexing, calls, or another cast.
 
-A cast does not convert the value. The source and target types must be compatible at compile time,
-and the evaluated value must satisfy the target type at runtime. An incompatible cast raises an error.
-Casts can be followed by property access, index access, function calls, or another cast.
+### Operators and precedence
 
-### Definitions
-- Unit grouping: **{...}**
-- Unit separator: **;**
-- Value grouping: **(...)**
-- Value separator: **,**
-- Array element at numeric index, or object property by string key: **[]**
-- Object property by string key or method function call: **.**
-- Array definition: **[item1, ...]**
-- Object definition: **[property1-key: property1-value, ...]**
-- Subroutine definition: **~(argument1-name: argument1-type, ...):return-type {...}**
-- Conditional switch definition, returns first or second value if prefix is true or false: **if condition {value1} else {value2}**,
- and if the **else** clause is omitted, the second value is **void**
-- Loop definition, iteratively evaluates suffix while prefix is true, returns last evaluated value: **while condition {...}**
-- Leave the loop: **>|**
-- Proceed to next iteration: **>>**
-- Function return operator: **~>value**
-- Execution exit operator: **=>value**
+Expression operators are listed from highest precedence to lowest. Parentheses override grouping.
 
-### Operators
-- Boolean negation (Logical NOT): **!**
-- Boolean disjunction (Logical OR): **|**
-- Boolean conjunction (Logical AND): **&**
-- Greater than: **>**
-- Less than: **<**
-- Greater than or equals to: **>=**
-- Less than or equals to: **<=**
-- Equals to: **==**
-- Not equals to: **!=**
-- Arithmetic addition, or buffer, string, and array concatenation: **+**
-- Arithmetic subtraction or negation: **-**
-- Arithmetic multiplication: **\***
-- Arithmetic division: **/**
-- Arithmetic remainder: **%**
-- Exponentiation operator: **^**
-- Property access operator: **.**
-- Property existence operator: **?**
-- Null coalescence operator: **?:**
-- Type cast operator: **::**
-- Assignment: **=**
-- Boolean disjunction (Logical OR) assignment: **|=**
-- Boolean conjunction (Logical AND) assignment: **&=**
-- Arithmetic addition assignment: **+=**
-- Arithmetic subtraction assignment: **-=**
-- Arithmetic multiplication assignment: **\*=**
-- Arithmetic division assignment: **/=**
-- Arithmetic remainder assignment: **%=**
+| Precedence | Operators | Meaning |
+| --- | --- | --- |
+| Highest | `.`, `[]`, `?`, `()`, `::` | Access, presence, calls, and casts |
+| | `^` | Exponentiation |
+| | Unary `+`, `-` | Arithmetic sign |
+| | `*`, `/`, `%` | Multiplication, division, remainder |
+| | `+`, `-` | Addition or concatenation; subtraction |
+| | `>`, `<`, `>=`, `<=`, `==`, `!=` | Comparison and equality |
+| | `!` | Boolean negation |
+| | `&` | Boolean AND |
+| | `\|` | Boolean OR |
+| Lowest | `?:` | Null coalescing |
 
-### Native Global Functions
+Binary operators at the same precedence group left to right, including exponentiation:
+`2 ^ 3 ^ 2` means `(2 ^ 3) ^ 2` and produces `64`. Exponentiation binds before arithmetic sign, so `-2 ^ 2` is `-4`.
+Boolean negation binds after comparisons: `!a == b` means `!(a == b)`.
+
+`+` adds numbers or concatenates strings, buffers, and arrays. `value ?: fallback` returns `fallback` when `value` is
+`void`, otherwise `value`. Operators evaluate their operands eagerly, including `&`, `|`, and `?:`.
+Use `if` when only one branch should run.
+
+Assign with `=` or combine assignment with an operation: `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, and `|=`.
+Assignments and returns consume the expression that follows them; separate them into statements for clarity.
+
+## Embedding API
+
+`new Affinirum(script, config?)` parses and compiles the script. `evaluate(inputs?)` executes it with the current inputs.
+By default, a name that is not a local binding, keyword, or built-in is treated as an input variable, and its type is inferred
+from how it is used.
+
+### Typed inputs and strict mode
+
+Use constructor configuration to declare input types, require declarations, and constrain the result type:
+
+```js
+import { Affinirum, Type } from "affinirum";
+
+const expression = new Affinirum("price * quantity", {
+    strict: true,
+    type: Type.Float,
+    variables: {
+        price: Type.Float,
+        quantity: Type.Integer,
+    },
+});
+
+console.log(expression.evaluate({ price: 12.5, quantity: 3n })); // 37.5
+```
+
+- `variables` declares input types; structured types can be built with helpers such as `Type.arrayType([Type.Integer])`
+  and `Type.objectType([["name", Type.String]])`.
+- `strict: true` rejects undeclared input names during compilation. It does not change the language's type compatibility rules.
+- `type` specifies the expected result type and is checked during compilation.
+
+Every referenced input must be supplied as an own property of the object passed to `evaluate`, even if its value is `undefined`.
+Non-function input values are checked against their inferred or declared types, including array items and object properties.
+
+| Instance member | Result |
+| --- | --- |
+| `script` | Original script text |
+| `type` | Inferred result `Type`; use `.toString()` for its readable form |
+| `variables()` | Record of referenced input names and their inferred types |
+| `toString()` | Compiled tree representation |
+| `evaluate(inputs?)` | Script result as a JavaScript value |
+
+### Host functions
+
+Declare a function's type in `variables`, then supply its JavaScript implementation on evaluation.
+`Type.functionType` takes the return type first and the parameter types second:
+
+```ts
+import { Affinirum, Type } from "affinirum";
+
+const expression = new Affinirum("discount(total)", {
+    strict: true,
+    type: Type.Float,
+    variables: {
+        total: Type.Float,
+        discount: Type.functionType(Type.Float, [Type.Float]),
+    },
+});
+
+const result = expression.evaluate({
+    total: 100,
+    discount: (amount: number) => amount * 0.9,
+}); // 90
+```
+
+Injected functions are checked to be callable. Their JavaScript parameter behavior and return values are trusted
+according to their declared Affinirum types. Supply synchronous functions that return supported values.
+
+### JavaScript value mapping
+
+| Affinirum type | JavaScript value |
+| --- | --- |
+| `void` | `undefined` on output; `null` or `undefined` accepted as input |
+| `boolean` | `boolean` |
+| `float` | `number` |
+| `integer` | `bigint` |
+| `timestamp` | `Date` |
+| `buffer` | `ArrayBuffer` |
+| `string` | `string` |
+| `array` | Array of supported values |
+| `object` | Object containing supported values |
+| `function` | Synchronous JavaScript function |
+
+For example, supply `quantity: 3n` for an integer input; `quantity: 3` supplies a float.
+
+### Errors
+
+Syntax and compilation errors are thrown by the constructor. Missing inputs, incompatible input values, and other
+evaluation failures are thrown by `evaluate`. Errors reported by the parser or type checker include a source position
+and an excerpt. Catch errors around both construction and evaluation:
+
+```js
+import { Affinirum, Type } from "affinirum";
+
+try {
+    const expression = new Affinirum("quantity + 1", {
+        strict: true,
+        variables: { quantity: Type.Integer },
+    });
+    expression.evaluate({ quantity: "three" }); // Throws: an integer was expected.
+} catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+}
+```
+
+### Affinirum Notation
+
+Affinirum Notation (AN) uses the language's literal syntax to represent values, including integers, timestamps,
+buffers, arrays, and objects. `Affinirum.parse()` reads a single notation value; it does not execute a script.
+Empty or `undefined` input returns `undefined`, and invalid input throws. `Affinirum.format()` writes a notation string:
+
+```js
+import { Affinirum } from "affinirum";
+
+const value = Affinirum.parse('["answer":42,"enabled":true]');
+const notation = Affinirum.format(value); // '["answer":42,"enabled":true]'
+
+Affinirum.format(undefined); // "null"
+Affinirum.format(null); // "null"
+Affinirum.format([1n, undefined]); // "[1,null]"
+Affinirum.format({ missing: undefined }); // '["missing":null]'
+```
+
+Both `Affinirum.format(value, whitespace?)` and the script function `AN.Format(value, whitespace?)` accept optional
+indentation text. They write JavaScript `null` and `undefined` as the AN literal `null` at every nesting level.
+Parsing that literal produces JavaScript `undefined`, preserving array lengths and object properties containing `void`.
+
+## Standard library
+
+Global functions use namespaces such as `Integer.Sum(...)`. Method functions use `value.Method(...)`.
+In the signatures below, `T?` means `T` or `void`, `...` marks variadic arguments, and `??` means any type.
+Parameters whose type includes `void` can be omitted. Parameter names are explanatory; arguments are positional.
+
+### Global functions
 
 Native conversions use the following **void** handling:
 
@@ -182,6 +446,7 @@ Empty strings and zero-length buffers remain ordinary values; they are not seria
 Invalid non-void inputs are function-specific and may raise an evaluation error.
 
 #### Boolean
+
 - **Boolean.Or(values: ...(boolean | [boolean])):boolean** — Boolean disjunction of booleans and arrays of booleans
 - **Boolean.And(values: ...(boolean | [boolean])):boolean** — Boolean conjunction of booleans and arrays of booleans
 - **Boolean.Not(value: boolean):boolean** — Boolean negation
@@ -189,16 +454,18 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **Boolean.Parse(value: string?):boolean?** — Parse case-insensitive `true` or `false`; other values return **void**
 
 #### Timestamp
+
 - **Timestamp.Now():timestamp** — Current date and time
 - **Timestamp.Epoch(value: float | integer, epoch: timestamp?):timestamp** — Create timestamp from milliseconds
 - **Timestamp.Decode(value: buffer?, encoding: string?, offset: integer?):timestamp?** — Decode a timestamp using `i32` or `i32le` minutes, or `i64` (default) or `i64le` milliseconds since the Unix epoch
 - **Timestamp.Parse(value: string?):timestamp?** — Parse a string as a timestamp
 
 #### Float
+
 - **Float.NAN** — Not-a-number
 - **Float.PositiveInfinity** — Positive infinity
 - **Float.NegativeInfinity** — Negative infinity
-- **Float.Epsilon** — Smallest positive float
+- **Float.Epsilon** — Difference between `1` and the next larger representable float (`2.220446049250313e-16`)
 - **Float.Sum(values: ...(float | integer | [float | integer])):float** — Numeric sum
 - **Float.Min(values: ...(float | integer | [float | integer])):float** — Numeric minimum
 - **Float.Max(values: ...(float | integer | [float | integer])):float** — Numeric maximum
@@ -214,6 +481,7 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **Float.Parse(value: string?):float?** — Parse a string as a float
 
 #### Integer
+
 - **Integer.Sum(values: ...(integer | [integer])):integer** — Numeric sum
 - **Integer.Min(values: ...(integer | [integer])):integer** — Numeric minimum
 - **Integer.Max(values: ...(integer | [integer])):integer** — Numeric maximum
@@ -222,39 +490,55 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **Integer.Parse(value: string?):integer?** — Parse a string as an integer
 
 #### String
+
 - **String.Alphanum(value: string):string** — Keep only ASCII letters and digits
 - **String.Random(length: integer):string** — Random alphanumeric string
 - **String.Decode(value: buffer?, encoding: string?, offset: integer?, length: integer?):string?** — Decode using `utf8` (default), `sbcs`, `ucs2`, or `ucs2le`
 
 #### Buffer
+
 - **Buffer.Random(length: integer):buffer** — Buffer of given length filled with random bytes
 - **Buffer.Parse(value: string?):buffer?** — Parse a hexadecimal string as a buffer
 
 #### Array
-- **Array.Join(values: ...array):array** — Join arrays of any depths into a single array
+
+- **Array.Join(values: ...array):array** — Concatenate arrays in argument order into a new array, preserving nested arrays
 - **Array.Range(a: integer, b: integer):array** — Integers from the lower endpoint (inclusive) to the higher endpoint (exclusive)
 - **Array.Unique(value: array):array** — Array of unique values
 - **Array.Intersection(a1: array, a2: array):array** — Common values from two arrays
-- **Array.Difference(a1: array, a2: array):array** — Symmetrical difference between arrays
+- **Array.Difference(a1: array, a2: array):array** — Symmetric difference between arrays
+
+`Array.Join(a,b,c)` has the same shallow concatenation behavior as `a+b+c`. Inputs are preserved, and nested arrays
+and objects are shared by reference. Use `array.Flatten(depth)` to flatten nested array elements.
+
+```text
+Array.Join([1,2],[3],[4,5]);  // [1,2,3,4,5]
+Array.Join([[1,2]],[3])      // [[1,2],3]
+```
 
 #### Object
-- **Object.Merge(values: ...(object | [object])):object** — Merge objects and arrays of objects
+
+- **Object.Merge(values: ...(object | [object])):object** — Shallow merge into a new object; later arguments take precedence
 
 #### AN
+
 - **AN.Format(value: ??, whitespace: string?):string** — Format a value as AN notation; **void** values are written as `null`
 
 #### JSON
+
 - **JSON.Format(value: (void | boolean | timestamp | float | integer | string | array | object), whitespace: string?):string** — Format a value as JSON
 - **JSON.Parse(value: string?):(void | boolean | timestamp | float | integer | string | array | object)** — Parse a JSON-formatted string; standard JSON values are not revived as timestamps or integers
 
 #### IP
+
 - **IP.Match(values: [string], search: ...(string | [string])):boolean** — Check whether any searched IPv4 or IPv6 address belongs to the supplied addresses or CIDR ranges
 - **IP.Encode(value: string?):buffer** — Encode an IPv4, IPv6, or CIDR string as a network-byte-order buffer; malformed or **void** input returns a zero-length buffer
 - **IP.Decode(value: buffer?):string?** — Decode a 4-, 5-, 16-, or 17-byte buffer as canonical IPv4, IPv6, or CIDR notation; malformed or **void** input returns **void**
 
-### Native Method Functions
+### Method functions
 
 #### General Functions
+
 - **??.Coalesce(otherwise: ??):??** — Null coalescence
 - **??.Equal(value: ??):boolean** — Equals to
 - **??.Unequal(value: ??):boolean** — Not equals to
@@ -264,6 +548,7 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **(void | timestamp | float | integer | buffer | array | object).Format(formatting: string?):string** — Format a value; buffers use `hex` by default and also support `base64`
 
 #### Aggregable Functions
+
 - **float.Add(value: float):float** — Add a float
 - **float.Add(value: integer):float** — Add an integer
 - **integer.Add(value: float):float** — Add a float
@@ -273,6 +558,7 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **array.Add(value: array):array** — Concatenate arrays
 
 #### Array Functions
+
 - **array.First(condition: ~(??, integer?, array?):boolean):??** — First item satisfying condition
 - **array.Last(condition: ~(??, integer?, array?):boolean):??** — Last item satisfying condition
 - **array.FirstIndex(condition: ~(??, integer?, array?):boolean):integer?** — First index satisfying condition, or **void** if none does
@@ -285,13 +571,16 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **array.Filter(condition: ~(??, integer?, array?):boolean):array** — Filtered array
 - **array.Reduce(reducer: ~(??, ??, integer?, array?):??, initial: ?? = void):??** — Reduced value
 - **array.Compose(generator: ~(object, string, integer?, array?):??):object** — Compose object from array
-- **array.Prepend(items: ...??):array** — Prepend items
-- **array.Append(items: ...??):array** — Append items
+
+`Compose` builds a new object. Each callback receives an immutable snapshot of the properties produced by earlier callbacks.
+Retaining that snapshot preserves its contents as subsequent properties are added to the result.
 
 #### Buffer Functions
+
 - **buffer.Byte(pos: integer):buffer?** — Byte at position, or **void** when unavailable
 
 #### Enumerable Functions
+
 - **buffer.Slice(start: integer?, end: integer?):buffer** — Slice section
 - **string.Slice(start: integer?, end: integer?):string** — Slice section
 - **array.Slice(start: integer?, end: integer?):array** — Slice section
@@ -303,6 +592,7 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **array.Inject(start: integer, inject: ...array):array** — Inject section
 
 #### Iterable Functions
+
 - **(buffer | string | array | object).Length():integer** — Get length
 - **buffer.Contains(search: buffer, startPos: integer?):boolean** — Check if buffer contains another buffer
 - **string.Contains(search: string, startPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Check if string contains another string
@@ -314,31 +604,32 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **object.Has(index: string):boolean** — Identify if object has key
 
 #### Number Functions
+
 - **(float | integer).GreaterThan(value: float | integer):boolean** — Greater than
 - **(float | integer).LessThan(value: float | integer):boolean** — Less than
 - **(float | integer).GreaterOrEqual(value: float | integer):boolean** — Greater or equal
 - **(float | integer).LessOrEqual(value: float | integer):boolean** — Less or equal
-- **float.Subtract(subtrahend: integer):float** — Subtract an integer
+- **float.Subtract(subtrahend: float | integer):float** — Subtract a number
 - **integer.Subtract(subtrahend: float):float** — Subtract a float
 - **integer.Subtract(subtrahend: integer):integer** — Subtract an integer
 - **float.Negate():float** — Negate number
 - **integer.Negate():integer** — Negate number
-- **float.Multiply(value: integer):float** — Multiply by an integer
+- **float.Multiply(value: float | integer):float** — Multiply by a number
 - **integer.Multiply(value: float):float** — Multiply by a float
 - **integer.Multiply(value: integer):integer** — Multiply by an integer
-- **float.Divide(divisor: integer):float** — Divide by an integer
+- **float.Divide(divisor: float | integer):float** — Divide by a number
 - **integer.Divide(divisor: float):float** — Divide by a float
 - **integer.Divide(divisor: integer):integer** — Divide by an integer
-- **float.Remainder(divisor: integer):float** — Remainder after division by an integer
+- **float.Remainder(divisor: float | integer):float** — Remainder after division by a number
 - **integer.Remainder(divisor: float):float** — Remainder after division by a float
 - **integer.Remainder(divisor: integer):integer** — Remainder after division by an integer
-- **float.Modulo(divisor: integer):float** — Modulo by an integer
+- **float.Modulo(divisor: float | integer):float** — Modulo by a number
 - **integer.Modulo(divisor: float):float** — Modulo by a float
 - **integer.Modulo(divisor: integer):integer** — Modulo by an integer
-- **float.Power(exponent: integer):float** — Raise to an integer power
+- **float.Power(exponent: float | integer):float** — Raise to a numeric power
 - **integer.Power(exponent: float):float** — Raise to a float power
 - **integer.Power(exponent: integer):integer** — Raise to an integer power
-- **float.Root(index: integer):float** — Take an integer root
+- **float.Root(index: float | integer):float** — Take a root with the specified index
 - **integer.Root(index: float):float** — Take a float root
 - **integer.Root(index: integer):integer** — Take an integer root
 - **(boolean | timestamp | integer).Float():float** — Convert to a float; timestamps use milliseconds since the Unix epoch
@@ -346,11 +637,13 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **(timestamp | float | integer).Boolean():boolean** — Convert to a boolean by testing whether the numeric or epoch value is non-zero
 
 #### Object Functions
+
 - **object.Entries():array** — Key-value pairs
 - **object.Keys():[string]** — Object keys
 - **object.Values():array** — Object values
 
 #### String Functions
+
 - **string.Like(value: string):boolean** — Alphanumeric equality
 - **string.Unlike(value: string):boolean** — Alphanumeric inequality
 - **string.StartsWith(search: string, startPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Prefix check
@@ -366,6 +659,7 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **string.ReplaceWith(replacement: string, search: ...(string | [string])):string** — Replace all instances of the searched strings
 
 #### Timestamp Functions
+
 - **timestamp.Year(utc: boolean?):integer** — Get year
 - **timestamp.Month(utc: boolean?):integer** — Get month
 - **timestamp.MonthIndex(utc: boolean?):integer** — Month index
@@ -381,75 +675,54 @@ Invalid non-void inputs are function-specific and may raise an evaluation error.
 - **timestamp.MinutesSince(value: timestamp):float** — Difference from another timestamp in minutes
 - **timestamp.SecondsSince(value: timestamp):float** — Difference from another timestamp in seconds
 
-## Reference
+## Detailed type rules
 
-Install the package:
+Affinirum uses intentionally permissive type checking. Type information helps reject clearly incompatible expressions,
+select function overloads, and report compilation errors. It does not prove that every accepted expression is safe
+for every possible runtime value.
 
-```sh
-npm install affinirum
-```
+- `??` is the unknown or variant type and is compatible with every type, including `void`. A `??` function parameter
+  may receive `null`, JavaScript `undefined`, or be omitted.
+- An optional type such as `integer?` is the union `void | integer`. Optional function parameters may receive `null`,
+  JavaScript `undefined`, or be omitted.
+- A call with known argument types must match one complete function overload. Parameter matches from separate
+  overloads are not combined to accept a call.
+- Object types are open structural constraints: required properties and their values are checked, while additional
+  properties are allowed.
+- Tuple types are prefix constraints: declared item types are checked in order, optional trailing items may be
+  omitted, and additional items are allowed.
+- Function compatibility is deliberately flexible. Accepted argument-count ranges only need to overlap;
+  one function's complete range does not need to contain the other's.
+- A callback may declare fewer parameters than the caller provides. Additional arguments are ignored at runtime,
+  following JavaScript function-call behavior.
+- Function parameter types are checked contravariantly where both signatures declare a parameter: the receiving
+  function must accept the expected parameter type. Return types are checked covariantly: the returned type must fit
+  the expected result type. `??` remains compatible with any parameter type.
+- Fixed and variadic signatures are not interchangeable. Variadic arguments use a distinct packed-array calling
+  convention and are only compatible with corresponding variadic signatures.
 
-Create an `Affinirum` instance with a script and optional compilation configuration, then call `evaluate`
-with the script's input variables:
+For example, a callback declared as `~(value: float):boolean` is compatible with an expected callback type such as
+`~(??, integer?, array?):boolean`: their argument-count ranges overlap, `??` accepts the concrete value type,
+and the callback may ignore the additional arguments. Affinirum does not enforce strict function subtyping.
 
-```ts
-import { Affinirum } from "affinirum";
-
-const expression = new Affinirum("a + b");
-const result = expression.evaluate({ a: 10n, b: 20n }); // 30n
-```
-
-During parsing, any valid name that is not recognized as a keyword, constant, or built-in function is treated as an input variable.
-Use the optional constructor configuration to specify the expected result `type`, enable `strict` handling of undeclared variables,
-or declare input `variables` and their types. An instance exposes the original `script`, its inferred result `type`,
-the inferred input types through `variables()`, and the parsed tree through `toString()`.
-
-`Affinirum.parse()` parses a single Affinirum Notation value into a JavaScript value. Empty or `undefined` input returns
-`undefined`; invalid input throws an error. `Affinirum.format()` formats a JavaScript value as an Affinirum Notation string:
-
-```ts
-const value = Affinirum.parse('["answer":42,"enabled":true]');
-const notation = Affinirum.format(value);
-
-Affinirum.format(undefined); // "null"
-Affinirum.format(null); // "null"
-Affinirum.format([1n, undefined]); // "[1,null]"
-Affinirum.format({ missing: undefined }); // '["missing":null]'
-```
-
-Both `Affinirum.format()` and `AN.Format()` write JavaScript `null` and `undefined` as the AN literal `null` at every nesting level.
-Parsing that literal produces JavaScript `undefined`. This preserves array lengths and object properties containing **void** values,
-including trailing array elements. Indented output follows the same rule.
-
-JavaScript `number` values map to **float**, while **integer** values map to `bigint`. Timestamps use `Date`, buffers use
-`ArrayBuffer`, and a **void** result is returned as `undefined`. Arrays, objects, and functions use their corresponding
-JavaScript values. Injected non-function values are checked against the types inferred or declared during compilation.
-Injected functions are checked to be callable; their JavaScript parameter behavior and return values are trusted according
-to their declared Affinirum types.
-
-Use **val** for a local value that cannot be reassigned and **var** for a reassignable local variable. Statements are
-separated with semicolons.
-
-Sample code:
+For a variadic host function, set the third argument of `Type.functionType` to `true` and declare the last parameter
+as an array type. The JavaScript implementation receives the trailing arguments as one packed array, rather than
+separate JavaScript rest arguments:
 
 ```ts
-const expr = new Affinirum("x * (y + abc / 5) > 10");
-const value1 = expr.evaluate({ x: 10, y: 20, abc: 10 }); // true
-const value2 = expr.evaluate({ x: 1, y: 4, abc: 5 }); // false
+import { Affinirum, Type } from "affinirum";
 
-const arrExpr = new Affinirum("Integer.Sum([1, 2, 3, a, b, c])");
-const valueSum = arrExpr.evaluate({ a: 10n, b: 20n, c: 30n }); // 66n
+const expression = new Affinirum("sum(1, 2, 3)", {
+    strict: true,
+    variables: {
+        sum: Type.functionType(Type.Integer, [Type.arrayType([Type.Integer])], true),
+    },
+});
 
-const objExpr = new Affinirum('["prop1":a, "prop2":"abc"].prop1 + 10');
-const oValue = objExpr.evaluate({ a: 50n }); // 60n
-
-const iteratorExpr = new Affinirum(
-	"Float.Sum(arr1.Derive(~(a:float):float{a*2}).Filter(~(a:float):boolean{a>3}))"
-);
-const iValue = iteratorExpr.evaluate({ arr1: [1, 2, 3] }); // 10
-
-const complexExpr = new Affinirum(
-	"var a = myvar1 / 10; val b = myvar2 - 100; a / b + b * a + 600"
-);
-const value = complexExpr.evaluate({ myvar1: 40, myvar2: 104 }); // 617
+const result = expression.evaluate({
+    sum: (values: bigint[]) => values.reduce((total, value) => total + value, 0n),
+}); // 6n
 ```
+
+Casts require compatible source and target types at compile time, and the evaluated value must satisfy the target
+type at runtime. A cast checks the value; it does not perform a conversion.

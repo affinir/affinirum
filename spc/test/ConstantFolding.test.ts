@@ -7,9 +7,15 @@ import { CallFrame } from "../../src/CallFrame.js";
 
 describe("Constant folding test", () => {
 	it("creates fresh array literals for each function call and evaluation", () => {
-		const expression = new Affinirum("val f=~():integer{var a=[];a.Append(1);a.Length};[f(),f()]");
-		expect<unknown>(expression.evaluate()).toEqual([1n, 1n]);
-		expect<unknown>(expression.evaluate()).toEqual([1n, 1n]);
+		const expression = new Affinirum("val f=~():array{[]};[f(),f()]");
+		const first = expression.evaluate() as Value[][];
+		expect(first).toEqual([[], []]);
+		expect(first[0]).not.toBe(first[1]);
+		first[0].push(1n);
+		expect(first[1]).toEqual([]);
+		const second = expression.evaluate() as Value[][];
+		expect(second).toEqual([[], []]);
+		expect(second[0]).not.toBe(first[0]);
 	});
 
 	it("creates fresh object literals and nested containers for each evaluation", () => {
@@ -25,9 +31,14 @@ describe("Constant folding test", () => {
 	});
 
 	it("creates fresh array results for each function call and evaluation", () => {
-		const expression = new Affinirum("val f=~():integer{var a=Array.Range(0,2);a.Append(9);a.Length};[f(),f()]");
-		expect<unknown>(expression.evaluate()).toEqual([3n, 3n]);
-		expect<unknown>(expression.evaluate()).toEqual([3n, 3n]);
+		const expression = new Affinirum("val f=~():array{Array.Range(0,2)};[f(),f()]");
+		const first = expression.evaluate() as Value[][];
+		expect(first).toEqual([[0n, 1n], [0n, 1n]]);
+		expect(first[0]).not.toBe(first[1]);
+		first[0].push(9n);
+		const second = expression.evaluate() as Value[][];
+		expect(second).toEqual([[0n, 1n], [0n, 1n]]);
+		expect(second[0]).not.toBe(first[0]);
 	});
 
 	it("creates fresh object results for functions with union return types", () => {
@@ -40,9 +51,9 @@ describe("Constant folding test", () => {
 		expect(second.items).not.toBe(first.items);
 	});
 
-	it("preserves aliases within one evaluation", () => {
-		const expression = new Affinirum("var a=[];val b=a;b.Append(1);a.Length");
-		expect(expression.evaluate() as bigint).toBe(1n);
+	it("preserves an existing array value when another binding is reassigned", () => {
+		const expression = new Affinirum("var a=[1];val b=a;a+=[2];[a,b]");
+		expect(expression.evaluate()).toEqual([[1n, 2n], [1n]]);
 	});
 
 	const referenceFactories: [string, Type, () => Value][] = [
