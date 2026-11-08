@@ -590,17 +590,24 @@ export class Affinirum {
 			return type;
 		}
 		else if (state.isBracketsOpen) { // array or object type
-			const itemKeyTypes: [number | string, Type][] = [];
+			const valTypes: [number | string | undefined, Type][] = [];
 			let index = 0, colon = false;
 			while (!state.next().isBracketsClose) {
 				if (state.isLiteral && typeof state.literal.value === "string") {
 					const key = state.literal.value;
 					state.next().separateByColon().next();
-					itemKeyTypes.push([key, this._type(state, scope)]);
+					valTypes.push([key, this._type(state, scope)]);
 					colon = true;
 				}
+				else if (state.isColon) {
+					colon = true;
+					if (!state.next().isBracketsClose) {
+						valTypes.push([undefined, this._type(state, scope)]);
+						break;
+					}
+				}
 				else {
-					itemKeyTypes.push([index++, this._type(state, scope)]);
+					valTypes.push([index++, this._type(state, scope)]);
 				}
 				if (!state.isComma) {
 					break;
@@ -608,8 +615,8 @@ export class Affinirum {
 			}
 			state.closeBrackets().next();
 			return colon
-				? Type.objectType(itemKeyTypes.map(([key, type]) => [key as string, type]))
-				: Type.arrayType(itemKeyTypes.map(([, v]) => v));
+				? Type.objectType(valTypes.map(([key, type]) => [key as string | undefined, type]))
+				: Type.arrayType(valTypes.map(([, v]) => v));
 		}
 		else if (state.isTilda) { // function type
 			state.next().openParentheses();

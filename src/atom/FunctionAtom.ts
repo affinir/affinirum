@@ -34,7 +34,7 @@ export class FunctionAtom implements IAtom {
 		this._isVolatile = options?.volatile ?? false;
 	}
 
-	private get _undefined(): boolean {
+	private get _generic(): boolean {
 		return this._retType.isUnknown && this._argTypes.length === 0 && this._isVariadic;
 	}
 
@@ -93,7 +93,7 @@ export class FunctionAtom implements IAtom {
 		if (!(atom instanceof FunctionAtom)) {
 			return false;
 		}
-		if (this._undefined || atom._undefined) {
+		if (this._generic || atom._generic) {
 			return true;
 		}
 		if (this._isVariadic !== atom._isVariadic
@@ -118,7 +118,7 @@ export class FunctionAtom implements IAtom {
 		if (!(atom instanceof FunctionAtom)) {
 			return false;
 		}
-		if (this._undefined || atom._undefined) {
+		if (this._generic || atom._generic) {
 			return true;
 		}
 		if (this._isVariadic !== atom._isVariadic
@@ -144,7 +144,7 @@ export class FunctionAtom implements IAtom {
 	}
 
 	toString(): string {
-		if (this._undefined) {
+		if (this._generic) {
 			return "function";
 		}
 		const argTypes = this._argTypes.map((i, ix) => ix === this._argTypes.length - 1 && this.isVariadic ? `...${i.toString()}` : i.toString()).join(",");

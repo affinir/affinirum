@@ -14,7 +14,9 @@ export class ObjectNode extends Node {
 		protected _subnodes: [Node, Node][],
 	) {
 		super(span);
-		this._type = Type.objectType(_subnodes.filter(([i]) => i instanceof ConstantNode && i.constant).map(([k, v]) => [k.evaluate(new CallFrame()) as string, v.type]));
+		this._type = Type.objectType(_subnodes.flatMap<[string, Type]>(([key, value]) =>
+			key instanceof ConstantNode && key.constant && key.type.isString ? [[key.value as string, value.type]] : []
+		));
 	}
 
 	override get type(): Type {
@@ -22,42 +24,40 @@ export class ObjectNode extends Node {
 	}
 
 	override compile(type: Type): Node {
-		const keyOf = (node: Node): string | undefined =>
-			node instanceof ConstantNode && node.constant && node.type.isString
-				? node.value as string
-				: undefined;
-		const lastKeys = new Map<string, number>();
-		const keys = this._subnodes.map(([node], index) => {
-			const key = keyOf(node);
-			if (key !== undefined) {
-				lastKeys.set(key, index);
-			}
-			return key;
-		});
-		for (let i = 0; i < this._subnodes.length; ++i) {
-			const enodes = this._subnodes[i];
-			enodes[0] = enodes[0].compile(Type.String);
-			const key = keys[i] ??= keyOf(enodes[0]);
-			if (key !== undefined) {
-				lastKeys.set(key, Math.max(i, lastKeys.get(key) ?? -1));
-			}
-			const lastDynamic = keys.lastIndexOf(undefined);
-			const shape = Type.objectType([...lastKeys]
-				.filter(([, index]) => index > lastDynamic)
-				.map(([name, index]) => [name, this._subnodes[index][1].type]));
-			const objectAtoms = type.objectAtoms(shape);
-			const valTypes = key !== undefined && lastKeys.get(key) === i && i > lastDynamic
-				? objectAtoms.map((atom) => atom.valType(key))
-				: [];
-			const first = valTypes[0];
-			const valType = first && valTypes.every((candidate) => first.equate(candidate))
-				? first
-				: Type.Unknown;
-			enodes[1] = enodes[1].compile(valType);
+		let objectAtoms = type.objectAtoms(this._type);
+		if (!objectAtoms.length && !type.isVoid) {
+			this.throwTypeError(type);
 		}
-		this._type = Type.objectType(keys.flatMap<[string, Type]>((key, index) =>
-			key !== undefined ? [[key, this._subnodes[index][1].type]] : []
-		));
+		const valTypes: [string, Type][] = [];
+		let generic = false;
+		for (const kvnodes of this._subnodes) {
+			kvnodes[0] = kvnodes[0].compile(Type.String);
+			const key = kvnodes[0] instanceof ConstantNode && kvnodes[0].constant
+				? kvnodes[0].value as string
+				: undefined;
+			const constraints = objectAtoms.map((atom) =>
+				atom.isUniform || key !== undefined
+					? [atom.valType(atom.isUniform ? undefined : key) ?? Type.Unknown]
+					: atom.valTypes().map(([, type]) => type)
+			);
+			const types = constraints.map((types) => types.reduce((type, mask) => type.reduce(mask) ?? type, Type.Unknown));
+			const first = types[0];
+			const valType = first && types.every((candidate) => first.equate(candidate)) ? first : Type.Unknown;
+			kvnodes[1] = kvnodes[1].compile(valType);
+			objectAtoms = objectAtoms.filter((_, index) => constraints[index].every((type) => type.accept(kvnodes[1].type)));
+			if (!objectAtoms.length && !type.isVoid) {
+				kvnodes[1].throwError(`type ${kvnodes[1].type} mismatch with expected type ${type}`);
+			}
+			if (key === undefined) {
+				generic = true;
+			}
+			else {
+				valTypes.push([key, kvnodes[1].type]);
+			}
+		}
+		this._type = objectAtoms.some((atom) => atom.valTypes().length)
+			? Type.union(...objectAtoms.map((atom) => Type.objectType(atom.valTypes())))
+			: generic ? Type.Object : Type.objectType(valTypes);
 		this._type = this.reduceType(type);
 		return this;
 	}
@@ -66,6 +66,9 @@ export class ObjectNode extends Node {
 		const result: { [ key: string ]: Value } = Object.create(null);
 		for (const [key, value] of this._subnodes) {
 			result[key.evaluate(frame) as string] = value.evaluate(frame);
+		}
+		if (!this._type.acceptValue(result)) {
+			this.throwError(`object value mismatch with expected type ${this._type}`);
 		}
 		return result;
 	}

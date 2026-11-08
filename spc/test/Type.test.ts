@@ -241,3 +241,52 @@ describe("Value normalization test", () => {
 		expect(result[0][0] as bigint).toBe(0n);
 	});
 });
+
+describe("Uniform object type test", () => {
+	it("checks every source value type during acceptance", () => {
+		const type = Type.objectType([[undefined, Type.Integer]]);
+		expect(type.accept(Type.objectType([["a", Type.Integer], ["b", Type.Integer]]))).toBe(true);
+		expect(type.accept(Type.objectType([["a", Type.Integer], ["b", Type.String]]))).toBe(false);
+		expect(type.accept(Type.objectType([[undefined, Type.Integer]]))).toBe(true);
+		expect(type.accept(Type.objectType([[undefined, Type.String]]))).toBe(false);
+		expect(Type.objectType([[undefined, Type.OptionalInteger]])
+			.accept(Type.objectType([["a", Type.String]]))).toBe(false);
+	});
+
+	it("does not guarantee the existence of named properties", () => {
+		const type = Type.objectType([[undefined, Type.Integer]]);
+		expect(Type.objectType([["a", Type.Integer]]).accept(type)).toBe(false);
+		expect(Type.objectType([["a", Type.OptionalInteger]]).accept(type)).toBe(true);
+		expect(Type.objectType([["a", Type.OptionalString]]).accept(type)).toBe(false);
+	});
+
+	it("supplies uniform constraints for property inference without changing equality", () => {
+		const type = Type.objectType([[undefined, Type.Integer]]);
+		expect(type.objectAtomValType("a").equate(Type.Integer)).toBe(true);
+		expect(type.objectAtomValType("").equate(Type.Integer)).toBe(true);
+		expect(Type.union(type, Type.objectType([[undefined, Type.Float]]))
+			.objectAtomValType("a").equate(Type.Number)).toBe(true);
+		expect(type.equate(Type.objectType([["a", Type.Integer]]))).toBe(false);
+		expect(Type.objectType([["a", Type.Integer]]).equate(type)).toBe(false);
+	});
+
+	it.each<[Type, boolean]>([
+		[Type.objectType([["a", Type.Integer]]), true],
+		[Type.objectType([["a", Type.String]]), false],
+		[Type.objectType([["a", Type.OptionalString]]), true],
+		[Type.objectType([["a", Type.Void]]), true],
+		[Type.objectType([["a", Type.union(Type.Integer, Type.String)]]), true],
+		[Type.objectType([[undefined, Type.String]]), true],
+	])("compares intersections with %s symmetrically", (other, expected) => {
+		const type = Type.objectType([[undefined, Type.Integer]]);
+		expect(type.intersect(other)).toBe(expected);
+		expect(other.intersect(type)).toBe(expected);
+	});
+
+	it("checks uniform values recursively and accepts empty objects", () => {
+		const type = Type.objectType([[undefined, Type.objectType([[undefined, Type.Integer]])]]);
+		expect(type.acceptValue({})).toBe(true);
+		expect(type.acceptValue({ a: {}, b: { count: 1n } })).toBe(true);
+		expect(type.acceptValue({ a: { count: 1n, other: "bad" } })).toBe(false);
+	});
+});

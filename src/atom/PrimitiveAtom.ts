@@ -8,10 +8,6 @@ export class PrimitiveAtom implements IAtom {
 		protected readonly _primitive: Primitive = "void",
 	) {}
 
-	get undef(): boolean {
-		return this._primitive === "void";
-	}
-
 	equate(atom: IAtom): boolean {
 		if (atom instanceof PrimitiveAtom) {
 			return atom._primitive === this._primitive;

@@ -108,7 +108,7 @@ export class Type {
 				if (!types.length) {
 					return true;
 				}
-				if (atom.isTuple) {
+				if (!atom.isUniform) {
 					return types.every((type, ix) => type.acceptValue(Object.hasOwn(values, ix) ? values[ix] : undefined));
 				}
 				for (let i = 0; i < values.length; ++i) {
@@ -121,7 +121,9 @@ export class Type {
 			if (atom instanceof ObjectAtom) {
 				const values = value as Record<string, Value>;
 				return atom.valTypes().every(([key, type]) =>
-					type.acceptValue(Object.hasOwn(values, key) ? values[key] : undefined)
+					key != null
+						? type.acceptValue(Object.hasOwn(values, key) ? values[key] : undefined)
+						: Object.values(values).every((v) => type.acceptValue(v))
 				);
 			}
 			return true;
@@ -161,9 +163,9 @@ export class Type {
 		}
 		const valTypes: Type[] = [];
 		for (const atom of atoms) {
-			const valType = atom.isTuple
-				? atom.valType(index)
-				: atom.valType(0);
+			const valType = atom.isUniform
+				? atom.valType(0)
+				: atom.valType(index);
 			if (!valType) {
 				return Type.Unknown;
 			}
@@ -179,7 +181,7 @@ export class Type {
 		}
 		const valTypes: Type[] = [];
 		for (const atom of atoms) {
-			const valType = atom.valType(key);
+			const valType = atom.valType(atom.isUniform ? undefined : key);
 			if (!valType) {
 				return Type.Unknown;
 			}
@@ -284,7 +286,7 @@ export class Type {
 		return new Type([new ArrayAtom(itemTypes)]);
 	}
 
-	static objectType(propTypes: [string, Type][] = []) {
+	static objectType(propTypes: [string | undefined, Type][] = []) {
 		return new Type([new ObjectAtom(propTypes)]);
 	}
 
