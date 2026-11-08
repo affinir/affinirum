@@ -120,7 +120,7 @@ export const funcCompose = new Constant(
 const funcJoin = new Constant(
 	(values: (Value[] | Value[][])[]) =>
 		values.flat(),
-	Type.functionType(Type.Array, [Type.arrayType([Type.Array])], true),
+	Type.functionType(Type.Array, [Type.arrayType([Type.Array])], { variadic: true }),
 );
 
 const funcRange = new Constant(

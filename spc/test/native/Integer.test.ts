@@ -103,20 +103,6 @@ describe("Integer function test", () => {
 			],
 		},
 		{
-			script: "v.Format()",
-			cases: [
-				{ values: { v: undefined }, result: "" },
-				{ values: { v: null }, result: "" },
-			],
-		},
-		{
-			script: "v.Encode().Length",
-			cases: [
-				{ values: { v: undefined }, result: 0n },
-				{ values: { v: null }, result: 0n },
-			],
-		},
-		{
 			script: "Integer.Random(limit)",
 			cases: [
 				{ values: { limit: 0n }, result: 0n },

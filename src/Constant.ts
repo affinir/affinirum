@@ -6,7 +6,6 @@ export class Constant {
 	constructor(
 		protected readonly _value: Value,
 		protected _type: Type = Type.of(_value),
-		protected readonly _deterministic: boolean = true,
 	) {}
 
 	get value() {
@@ -19,10 +18,6 @@ export class Constant {
 
 	set type(type: Type) {
 		this._type = type;
-	}
-
-	get deterministic() {
-		return this._deterministic;
 	}
 
 	static Null = new Constant(undefined);

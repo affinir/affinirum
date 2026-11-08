@@ -1,4 +1,4 @@
-import { IAtom } from "../Atom.js";
+import { IAtom } from "./Atom.js";
 import { Type } from "../Type.js";
 
 export class ArrayAtom implements IAtom {

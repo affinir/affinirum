@@ -1,8 +1,8 @@
-import { Node } from "../Node.js";
+import { Node } from "./Node.js";
 import { ScriptSpan } from "../ScriptSpan.js";
 import { Constant } from "../Constant.js";
 import { ConstantNode } from "./ConstantNode.js";
-import { VariadicNode } from "./VariadicNode.js";
+import { VariadicArgumentNode } from "./VariadicArgumentNode.js";
 import { Value, normalize } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
@@ -53,9 +53,9 @@ export class CallNode extends Node {
 		if (variadicArity > 0) {
 			const span = this._subnodes[variadicArity - 1].start();
 			const vnodes = this._subnodes.splice(variadicArity - 1);
-			this._subnodes.push(new VariadicNode(span.end(vnodes[vnodes.length - 1]), vnodes));
+			this._subnodes.push(new VariadicArgumentNode(span.end(vnodes[vnodes.length - 1]), vnodes));
 		}
-		let constant = this._fnode.constant;
+		let constant = this._fnode.constant && !this._fnode.type.isVolatile;
 		for (let i = 0; i < this._subnodes.length; ++i) {
 			const argTypes = functionAtoms.map((a) => a.argType(i));
 			const argType = variadicArity > 0 && i === variadicArity - 1

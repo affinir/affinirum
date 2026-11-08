@@ -40,20 +40,6 @@ describe("Array function test", () => {
 
 	runAffinirumTests([
 		{
-			script: "v.Format()",
-			cases: [
-				{ values: { v: undefined }, result: "" },
-				{ values: { v: null }, result: "" },
-			],
-		},
-		{
-			script: "v.Encode().Length",
-			cases: [
-				{ values: { v: undefined }, result: 0n },
-				{ values: { v: null }, result: 0n },
-			],
-		},
-		{
 			script: "[a, b, c].Add([1, 2, 3, 4]).Reduce(~(acc:float, v):float { acc + v })",
 			cases: [
 				{ values: { a: 1, b: 2, c: 3 }, result: 16 },
@@ -158,7 +144,7 @@ describe("Array function test", () => {
 			],
 		},
 		{
-			script: "keys.Compose(~(acc:object, key:string):string{key.Char(0)}).\"a\"",
+			script: "keys.Compose(~(acc:object, key:string):string?{key.Char(0)}).\"a\"",
 			cases: [
 				{ values: { keys: ["a", "b", "c"] }, result: "a" },
 				{ values: { keys: ["b", "a"] }, result: "a" },

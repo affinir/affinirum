@@ -1,14 +1,21 @@
-import { IAtom } from "../Atom.js";
+import { IAtom } from "./Atom.js";
 import { Type } from "../Type.js";
+
+export interface FunctionOptions {
+	variadic?: boolean;
+	volatile?: boolean;
+}
 
 export class FunctionAtom implements IAtom {
 
 	protected readonly _minArity: number;
+	protected readonly _isVariadic: boolean;
+	protected readonly _isVolatile: boolean;
 
 	constructor(
 		protected readonly _retType: Type = Type.Unknown,
 		protected readonly _argTypes: Type[] = [],
-		protected readonly _isVariadic: boolean = false,
+		options?: FunctionOptions,
 	) {
 		let ix = 0;
 		while (ix < _argTypes.length && !_argTypes[ix].isOptional) {
@@ -23,6 +30,8 @@ export class FunctionAtom implements IAtom {
 				throw new Error("a required parameter illegally follows an optional one");
 			}
 		}
+		this._isVariadic = options?.variadic ?? false;
+		this._isVolatile = options?.volatile ?? false;
 	}
 
 	private get _undefined(): boolean {
@@ -45,6 +54,10 @@ export class FunctionAtom implements IAtom {
 		return this._isVariadic;
 	}
 
+	get isVolatile() {
+		return this._isVolatile;
+	}
+
 	get arity() {
 		return this._argTypes.length;
 	}
@@ -64,13 +77,13 @@ export class FunctionAtom implements IAtom {
 		if (index < variadicIndex) {
 			return this.argType(index);
 		}
-		return this.argType(variadicIndex)
-			?.arrayAtomValType(index - variadicIndex);
+		return this.argType(variadicIndex)?.arrayAtomValType(index - variadicIndex);
 	}
 
 	equate(atom: IAtom): boolean {
 		return atom instanceof FunctionAtom
 			&& this._isVariadic === atom._isVariadic
+			&& this._isVolatile === atom._isVolatile
 			&& this._argTypes.length === atom._argTypes.length
 			&& this._retType.equate(atom._retType)
 			&& this._argTypes.every((type, index) => type.equate(atom._argTypes[index]));

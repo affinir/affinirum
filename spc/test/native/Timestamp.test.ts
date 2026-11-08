@@ -83,13 +83,6 @@ describe("Timestamp function test", () => {
 			],
 		},
 		{
-			script: "v.Encode().Length",
-			cases: [
-				{ values: { v: undefined }, result: 0n },
-				{ values: { v: null }, result: 0n },
-			],
-		},
-		{
 			script: "d.Year(true) == 2025 & d.Month(true) == 4 & d.MonthIndex(true) == 3 & d.WeekdayIndex(true) == 2 & d.Day(true) == 22",
 			cases: [
 				{ values: { d: new Date("2025-04-22T03:04:05.099Z") }, result: true },

@@ -97,7 +97,7 @@ const decodeInteger = (value?: ArrayBuffer, encoding: IntegerEncoding = "i64", b
 };
 
 const typeIntegerOrArray = Type.union(Type.Integer, Type.arrayType([Type.Integer]));
-const typeAggregator = Type.functionType(Type.Integer, [Type.arrayType([typeIntegerOrArray])], true);
+const typeAggregator = Type.functionType(Type.Integer, [Type.arrayType([typeIntegerOrArray])], { variadic: true });
 
 const funcSum = new Constant(
 	(values: (bigint | bigint[])[]) =>
@@ -120,8 +120,7 @@ const funcMax = new Constant(
 const funcRandomInteger = new Constant(
 	(value: bigint) =>
 		value == null ? undefined : boundInteger(BigInt(Math.floor(Math.random() * Number(value)))),
-	Type.functionType(Type.Integer, [Type.Integer]),
-	false,
+	Type.functionType(Type.Integer, [Type.Integer], { volatile: true }),
 );
 
 const funcDecodeInteger = new Constant(

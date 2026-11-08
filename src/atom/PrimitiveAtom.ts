@@ -1,4 +1,4 @@
-import { IAtom } from "../Atom.js";
+import { IAtom } from "./Atom.js";
 
 export type Primitive = "void" | "boolean" | "timestamp" | "float" | "integer" | "buffer" | "string";
 

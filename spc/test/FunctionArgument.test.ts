@@ -82,14 +82,14 @@ vfunc(cfunc)
 
 	it("does not mix fixed and variadic calling conventions", () => {
 		const fixed = Type.functionType(Type.Boolean, [Type.Integer]);
-		const variadic = Type.functionType(Type.Boolean, [Type.arrayType([Type.Integer])], true);
+		const variadic = Type.functionType(Type.Boolean, [Type.arrayType([Type.Integer])], { variadic: true });
 
 		expect(fixed.accept(variadic)).toBe(false);
 		expect(variadic.accept(fixed)).toBe(false);
 		expect(variadic.accept(Type.functionType(
 			Type.Boolean,
 			[Type.arrayType([Type.Integer])],
-			true,
+			{ variadic: true },
 		))).toBe(true);
 	});
 
@@ -109,5 +109,16 @@ vfunc(cfunc)
 val use = ~(f: ~(float | integer):integer):integer { f(1.5) };
 use(~(x:integer):integer { x })
 		`)).toThrow(/type ~\(integer\):integer mismatch with expected type ~\(float\|integer\):integer/);
+	});
+	it.each<[string, RegExp]>([
+		["[1].Derive(~(value:integer):integer{'bad'})", /type string mismatch with expected type integer/],
+		["['a'].Compose(~(acc:object,key:string):string{key.Char(0)})", /return a type compatible with string/],
+		["[1,2].Reduce(~(a:integer,b:integer):float{a.Subtract(b)})", /return a type compatible with float/],
+	])("rejects a callback whose body does not match its declared return type in %s", (script, error) => {
+		expect(() => new Affinirum(script)).toThrow(error);
+	});
+	it("accepts optional callback results", () => {
+		const script = new Affinirum("['','a'].Derive(~(key:string):string?{if key.Length>0 {key.Char(0)} else {null}})");
+		expect(script.evaluate()).toEqual([undefined, "a"]);
 	});
 });

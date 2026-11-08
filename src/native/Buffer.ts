@@ -178,8 +178,7 @@ export const funcByte = new Constant(
 const funcRandomBuffer = new Constant(
 	(value: bigint) =>
 		value == null || value <= 0n ? new Uint8Array(0).buffer : crypto.getRandomValues(new Uint8Array(Number(value))).buffer,
-	Type.functionType(Type.Buffer, [Type.Integer]),
-	false,
+	Type.functionType(Type.Buffer, [Type.Integer], { volatile: true }),
 );
 
 const funcParseBuffer = new Constant(

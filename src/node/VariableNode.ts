@@ -1,4 +1,4 @@
-import { Node } from "../Node.js";
+import { Node } from "./Node.js";
 import { ScriptSpan } from "../ScriptSpan.js";
 import { Variable } from "../Variable.js";
 import { Value } from "../Value.js";

@@ -39,7 +39,7 @@ describe("Variadic function argument test", () => {
 			Type.functionType(
 				Type.Integer,
 				[Type.arrayType([Type.Number])],
-				true,
+				{ variadic: true },
 			),
 		);
 		const expression = new Affinirum("f(1, 2)", {
@@ -53,7 +53,7 @@ describe("Variadic function argument test", () => {
 	it("uses a matching variadic overload when fixed overloads are incompatible", () => {
 		const overloaded = Type.union(
 			Type.functionType(Type.Integer, [Type.String, Type.String]),
-			Type.functionType(Type.Integer, [Type.arrayType([Type.Number])], true),
+			Type.functionType(Type.Integer, [Type.arrayType([Type.Number])], { variadic: true }),
 		);
 		const expression = new Affinirum("f(1, 2)", {
 			strict: true,

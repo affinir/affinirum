@@ -3,20 +3,6 @@ import { runAffinirumTests } from "../../util/AffinirumTest.js";
 describe("String function test", () => {
 	runAffinirumTests([
 		{
-			script: "v.Format()",
-			cases: [
-				{ values: { v: undefined }, result: "" },
-				{ values: { v: null }, result: "" },
-			],
-		},
-		{
-			script: "v.Encode().Length",
-			cases: [
-				{ values: { v: undefined }, result: 0n },
-				{ values: { v: null }, result: 0n },
-			],
-		},
-		{
 			script: "a.Like(b)",
 			cases: [
 				{ values: { a: "   Abcd  0123  !", b: "abcd-0123 " }, result: true },

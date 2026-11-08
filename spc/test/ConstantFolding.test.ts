@@ -106,7 +106,7 @@ describe("Constant folding test", () => {
 		const functionNode = new ConstantNode(span, new Constant((first: bigint, rest: bigint[]) => {
 			++calls;
 			return rest.reduce((sum, value) => sum + value, first);
-		}, Type.functionType(Type.Integer, [Type.Integer, Type.arrayType([Type.Integer])], true)));
+		}, Type.functionType(Type.Integer, [Type.Integer, Type.arrayType([Type.Integer])], { variadic: true })));
 		const arguments_ = [1n, 2n, 3n].map((value) => new ConstantNode(span, new Constant(value)));
 		const node = new CallNode(span, functionNode, arguments_).compile(Type.Unknown);
 		const frame = new CallFrame();
@@ -122,7 +122,7 @@ describe("Constant folding test", () => {
 		const functionNode = new ConstantNode(span, new Constant((items: bigint[]) => {
 			++calls;
 			return items;
-		}, Type.functionType(Type.Array, [Type.arrayType([Type.Integer])], true)));
+		}, Type.functionType(Type.Array, [Type.arrayType([Type.Integer])], { variadic: true })));
 		const arguments_ = [1n, 2n].map((value) => new ConstantNode(span, new Constant(value)));
 		const node = new CallNode(span, functionNode, arguments_).compile(Type.Unknown);
 		const frame = new CallFrame();

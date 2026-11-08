@@ -705,8 +705,8 @@ For example, a callback declared as `~(value: float):boolean` is compatible with
 `~(??, integer?, array?):boolean`: their argument-count ranges overlap, `??` accepts the concrete value type,
 and the callback may ignore the additional arguments. Affinirum does not enforce strict function subtyping.
 
-For a variadic host function, set the third argument of `Type.functionType` to `true` and declare the last parameter
-as an array type. The JavaScript implementation receives the trailing arguments as one packed array, rather than
+For a variadic host function, pass `{ variadic: true }` as the third argument of `Type.functionType` and declare the last
+parameter as an array type. The JavaScript implementation receives the trailing arguments as one packed array, rather than
 separate JavaScript rest arguments:
 
 ```ts
@@ -715,7 +715,7 @@ import { Affinirum, Type } from "affinirum";
 const expression = new Affinirum("sum(1, 2, 3)", {
     strict: true,
     variables: {
-        sum: Type.functionType(Type.Integer, [Type.arrayType([Type.Integer])], true),
+        sum: Type.functionType(Type.Integer, [Type.arrayType([Type.Integer])], { variadic: true }),
     },
 });
 

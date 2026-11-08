@@ -12,12 +12,13 @@ import { Type } from "./Type.js";
 import { Keywords } from "./Keywords.js";
 import { Constants } from "./Constants.js";
 import { Functions } from "./Functions.js";
-import { Node } from "./Node.js";
+import { Node } from "./node/Node.js";
 import { ArrayNode } from "./node/ArrayNode.js";
 import { BlockNode } from "./node/BlockNode.js";
 import { CallNode } from "./node/CallNode.js";
 import { CastNode } from "./node/CastNode.js";
 import { ConstantNode } from "./node/ConstantNode.js";
+import { FunctionNode } from "./node/FunctionNode.js";
 import { ReturnNode } from "./node/ReturnNode.js";
 import { JumpNode } from "./node/JumpNode.js";
 import { LoopNode } from "./node/LoopNode.js";
@@ -554,26 +555,8 @@ export class Affinirum {
 		const args = Array.from(variables.values());
 		const subscope = scope.subscope(variables, returnType);
 		const subnode =  this._unit(state, subscope);
-		const createFunction = (frame: CallFrame) => (...values: Value[]) => {
-			const subframe = frame.subframe(subscope.variables());
-			try {
-				args.forEach((arg, ix) => subframe.set(arg, normalize(values[ix])));
-				return normalize(subnode.evaluate(subframe));
-			}
-			catch (e) {
-				if (e instanceof ReturnNode) {
-					if (e.scope === "function") {
-						return normalize(e.value);
-					}
-				}
-				if (e instanceof JumpNode) {
-					subnode.throwError(`unexpected ${e.action} jump`);
-				}
-				throw e;
-			}
-		};
-		const constant = new Constant(createFunction, Type.functionType(returnType, args.map((v) => v.type), variadic));
-		return new ConstantNode(span, constant, subnode, createFunction);
+		const functionType = Type.functionType(returnType, args.map((v) => v.type), { variadic });
+		return new FunctionNode(span, subnode, args, [...subscope.variables()], functionType);
 	}
 
 	protected _loop(state: ParserState, scope: LexicalScope) {
@@ -653,7 +636,7 @@ export class Affinirum {
 			}
 			state.closeParentheses().next();
 			const retType = state.isColon ? this._type(state.next(), scope) : Type.Unknown;
-			return Type.functionType(retType, argTypes, variadic);
+			return Type.functionType(retType, argTypes, { variadic });
 		}
 		else if (state.isParenthesesOpen) { // type grouping
 			const type = this._type(state.next(), scope);

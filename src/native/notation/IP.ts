@@ -220,7 +220,7 @@ const funcMatchIP = new Constant(
 		catch {}
 		return false;
 	},
-	Type.functionType(Type.Boolean, [Type.arrayType([Type.String]), Type.arrayType([typeStringOrArray])], true),
+	Type.functionType(Type.Boolean, [Type.arrayType([Type.String]), Type.arrayType([typeStringOrArray])], { variadic: true }),
 );
 
 const funcEncodeIP = new Constant(

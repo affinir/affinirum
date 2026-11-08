@@ -59,13 +59,6 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "a.Compose(~ (acc:object, key:string):string{key.Char(0)}).\"a\"",
-			cases: [
-				{ values: { a: ["a", "b", "c"] }, result: "a" },
-				{ values: { a: ["b", "a"] }, result: "a" },
-			],
-		},
-		{
 			script: "Float.Sum(Array.Intersection(a, b))",
 			cases: [
 				{ values: { a: [-1, 2, 1, -2], b: [1, 2] }, result: 3 },

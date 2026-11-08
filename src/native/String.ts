@@ -392,7 +392,7 @@ export const funcSplit = new Constant(
 export const funcReplaceWith = new Constant(
 	(value: string, replacement: string, search: (string | string[])[]) =>
 		replaceWith(value, replacement, ...search.flat()),
-	Type.functionType(Type.String, [Type.String, Type.String, Type.arrayType([typeStringOrArray])], true),
+	Type.functionType(Type.String, [Type.String, Type.String, Type.arrayType([typeStringOrArray])], { variadic: true }),
 );
 
 const funcAlphanum = new Constant(
@@ -421,8 +421,7 @@ const funcRandomString = new Constant(
 		}
 		return str.slice(0, length);
 	},
-	Type.functionType(Type.String, [Type.Integer]),
-	false,
+	Type.functionType(Type.String, [Type.Integer], { volatile: true }),
 );
 
 const funcDecodeString = new Constant(

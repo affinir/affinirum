@@ -135,8 +135,7 @@ const parseTimestamp = (value?: number | string) => {
 const funcNow = new Constant(
 	() =>
 		new Date(),
-	Type.functionType(Type.Timestamp, []),
-	false,
+	Type.functionType(Type.Timestamp, [], { volatile: true }),
 );
 
 export const funcYear = new Constant(

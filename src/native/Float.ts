@@ -49,7 +49,7 @@ const decodeFloat = (value?: ArrayBuffer, encoding: FloatEncoding = "f64", byteO
 };
 
 const typeNumberOrArray = Type.union(Type.Number, Type.arrayType([Type.Number]));
-const typeAggregator = Type.functionType(Type.Float, [Type.arrayType([typeNumberOrArray])], true);
+const typeAggregator = Type.functionType(Type.Float, [Type.arrayType([typeNumberOrArray])], { variadic: true });
 const typeTransform = Type.functionType(Type.Float, [Type.Number]);
 
 const funcSum = new Constant(
@@ -115,8 +115,7 @@ const funcTruncate = new Constant(
 const funcRandomFloat = new Constant(
 	(value: number | bigint) =>
 		value == null ? undefined : Math.random() * Number(value),
-	typeTransform,
-	false,
+	Type.functionType(Type.Float, [Type.Number], { volatile: true }),
 );
 
 const funcDecodeFloat = new Constant(

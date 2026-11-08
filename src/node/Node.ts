@@ -1,7 +1,7 @@
-import { ScriptSpan } from "./ScriptSpan.js";
-import { Type } from "./Type.js";
-import { Value } from "./Value.js";
-import { CallFrame } from "./CallFrame.js";
+import { ScriptSpan } from "../ScriptSpan.js";
+import { Type } from "../Type.js";
+import { Value } from "../Value.js";
+import { CallFrame } from "../CallFrame.js";
 
 export abstract class Node extends ScriptSpan {
 

@@ -1,4 +1,4 @@
-import { Node } from "../Node.js";
+import { Node } from "./Node.js";
 import { Constant } from "../Constant.js";
 import { ConstantNode } from "./ConstantNode.js";
 import { ScriptSpan } from "../ScriptSpan.js";

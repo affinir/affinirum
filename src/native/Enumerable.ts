@@ -28,9 +28,9 @@ export const funcSplice = new Constant(
 				value.slice(Number(start + remove)),
 			),
 	Type.union(
-		Type.functionType(Type.Buffer, [Type.Buffer, Type.Integer, Type.Integer, typeBufferArray], true),
-		Type.functionType(Type.String, [Type.String, Type.Integer, Type.Integer, typeStringArray], true),
-		Type.functionType(Type.Array, [Type.Array, Type.Integer, Type.Integer, typeArrayArray], true),
+		Type.functionType(Type.Buffer, [Type.Buffer, Type.Integer, Type.Integer, typeBufferArray], { variadic: true }),
+		Type.functionType(Type.String, [Type.String, Type.Integer, Type.Integer, typeStringArray], { variadic: true }),
+		Type.functionType(Type.Array, [Type.Array, Type.Integer, Type.Integer, typeArrayArray], { variadic: true }),
 	),
 );
 
@@ -43,8 +43,8 @@ export const funcInject	= new Constant(
 				value.slice(Number(start)),
 			),
 	Type.union(
-		Type.functionType(Type.Buffer, [Type.Buffer, Type.Integer, typeBufferArray], true),
-		Type.functionType(Type.String, [Type.String, Type.Integer, typeStringArray], true),
-		Type.functionType(Type.Array, [Type.Array, Type.Integer, typeArrayArray], true),
+		Type.functionType(Type.Buffer, [Type.Buffer, Type.Integer, typeBufferArray], { variadic: true }),
+		Type.functionType(Type.String, [Type.String, Type.Integer, typeStringArray], { variadic: true }),
+		Type.functionType(Type.Array, [Type.Array, Type.Integer, typeArrayArray], { variadic: true }),
 	),
 );

@@ -16,11 +16,11 @@ describe("Type equality test", () => {
 	});
 
 	it("compares function atoms including return, arguments, and variadicity", () => {
-		const type = Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], true);
-		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], true))).toBe(true);
-		expect(type.equate(Type.functionType(Type.Integer, [Type.Integer, Type.OptionalString], true))).toBe(false);
-		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalBoolean], true))).toBe(false);
-		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], false))).toBe(false);
+		const type = Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], { variadic: true });
+		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], { variadic: true }))).toBe(true);
+		expect(type.equate(Type.functionType(Type.Integer, [Type.Integer, Type.OptionalString], { variadic: true }))).toBe(false);
+		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalBoolean], { variadic: true }))).toBe(false);
+		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], { variadic: false }))).toBe(false);
 	});
 
 	it("compares union members independently of order", () => {
@@ -152,7 +152,7 @@ describe("Type intersect test", () => {
 		const acceptsInteger = Type.functionType(Type.Boolean, [Type.Integer]);
 		const acceptsString = Type.functionType(Type.Boolean, [Type.String]);
 		const requiresTwo = Type.functionType(Type.Boolean, [Type.Integer, Type.String]);
-		const variadic = Type.functionType(Type.Boolean, [Type.arrayType([Type.Integer])], true);
+		const variadic = Type.functionType(Type.Boolean, [Type.arrayType([Type.Integer])], { variadic: true });
 		expect(acceptsInteger.intersect(acceptsString)).toBe(false);
 		expect(acceptsInteger.intersect(requiresTwo)).toBe(false);
 		expect(acceptsInteger.intersect(variadic)).toBe(false);

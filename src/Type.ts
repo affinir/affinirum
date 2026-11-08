@@ -2,7 +2,7 @@ import { Value } from "./Value.js";
 import { PrimitiveAtom, Primitive } from "./atom/PrimitiveAtom.js";
 import { ArrayAtom } from "./atom/ArrayAtom.js";
 import { ObjectAtom } from "./atom/ObjectAtom.js";
-import { FunctionAtom } from "./atom/FunctionAtom.js";
+import { FunctionAtom, FunctionOptions } from "./atom/FunctionAtom.js";
 
 type Atom = PrimitiveAtom | ArrayAtom | ObjectAtom | FunctionAtom;
 
@@ -62,6 +62,10 @@ export class Type {
 
 	get isFunction() {
 		return this._atoms.every((a) => a instanceof FunctionAtom);
+	}
+
+	get isVolatile() {
+		return this._atoms.some((a) => a instanceof FunctionAtom && a.isVolatile);
 	}
 
 	equate(type: Type | undefined): boolean {
@@ -168,9 +172,34 @@ export class Type {
 		return Type.union(...valTypes);
 	}
 
-	functionAtomRetType(type: Type) {
-		const atoms = this._atoms.filter((a): a is FunctionAtom => a instanceof FunctionAtom && type.accept(a.retType));
-		return Type.union(...atoms.map((a) => a.retType));
+	objectAtomValType(key: string): Type {
+		const atoms = this._atoms.filter((a): a is ObjectAtom => a instanceof ObjectAtom);
+		if (!atoms.length) {
+			return Type.Unknown;
+		}
+		const valTypes: Type[] = [];
+		for (const atom of atoms) {
+			const valType = atom.valType(key);
+			if (!valType) {
+				return Type.Unknown;
+			}
+			valTypes.push(valType);
+		}
+		return Type.union(...valTypes);
+	}
+
+	functionAtomRetType() {
+		return Type.union(...this._atoms.filter((a) => a instanceof FunctionAtom).map((a) => a.retType));
+	}
+
+	objectAtoms(type: Type) {
+		if (this.isUnknown) {
+			return Type.Object._atoms as ObjectAtom[];
+		}
+		return this._atoms.filter((a): a is ObjectAtom =>
+			a instanceof ObjectAtom
+			&& Type.objectType(a.valTypes()).intersect(type)
+		);
 	}
 
 	functionAtoms(type: Type, argc: number) {
@@ -178,7 +207,7 @@ export class Type {
 			return Type.Function._atoms as FunctionAtom[];
 		}
 		return this._atoms.filter((a) =>
-			a instanceof FunctionAtom && a.minArity <= argc && a.maxArity >= argc && (type.isVoid || type.accept(a.retType))
+			a instanceof FunctionAtom && a.minArity <= argc && a.maxArity >= argc && (type.accept(a.retType) || type.isVoid)
 		) as FunctionAtom[];
 	}
 
@@ -259,8 +288,8 @@ export class Type {
 		return new Type([new ObjectAtom(propTypes)]);
 	}
 
-	static functionType(retType: Type = Type.Unknown, argTypes: Type[] = [], isVariadic: boolean = false) {
-		return new Type([new FunctionAtom(retType, argTypes, isVariadic)]);
+	static functionType(retType: Type = Type.Unknown, argTypes: Type[] = [], options?: FunctionOptions) {
+		return new Type([new FunctionAtom(retType, argTypes, options)]);
 	}
 
 	static readonly Unknown = new Type();
@@ -281,7 +310,7 @@ export class Type {
 	static readonly OptionalArray = Type.union(Type.Void, Type.Array);
 	static readonly Object = Type.objectType();
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
-	static readonly Function = Type.functionType(undefined, undefined, true);
+	static readonly Function = Type.functionType(undefined, undefined, { variadic: true });
 	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
 	static readonly Reference = Type.union(Type.Array, Type.Object, Type.Function);
 	static readonly OptionalReference = Type.union(Type.Void, Type.Array, Type.Object, Type.Function);
