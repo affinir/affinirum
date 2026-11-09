@@ -337,6 +337,7 @@ export class ParserState extends ScriptSpan {
 					break;
 				case "*":
 					switch (this._script.charAt(this._end)) {
+						case "*": ++this._end; this._fragment = funcPower; break;
 						case "=": ++this._end; this._fragment = funcMultiplyAssignment; break;
 						default: this._fragment = funcMultiply; break;
 					}
@@ -375,7 +376,6 @@ export class ParserState extends ScriptSpan {
 						default: this._fragment = funcRemainder; break;
 					}
 					break;
-				case "^": this._fragment = funcPower; break;
 				case ".":
 					switch (this._script.charAt(this._end)) {
 						case ".":

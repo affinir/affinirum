@@ -2,13 +2,12 @@ import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { BufferFormatting, formatBuffer, concatBuffers, equateBuffers, EmptyBuffer } from "./Buffer.js";
-import { FloatEncoding, encodeFloat } from "./Float.js";
-import { IntegerEncoding, encodeInteger } from "./Integer.js";
-import { formatNumber } from "./Number.js";
+import { FloatEncoding, encodeFloat, formatFloat } from "./Float.js";
+import { IntegerEncoding, encodeInteger, formatInteger } from "./Integer.js";
 import { StringEncoding, encodeString } from "./String.js";
 import { TimestampEncoding, encodeTimestamp, formatTimestamp } from "./Timestamp.js";
 
-export const equate = (value1: Value, value2: Value) => {
+export const equate = (value1: Value, value2: Value, pairs?: WeakMap<object, WeakSet<object>>): boolean => {
 	if (value1 == null || value2 == null) {
 		return value1 == value2;
 	}
@@ -24,7 +23,10 @@ export const equate = (value1: Value, value2: Value) => {
 	if (typeof value1 === "number") {
 		return isNaN(value1) && isNaN(value2 as number) ? true : value1 === value2;
 	}
-	if (typeof value1 === "boolean" || typeof value1 === "bigint" || typeof value1 === "string" || typeof value1 === "function") {
+	if (typeof value1 === "bigint") {
+		return value1 === value2 as bigint;
+	}
+	if (typeof value1 === "boolean" || typeof value1 === "string" || typeof value1 === "function") {
 		return value1 === value2;
 	}
 	if (value1 instanceof Date && value2 instanceof Date) {
@@ -39,10 +41,20 @@ export const equate = (value1: Value, value2: Value) => {
 	if (value1 instanceof ArrayBuffer || value2 instanceof ArrayBuffer) {
 		return false;
 	}
+	pairs ??= new WeakMap();
+	let matches = pairs.get(value1);
+	if (matches?.has(value2 as object)) {
+		return true;
+	}
+	if (!matches) {
+		matches = new WeakSet();
+		pairs.set(value1, matches);
+	}
+	matches.add(value2 as object);
 	if (Array.isArray(value1) && Array.isArray(value2)) {
 		if (value1.length === value2.length) {
 			for (let i = 0; i < value1.length; ++i) {
-				if (!equate(value1[i], value2[i])) {
+				if (!equate(value1[i], value2[i], pairs)) {
 					return false;
 				}
 			}
@@ -55,7 +67,7 @@ export const equate = (value1: Value, value2: Value) => {
 	}
 	const props = new Set([...Object.getOwnPropertyNames(value1), ...Object.getOwnPropertyNames(value2)]);
 	for (const prop of props) {
-		if (!equate((value1 as any)[prop] as Value, (value2 as any)[prop] as Value)) {
+		if (!equate((value1 as any)[prop] as Value, (value2 as any)[prop] as Value, pairs)) {
 			return false;
 		}
 	}
@@ -93,9 +105,9 @@ export const format = (value: Value, formatting?: string): string =>
 			: value instanceof Date
 				? formatTimestamp(value, formatting)
 				: typeof value === "number"
-					? formatNumber(value, formatting)
+					? formatFloat(value, formatting)
 					: typeof value === "bigint"
-						? formatNumber(value, formatting)
+						? formatInteger(value, formatting)
 						: value instanceof ArrayBuffer
 							? formatBuffer(value, formatting as BufferFormatting)
 							: typeof value === "string"

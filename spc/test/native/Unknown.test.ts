@@ -145,6 +145,8 @@ describe("Mixed numeric equality", () => {
 		[-(2 ** 63), -9223372036854775808n, true],
 		[2 ** 63, 9223372036854775807n, false],
 		[2 ** 63, -9223372036854775808n, false],
+		[2 ** 64, 0n, false],
+		[-(2 ** 64), 0n, false],
 		[NaN, 0n, false],
 		[Infinity, 0n, false],
 		[-Infinity, 0n, false],
@@ -219,5 +221,75 @@ describe("Object category equality", () => {
 		];
 		expect(new Affinirum("Array.Unique(values)").evaluate({ values }))
 			.toEqual([new Date(0), new Uint8Array([1]).buffer, [], {}]);
+	});
+});
+
+describe("Cyclic structural equality", () => {
+	const comparisonScript = "[a==b,b==a,a.Equal(b),b.Equal(a),a!=b,b!=a,a.Unequal(b),b.Unequal(a)]";
+	const createObject = (value: bigint): Record<string, Value> => {
+		const object: Record<string, Value> = {};
+		object.self = object;
+		object.value = value;
+		return object;
+	};
+	const factories: [string, (value: bigint) => Value][] = [
+		["array", (value) => {
+			const array: Value[] = [];
+			array.push(array, value);
+			return array;
+		}],
+		["object", createObject],
+		["mixed object and array", (value) => {
+			const object: Record<string, Value> = {};
+			object.items = [object, value];
+			return object;
+		}],
+	];
+
+	it.each(factories)("compares cyclic %s values with themselves and matching copies", (_category, create) => {
+		const expression = new Affinirum(comparisonScript);
+		const a = create(1n);
+		for (const b of [a, create(1n)]) {
+			expect(expression.evaluate({ a, b }))
+				.toEqual([true, true, true, true, false, false, false, false]);
+		}
+	});
+
+	it.each(factories)("detects differences after a back-reference in cyclic %s values", (_category, create) => {
+		const expression = new Affinirum(comparisonScript);
+		expect(expression.evaluate({ a: create(1n), b: create(2n) }))
+			.toEqual([false, false, false, false, true, true, true, true]);
+	});
+
+	it.each<[bigint, boolean]>([
+		[1n, true],
+		[2n, false],
+	])("compares a shared child against distinct children with value %s", (value, equal) => {
+		const shared = { value: 1n };
+		const a = { first: shared, second: shared };
+		const b = { first: { value: 1n }, second: { value } };
+		const expression = new Affinirum(comparisonScript);
+		expect(expression.evaluate({ a, b }))
+			.toEqual([equal, equal, equal, equal, !equal, !equal, !equal, !equal]);
+	});
+
+	it("does not reuse compared pairs across evaluations", () => {
+		const expression = new Affinirum("a==b");
+		const a = createObject(1n);
+		const b = createObject(1n);
+		expect(expression.evaluate({ a, b })).toBe(true);
+		b.value = 2n;
+		expect(expression.evaluate({ a, b })).toBe(false);
+	});
+
+	it.each(factories)("removes matching cyclic %s values in Array.Unique", (_category, create) => {
+		const a = create(1n);
+		const b = create(1n);
+		const c = create(2n);
+		const expression = new Affinirum("Array.Unique(values)");
+		const result = expression.evaluate({ values: [a, b, c] }) as Value[];
+		expect(result).toHaveLength(2);
+		expect(result[0]).toBe(a);
+		expect(result[1]).toBe(c);
 	});
 });

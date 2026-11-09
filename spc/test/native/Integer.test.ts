@@ -1,3 +1,4 @@
+import { formatInteger } from "../../../src/native/Integer.js";
 import { runAffinirumTests } from "../../util/AffinirumTest.js";
 
 describe("Integer function test", () => {
@@ -110,4 +111,13 @@ describe("Integer function test", () => {
 			],
 		},
 	]);
+});
+
+describe("Integer formatting test", () => {
+	it.each<[string | undefined, string]>([
+		[undefined, "42"],
+		["\"min_integer_digits\":3", "042"],
+	])("formats normalized i64 values with options %s", (formatting, expected) => {
+		expect(formatInteger((1n << 64n) + 42n, formatting)).toBe(expected);
+	});
 });

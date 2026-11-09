@@ -1,6 +1,7 @@
 import { Affinirum, Type, Value } from "../../src/index.js";
 import { Constant } from "../../src/Constant.js";
 import { ParserState } from "../../src/ParserState.js";
+import { ArrayNode } from "../../src/node/ArrayNode.js";
 import { CallNode } from "../../src/node/CallNode.js";
 import { ConstantNode } from "../../src/node/ConstantNode.js";
 import { CallFrame } from "../../src/CallFrame.js";
@@ -16,6 +17,37 @@ describe("Constant folding test", () => {
 		const second = expression.evaluate() as Value[][];
 		expect(second).toEqual([[], []]);
 		expect(second[0]).not.toBe(first[0]);
+	});
+
+	it.each([true, false])("creates fresh nested arrays in the selected branch when the condition is %s", (condition) => {
+		const expression = new Affinirum(`val f=~():array{if ${condition}{[1,[2]]}else{[3,[4]]}};[f(),f()]`);
+		const expected = condition ? [1n, [2n]] : [3n, [4n]];
+		const first = expression.evaluate() as Value[][];
+		expect(first).toEqual([expected, expected]);
+		expect(first[0]).not.toBe(first[1]);
+		expect(first[0][1]).not.toBe(first[1][1]);
+		(first[0][1] as Value[]).push(9n);
+		expect(first[1]).toEqual(expected);
+		const second = expression.evaluate() as Value[][];
+		expect(second).toEqual([expected, expected]);
+		expect(second[0]).not.toBe(first[0]);
+		expect(second[0][1]).not.toBe(first[0][1]);
+	});
+
+	it.each<[boolean, Type, Value]>([
+		[true, Type.Integer, 5n],
+		[false, Type.String, "fallback"],
+	])("selects the compiled branch for condition %s even when a branch is non-constant", (condition, type, expected) => {
+		const expression = new Affinirum(`if ${condition}{value}else{'fallback'}`, {
+			variables: { value: Type.Integer },
+		});
+		expect(expression.type.equate(type)).toBe(true);
+		expect(expression.evaluate({ value: 5n })).toEqual(expected);
+	});
+
+	it("still checks the unselected branch against the expected type", () => {
+		expect(() => new Affinirum("if true{1}else{'bad'}", { type: Type.Integer }))
+			.toThrow(/type string mismatch with expected type integer/);
 	});
 
 	it("creates fresh object literals and nested containers for each evaluation", () => {
@@ -98,6 +130,42 @@ describe("Constant folding test", () => {
 		expect(node.evaluate(frame) as bigint).toBe(6n);
 		expect(node.evaluate(frame) as bigint).toBe(6n);
 		expect(calls).toBe(1);
+	});
+
+	it.each<[bigint[]]>([
+		[[]],
+		[[1n, 2n, 3n]],
+	])("folds deterministic scalar calls with a constant array %s", (values) => {
+		let calls = 0;
+		const span = new ParserState("sum([1,2,3])");
+		const functionNode = new ConstantNode(span, new Constant((items: bigint[]) => {
+			++calls;
+			return items.reduce((sum, value) => sum + value, 0n);
+		}, Type.functionType(Type.Integer, [Type.arrayType([Type.Integer])])));
+		const arrayNode = new ArrayNode(span, values.map((value) => new ConstantNode(span, new Constant(value))));
+		const node = new CallNode(span, functionNode, [arrayNode]).compile(Type.Unknown);
+		const frame = new CallFrame();
+		const expected = values.reduce((sum, value) => sum + value, 0n);
+		expect(calls).toBe(1);
+		expect(node.evaluate(frame)).toBe(expected);
+		expect(node.evaluate(frame)).toBe(expected);
+		expect(calls).toBe(1);
+	});
+
+	it("does not fold arrays containing volatile calls", () => {
+		let calls = 0;
+		const span = new ParserState("sum([next()])");
+		const next = new ConstantNode(span, new Constant(() => BigInt(++calls),
+			Type.functionType(Type.Integer, [], { volatile: true })));
+		const sum = new ConstantNode(span, new Constant((items: bigint[]) => items[0],
+			Type.functionType(Type.Integer, [Type.arrayType([Type.Integer])])));
+		const arrayNode = new ArrayNode(span, [new CallNode(span, next, [])]);
+		const node = new CallNode(span, sum, [arrayNode]).compile(Type.Unknown);
+		const frame = new CallFrame();
+		expect(calls).toBe(0);
+		expect(node.evaluate(frame)).toBe(1n);
+		expect(node.evaluate(frame)).toBe(2n);
+		expect(calls).toBe(2);
 	});
 
 	it("folds deterministic scalar calls with fixed and variadic constant arguments", () => {

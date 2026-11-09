@@ -2,7 +2,7 @@ import { Node } from "./Node.js";
 import { ScriptSpan } from "../ScriptSpan.js";
 import { Variable } from "../Variable.js";
 import { Type } from "../Type.js";
-import { Value, normalize } from "../Value.js";
+import { Value } from "../Value.js";
 import { CallFrame } from "../CallFrame.js";
 import { ReturnNode } from "./ReturnNode.js";
 import { JumpNode } from "./JumpNode.js";
@@ -35,13 +35,13 @@ export class FunctionNode extends Node {
 
 			try {
 				this._arguments.forEach((arg, index) => {
-					subframe.set(arg, normalize(values[index]));
+					subframe.set(arg, values[index]);
 				});
-				return normalize(this._subnode.evaluate(subframe));
+				return this._subnode.evaluate(subframe);
 			}
 			catch (e) {
 				if (e instanceof ReturnNode && e.scope === "function") {
-					return normalize(e.value);
+					return e.value;
 				}
 				if (e instanceof JumpNode) {
 					this._subnode.throwError(`unexpected ${e.action} jump`);

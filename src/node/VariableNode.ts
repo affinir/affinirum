@@ -1,16 +1,15 @@
-import { Node } from "./Node.js";
+import { AssignableNode } from "./AssignableNode.js";
 import { ScriptSpan } from "../ScriptSpan.js";
 import { Variable } from "../Variable.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
 
-export class VariableNode extends Node {
+export class VariableNode extends AssignableNode {
 
 	constructor(
 		span: ScriptSpan,
 		protected readonly _variable: Variable,
-		protected _subnode?: Node,
 	) {
 		super(span);
 	}
@@ -19,22 +18,21 @@ export class VariableNode extends Node {
 		return this._variable.type;
 	}
 
-	override compile(type: Type): Node {
-		this._subnode = this._subnode?.compile(type);
-		this._variable.type = this.reduceType(this._subnode?.type ?? type);
+	override compile(type: Type): AssignableNode {
+		this._variable.type = this.reduceType(type);
 		return this;
 	}
 
 	override evaluate(frame: CallFrame): Value {
-		return this._subnode
-			? frame.set(this._variable, this._subnode.evaluate(frame))
-			: frame.get(this._variable);
+		return frame.get(this._variable);
+	}
+
+	override resolver(frame: CallFrame): (value: Value) => Value {
+		return (value: Value) => frame.set(this._variable, value);
 	}
 
 	override toString(ident: number = 0): string {
-		return this._subnode
-			? `${super.toString(ident)} variable node subnode:\n${this._subnode.toString(ident + 1)}`
-			: `${super.toString(ident)} variable node`;
+		return `${super.toString(ident)} variable node`;
 	}
 
 }

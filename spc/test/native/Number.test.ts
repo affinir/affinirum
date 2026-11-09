@@ -88,7 +88,7 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "-a^2 == b",
+			script: "-a**2 == b",
 			cases: [
 				{ values: { a: 2, b: -4 }, result: true },
 				{ values: { a: 2n, b: -5n }, result: false },
@@ -115,7 +115,7 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "longvariablename.Root(2) - 10",
+			script: "longvariablename.Root(2)::(float|integer) - 10",
 			cases: [
 				{ values: { longvariablename: 100 }, result: 0 },
 			],
@@ -208,6 +208,35 @@ describe("Number function test", () => {
 		},
 	]);
 
+	describe("Power operator", () => {
+		it.each<[string, bigint]>([
+			["2**3", 8n],
+			["2 ** 3 ** 2", 64n],
+			["2 ** (3 ** 2)", 512n],
+			["2 * 3 ** 2", 18n],
+			["2 ** 3 * 2", 16n],
+			["-2 ** 2", -4n],
+			["(-2) ** 2", 4n],
+		])("evaluates %s with integer type", (script, expected) => {
+			const expression = new Affinirum(script);
+			expect(expression.type.equate(Type.Integer)).toBe(true);
+			expect(expression.evaluate()).toBe(expected);
+		});
+
+		it("evaluates declared integer inputs", () => {
+			const expression = new Affinirum("a**b", {
+				strict: true,
+				variables: { a: Type.Integer, b: Type.Integer },
+			});
+			expect(expression.type.equate(Type.Integer)).toBe(true);
+			expect(expression.evaluate({ a: 2n, b: 3n })).toBe(8n);
+		});
+
+		it.each(["2 * * 3", "2 *** 3"])("rejects %s", (script) => {
+			expect(() => new Affinirum(script)).toThrow(/unexpected expression token/);
+		});
+	});
+
 	describe("Float arithmetic", () => {
 		it.each<[string, string, number, number, number]>([
 			["7.5 - 2.5", "a - b", 7.5, 2.5, 5],
@@ -219,9 +248,8 @@ describe("Number function test", () => {
 			["7.5 % 2.0", "a % b", 7.5, 2, 1.5],
 			["7.5.Remainder(2.0)", "a.Remainder(b)", 7.5, 2, 1.5],
 			["(-7.5).Modulo(2.0)", "a.Modulo(b)", -7.5, 2, 0.5],
-			["9.0 ^ 0.5", "a ^ b", 9, 0.5, 3],
+			["9.0 ** 0.5", "a ** b", 9, 0.5, 3],
 			["9.0.Power(0.5)", "a.Power(b)", 9, 0.5, 3],
-			["9.0.Root(2.0)", "a.Root(b)", 9, 2, 3],
 		])("evaluates %s with literals and declared float inputs", (literalScript, inputScript, a, b, expected) => {
 			const literal = new Affinirum(literalScript);
 			expect(literal.type.equate(Type.Float)).toBe(true);
@@ -237,6 +265,54 @@ describe("Number function test", () => {
 	});
 
 	describe("Root edge cases", () => {
+		it.each<[Type, Type, Type, number | bigint, number | bigint]>([
+			[Type.Integer, Type.Integer, Type.OptionalInteger, 9n, 2n],
+			[Type.Float, Type.Float, Type.OptionalFloat, 9, 2],
+			[Type.Float, Type.Integer, Type.OptionalFloat, 9, 2n],
+			[Type.Integer, Type.Float, Type.OptionalFloat, 9n, 2],
+		])("declares %s.Root(%s) as %s", (valueType, indexType, resultType, value, index) => {
+			const config = { strict: true, variables: { value: valueType, index: indexType } };
+			const expression = new Affinirum("value.Root(index)", { ...config, type: resultType });
+			expect(expression.type.equate(resultType)).toBe(true);
+			expect(expression.evaluate({ value, index })).toBe(typeof value === "bigint" && typeof index === "bigint" ? 3n : 3);
+
+			for (const invalidIndex of typeof index === "bigint" ? [0n, -2n] : [0, -2]) {
+				const result = expression.evaluate({ value, index: invalidIndex });
+				expect(result).toBeUndefined();
+				expect(expression.type.acceptValue(result)).toBe(true);
+			}
+
+			const result = expression.evaluate({ value: typeof value === "bigint" ? -16n : -16, index });
+			if (valueType.isInteger && indexType.isInteger) {
+				expect(result).toBeUndefined();
+			}
+			else {
+				expect(result).toBeNaN();
+			}
+			expect(expression.type.acceptValue(result)).toBe(true);
+			expect(() => new Affinirum("value.Root(index)", { ...config, type: resultType.toMandatory() }))
+				.toThrow(/return a type compatible/);
+		});
+
+		it.each<[string, Type, number | undefined]>([
+			["9.0.Root(2.0)", Type.Float, 3],
+			["(-16).Root(2)", Type.Void, undefined],
+		])("folds %s to its concrete result type", (script, type, expected) => {
+			const expression = new Affinirum(script);
+			expect(expression.type.equate(type)).toBe(true);
+			expect(expression.evaluate()).toBe(expected);
+		});
+
+		it("accepts Root in a function with an optional return type", () => {
+			const expression = new Affinirum("val f=~(a:integer,b:integer):integer?{a.Root(b)};f(a,b)", {
+				strict: true,
+				variables: { a: Type.Integer, b: Type.Integer },
+			});
+			expect(expression.type.equate(Type.OptionalInteger)).toBe(true);
+			expect(expression.evaluate({ a: 9n, b: 2n })).toBe(3n);
+			expect(expression.evaluate({ a: -16n, b: 2n })).toBeUndefined();
+		});
+
 		runAffinirumTests([
 			{
 				script: "(-8.0).Root(3)",

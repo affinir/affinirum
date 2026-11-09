@@ -8,35 +8,6 @@ const ZERO = "0".charCodeAt(0), NINE = "9".charCodeAt(0);
 const UPPER_A = "A".charCodeAt(0), UPPER_F = "F".charCodeAt(0);
 const LOWER_A = "a".charCodeAt(0), LOWER_F = "f".charCodeAt(0);
 
-export const formatLiteralBuffer = (value: ArrayBuffer) => `\`${formatBuffer(value)}\``;
-
-export const parseLiteralBuffer = (value: string, offset = 0) => {
-	const q = value.charCodeAt(offset);
-	for (let i = offset + 1, bytes: number[] = [], digits = [0, 0], ix = 0; i < value.length; ++i) {
-		const code = value.charCodeAt(i);
-		if (code === q) {
-			if (ix === 1) {
-				bytes.push(digits[0]);
-			}
-			return [new Uint8Array(bytes).buffer, i + 1] as const;
-		}
-		if (code >= ZERO && code <= NINE) {
-			digits[ix++] = code - ZERO;
-		}
-		else if (code >= UPPER_A && code <= UPPER_F) {
-			digits[ix++] = code - UPPER_A + 10;
-		}
-		else if (code >= LOWER_A && code <= LOWER_F) {
-			digits[ix++] = code - LOWER_A + 10;
-		}
-		if (ix > 1) {
-			bytes.push(digits[0] << 4 | digits[1]);
-			ix = 0;
-		}
-	}
-	throw new Error(`missing closing buffer quotation mark ${String.fromCharCode(q)}`);
-};
-
 export const parseBoundedInteger = (input: string, base: 10 | 16, min: number, max: number): number => {
 	if (input.length === 0) {
 		throw new Error(`Invalid IP component: ${input}`);
@@ -165,6 +136,35 @@ export const parseBuffer = (value?: string) => {
 		bytes[i] = parseBoundedInteger(value.slice(c, c += 2), 16, 0, 0xff);
 	}
 	return bytes.buffer;
+};
+
+export const formatLiteralBuffer = (value: ArrayBuffer) => `\`${formatBuffer(value)}\``;
+
+export const parseLiteralBuffer = (value: string, offset = 0) => {
+	const q = value.charCodeAt(offset);
+	for (let i = offset + 1, bytes: number[] = [], digits = [0, 0], ix = 0; i < value.length; ++i) {
+		const code = value.charCodeAt(i);
+		if (code === q) {
+			if (ix === 1) {
+				bytes.push(digits[0]);
+			}
+			return [new Uint8Array(bytes).buffer, i + 1] as const;
+		}
+		if (code >= ZERO && code <= NINE) {
+			digits[ix++] = code - ZERO;
+		}
+		else if (code >= UPPER_A && code <= UPPER_F) {
+			digits[ix++] = code - UPPER_A + 10;
+		}
+		else if (code >= LOWER_A && code <= LOWER_F) {
+			digits[ix++] = code - LOWER_A + 10;
+		}
+		if (ix > 1) {
+			bytes.push(digits[0] << 4 | digits[1]);
+			ix = 0;
+		}
+	}
+	throw new Error(`missing closing buffer quotation mark ${String.fromCharCode(q)}`);
 };
 
 export const funcByte = new Constant(

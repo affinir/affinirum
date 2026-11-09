@@ -4,7 +4,7 @@ import { Type } from "../Type.js";
 export type IntegerEncoding = "i8" | "i16" | "i16le" | "i32" | "i32le" | "i64" | "i64le"
 	| "n8" | "n16" | "n16le" | "n32" | "n32le";
 
-export const boundInteger = (value: bigint) => BigInt.asIntN(64, value);
+export const int64 = (value: bigint) => BigInt.asIntN(64, value);
 
 export const createInteger = (value?: number) => {
 	if (value == null || Number.isNaN(value)) {
@@ -16,7 +16,7 @@ export const createInteger = (value?: number) => {
 	if (value === Number.POSITIVE_INFINITY) {
 		return 0x7FFFFFFFFFFFFFFFn;
 	}
-	return boundInteger(BigInt(Math.trunc(value)));
+	return int64(BigInt(Math.trunc(value)));
 };
 
 export const encodeInteger = (value: bigint, encoding: IntegerEncoding = "i64") => {
@@ -29,16 +29,16 @@ export const encodeInteger = (value: bigint, encoding: IntegerEncoding = "i64") 
 	}
 	const dv = new DataView(new Uint8Array(Number.parseInt(bits) / 8).buffer);
 	switch (encoding) {
-		case "i8": dv.setInt8(0, Number(value)); break;
-		case "i16": dv.setInt16(0, Number(value)); break;
-		case "i16le": dv.setInt16(0, Number(value), true); break;
-		case "i32": dv.setInt32(0, Number(value)); break;
-		case "i32le": dv.setInt32(0, Number(value), true); break;
-		case "n8": dv.setUint8(0, Number(value)); break;
-		case "n16": dv.setUint16(0, Number(value)); break;
-		case "n16le": dv.setUint16(0, Number(value), true); break;
-		case "n32": dv.setUint32(0, Number(value)); break;
-		case "n32le": dv.setUint32(0, Number(value), true); break;
+		case "i8": dv.setInt8(0, Number(BigInt.asIntN(8, value))); break;
+		case "i16": dv.setInt16(0, Number(BigInt.asIntN(16, value))); break;
+		case "i16le": dv.setInt16(0, Number(BigInt.asIntN(16, value)), true); break;
+		case "i32": dv.setInt32(0, Number(BigInt.asIntN(32, value))); break;
+		case "i32le": dv.setInt32(0, Number(BigInt.asIntN(32, value)), true); break;
+		case "n8": dv.setUint8(0, Number(BigInt.asUintN(8, value))); break;
+		case "n16": dv.setUint16(0, Number(BigInt.asUintN(16, value))); break;
+		case "n16le": dv.setUint16(0, Number(BigInt.asUintN(16, value)), true); break;
+		case "n32": dv.setUint32(0, Number(BigInt.asUintN(32, value))); break;
+		case "n32le": dv.setUint32(0, Number(BigInt.asUintN(32, value)), true); break;
 		case "i64": dv.setBigInt64(0, value); break;
 		case "i64le": dv.setBigInt64(0, value, true); break;
 		default: throw new Error(`${encoding} encoding not supported`);
@@ -96,30 +96,52 @@ const decodeInteger = (value?: ArrayBuffer, encoding: IntegerEncoding = "i64", b
 	}
 };
 
+export const formatInteger = (value: bigint, formatting?: string) => {
+	const int = int64(value);
+	if (formatting) {
+		const nformat = JSON.parse(`{${formatting}}`);
+		if (typeof nformat === "object") {
+			return new Intl.NumberFormat(undefined, {
+				minimumIntegerDigits: nformat?.min_integer_digits,
+				minimumFractionDigits: nformat?.min_fraction_digits,
+				maximumFractionDigits: nformat?.max_fraction_digits,
+				minimumSignificantDigits: nformat?.min_significant_digits,
+				maximumSignificantDigits: nformat?.max_significant_digits,
+				notation: nformat?.notation,
+			}).format(int);
+		}
+	}
+	return int.toString();
+};
+
+export const formatLiteralInteger = (value: bigint) => {
+	return int64(value).toString();
+};
+
 const typeIntegerOrArray = Type.union(Type.Integer, Type.arrayType([Type.Integer]));
 const typeAggregator = Type.functionType(Type.Integer, [Type.arrayType([typeIntegerOrArray])], { variadic: true });
 
 const funcSum = new Constant(
 	(values: (bigint | bigint[])[]) =>
-		boundInteger(values.flat().reduce((acc, val) => acc + val, 0n)),
+		int64(values.flat().reduce((acc, val) => acc + val, 0n)),
 	typeAggregator,
 );
 
 const funcMin = new Constant(
 	(values: (bigint | bigint[])[]) =>
-		boundInteger(values.flat().reduce((min, val) => val < min ? val : min)),
+		values.flat().reduce((min, val) => val < min ? val : min),
 	typeAggregator,
 );
 
 const funcMax = new Constant(
 	(values: (bigint | bigint[])[]) =>
-		boundInteger(values.flat().reduce((max, val) => val > max ? val : max)),
+		values.flat().reduce((max, val) => val > max ? val : max),
 	typeAggregator,
 );
 
 const funcRandomInteger = new Constant(
 	(value: bigint) =>
-		value == null ? undefined : boundInteger(BigInt(Math.floor(Math.random() * Number(value)))),
+		value == null ? undefined : BigInt(Math.floor(Math.random() * Number(value))),
 	Type.functionType(Type.Integer, [Type.Integer], { volatile: true }),
 );
 
@@ -132,7 +154,7 @@ const funcDecodeInteger = new Constant(
 const funcParseInteger = new Constant(
 	(value: string | undefined) => {
 		try {
-			return value ? boundInteger(BigInt(value)) : undefined
+			return value ? int64(BigInt(value)) : undefined
 		}
 		catch {}
 		return undefined;

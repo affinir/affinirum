@@ -3,17 +3,16 @@ import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { containsBuffer } from "./Buffer.js";
 import { containsString } from "./String.js";
-import { boundInteger } from "./Integer.js";
 
 export const funcLength = new Constant(
 	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value }) =>
-		boundInteger(BigInt(value == null
+		BigInt(value == null
 			? 0
 			:	value instanceof ArrayBuffer
 				? value.byteLength
 				: typeof value === "string" || Array.isArray(value)
 					? value.length
-					: Object.keys(value).length)),
+					: Object.keys(value).length),
 	Type.functionType(Type.Integer, [Type.Iterable]),
 );
 

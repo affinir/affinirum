@@ -1,7 +1,6 @@
 import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
-import { boundInteger } from "./Integer.js";
 import { equate } from "./Unknown.js";
 
 const typePredicate = Type.functionType(Type.Boolean, [Type.Unknown, Type.OptionalInteger, Type.OptionalArray]);
@@ -37,7 +36,7 @@ export const funcFirstIndex = new Constant(
 			return undefined;
 		}
 		const ix = value.findIndex((v, i, a) => predicate(v, BigInt(i), a));
-		return ix < 0 ? undefined : boundInteger(BigInt(ix));
+		return ix < 0 ? undefined : BigInt(ix);
 	},
 	typeIndexFinder,
 );
@@ -49,7 +48,7 @@ export const funcLastIndex = new Constant(
 		}
 		for (let i = value.length - 1; i >= 0; i--) {
 			if (predicate(value[i], BigInt(i), value)) {
-				return boundInteger(BigInt(i));
+				return BigInt(i);
 			}
 		}
 		return undefined;
@@ -125,9 +124,7 @@ const funcJoin = new Constant(
 
 const funcRange = new Constant(
 	(value1: bigint, value2: bigint) => {
-		const v1 = boundInteger(value1);
-		const v2 = boundInteger(value2);
-		const [min, max] = v1 < v2 ? [v1, v2] : [v2, v1];
+		const [min, max] = value1 < value2 ? [value1, value2] : [value2, value1];
 		return [...Array(Number(max - min)).keys()].map((i) => BigInt(i) + min);
 	},
 	Type.functionType(Type.Array, [Type.Integer, Type.Integer]),

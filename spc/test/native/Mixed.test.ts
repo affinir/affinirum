@@ -26,7 +26,7 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "(a[n+1] + 2)^2",
+			script: "(a[n+1] + 2)**2",
 			cases: [
 				{ values: { a: [0, 1, 2], n: 1n }, result: 16 },
 			],

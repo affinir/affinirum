@@ -73,6 +73,10 @@ export class ObjectNode extends Node {
 		return result;
 	}
 
+	override get constant(): boolean {
+		return this._subnodes.every(([key, value]) => key.constant && value.constant);
+	}
+
 	override toString(ident: number = 0): string {
 		const subnodes = this._subnodes.map(([k, v]) => `${k.toString(ident + 1)}:\n${v.toString(ident + 1)}`).join("\n");
 		return `${super.toString(ident)} object node subnodes:\n${subnodes}`;

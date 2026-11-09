@@ -1,6 +1,5 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
-import { boundInteger } from "./Integer.js";
 import { isNumericSymbol } from "./Number.js";
 
 export type TimestampEncoding = "i32" | "i32le" | "i64" | "i64le";
@@ -14,32 +13,6 @@ const isTimeSeparatorSymbol = (c: string) => c === ":";
 const isDateTimeSeparatorSymbol = (c: string) => c === "T" || c === " " || c === "@";
 const isDateSymbol = (c: string) => isNumericSymbol(c) || isDateSeparatorSymbol(c);
 const isTimeSymbol = (c: string) => isNumericSymbol(c) || isTimeSeparatorSymbol(c);
-
-export const formatLiteralTimestamp = (value: Date) => `@${formatTimestamp(value)}`;
-
-export const parseLiteralTimestamp = (value: string, offset = 0) => {
-	let i = offset + 1;
-	while (isDateSymbol(value.charAt(i))) {
-		++i;
-	}
-	if (isDateTimeSeparatorSymbol(value.charAt(i))) {
-		++i;
-		while (isTimeSymbol(value.charAt(i))) {
-			++i;
-		}
-		if (value.charAt(i) === "."
-			&& isNumericSymbol(value.charAt(i + 1))) {
-			++i;
-			while (isNumericSymbol(value.charAt(i))) {
-				++i;
-			}
-			if (value.charAt(i) === "Z") {
-				++i;
-			}
-		}
-	}
-	return [new Date(value.slice(offset + 1, i)), i] as const;
-};
 
 export const encodeTimestamp = (value: Date, encoding: TimestampEncoding = "i64") => {
 	const littleEndian = encoding.endsWith("le");
@@ -132,6 +105,32 @@ const parseTimestamp = (value?: number | string) => {
 	return isNaN(date.getTime()) ? undefined : date;
 };
 
+export const formatLiteralTimestamp = (value: Date) => `@${formatTimestamp(value)}`;
+
+export const parseLiteralTimestamp = (value: string, offset = 0) => {
+	let i = offset + 1;
+	while (isDateSymbol(value.charAt(i))) {
+		++i;
+	}
+	if (isDateTimeSeparatorSymbol(value.charAt(i))) {
+		++i;
+		while (isTimeSymbol(value.charAt(i))) {
+			++i;
+		}
+		if (value.charAt(i) === "."
+			&& isNumericSymbol(value.charAt(i + 1))) {
+			++i;
+			while (isNumericSymbol(value.charAt(i))) {
+				++i;
+			}
+			if (value.charAt(i) === "Z") {
+				++i;
+			}
+		}
+	}
+	return [new Date(value.slice(offset + 1, i)), i] as const;
+};
+
 const funcNow = new Constant(
 	() =>
 		new Date(),
@@ -194,7 +193,7 @@ export const funcMillisecond = new Constant(
 
 export const funcEpochTime = new Constant(
 	(value: Date, epoch = new Date(0)) =>
-		value ? boundInteger(BigInt(value.getTime() - epoch.getTime())) : undefined,
+		value ? BigInt(value.getTime() - epoch.getTime()) : undefined,
 	Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalTimestamp]),
 );
 

@@ -40,6 +40,10 @@ export class ArrayNode extends Node {
 		return result;
 	}
 
+	override get constant(): boolean {
+		return this._subnodes.every((node) => node.constant);
+	}
+
 	override toString(ident: number = 0): string {
 		const subnodes = this._subnodes.map((s) => s.toString(ident + 1)).join("\n");
 		return `${super.toString(ident)} array node subnodes:\n${subnodes}`;

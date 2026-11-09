@@ -3,8 +3,9 @@ import { ParserState } from "../../ParserState.js";
 import { Value } from "../../Value.js";
 import { Type } from "../../Type.js";
 import { funcAdd } from "../Aggregable.js";
-import { boundInteger } from "../Integer.js";
-import { formatLiteralNumber, funcSubtract } from "../Number.js";
+import { formatLiteralFloat } from "../Float.js";
+import { formatLiteralInteger, int64 } from "../Integer.js";
+import { funcSubtract } from "../Number.js";
 import { formatLiteralBuffer } from "../Buffer.js";
 import { formatLiteralString } from "../String.js";
 import { formatLiteralTimestamp } from "../Timestamp.js";
@@ -31,8 +32,11 @@ export const formatAN = (value: Value, whitespace?: string): string => {
 	if (value instanceof Date) {
 		return formatLiteralTimestamp(value);
 	}
-	if (typeof value === "bigint" || typeof value === "number") {
-		return formatLiteralNumber(value);
+	if (typeof value === "number") {
+		return formatLiteralFloat(value);
+	}
+	if (typeof value === "bigint") {
+		return formatLiteralInteger(value);
 	}
 	if (value instanceof ArrayBuffer) {
 		return formatLiteralBuffer(value);
@@ -149,7 +153,7 @@ const parseLiteral = (state: ParserState): Value => {
 		const value = state.literal.value;
 		state.next();
 		return negative
-			? typeof value === "bigint" ? boundInteger(-value) : -value
+			? typeof value === "bigint" ? int64(-value) : -value
 			: value;
 	}
 	if (state.isBracketsOpen) {

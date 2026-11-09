@@ -1,6 +1,6 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
-import { boundInteger } from "./Integer.js";
+import { int64 } from "./Integer.js";
 
 export const isSignSymbol = (c: string) => c === "+" || c === "-";
 export const isNumericSymbol = (c: string) =>  c >= "0" && c <= "9" ;
@@ -13,13 +13,6 @@ export interface NumberFormatting {
 	max_significant_digits?: number;
 	notation?: "standard" | "scientific";
 }
-
-export const formatLiteralNumber = (value: bigint | number) => {
-	const str = value.toString();
-	return typeof value === "number" && Number.isInteger(value) && !str.includes("e")
-		? `${str}.0`
-		: str;
-};
 
 export const parseLiteralNumber = (value: string, offset = 0) => {
 	let i = offset;
@@ -52,26 +45,7 @@ export const parseLiteralNumber = (value: string, offset = 0) => {
 		integer = false;
 	}
 	const str = value.slice(offset, i);
-	return [integer ? boundInteger(BigInt(str)) : parseFloat(str), i] as const;
-};
-
-export const formatNumber = (value: bigint | number, formatting?: string) => {
-	if (formatting) {
-		const nformat = JSON.parse(`{${formatting}}`);
-		if (typeof nformat === "object") {
-			return new Intl.NumberFormat(undefined, {
-				minimumIntegerDigits: nformat?.min_integer_digits,
-				minimumFractionDigits: nformat?.min_fraction_digits,
-				maximumFractionDigits: nformat?.max_fraction_digits,
-				minimumSignificantDigits: nformat?.min_significant_digits,
-				maximumSignificantDigits: nformat?.max_significant_digits,
-				notation: nformat?.notation,
-			}).format(value);
-		}
-	}
-	return typeof value === "number" && Number.isInteger(value)
-		? `${value.toString()}.0`
-		: value.toString();
+	return [integer ? int64(BigInt(str)) : parseFloat(str), i] as const;
 };
 
 const typeComparator = Type.functionType(Type.Boolean, [Type.Number, Type.Number]);
@@ -109,7 +83,7 @@ export const funcLessOrEqual = new Constant(
 export const funcSubtract = new Constant(
 	(value: number | bigint, subtrahend: number | bigint) =>
 		typeof value === "bigint" && typeof subtrahend === "bigint"
-			? boundInteger(value - subtrahend)
+			? int64(value - subtrahend)
 			: Number(value) - Number(subtrahend),
 	typeOperator,
 );
@@ -117,7 +91,7 @@ export const funcSubtract = new Constant(
 export const funcMultiply = new Constant(
 	(value1: number | bigint, value2: number | bigint) =>
 		typeof value1 === "bigint" && typeof value2 === "bigint"
-			? boundInteger(value1 * value2)
+			? int64(value1 * value2)
 			: Number(value1) * Number(value2),
 	typeOperator,
 );
@@ -125,7 +99,7 @@ export const funcMultiply = new Constant(
 export const funcDivide = new Constant(
 	(value: number | bigint, divisor: number | bigint) =>
 		typeof value === "bigint" && typeof divisor === "bigint"
-			? boundInteger(value / divisor)
+			? int64(value / divisor)
 			: Number(value) / Number(divisor),
 	typeOperator,
 );
@@ -133,7 +107,7 @@ export const funcDivide = new Constant(
 export const funcRemainder = new Constant(
 	(value: number | bigint, divisor: number | bigint) =>
 		typeof value === "bigint" && typeof divisor === "bigint"
-			? boundInteger(value % divisor)
+			? value % divisor
 			: Number(value) % Number(divisor),
 	typeOperator,
 );
@@ -141,7 +115,7 @@ export const funcRemainder = new Constant(
 export const funcModulo = new Constant(
 	(value: number | bigint, divisor: number | bigint) =>
 		typeof value === "bigint" && typeof divisor === "bigint"
-			? boundInteger((value % divisor + divisor) % divisor)
+			? (value % divisor + divisor) % divisor
 			: (Number(value) % Number(divisor) + Number(divisor)) % Number(divisor),
 	typeOperator,
 );
@@ -149,7 +123,7 @@ export const funcModulo = new Constant(
 export const funcPower = new Constant(
 	(value: number | bigint, exponent: number | bigint) =>
 		typeof value === "bigint" && typeof exponent === "bigint"
-			? boundInteger(value ** BigInt(exponent))
+			? int64(value ** exponent)
 			: Number(value) ** Number(exponent),
 	typeOperator,
 );
@@ -160,20 +134,18 @@ export const funcRoot = new Constant(
 			return undefined;
 		}
 		if (typeof value === "bigint" && typeof exponent === "bigint") {
-			const v = boundInteger(value);
-			const e = boundInteger(exponent);
-			const negative = v < 0n;
-			if (negative && e % 2n === 0n) {
+			const negative = value < 0n;
+			if (negative && exponent % 2n === 0n) {
 				return undefined;
 			}
-			const magnitude = negative ? -v : v;
-			if (magnitude <= 1n || e === 1n) {
-				return v;
+			const magnitude = negative ? -value : value;
+			if (magnitude <= 1n || exponent === 1n) {
+				return value;
 			}
 			let low = 0n, high = magnitude, result = 0n;
 			while (low <= high) {
 				const mid = low + high >> 1n;
-				const midPow = mid ** e;
+				const midPow = mid ** exponent;
 				if (midPow === magnitude) {
 					return negative ? -mid : mid;
 				}
@@ -196,12 +168,17 @@ export const funcRoot = new Constant(
 			? -Math.pow(-v, 1 / e)
 			: Math.pow(v, 1 / e);
 	},
-	typeOperator,
+	Type.union(
+		Type.functionType(Type.OptionalFloat, [Type.Float, Type.Float]),
+		Type.functionType(Type.OptionalFloat, [Type.Float, Type.Integer]),
+		Type.functionType(Type.OptionalFloat, [Type.Integer, Type.Float]),
+		Type.functionType(Type.OptionalInteger, [Type.Integer, Type.Integer]),
+	),
 );
 
 export const funcNegate = new Constant(
 	(value: number | bigint) =>
-		value == null ? undefined : typeof value === "number" ? -value : boundInteger(-value),
+		value == null ? undefined : typeof value === "number" ? -value : int64(-value),
 	Type.union(
 		Type.functionType(Type.Float, [Type.Float]),
 		Type.functionType(Type.Integer, [Type.Integer]),

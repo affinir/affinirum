@@ -48,6 +48,32 @@ const decodeFloat = (value?: ArrayBuffer, encoding: FloatEncoding = "f64", byteO
 	}
 };
 
+export const formatFloat = (value: number, formatting?: string) => {
+	if (formatting) {
+		const nformat = JSON.parse(`{${formatting}}`);
+		if (typeof nformat === "object") {
+			return new Intl.NumberFormat(undefined, {
+				minimumIntegerDigits: nformat?.min_integer_digits,
+				minimumFractionDigits: nformat?.min_fraction_digits,
+				maximumFractionDigits: nformat?.max_fraction_digits,
+				minimumSignificantDigits: nformat?.min_significant_digits,
+				maximumSignificantDigits: nformat?.max_significant_digits,
+				notation: nformat?.notation,
+			}).format(value);
+		}
+	}
+	return Number.isInteger(value)
+		? `${value.toString()}.0`
+		: value.toString();
+};
+
+export const formatLiteralFloat = (value: number) => {
+	const str = value.toString();
+	return Number.isInteger(value) && !str.includes("e")
+		? `${str}.0`
+		: str;
+};
+
 const typeNumberOrArray = Type.union(Type.Number, Type.arrayType([Type.Number]));
 const typeAggregator = Type.functionType(Type.Float, [Type.arrayType([typeNumberOrArray])], { variadic: true });
 const typeTransform = Type.functionType(Type.Float, [Type.Number]);

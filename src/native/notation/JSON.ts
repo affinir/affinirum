@@ -5,9 +5,9 @@ import { Type } from "../../Type.js";
 const typeJson = Type.union(Type.Void, Type.Boolean, Type.Timestamp, Type.Float, Type.Integer, Type.String, Type.Array, Type.Object);
 
 export const formatJSON = (value: Value, whitespace?: string): string =>
-	value == null ? "" : JSON.stringify(
+	value == null ? "null" : JSON.stringify(
 		value,
-		(_key: string, value: any) => typeof value === "bigint" ? value.toString() : value as unknown,
+		(_key: string, value: any) => typeof value === "bigint" ? value.toString() : value as unknown ?? null,
 		whitespace,
 	);
 

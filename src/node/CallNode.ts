@@ -2,8 +2,8 @@ import { Node } from "./Node.js";
 import { ScriptSpan } from "../ScriptSpan.js";
 import { Constant } from "../Constant.js";
 import { ConstantNode } from "./ConstantNode.js";
-import { VariadicArgumentNode } from "./VariadicArgumentNode.js";
-import { Value, normalize } from "../Value.js";
+import { ArrayNode } from "./ArrayNode.js";
+import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
 
@@ -53,7 +53,7 @@ export class CallNode extends Node {
 		if (variadicArity > 0) {
 			const span = this._subnodes[variadicArity - 1].start();
 			const vnodes = this._subnodes.splice(variadicArity - 1);
-			this._subnodes.push(new VariadicArgumentNode(span.end(vnodes[vnodes.length - 1]), vnodes));
+			this._subnodes.push(new ArrayNode(span.end(vnodes[vnodes.length - 1]), vnodes));
 		}
 		let constant = this._fnode.constant && !this._fnode.type.isVolatile;
 		for (let i = 0; i < this._subnodes.length; ++i) {
@@ -75,7 +75,7 @@ export class CallNode extends Node {
 		if (typeof func !== "function") {
 			this.throwError(`function expected not ${Type.of(func)}`);
 		}
-		return normalize(func(...this._subnodes.map((node) => node.evaluate(frame))));
+		return func(...this._subnodes.map((node) => node.evaluate(frame)));
 	}
 
 	override toString(ident: number = 0): string {

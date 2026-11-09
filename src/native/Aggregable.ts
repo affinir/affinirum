@@ -2,7 +2,7 @@ import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { concatBuffers } from "./Buffer.js";
-import { boundInteger } from "./Integer.js";
+import { int64 } from "./Integer.js";
 
 export const aggregate = (
 	value1: ArrayBuffer | string | Value[] | null | undefined,
@@ -25,7 +25,7 @@ const add = (
 	value2: number | bigint | ArrayBuffer | string | Value[] | null | undefined
 ) => {
 	if (typeof value1 === "bigint" && typeof value2 === "bigint") {
-		return boundInteger(value1 + value2);
+		return int64(value1 + value2);
 	}
 	if ((typeof value1 === "number" || typeof value1 === "bigint") && (typeof value2 === "number" || typeof value2 === "bigint")) {
 		return Number(value1) + Number(value2);

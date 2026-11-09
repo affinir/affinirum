@@ -20,8 +20,8 @@ f(x, 1, 2, 3, 4)
 });
 
 describe("Variadic function argument test", () => {
-	it("evaluates non-constant variadic arguments with the current inputs", () => {
-		const expression = new Affinirum("Integer.Sum(x,2)");
+	it.each(["Integer.Sum(x,2)", "Integer.Sum([x,2])"])("evaluates non-constant arguments with the current inputs in %s", (script) => {
+		const expression = new Affinirum(script);
 		expect(expression.evaluate({ x: 1n }) as bigint).toBe(3n);
 		expect(expression.evaluate({ x: 5n }) as bigint).toBe(7n);
 	});

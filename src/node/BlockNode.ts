@@ -31,7 +31,7 @@ export class BlockNode extends Node {
 			this._subnodes[i] = this._subnodes[i].compile(i < last ? Type.Unknown : type);
 			constant &&= this._subnodes[i].constant;
 		}
-		if (constant) {
+		if (constant && !this.type.intersect(Type.Reference)) {
 			return new ConstantNode(this, new Constant(this.evaluate(new CallFrame()), this.type));
 		}
 		if (this._subnodes.length === 1 && this._variables.length === 0) {

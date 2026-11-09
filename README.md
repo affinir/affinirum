@@ -280,7 +280,7 @@ Expression operators are listed from highest precedence to lowest. Parentheses o
 | Precedence | Operators | Meaning |
 | --- | --- | --- |
 | Highest | `.`, `[]`, `?`, `()`, `::` | Access, presence, calls, and casts |
-| | `^` | Exponentiation |
+| | `**` | Exponentiation |
 | | Unary `+`, `-` | Arithmetic sign |
 | | `*`, `/`, `%` | Multiplication, division, remainder |
 | | `+`, `-` | Addition or concatenation; subtraction |
@@ -291,11 +291,11 @@ Expression operators are listed from highest precedence to lowest. Parentheses o
 | Lowest | `?:` | Null coalescing |
 
 Binary operators at the same precedence group left to right, including exponentiation:
-`2 ^ 3 ^ 2` means `(2 ^ 3) ^ 2` and produces `64`. Exponentiation binds before arithmetic sign, so `-2 ^ 2` is `-4`.
+`2 ** 3 ** 2` means `(2 ** 3) ** 2` and produces `64`. Exponentiation binds before arithmetic sign, so `-2 ** 2` is `-4`.
 Boolean negation binds after comparisons: `!a == b` means `!(a == b)`.
 
 `+` adds numbers or concatenates strings, buffers, and arrays. `value ?: fallback` returns `fallback` when `value` is
-`void`, otherwise `value`. Operators evaluate their operands eagerly, including `&`, `|`, and `?:`.
+`null`, otherwise `value`. Operators evaluate their operands eagerly, including `&`, `|`, and `?:`.
 Use `if` when only one branch should run.
 
 Assign with `=` or combine assignment with an operation: `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, and `|=`.
@@ -425,7 +425,7 @@ Affinirum.format({ missing: undefined }); // '["missing":null]'
 
 Both `Affinirum.format(value, whitespace?)` and the script function `AN.Format(value, whitespace?)` accept optional
 indentation text. They write JavaScript `null` and `undefined` as the AN literal `null` at every nesting level.
-Parsing that literal produces JavaScript `undefined`, preserving array lengths and object properties containing `void`.
+Parsing that literal produces JavaScript `undefined`, preserving array lengths and object properties containing `undefined`.
 
 ## Standard library
 
@@ -435,23 +435,24 @@ Parameters whose type includes `void` can be omitted. Parameter names are explan
 
 ### Global functions
 
-Native conversions use the following **void** handling:
+Native conversions use the following `null` handling:
 
-- General `Format` conversions and `JSON.Format` return an empty string for **void**.
-- `AN.Format` and `Affinirum.format` serialize **void** as the literal `null`, including array elements and object properties.
-- `Encode` returns a zero-length buffer for **void**.
-- `Decode` and `Parse` return **void** when their input value is **void**.
+- General `Format` conversions return an empty string for `null`.
+- `JSON.Format` serializes JavaScript `null` and `undefined` as JSON `null`, including array elements and object properties.
+- `AN.Format` and `Affinirum.format` serialize JavaScript `null` and `undefined` as the literal `null`, including array elements and object properties.
+- `Encode` returns a zero-length buffer for `null`.
+- `Decode` and `Parse` return `null` when their input value is `null`.
 
-Empty strings and zero-length buffers remain ordinary values; they are not serialized void markers.
-Invalid non-void inputs are function-specific and may raise an evaluation error.
+Empty strings and zero-length buffers remain ordinary values; they are not serialized null markers.
+Invalid inputs other than `null` may raise an evaluation error, depending on the function.
 
 #### Boolean
 
 - **Boolean.Or(values: ...(boolean | [boolean])):boolean** — Boolean disjunction of booleans and arrays of booleans
 - **Boolean.And(values: ...(boolean | [boolean])):boolean** — Boolean conjunction of booleans and arrays of booleans
 - **Boolean.Not(value: boolean):boolean** — Boolean negation
-- **Boolean.Decode(value: buffer?, offset: integer?):boolean?** — Decode a byte at the optional offset; missing or out-of-range input returns **void**
-- **Boolean.Parse(value: string?):boolean?** — Parse case-insensitive `true` or `false`; other values return **void**
+- **Boolean.Decode(value: buffer?, offset: integer?):boolean?** — Decode a byte at the optional offset; missing or out-of-range input returns `null`
+- **Boolean.Parse(value: string?):boolean?** — Parse case-insensitive `true` or `false`; other values return `null`
 
 #### Timestamp
 
@@ -522,18 +523,29 @@ Array.Join([[1,2]],[3])      // [[1,2],3]
 
 #### AN
 
-- **AN.Format(value: ??, whitespace: string?):string** — Format a value as AN notation; **void** values are written as `null`
+- **AN.Format(value: ??, whitespace: string?):string** — Format a value as AN notation, including `null` values in arrays and objects
 
 #### JSON
 
 - **JSON.Format(value: (void | boolean | timestamp | float | integer | string | array | object), whitespace: string?):string** — Format a value as JSON
 - **JSON.Parse(value: string?):(void | boolean | timestamp | float | integer | string | array | object)** — Parse a JSON-formatted string; standard JSON values are not revived as timestamps or integers
 
+`JSON.Format` uses JavaScript `JSON.stringify`, with integers converted to decimal strings and JavaScript `null` or
+`undefined` values serialized as JSON `null` at every nesting level. Object keys and array positions are preserved.
+The optional `whitespace` controls indentation.
+
+```text
+JSON.Format(null);                          // "null"
+JSON.Format(JSON.Parse("null"));            // "null"
+JSON.Format([null, 1]);                     // '[null,"1"]'
+JSON.Format(["missing": null, "count": 1])  // '{"missing":null,"count":"1"}'
+```
+
 #### IP
 
 - **IP.Match(values: [string], search: ...(string | [string])):boolean** — Check whether any searched IPv4 or IPv6 address belongs to the supplied addresses or CIDR ranges
-- **IP.Encode(value: string?):buffer** — Encode an IPv4, IPv6, or CIDR string as a network-byte-order buffer; malformed or **void** input returns a zero-length buffer
-- **IP.Decode(value: buffer?):string?** — Decode a 4-, 5-, 16-, or 17-byte buffer as canonical IPv4, IPv6, or CIDR notation; malformed or **void** input returns **void**
+- **IP.Encode(value: string?):buffer** — Encode an IPv4, IPv6, or CIDR string as a network-byte-order buffer; malformed or `null` input returns a zero-length buffer
+- **IP.Decode(value: buffer?):string?** — Decode a 4-, 5-, 16-, or 17-byte buffer as canonical IPv4, IPv6, or CIDR notation; malformed or `null` input returns `null`
 
 ### Method functions
 
@@ -561,15 +573,15 @@ Array.Join([[1,2]],[3])      // [[1,2],3]
 
 - **array.First(condition: ~(??, integer?, array?):boolean):??** — First item satisfying condition
 - **array.Last(condition: ~(??, integer?, array?):boolean):??** — Last item satisfying condition
-- **array.FirstIndex(condition: ~(??, integer?, array?):boolean):integer?** — First index satisfying condition, or **void** if none does
-- **array.LastIndex(condition: ~(??, integer?, array?):boolean):integer?** — Last index satisfying condition, or **void** if none does
+- **array.FirstIndex(condition: ~(??, integer?, array?):boolean):integer?** — First index satisfying condition, or `null` if none does
+- **array.LastIndex(condition: ~(??, integer?, array?):boolean):integer?** — Last index satisfying condition, or `null` if none does
 - **array.Every(condition: ~(??, integer?, array?):boolean):boolean** — All items satisfy condition
 - **array.Any(condition: ~(??, integer?, array?):boolean):boolean** — Any item satisfies condition
 - **array.Reverse():array** — Reversed array
 - **array.Flatten(depth: integer = 1):array** — Flatten array
 - **array.Derive(transformation: ~(??, integer?, array?):??):array** — Derived array
 - **array.Filter(condition: ~(??, integer?, array?):boolean):array** — Filtered array
-- **array.Reduce(reducer: ~(??, ??, integer?, array?):??, initial: ?? = void):??** — Reduced value
+- **array.Reduce(reducer: ~(??, ??, integer?, array?):??, initial: ?? = null):??** — Reduced value
 - **array.Compose(generator: ~(object, string, integer?, array?):??):object** — Compose object from array
 
 `Compose` builds a new object. Each callback receives an immutable snapshot of the properties produced by earlier callbacks.
@@ -577,7 +589,7 @@ Retaining that snapshot preserves its contents as subsequent properties are adde
 
 #### Buffer Functions
 
-- **buffer.Byte(pos: integer):buffer?** — Byte at position, or **void** when unavailable
+- **buffer.Byte(pos: integer):buffer?** — Byte at position, or `null` when unavailable
 
 #### Enumerable Functions
 
@@ -629,12 +641,15 @@ Retaining that snapshot preserves its contents as subsequent properties are adde
 - **float.Power(exponent: float | integer):float** — Raise to a numeric power
 - **integer.Power(exponent: float):float** — Raise to a float power
 - **integer.Power(exponent: integer):integer** — Raise to an integer power
-- **float.Root(index: float | integer):float** — Take a root with the specified index
-- **integer.Root(index: float):float** — Take a float root
-- **integer.Root(index: integer):integer** — Take an integer root
+- **float.Root(index: float | integer):float?** — Take a root with the specified index
+- **integer.Root(index: float):float?** — Take a float root
+- **integer.Root(index: integer):integer?** — Take an integer root
 - **(boolean | timestamp | integer).Float():float** — Convert to a float; timestamps use milliseconds since the Unix epoch
 - **(boolean | timestamp | float).Integer():integer** — Convert to an integer; timestamps use milliseconds since the Unix epoch
 - **(timestamp | float | integer).Boolean():boolean** — Convert to a boolean by testing whether the numeric or epoch value is non-zero
+
+`Root` returns `null` for a nonpositive index. With integer operands, even roots of negative values also return `null`.
+Floating-point root calculations can return `NaN`, which is a float.
 
 #### Object Functions
 
@@ -648,8 +663,8 @@ Retaining that snapshot preserves its contents as subsequent properties are adde
 - **string.Unlike(value: string):boolean** — Alphanumeric inequality
 - **string.StartsWith(search: string, startPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Prefix check
 - **string.EndsWith(search: string, endPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Suffix check
-- **string.Char(pos: integer):string?** — Character at position, or **void** when unavailable
-- **string.CharCode(pos: integer):integer?** — Character code, or **void** when unavailable
+- **string.Char(pos: integer):string?** — Character at position, or `null` when unavailable
+- **string.CharCode(pos: integer):integer?** — Character code, or `null` when unavailable
 - **string.Trim():string** — Trim whitespace
 - **string.TrimStart():string** — Trim leading whitespace
 - **string.TrimEnd():string** — Trim trailing whitespace

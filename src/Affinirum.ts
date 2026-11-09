@@ -14,6 +14,7 @@ import { Constants } from "./Constants.js";
 import { Functions } from "./Functions.js";
 import { Node } from "./node/Node.js";
 import { ArrayNode } from "./node/ArrayNode.js";
+import { AssignmentNode } from "./node/AssignmentNode.js";
 import { BlockNode } from "./node/BlockNode.js";
 import { CallNode } from "./node/CallNode.js";
 import { CastNode } from "./node/CastNode.js";
@@ -389,11 +390,11 @@ export class Affinirum {
 					const operator = state.assignment.operator;
 					const fnode = new ConstantNode(span, operator);
 					const subnode = new CallNode(span, fnode, [new VariableNode(span, variable), this._unit(state.next(), scope)]);
-					return new VariableNode(span, variable, subnode);
+					return new AssignmentNode(span, new VariableNode(span, variable), subnode);
 				}
 				else {
 					const subnode = this._unit(state.next(), scope);
-					return new VariableNode(span, variable, subnode);
+					return new AssignmentNode(span, new VariableNode(span, variable), subnode);
 				}
 			}
 			return new VariableNode(span, variable);
@@ -477,7 +478,7 @@ export class Affinirum {
 				if (state.assignment.operator) {
 					state.throwError(`illegal assignment operator with variable ${token}`);
 				}
-				return new VariableNode(span, variable, this._unit(state.next(), scope));
+				return new AssignmentNode(span, new VariableNode(span, variable), this._unit(state.next(), scope));
 			}
 			return new VariableNode(span, variable);
 		}
