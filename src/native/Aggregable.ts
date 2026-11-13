@@ -37,10 +37,10 @@ export const funcAdd = new Constant(
 	(value1: number | bigint | ArrayBuffer | string | Value[], value2: number | bigint | ArrayBuffer | string | Value[]) =>
 		add(value1, value2),
 	Type.functionType([
-		[Type.Float, [Type.Float, Type.Float]],
-		[Type.Float, [Type.Float, Type.Integer]],
-		[Type.Float, [Type.Integer, Type.Float]],
 		[Type.Integer, [Type.Integer, Type.Integer]],
+		[Type.Float, [Type.Float, Type.Number]],
+		[Type.Float, [Type.Number, Type.Float]],
+		[Type.Number, [Type.Number, Type.Number]],
 		[Type.Buffer, [Type.Buffer, Type.Buffer]],
 		[Type.String, [Type.String, Type.String]],
 		[Type.Array, [Type.Array, Type.Array]],

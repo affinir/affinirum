@@ -50,10 +50,10 @@ export const parseLiteralNumber = (value: string, offset = 0) => {
 
 const typeComparator = Type.functionType([[Type.Boolean, [Type.Number, Type.Number]]]);
 const typeOperator = Type.functionType([
-	[Type.Float, [Type.Float, Type.Float]],
-	[Type.Float, [Type.Float, Type.Integer]],
-	[Type.Float, [Type.Integer, Type.Float]],
 	[Type.Integer, [Type.Integer, Type.Integer]],
+	[Type.Float, [Type.Float, Type.Number]],
+	[Type.Float, [Type.Number, Type.Float]],
+	[Type.Number, [Type.Number, Type.Number]],
 ]);
 
 export const funcGreaterThan = new Constant(
@@ -169,10 +169,10 @@ export const funcRoot = new Constant(
 			: Math.pow(v, 1 / e);
 	},
 	Type.functionType([
-		[Type.OptionalFloat, [Type.Float, Type.Float]],
-		[Type.OptionalFloat, [Type.Float, Type.Integer]],
-		[Type.OptionalFloat, [Type.Integer, Type.Float]],
 		[Type.OptionalInteger, [Type.Integer, Type.Integer]],
+		[Type.OptionalFloat, [Type.Float, Type.Number]],
+		[Type.OptionalFloat, [Type.Number, Type.Float]],
+		[Type.OptionalNumber, [Type.Number, Type.Number]],
 	]),
 );
 
@@ -182,5 +182,6 @@ export const funcNegate = new Constant(
 	Type.functionType([
 		[Type.Float, [Type.Float]],
 		[Type.Integer, [Type.Integer]],
+		[Type.Number, [Type.Number]],
 	])
 );

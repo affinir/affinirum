@@ -1,3 +1,4 @@
+import { Affinirum, Type } from "../../../src/index.js";
 import { runAffinirumTests } from "../../util/AffinirumTest.js";
 
 describe("Composite function test", () => {
@@ -124,7 +125,6 @@ describe("Composite function test", () => {
 			script: "v.At(\"prop\") + v.z",
 			cases: [
 				{ values: { v: { prop: 10n, z: 10n } }, result: 20n },
-				{ values: { v: { prop: 100n } }, result: undefined },
 			],
 		},
 		{
@@ -150,4 +150,9 @@ describe("Composite function test", () => {
 			],
 		},
 	]);
+
+	it("rejects a missing property used as an operand of addition", () => {
+		const type = Type.objectType([["prop", Type.Integer], ["z", Type.OptionalInteger]]);
+		expect(() => new Affinirum("v.At(\"prop\") + v.z", { variables: { v: type } })).toThrow(/cannot be called/);
+	});
 });

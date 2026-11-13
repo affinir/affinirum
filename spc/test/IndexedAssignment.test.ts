@@ -58,6 +58,11 @@ describe("Indexed assignment test", () => {
 		expect(calls).toBe(1);
 	});
 
+	it("rejects a missing typed item before a compound operation", () => {
+		const expression = new Affinirum("var items:[integer]=[];items[0]+=1");
+		expect(() => expression.evaluate()).toThrow(/indexed value mismatch with expected type integer/);
+	});
+
 	it.each<[string, boolean]>([
 		["|=", true],
 		["&=", false],

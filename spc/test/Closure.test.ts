@@ -32,14 +32,14 @@ describe("Closure test", () => {
 	});
 
 	it("keeps assignments in an uncalled function out of enclosing type inference", () => {
-		const expression = new Affinirum("var x:integer|string=1;val f=~():string{x='two'};x-1");
+		const expression = new Affinirum("var x:integer|string=1;val f=~():string{x='two'};(x::integer)-1");
 		expect(expression.type.equate(Type.Integer)).toBe(true);
 		expect(expression.evaluate()).toBe(0n);
 	});
 
 	it.each([
-		"val read=~():integer{x.Length};x='two';read()",
-		"val change=~():string{x='two'};change();x.Length",
+		"val read=~():integer{(x::string).Length};x='two';read()",
+		"val change=~():string{x='two'};change();(x::string).Length",
 	])("checks captured reads against the fixed declaration in %s", (script) => {
 		const expression = new Affinirum("var x:integer|string=1;" + script);
 		expect(expression.evaluate()).toBe(3n);
@@ -47,7 +47,7 @@ describe("Closure test", () => {
 
 	it("includes input uses from an uncalled function", () => {
 		const expression = new Affinirum("val f=~():float|integer{value-1};value.Length");
-		expect(expression.variables().value.equate(Type.union(Type.Number, Type.Iterable))).toBe(true);
+		expect(expression.variables().value.equate(Type.union(Type.Number, Type.OptionalIterable))).toBe(true);
 		expect(expression.type.equate(Type.Integer)).toBe(true);
 		expect(expression.evaluate({ value: "kept" })).toBe(4n);
 	});

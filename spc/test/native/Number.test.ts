@@ -69,7 +69,7 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "(a + b) * (c + d) - (e - f) / (g + h)",
+			script: "((a::float) + b) * ((c::float) + d) - (e - f) / ((g::float) + h)",
 			cases: [
 				{ values: { a: 1, b: 2, c: 3, d: 4, e: 1, f: 0, g: 0.5, h: 0.5 }, result: 20 },
 			],
@@ -82,7 +82,7 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "(a + b + c + d) * (a - b - c + 1) / b + 1 * (if (a < 23) { 10 } else { 20 })",
+			script: "((a::float) + b + c + d) * (a - b - c + 1) / b + 1 * (if (a < 23) { 10 } else { 20 })",
 			cases: [
 				{ values: { a: 20, b: 10, c: 1, d: 2 }, result: 43 },
 			],

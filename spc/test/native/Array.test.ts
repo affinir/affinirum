@@ -40,7 +40,7 @@ describe("Array function test", () => {
 
 	runAffinirumTests([
 		{
-			script: "[a, b, c].Add([1, 2, 3, 4]).Reduce(~(acc:float, v):float { acc + v })",
+			script: "[a, b, c].Add([1, 2, 3, 4]).Reduce(~(acc:float, v:float|integer):float { acc + v })",
 			cases: [
 				{ values: { a: 1, b: 2, c: 3 }, result: 16 },
 			],

@@ -645,7 +645,7 @@ Retaining that snapshot preserves its contents as subsequent properties are adde
 
 #### Iterable Functions
 
-- **(buffer | string | array | object).Length():integer** — Get length
+- **(buffer | string | array | object | void).Length():integer** — Get length, or zero for `null`
 - **buffer.Contains(search: buffer, startPos: integer?):boolean** — Check if buffer contains another buffer
 - **string.Contains(search: string, startPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Check if string contains another string
 - **array.Contains(search: ??, startPos: integer?):boolean** — Check if array contains value
@@ -741,7 +741,9 @@ for every possible runtime value.
 - An optional type such as `integer?` is the union `void | integer`. Optional function parameters may receive `null`,
   JavaScript `undefined`, or be omitted.
 - A call to an overloaded function must match one complete signature. A call through a union of functions must match
-  one complete signature for each possible function.
+  one complete signature for each possible function. For typed calls, the full argument types must fit the signature
+  at compile time. The first matching overload determines the result type for each callable. Implicit arguments can
+  remain `??` when the overloads leave their types ambiguous. Evaluation uses the function directly.
 - Object types are open structural constraints: required properties and their values are checked, while additional
   properties are allowed.
 - Tuple types are prefix constraints: declared item types are checked in order, optional trailing items may be

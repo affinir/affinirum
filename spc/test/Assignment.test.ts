@@ -69,7 +69,7 @@ describe("Assignment test", () => {
 	});
 
 	it("validates input values against the fixed declared type", () => {
-		const expression = new Affinirum("x-1", {
+		const expression = new Affinirum("(x::integer)-1", {
 			variables: { x: Type.union(Type.Integer, Type.String) },
 		});
 		expect(expression.variables().x.equate(Type.union(Type.Integer, Type.String))).toBe(true);

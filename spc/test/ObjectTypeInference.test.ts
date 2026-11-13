@@ -137,7 +137,7 @@ describe("Object type inference test", () => {
 	it("checks overwritten and dynamic properties in an overloaded call", () => {
 		const type = Type.objectType([["a", Type.Integer]]);
 		const f = Type.functionType([[Type.Integer, [type]], [Type.String, [Type.Integer]]]);
-		expect(() => new Affinirum("f(['a':'bad','a':1])", { variables: { f } })).toThrow(/mismatch with expected type/);
+		expect(() => new Affinirum("f(['a':'bad','a':1])", { variables: { f } })).toThrow(/cannot be called/);
 		const expression = new Affinirum("f([(key):1])", { variables: { f } });
 		expect(expression.evaluate({ key: "a", f: () => 1n })).toBe(1n);
 		expect(() => expression.evaluate({ key: "b", f: () => 1n })).toThrow(/object value mismatch with expected type/);

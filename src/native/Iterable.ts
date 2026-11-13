@@ -5,7 +5,7 @@ import { containsBuffer } from "./Buffer.js";
 import { containsString } from "./String.js";
 
 export const funcLength = new Constant(
-	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value }) =>
+	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value } | null | undefined) =>
 		BigInt(value == null
 			? 0
 			:	value instanceof ArrayBuffer
@@ -13,7 +13,7 @@ export const funcLength = new Constant(
 				: typeof value === "string" || Array.isArray(value)
 					? value.length
 					: Object.keys(value).length),
-	Type.functionType([[Type.Integer, [Type.Iterable]]]),
+	Type.functionType([[Type.Integer, [Type.OptionalIterable]]]),
 );
 
 export const funcContains = new Constant(

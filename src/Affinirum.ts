@@ -359,11 +359,7 @@ export class Affinirum {
 			}
 			const operator = state.assignment.operator;
 			const subnode = this._unit(state.next(), scope);
-			if (operator) {
-				const fnode = new ConstantNode(span, operator);
-				return new AssignmentNode(span, node, new CallNode(span, fnode, [node, subnode]), true);
-			}
-			return new AssignmentNode(span, node, subnode);
+			return new AssignmentNode(span, node, subnode, operator);
 		}
 		return node;
 	}

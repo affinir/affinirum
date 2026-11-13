@@ -2,8 +2,8 @@ import { Affinirum, Type } from "../../src/index.js";
 
 describe("Ternary node test", () => {
 	it.each<[string, string, bigint | string, bigint | string]>([
-		["x='two'", "x=x-1", "two", 1n],
-		["x=x-1", "x='two'", 1n, "two"],
+		["x='two'", "x=(x::integer)-1", "two", 1n],
+		["x=(x::integer)-1", "x='two'", 1n, "two"],
 	])("compiles branches independently for %s and %s", (thenBranch, elseBranch, thenValue, elseValue) => {
 		const expression = new Affinirum(`var x:integer|string=2;if condition{${thenBranch}}else{${elseBranch}};x`, {
 			variables: { condition: Type.Boolean },
@@ -37,13 +37,13 @@ describe("Ternary node test", () => {
 			variables: { condition: Type.Boolean },
 		});
 		expect(expression.type.equate(Type.Number)).toBe(true);
-		expect(expression.variables().value.equate(Type.union(Type.Number, Type.Iterable))).toBe(true);
+		expect(expression.variables().value.equate(Type.union(Type.Number, Type.OptionalIterable))).toBe(true);
 		expect(expression.evaluate({ condition: true, value: 3n })).toBe(2n);
 		expect(expression.evaluate({ condition: false, value: "two" })).toBe(3n);
 	});
 
 	it("retains a declared union across nested branches", () => {
-		const expression = new Affinirum("var x:integer|string=1;{if outer{if inner{x='two'}else{x=2}}else{x=x-1}};x", {
+		const expression = new Affinirum("var x:integer|string=1;{if outer{if inner{x='two'}else{x=2}}else{x=(x::integer)-1}};x", {
 			variables: { outer: Type.Boolean, inner: Type.Boolean },
 		});
 		expect(expression.type.equate(Type.union(Type.Integer, Type.String))).toBe(true);
@@ -53,7 +53,7 @@ describe("Ternary node test", () => {
 	});
 
 	it("preserves declared parameter types across branch assignments", () => {
-		const expression = new Affinirum("~(x:integer|string,condition:boolean):integer|string{x=2;if condition{x='two'}else{x=x-1};x}");
+		const expression = new Affinirum("~(x:integer|string,condition:boolean):integer|string{x=2;if condition{x='two'}else{x=(x::integer)-1};x}");
 		const type = Type.union(Type.Integer, Type.String);
 		expect(expression.type.equate(Type.functionType([[type, [type, Type.Boolean]]]))).toBe(true);
 		const func = expression.evaluate() as (value: bigint | string, condition: boolean) => bigint | string;
@@ -90,7 +90,7 @@ describe("Ternary node test", () => {
 		"if false{value.Length}else{value-1}",
 	])("includes input uses from the discarded branch in %s", (script) => {
 		const expression = new Affinirum(script);
-		expect(expression.variables().value.equate(Type.union(Type.Number, Type.Iterable))).toBe(true);
+		expect(expression.variables().value.equate(Type.union(Type.Number, Type.OptionalIterable))).toBe(true);
 		expect(expression.evaluate({ value: 2n })).toBe(1n);
 	});
 

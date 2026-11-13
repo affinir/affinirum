@@ -19,7 +19,7 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "a.Slice(3, 4).UpperCase()",
+			script: "(a::string).Slice(3, 4).UpperCase()",
 			cases: [
 				{ values: { a: "abcdef" }, result: "D" },
 				{ values: { a: "abcDef---" }, result: "D" },

@@ -151,20 +151,15 @@ export const funcNotEqual = new Constant(
 	typeEquator,
 );
 
+const typeWithEncoding = Type.union(Type.Void, Type.Timestamp, Type.Number, Type.String, Type.Composite);
+const typeWithFormatting = Type.union(Type.Void, Type.Timestamp, Type.Number, Type.Buffer, Type.Composite);
+
 export const funcEncode = new Constant(
 	(value: Value, encoding: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding) =>
 		encode(value, encoding),
 	Type.functionType([
-		[Type.Buffer, [Type.Void, Type.OptionalString]],
-		[Type.Buffer, [Type.Boolean]],
-		[Type.Buffer, [Type.Timestamp, Type.OptionalString]],
-		[Type.Buffer, [Type.Float, Type.OptionalString]],
-		[Type.Buffer, [Type.Integer, Type.OptionalString]],
-		[Type.Buffer, [Type.Buffer]],
-		[Type.Buffer, [Type.String, Type.OptionalString]],
-		[Type.Buffer, [Type.Array, Type.OptionalString]],
-		[Type.Buffer, [Type.Object, Type.OptionalString]],
-		[Type.Buffer, [Type.Function]],
+		[Type.Buffer, [Type.Unknown]],
+		[Type.Buffer, [typeWithEncoding, Type.OptionalString]],
 	]),
 );
 
@@ -172,15 +167,7 @@ export const funcFormat = new Constant(
 	(value: Value, formatting?: string) =>
 		format(value, formatting),
 	Type.functionType([
-		[Type.String, [Type.Void, Type.OptionalString]],
-		[Type.String, [Type.Boolean]],
-		[Type.String, [Type.Timestamp, Type.OptionalString]],
-		[Type.String, [Type.Float, Type.OptionalString]],
-		[Type.String, [Type.Integer, Type.OptionalString]],
-		[Type.String, [Type.Buffer, Type.OptionalString]],
-		[Type.String, [Type.String]],
-		[Type.String, [Type.Array, Type.OptionalString]],
-		[Type.String, [Type.Object, Type.OptionalString]],
-		[Type.String, [Type.Function]],
+		[Type.String, [Type.Unknown]],
+		[Type.String, [typeWithFormatting, Type.OptionalString]],
 	]),
 );

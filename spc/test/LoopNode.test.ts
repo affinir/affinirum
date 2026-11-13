@@ -2,7 +2,7 @@ import { Affinirum, Type } from "../../src/index.js";
 
 describe("Loop node test", () => {
 	it("preserves incoming variable types when a constant false loop is skipped", () => {
-		const expression = new Affinirum("var x:integer|string=1;while false{x='two'};x-1");
+		const expression = new Affinirum("var x:integer|string=1;while false{x='two'};(x::integer)-1");
 		expect(expression.type.equate(Type.Integer)).toBe(true);
 		expect(expression.evaluate()).toBe(0n);
 	});
@@ -18,13 +18,13 @@ describe("Loop node test", () => {
 
 	it("includes input uses from a skipped loop", () => {
 		const expression = new Affinirum("while false{value-1};value.Length");
-		expect(expression.variables().value.equate(Type.union(Type.Number, Type.Iterable))).toBe(true);
+		expect(expression.variables().value.equate(Type.union(Type.Number, Type.OptionalIterable))).toBe(true);
 		expect(expression.type.equate(Type.Integer)).toBe(true);
 		expect(expression.evaluate({ value: "kept" })).toBe(4n);
 	});
 
 	it("compiles reads of types assigned on earlier iterations", () => {
-		const expression = new Affinirum("var x:integer|string=1;var i=0;while i<2{if i==0{x='two'}else{x=x.Length};i+=1};x");
+		const expression = new Affinirum("var x:integer|string=1;var i=0;while i<2{if i==0{x='two'}else{x=(x::string).Length};i+=1};x");
 		expect(expression.type.equate(Type.union(Type.Integer, Type.String))).toBe(true);
 		expect(expression.evaluate()).toBe(3n);
 	});
@@ -54,7 +54,7 @@ describe("Loop node test", () => {
 	});
 
 	it("checks a repeated condition against the fixed declared type", () => {
-		const expression = new Affinirum("var x:integer|string=1;while if x==1{true}else{x.Length>0}{x=''};x");
+		const expression = new Affinirum("var x:integer|string=1;while if x==1{true}else{(x::string).Length>0}{x=''};x");
 		expect(expression.type.equate(Type.union(Type.Integer, Type.String))).toBe(true);
 		expect(expression.evaluate()).toBe("");
 	});
