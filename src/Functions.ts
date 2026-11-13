@@ -4,10 +4,11 @@ import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
 	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose } from "./native/Array.js";
 import { funcBoolean } from "./native/Boolean.js";
 import { funcByte } from "./native/Buffer.js";
+import { funcAt, funcHas } from "./native/Composite.js";
 import { funcSlice, funcSplice, funcInject } from "./native/Enumerable.js";
 import { funcFloat } from "./native/Float.js";
 import { funcInteger } from "./native/Integer.js";
-import { funcLength, funcContains, funcAt, funcHas } from "./native/Iterable.js";
+import { funcLength, funcContains } from "./native/Iterable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
 	funcPower, funcRoot, funcNegate } from "./native/Number.js";
 import { funcEntries, funcKeys, funcValues } from "./native/Object.js";
@@ -35,6 +36,9 @@ export const Functions: [string, Constant][] = [
 	["Compose", funcCompose],
 	// Buffer
 	["Byte", funcByte],
+	// Composite
+	["At", funcAt],
+	["Has", funcHas],
 	// Enumerable
 	["Slice", funcSlice],
 	["Splice", funcSplice],
@@ -42,8 +46,6 @@ export const Functions: [string, Constant][] = [
 	// Iterable
 	["Length", funcLength],
 	["Contains", funcContains],
-	["At", funcAt],
-	["Has", funcHas],
 	// Number
 	["GreaterThan", funcGreaterThan],
 	["LessThan", funcLessThan],

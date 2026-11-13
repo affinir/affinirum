@@ -1,5 +1,5 @@
 import { Node } from "./Node.js";
-import { ScriptSpan } from "../ScriptSpan.js";
+import { ParserSpan } from "../ParserSpan.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { JumpNode } from "./JumpNode.js";
@@ -8,7 +8,7 @@ import { CallFrame } from "../CallFrame.js";
 export class LoopNode extends Node {
 
 	constructor(
-		span: ScriptSpan,
+		span: ParserSpan,
 		protected _cnode: Node,
 		protected _subnode: Node,
 	) {
@@ -16,12 +16,24 @@ export class LoopNode extends Node {
 	}
 
 	override get type(): Type {
-		return this._subnode.type;
+		return this._cnode.type.isNever ? Type.Never : this._subnode.type.toOptional();
 	}
 
-	override compile(type: Type): Node {
+	override acceptType(type: Type): boolean {
+		return this.type.isNever || super.acceptType(type) && this._subnode.acceptType(type);
+	}
+
+	override validateType(type: Type): void {
+		super.validateType(type);
+		if (!this.type.isNever) {
+			this._subnode.validateType(type);
+		}
+	}
+
+	override compile(hint: Type): Node {
 		this._cnode = this._cnode.compile(Type.Boolean);
-		this._subnode = this._subnode.compile(type);
+		this._cnode.validateType(this._cnode.type.isOptional ? Type.OptionalBoolean : Type.Boolean);
+		this._subnode = this._subnode.compile(hint);
 		return this;
 	}
 

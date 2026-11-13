@@ -1,5 +1,5 @@
 import { Node } from "./Node.js";
-import { ScriptSpan } from "../ScriptSpan.js";
+import { ParserSpan } from "../ParserSpan.js";
 import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
@@ -8,7 +8,7 @@ import { CallFrame } from "../CallFrame.js";
 export class ConstantNode extends Node {
 
 	constructor(
-		span: ScriptSpan,
+		span: ParserSpan,
 		protected readonly _constant: Constant,
 	) {
 		super(span);
@@ -22,17 +22,16 @@ export class ConstantNode extends Node {
 		return this._constant.type;
 	}
 
-	override compile(type: Type): Node {
-		this._constant.type = this.reduceType(type);
+	override compile(): Node {
 		return this;
 	}
 
-	override evaluate(_: CallFrame): Value {
-		return this._constant.value;
+	override evaluate(frame: CallFrame): Value {
+		return frame.define(this._constant.value, this.type);
 	}
 
 	override get constant(): boolean {
-		return !this._constant.type.isVolatile;
+		return !this._constant.type.isVolatileFunction;
 	}
 
 	override toString(ident: number = 0): string {

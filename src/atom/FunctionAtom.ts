@@ -1,37 +1,35 @@
 import { IAtom } from "./Atom.js";
 import { Type } from "../Type.js";
 
-export interface FunctionOptions {
-	variadic?: boolean;
-	volatile?: boolean;
-}
+export class FunctionSignature {
 
-export class FunctionAtom implements IAtom {
-
+	protected readonly _retType: Type;
+	protected readonly _argTypes: readonly Type[];
 	protected readonly _minArity: number;
 	protected readonly _isVariadic: boolean;
-	protected readonly _isVolatile: boolean;
 
 	constructor(
-		protected readonly _retType: Type = Type.Unknown,
-		protected readonly _argTypes: Type[] = [],
-		options?: FunctionOptions,
+		retType: Type = Type.Unknown,
+		argTypes: readonly Type[] = [],
+		variadic = false,
 	) {
+		this._retType = retType;
+		this._argTypes = [...argTypes];
+		this._isVariadic = variadic;
 		let ix = 0;
-		while (ix < _argTypes.length && !_argTypes[ix].isOptional) {
+		while (ix < this._argTypes.length && !this._argTypes[ix].isOptional) {
 			++ix;
 		}
 		this._minArity = ix;
-		if (ix < _argTypes.length) {
-			while (ix < _argTypes.length && _argTypes[ix].isOptional) {
-				++ix;
-			}
-			if (ix < _argTypes.length) {
-				throw new Error("a required parameter illegally follows an optional one");
-			}
+		while (ix < this._argTypes.length && this._argTypes[ix].isOptional) {
+			++ix;
 		}
-		this._isVariadic = options?.variadic ?? false;
-		this._isVolatile = options?.volatile ?? false;
+		if (ix < this._argTypes.length) {
+			throw new Error("a required parameter illegally follows an optional one");
+		}
+		if (this._isVariadic && this._argTypes.length > 0 && !this._argTypes[this._argTypes.length - 1].isUniformArray) {
+			throw new Error("variadic function argument must be of uniform array type");
+		}
 	}
 
 	private get _generic(): boolean {
@@ -40,6 +38,10 @@ export class FunctionAtom implements IAtom {
 
 	get retType() {
 		return this._retType;
+	}
+
+	get argTypes() {
+		return this._argTypes;
 	}
 
 	get minArity() {
@@ -52,10 +54,6 @@ export class FunctionAtom implements IAtom {
 
 	get isVariadic() {
 		return this._isVariadic;
-	}
-
-	get isVolatile() {
-		return this._isVolatile;
 	}
 
 	get arity() {
@@ -80,59 +78,51 @@ export class FunctionAtom implements IAtom {
 		return this.argType(variadicIndex)?.arrayAtomValType(index - variadicIndex);
 	}
 
-	equate(atom: IAtom): boolean {
-		return atom instanceof FunctionAtom
-			&& this._isVariadic === atom._isVariadic
-			&& this._isVolatile === atom._isVolatile
-			&& this._argTypes.length === atom._argTypes.length
-			&& this._retType.equate(atom._retType)
-			&& this._argTypes.every((type, index) => type.equate(atom._argTypes[index]));
+	equate(signature: FunctionSignature): boolean {
+		return this._isVariadic === signature._isVariadic
+			&& this._argTypes.length === signature._argTypes.length
+			&& this._retType.equate(signature._retType)
+			&& this._argTypes.every((type, index) => type.equate(signature._argTypes[index]));
 	}
 
-	accept(atom: IAtom): boolean {
-		if (!(atom instanceof FunctionAtom)) {
-			return false;
-		}
-		if (this._generic || atom._generic) {
+	accept(signature: FunctionSignature): boolean {
+		if (this._generic || signature._generic) {
 			return true;
 		}
-		if (this._isVariadic !== atom._isVariadic
-			|| this._isVariadic && this.arity !== atom.arity
-			|| !this._retType.accept(atom._retType)
-			|| this.minArity > atom.maxArity
-			|| this.maxArity < atom.minArity) {
+		if (this._isVariadic !== signature._isVariadic
+			|| this._isVariadic && this.arity !== signature.arity
+			|| !this._retType.accept(signature._retType)
+			|| this.minArity > signature.maxArity
+			|| this.maxArity < signature.minArity) {
 			return false;
 		}
-		const argc = Math.min(this.arity, atom.arity);
+		const argc = Math.min(this.arity, signature.arity);
 		for (let i = 0; i < argc; ++i) {
 			const type = this.argType(i)?.toMandatory();
-			const atype = atom.argType(i);
-			if (type && (!atype || !atype.accept(type))) {
+			const argType = signature.argType(i);
+			if (type && (!argType || !argType.accept(type))) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	intersect(atom: IAtom): boolean {
-		if (!(atom instanceof FunctionAtom)) {
-			return false;
-		}
-		if (this._generic || atom._generic) {
+	intersect(signature: FunctionSignature): boolean {
+		if (this._generic || signature._generic) {
 			return true;
 		}
-		if (this._isVariadic !== atom._isVariadic
-			|| this._isVariadic && this.arity !== atom.arity
-			|| !this._retType.intersect(atom._retType)
-			|| this.minArity > atom.maxArity
-			|| this.maxArity < atom.minArity) {
+		if (this._isVariadic !== signature._isVariadic
+			|| this._isVariadic && this.arity !== signature.arity
+			|| !this._retType.intersect(signature._retType)
+			|| this.minArity > signature.maxArity
+			|| this.maxArity < signature.minArity) {
 			return false;
 		}
-		const argc = Math.max(this.minArity, atom.minArity);
+		const argc = Math.max(this.minArity, signature.minArity);
 		for (let i = 0; i < argc; ++i) {
 			const type = this.argType(i);
-			const atype = atom.argType(i);
-			if (!type || !atype || !type.intersect(atype)) {
+			const argType = signature.argType(i);
+			if (!type || !argType || !type.intersect(argType)) {
 				return false;
 			}
 		}
@@ -140,15 +130,79 @@ export class FunctionAtom implements IAtom {
 	}
 
 	weight(): number {
-		return 0x1000000000000 + this._argTypes.reduce((acc, i) => acc + i.weight(), this._retType.weight());
+		return this._argTypes.reduce((acc, type) => acc + type.weight(), this._retType.weight());
 	}
 
 	toString(): string {
 		if (this._generic) {
 			return "function";
 		}
-		const argTypes = this._argTypes.map((i, ix) => ix === this._argTypes.length - 1 && this.isVariadic ? `...${i.toString()}` : i.toString()).join(",");
-		return `~(${argTypes}):${this._retType.toString()}`;
+		const argTypes = this._argTypes.map((type, ix) => ix === this._argTypes.length - 1 && this._isVariadic ? `...${type}` : type.toString()).join(",");
+		return `~(${argTypes}):${this._retType}`;
+	}
+
+}
+
+export class FunctionAtom implements IAtom {
+
+	protected readonly _signatures: readonly FunctionSignature[];
+	protected readonly _isVolatile: boolean;
+
+	constructor(
+		signatures: readonly [retType: Type, argTypes: Type[], variadic?: boolean][],
+		volatile = false,
+	) {
+		if (!signatures.length) {
+			throw new Error("a function must have at least one signature");
+		}
+		const unique: FunctionSignature[] = [];
+		for (const s of signatures) {
+			const signature = new FunctionSignature(...s);
+			if (!unique.some((i) => i.equate(signature))) {
+				unique.push(signature);
+			}
+		}
+		this._signatures = unique;
+		this._isVolatile = volatile;
+	}
+
+	get signatures() {
+		return this._signatures;
+	}
+
+	get isVariadic() {
+		return this._signatures.every((signature) => signature.isVariadic);
+	}
+
+	get isVolatile() {
+		return this._isVolatile;
+	}
+
+	equate(atom: IAtom): boolean {
+		return atom instanceof FunctionAtom
+			&& this._isVolatile === atom._isVolatile
+			&& this._signatures.length === atom._signatures.length
+			&& this._signatures.every((signature) => atom._signatures.some((i) => signature.equate(i)));
+	}
+
+	accept(atom: IAtom): boolean {
+		return atom instanceof FunctionAtom
+			&& this._signatures.every((signature) => atom._signatures.some((i) => signature.accept(i)));
+	}
+
+	intersect(atom: IAtom): boolean {
+		return atom instanceof FunctionAtom
+			&& this._signatures.some((signature) => atom._signatures.some((i) => signature.intersect(i)));
+	}
+
+	weight(): number {
+		return 0x1000000000000 + this._signatures.reduce((acc, signature) => acc + signature.weight(), 0);
+	}
+
+	toString(): string {
+		return this._signatures.length === 1
+			? this._signatures[0].toString()
+			: this._signatures.map((signature) => `(${signature})`).join("&");
 	}
 
 }

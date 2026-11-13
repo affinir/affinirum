@@ -1,15 +1,13 @@
 import { Node } from "./Node.js";
-import { ScriptSpan } from "../ScriptSpan.js";
+import { ParserSpan } from "../ParserSpan.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
 
 export class TernaryNode extends Node {
 
-	protected _type: Type;
-
 	constructor(
-		span: ScriptSpan,
+		span: ParserSpan,
 		protected _cnode: Node,
 		protected _subnodes: Node[],
 	) {
@@ -17,21 +15,34 @@ export class TernaryNode extends Node {
 		if (_subnodes.length !== 2) {
 			this.throwError(`switch requires 2 subnodes not ${_subnodes.length}`);
 		}
-		this._type = Type.union(...this._subnodes.map((i) => i.type));
 	}
 
 	override get type(): Type {
-		return Type.union(...this._subnodes.map((i) => i.type));
+		return this._cnode.type.isNever ? Type.Never : Type.union(...this._subnodes.map((i) => i.type));
 	}
 
-	override compile(type: Type): Node {
-		this._cnode = this._cnode.compile(Type.Boolean);
-		this._type = type;
-		for (let i = 0; i < this._subnodes.length; ++i) {
-			this._subnodes[i] = this._subnodes[i].compile(type);
+	override acceptType(type: Type): boolean {
+		return this._cnode.type.isNever || this._subnodes.every((node) => node.acceptType(type));
+	}
+
+	override validateType(type: Type): void {
+		if (!this._cnode.type.isNever) {
+			for (const node of this._subnodes) {
+				node.validateType(type);
+			}
 		}
+	}
+
+	override compile(hint: Type): Node {
+		this._cnode = this._cnode.compile(Type.Boolean);
+		this._cnode.validateType(this._cnode.type.isOptional ? Type.OptionalBoolean : Type.Boolean);
 		if (this._cnode.constant) {
-			return this._subnodes[this._cnode.evaluate(new CallFrame()) ? 0 : 1];
+			const index = this._cnode.evaluate(new CallFrame()) ? 0 : 1;
+			this._subnodes[1 - index] = this._subnodes[1 - index].compile(hint);
+			return this._subnodes[index].compile(hint);
+		}
+		for (let i = 0; i < this._subnodes.length; ++i) {
+			this._subnodes[i] = this._subnodes[i].compile(hint);
 		}
 		return this;
 	}

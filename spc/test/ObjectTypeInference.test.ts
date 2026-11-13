@@ -36,7 +36,7 @@ describe("Object type inference test", () => {
 
 	it("checks later object keys using types established by earlier initializers", () => {
 		expect(() => new Affinirum("['init':val f=~():integer{1},f():0]"))
-			.toThrow(/return a type compatible with string/);
+			.toThrow(/type integer mismatch with expected type string/);
 		const expression = new Affinirum("['init':val f=~():string{'a'},f():0]");
 		expect(expression.evaluate()).toHaveProperty("a", 0n);
 	});
@@ -106,6 +106,41 @@ describe("Object type inference test", () => {
 		const expression = new Affinirum("['child':['a':value]]", { type });
 		expect(expression.variables().value.equate(Type.Integer)).toBe(true);
 		expect(expression.evaluate({ value: 3n })).toEqual({ child: { a: 3n } });
+	});
+
+	it("keeps the compiled property type when a broader result type accepts it", () => {
+		const expression = new Affinirum("['a':1]", { type: Type.objectType([["a", Type.Number]]) });
+		expect(expression.type.equate(Type.objectType([["a", Type.Integer]]))).toBe(true);
+	});
+
+	it("checks overwritten entries through an assignment result", () => {
+		expect(() => new Affinirum("var value:object=['a':'bad','a':1]", { type: Type.objectType([["a", Type.Integer]]) }))
+			.toThrow(/mismatch with expected type/);
+	});
+
+	it.each<[string, Type]>([
+		["var value:object=[(key):1]", Type.objectType([["a", Type.Integer]])],
+		["var n=0;while n<1{n=1;[(key):1]}", Type.union(Type.Void, Type.objectType([["a", Type.Integer]]))],
+	])("checks dynamic entries through the result of %s", (script, type) => {
+		const expression = new Affinirum(script, { type });
+		expect(expression.evaluate({ key: "a" })).toEqual({ a: 1n });
+		expect(() => expression.evaluate({ key: "b" })).toThrow(/object value mismatch with expected type/);
+	});
+
+	it("checks a nested dynamic object before a later entry overwrites it", () => {
+		const type = Type.objectType([["child", Type.objectType([["a", Type.Integer]])]]);
+		const expression = new Affinirum("['child':[(key):1],'child':['a':2]]", { type });
+		expect(expression.evaluate({ key: "a" })).toEqual({ child: { a: 2n } });
+		expect(() => expression.evaluate({ key: "b" })).toThrow(/object value mismatch with expected type/);
+	});
+
+	it("checks overwritten and dynamic properties in an overloaded call", () => {
+		const type = Type.objectType([["a", Type.Integer]]);
+		const f = Type.functionType([[Type.Integer, [type]], [Type.String, [Type.Integer]]]);
+		expect(() => new Affinirum("f(['a':'bad','a':1])", { variables: { f } })).toThrow(/mismatch with expected type/);
+		const expression = new Affinirum("f([(key):1])", { variables: { f } });
+		expect(expression.evaluate({ key: "a", f: () => 1n })).toBe(1n);
+		expect(() => expression.evaluate({ key: "b", f: () => 1n })).toThrow(/object value mismatch with expected type/);
 	});
 
 	it("preserves variadic calls used as object property values", () => {

@@ -9,7 +9,7 @@ import { parseLiteralTimestamp } from "./native/Timestamp.js";
 import { Constant } from "./Constant.js";
 import { Value } from "./Value.js";
 import { Type } from "./Type.js";
-import { ScriptSpan } from "./ScriptSpan.js";
+import { ParserSpan } from "./ParserSpan.js";
 
 class Literal { constructor(public readonly value: Value) {} }
 const valueTrue = new Literal(true);
@@ -48,7 +48,7 @@ const idReturn = Symbol();
 const idExit = Symbol();
 const idNext = Symbol();
 
-export class ParserState extends ScriptSpan {
+export class ParserState extends ParserSpan {
 
 	protected _fragment: Literal | Assignment | Constant | Type | symbol | string | undefined;
 
@@ -198,49 +198,42 @@ export class ParserState extends ScriptSpan {
 		if (!this.isParenthesesOpen) {
 			this.throwError("missing opening parentheses");
 		}
-		return this;
 	}
 
 	closeParentheses() {
 		if (!this.isParenthesesClose) {
 			this.throwError("missing closing parentheses");
 		}
-		return this;
 	}
 
 	openBrackets() {
 		if (!this.isBracketsOpen) {
 			this.throwError("missing opening brackets");
 		}
-		return this;
 	}
 
 	closeBrackets() {
 		if (!this.isBracketsClose) {
 			this.throwError("missing closing brackets");
 		}
-		return this;
 	}
 
 	openBraces() {
 		if (!this.isBracesOpen) {
 			this.throwError("missing opening braces");
 		}
-		return this;
 	}
 
 	closeBraces() {
 		if (!this.isBracesClose) {
 			this.throwError("missing closing braces");
 		}
-		return this;
 	}
 
 	separateByColon() {
 		if (!this.isColon) {
 			this.throwError("missing colon separator")
 		}
-		return this;
 	}
 
 	clone() {

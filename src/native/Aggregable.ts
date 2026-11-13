@@ -36,13 +36,13 @@ const add = (
 export const funcAdd = new Constant(
 	(value1: number | bigint | ArrayBuffer | string | Value[], value2: number | bigint | ArrayBuffer | string | Value[]) =>
 		add(value1, value2),
-	Type.union(
-		Type.functionType(Type.Float, [Type.Float, Type.Float]),
-		Type.functionType(Type.Float, [Type.Float, Type.Integer]),
-		Type.functionType(Type.Float, [Type.Integer, Type.Float]),
-		Type.functionType(Type.Integer, [Type.Integer, Type.Integer]),
-		Type.functionType(Type.Buffer, [Type.Buffer, Type.Buffer]),
-		Type.functionType(Type.String, [Type.String, Type.String]),
-		Type.functionType(Type.Array, [Type.Array, Type.Array]),
-	),
+	Type.functionType([
+		[Type.Float, [Type.Float, Type.Float]],
+		[Type.Float, [Type.Float, Type.Integer]],
+		[Type.Float, [Type.Integer, Type.Float]],
+		[Type.Integer, [Type.Integer, Type.Integer]],
+		[Type.Buffer, [Type.Buffer, Type.Buffer]],
+		[Type.String, [Type.String, Type.String]],
+		[Type.Array, [Type.Array, Type.Array]],
+	]),
 );

@@ -1,40 +1,35 @@
 import { Node } from "./Node.js";
-import { ScriptSpan } from "../ScriptSpan.js";
+import { ParserSpan } from "../ParserSpan.js";
 import { Type } from "../Type.js";
 import { Value } from "../Value.js";
 import { CallFrame } from "../CallFrame.js";
 
 export class CastNode extends Node {
 
-	protected _type: Type;
-
 	constructor(
-		span: ScriptSpan,
+		span: ParserSpan,
 		protected _subnode: Node,
 		protected readonly _target: Type,
 	) {
 		super(span);
-		this._type = _target;
 	}
 
 	override get type(): Type {
-		return this._type;
+		return this._subnode.type.isNever ? Type.Never : this._target;
 	}
 
-	override compile(type: Type): Node {
+	override compile(): Node {
 		this._subnode = this._subnode.compile(Type.Unknown);
-		if (!this._subnode.type.intersect(this._target)) {
+		if (!this._subnode.type.isNever && !this._subnode.type.intersect(this._target)) {
 			this.throwError(`cannot cast type ${this._subnode.type} to ${this._target}`);
 		}
-		this._type = this._target;
-		this._type = this.reduceType(type);
 		return this;
 	}
 
 	override evaluate(frame: CallFrame): Value {
 		const value = this._subnode.evaluate(frame);
-		if (!this._type.acceptValue(value)) {
-			this.throwError(`cannot cast value of type ${Type.of(value)} to ${this._type}`);
+		if (!this._target.acceptValue(value)) {
+			this.throwError(`cannot cast value of type ${Type.of(value)} to ${this._target}`);
 		}
 		return value;
 	}

@@ -1,5 +1,5 @@
 import { Node } from "./Node.js";
-import { ScriptSpan } from "../ScriptSpan.js";
+import { ParserSpan } from "../ParserSpan.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
@@ -7,7 +7,7 @@ import { CallFrame } from "../CallFrame.js";
 export class JumpNode extends Node {
 
 	constructor(
-		span: ScriptSpan,
+		span: ParserSpan,
 		protected _action: "exit" | "next",
 	) {
 		super(span);
@@ -17,7 +17,11 @@ export class JumpNode extends Node {
 		return this._action;
 	}
 
-	override compile(_: Type): Node {
+	override get type(): Type {
+		return Type.Never;
+	}
+
+	override compile(): Node {
 		return this;
 	}
 

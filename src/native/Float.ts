@@ -75,23 +75,23 @@ export const formatLiteralFloat = (value: number) => {
 };
 
 const typeNumberOrArray = Type.union(Type.Number, Type.arrayType([Type.Number]));
-const typeAggregator = Type.functionType(Type.Float, [Type.arrayType([typeNumberOrArray])], { variadic: true });
-const typeTransform = Type.functionType(Type.Float, [Type.Number]);
+const typeAggregator = Type.functionType([[Type.Float, [Type.arrayType([typeNumberOrArray])], true]]);
+const typeTransform = Type.functionType([[Type.Float, [Type.Number]]]);
 
 const funcSum = new Constant(
-	(values: (number | number[] | bigint | bigint[])[]) =>
+	(...values: (number | number[] | bigint | bigint[])[]) =>
 		values.flat().reduce((acc: number, val) => acc + Number(val), 0),
 	typeAggregator,
 );
 
 const funcMin = new Constant(
-	(values: (number | number[] | bigint | bigint[])[]) =>
+	(...values: (number | number[] | bigint | bigint[])[]) =>
 		Math.min(Number.POSITIVE_INFINITY, ...values.flat().map((i) => Number(i))),
 	typeAggregator,
 );
 
 const funcMax = new Constant(
-	(values: (number | number[] | bigint | bigint[])[]) =>
+	(...values: (number | number[] | bigint | bigint[])[]) =>
 		Math.max(Number.NEGATIVE_INFINITY, ...values.flat().map((i) => Number(i))),
 	typeAggregator,
 );
@@ -141,29 +141,29 @@ const funcTruncate = new Constant(
 const funcRandomFloat = new Constant(
 	(value: number | bigint) =>
 		value == null ? undefined : Math.random() * Number(value),
-	Type.functionType(Type.Float, [Type.Number], { volatile: true }),
+	Type.functionType([[Type.Float, [Type.Number]]], true),
 );
 
 const funcDecodeFloat = new Constant(
 	(value: ArrayBuffer | undefined, encoding: FloatEncoding = "f64", byteOffset?: bigint) =>
 		decodeFloat(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
-	Type.functionType(Type.OptionalFloat, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]),
+	Type.functionType([[Type.OptionalFloat, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]]]),
 );
 
 const funcParseFloat = new Constant(
 	(value: string | undefined) =>
 		value ? Number.parseFloat(value) : undefined,
-	Type.functionType(Type.OptionalFloat, [Type.OptionalString]),
+	Type.functionType([[Type.OptionalFloat, [Type.OptionalString]]]),
 );
 
 export const funcFloat = new Constant(
 	(value: boolean | Date | bigint) =>
 		Number(value),
-	Type.union(
-		Type.functionType(Type.Float, [Type.Boolean]),
-		Type.functionType(Type.Float, [Type.Timestamp]),
-		Type.functionType(Type.Float, [Type.Integer]),
-	),
+	Type.functionType([
+		[Type.Float, [Type.Boolean]],
+		[Type.Float, [Type.Timestamp]],
+		[Type.Float, [Type.Integer]],
+	]),
 );
 
 export const constFloat = Object.assign(Object.create(null), {

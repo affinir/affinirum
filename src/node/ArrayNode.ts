@@ -1,5 +1,5 @@
 import { Node } from "./Node.js";
-import { ScriptSpan } from "../ScriptSpan.js";
+import { ParserSpan } from "../ParserSpan.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
@@ -9,7 +9,7 @@ export class ArrayNode extends Node {
 	protected _type: Type;
 
 	constructor(
-		span: ScriptSpan,
+		span: ParserSpan,
 		protected _subnodes: Node[],
 	) {
 		super(span);
@@ -20,24 +20,33 @@ export class ArrayNode extends Node {
 		return this._type;
 	}
 
-	override compile(type: Type): Node {
-		for (let i = 0; i < this._subnodes.length; ++i) {
-			const valType = type.arrayAtomValType(i);
-			this._subnodes[i] = this._subnodes[i].compile(valType);
+	override acceptType(type: Type): boolean {
+		return this.type.isNever || super.acceptType(type)
+			&& this._subnodes.every((node, index) => node.acceptType(type.arrayAtomValType(index)));
+	}
+
+	override validateType(type: Type): void {
+		super.validateType(type);
+		if (!type.isVoid && !this.type.isNever) {
+			for (let i = 0; i < this._subnodes.length; ++i) {
+				this._subnodes[i].validateType(type.arrayAtomValType(i));
+			}
 		}
-		this._type = Type.arrayType(
-			this._subnodes.map((node) => node.type)
-		);
-		this._type = this.reduceType(type);
+	}
+
+	override compile(hint: Type): Node {
+		const valTypes: Type[] = [];
+		for (let i = 0; i < this._subnodes.length; ++i) {
+			this._subnodes[i] = this._subnodes[i].compile(hint.arrayAtomValType(i));
+			valTypes.push(this._subnodes[i].type);
+		}
+		this._type = valTypes.some((type) => type.isNever) ? Type.Never : Type.arrayType(valTypes);
 		return this;
 	}
 
 	override evaluate(frame: CallFrame): Value {
-		const result: Value[] = [];
-		for (const subnode of this._subnodes) {
-			result.push(subnode.evaluate(frame));
-		}
-		return result;
+		const result = this._subnodes.map((node) => node.evaluate(frame));
+		return frame.define(result, this.type);
 	}
 
 	override get constant(): boolean {

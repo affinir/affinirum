@@ -3,24 +3,28 @@ import { Type } from "../Type.js";
 
 export class ArrayAtom implements IAtom {
 
+	protected readonly _valTypes: Type[];
+
 	constructor(
-		protected readonly _valTypes: Type[] = [],
-	) {}
+		valTypes: readonly Type[] = [],
+	) {
+		this._valTypes = [...valTypes];
+	}
 
 	private get _generic(): boolean {
 		return this._valTypes.length === 0;
 	}
 
 	get isUniform(): boolean {
-		return this._valTypes.length === 1;
+		return this._valTypes.length < 2;
 	}
 
 	valTypes(): Type[] {
 		return this._valTypes;
 	}
 
-	valType(index: number): Type | undefined {
-		return this._valTypes[index];
+	valType(index: number | undefined): Type | undefined {
+		return index == null ? undefined : this._valTypes[index];
 	}
 
 	equate(atom: IAtom): boolean {

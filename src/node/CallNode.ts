@@ -1,8 +1,7 @@
 import { Node } from "./Node.js";
-import { ScriptSpan } from "../ScriptSpan.js";
+import { ParserSpan } from "../ParserSpan.js";
 import { Constant } from "../Constant.js";
 import { ConstantNode } from "./ConstantNode.js";
-import { ArrayNode } from "./ArrayNode.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
@@ -12,70 +11,92 @@ export class CallNode extends Node {
 	protected _type: Type;
 
 	constructor(
-		span: ScriptSpan,
+		span: ParserSpan,
 		protected _fnode: Node,
 		protected _subnodes: Node[],
 	) {
 		super(span);
-		const functionAtoms = this._fnode.type.functionAtoms(Type.Unknown, this._subnodes.length);
-		if (!functionAtoms.length) {
-			this.throwError(`value of type ${this._fnode.type} cannot be called with ${this._subnodes.length} argument(s)`);
+		const argc = this._subnodes.length;
+		const signatures = this._fnode.type.functionAtoms().flatMap((atom) =>
+			atom.signatures
+		).filter((signature) =>
+			signature.minArity <= argc && argc <= signature.maxArity
+		);
+		if (!signatures.length) {
+			this.throwError(`value of type ${this._fnode.type} cannot be called with ${argc} argument(s)`);
 		}
-		this._type = Type.union(...functionAtoms.map((i) => i.retType));
+		this._type = Type.union(...signatures.map((signature) => signature.retType));
 	}
 
 	override get type(): Type {
 		return this._type;
 	}
 
-	override compile(type: Type): Node {
-		this._fnode = this._fnode.compile(this._fnode.type);
-		const functionAtoms_ = this._fnode.type.functionAtoms(type, this._subnodes.length);
-		let functionAtoms = functionAtoms_.filter((atom) =>
-			!atom.isVariadic && this._subnodes.every((node, index) =>
-				node.type.intersect(atom.paramType(index) ?? Type.Unknown)
-			)
+	override compile(): Node {
+		this._fnode = this._fnode.compile(Type.Function);
+		const functionType = this._fnode.type;
+		const functionAtoms = functionType.functionAtoms();
+		const singleSignature = functionType.isAtom && functionAtoms[0]?.signatures.length === 1;
+		const strictArguments = functionAtoms.length > 1 || singleSignature && !(this._fnode instanceof ConstantNode);
+		const argc = this._subnodes.length;
+		let signatures = functionAtoms.flatMap((atom) => atom.signatures)
+			.filter((signature) => signature.minArity <= argc && argc <= signature.maxArity);
+		let hints = signatures.filter((signature) =>
+			this._subnodes.every((node, index) => node.type.isNever || node.type.intersect(signature.paramType(index) ?? Type.Unknown))
 		);
-		if (!functionAtoms.length) {
-			functionAtoms = functionAtoms_.filter((atom) =>
-				atom.isVariadic && this._subnodes.every((node, index) =>
-					node.type.intersect(atom.paramType(index) ?? Type.Unknown)
-				)
-			);
-		}
-		if (!functionAtoms.length) {
-			this.throwError(`value of type ${this._fnode.type} cannot be called with ${this._subnodes.length} argument(s) and return a type compatible with ${type}`);
-		}
-		this._type = Type.union(...functionAtoms.map((i) => i.retType));
-		const variadicArity = functionAtoms[0].isVariadic
-			? Math.max(...functionAtoms.map((atom) => atom.arity))
-			: 0;
-		if (variadicArity > 0) {
-			const span = this._subnodes[variadicArity - 1].start();
-			const vnodes = this._subnodes.splice(variadicArity - 1);
-			this._subnodes.push(new ArrayNode(span.end(vnodes[vnodes.length - 1]), vnodes));
-		}
-		let constant = this._fnode.constant && !this._fnode.type.isVolatile;
-		for (let i = 0; i < this._subnodes.length; ++i) {
-			const argTypes = functionAtoms.map((a) => a.argType(i));
-			const argType = variadicArity > 0 && i === variadicArity - 1
-				? Type.arrayType([Type.union(...functionAtoms.map((a) => a.paramType(i) ?? Type.Unknown))])
-				: Type.union(...argTypes.filter((t) => t != null));
-			this._subnodes[i] = this._subnodes[i].compile(argType);
+		const compiledArgTypes: Type[] = [];
+		let constant = this._fnode.constant && !this._fnode.type.isVolatileFunction;
+		for (let i = 0; i < argc && signatures.length; ++i) {
+			const hint = Type.union(...(hints.length ? hints : signatures).map((signature) => signature.paramType(i) ?? Type.Unknown));
+			this._subnodes[i] = this._subnodes[i].compile(hint);
+			const compiledArgType = this._subnodes[i].type;
+			compiledArgTypes.push(compiledArgType);
 			constant &&= this._subnodes[i].constant;
+			signatures = signatures.filter((signature) => {
+				const parameterType = signature.paramType(i) ?? Type.Unknown;
+				return compiledArgType.isNever || (strictArguments
+					? this._subnodes[i].acceptType(parameterType)
+					: compiledArgType.intersect(parameterType));
+			});
+			hints = hints.filter((signature) => signatures.includes(signature));
 		}
+		const never = this._fnode.type.isNever || compiledArgTypes.some((type) => type.isNever);
+		signatures = signatures.filter((signature) => {
+			const index = signature.isVariadic ? signature.arity - 1 : -1;
+			if (never || index < 0) {
+				return true;
+			}
+			const args = Type.arrayType(compiledArgTypes.slice(index));
+			const tail = signature.argType(index) ?? Type.Unknown;
+			return functionAtoms.length > 1 ? tail.accept(args) : args.intersect(tail);
+		});
+		const matchesEveryFunction = functionAtoms.every((atom) => atom.signatures.some((signature) => signatures.includes(signature)));
+		if (!signatures.length || !never && !matchesEveryFunction) {
+			this.throwError(`value of type ${this._fnode.type} cannot be called with ${argc} argument(s)`);
+		}
+		for (let i = 0; i < argc; ++i) {
+			const node = this._subnodes[i];
+			const parameterType = Type.union(...signatures.map((signature) => signature.paramType(i) ?? Type.Unknown));
+			if (parameterType.accept(node.type)) {
+				node.validateType(parameterType);
+			}
+		}
+		this._type = never ? Type.Never : Type.union(...signatures.map((signature) => signature.retType));
 		if (constant && !this.type.intersect(Type.Reference)) {
 			return new ConstantNode(this, new Constant(this.evaluate(new CallFrame()), this.type));
 		}
 		return this;
 	}
 
-	override evaluate(frame: CallFrame): Value {
+	override evaluate(frame: CallFrame, values?: readonly Value[]): Value {
 		const func = this._fnode.evaluate(frame) as (...values: any[]) => Value;
 		if (typeof func !== "function") {
 			this.throwError(`function expected not ${Type.of(func)}`);
 		}
-		return func(...this._subnodes.map((node) => node.evaluate(frame)));
+		const result = func(...this._subnodes.map((node, index) =>
+			values && index < values.length ? values[index] : node.evaluate(frame)
+		));
+		return frame.define(result, this.type);
 	}
 
 	override toString(ident: number = 0): string {

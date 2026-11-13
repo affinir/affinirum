@@ -48,13 +48,13 @@ export const parseLiteralNumber = (value: string, offset = 0) => {
 	return [integer ? int64(BigInt(str)) : parseFloat(str), i] as const;
 };
 
-const typeComparator = Type.functionType(Type.Boolean, [Type.Number, Type.Number]);
-const typeOperator = Type.union(
-	Type.functionType(Type.Float, [Type.Float, Type.Float]),
-	Type.functionType(Type.Float, [Type.Float, Type.Integer]),
-	Type.functionType(Type.Float, [Type.Integer, Type.Float]),
-	Type.functionType(Type.Integer, [Type.Integer, Type.Integer]),
-);
+const typeComparator = Type.functionType([[Type.Boolean, [Type.Number, Type.Number]]]);
+const typeOperator = Type.functionType([
+	[Type.Float, [Type.Float, Type.Float]],
+	[Type.Float, [Type.Float, Type.Integer]],
+	[Type.Float, [Type.Integer, Type.Float]],
+	[Type.Integer, [Type.Integer, Type.Integer]],
+]);
 
 export const funcGreaterThan = new Constant(
 	(value1: number | bigint, value2: number | bigint) =>
@@ -168,19 +168,19 @@ export const funcRoot = new Constant(
 			? -Math.pow(-v, 1 / e)
 			: Math.pow(v, 1 / e);
 	},
-	Type.union(
-		Type.functionType(Type.OptionalFloat, [Type.Float, Type.Float]),
-		Type.functionType(Type.OptionalFloat, [Type.Float, Type.Integer]),
-		Type.functionType(Type.OptionalFloat, [Type.Integer, Type.Float]),
-		Type.functionType(Type.OptionalInteger, [Type.Integer, Type.Integer]),
-	),
+	Type.functionType([
+		[Type.OptionalFloat, [Type.Float, Type.Float]],
+		[Type.OptionalFloat, [Type.Float, Type.Integer]],
+		[Type.OptionalFloat, [Type.Integer, Type.Float]],
+		[Type.OptionalInteger, [Type.Integer, Type.Integer]],
+	]),
 );
 
 export const funcNegate = new Constant(
 	(value: number | bigint) =>
 		value == null ? undefined : typeof value === "number" ? -value : int64(-value),
-	Type.union(
-		Type.functionType(Type.Float, [Type.Float]),
-		Type.functionType(Type.Integer, [Type.Integer]),
-	)
+	Type.functionType([
+		[Type.Float, [Type.Float]],
+		[Type.Integer, [Type.Integer]],
+	])
 );

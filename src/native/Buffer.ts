@@ -172,19 +172,19 @@ export const funcByte = new Constant(
 		value == null
 			? undefined
 			: value.slice(Number(pos), Number(pos) + 1),
-	Type.functionType(Type.OptionalBuffer, [Type.Buffer, Type.Integer]),
+	Type.functionType([[Type.OptionalBuffer, [Type.Buffer, Type.Integer]]]),
 );
 
 const funcRandomBuffer = new Constant(
 	(value: bigint) =>
 		value == null || value <= 0n ? new Uint8Array(0).buffer : crypto.getRandomValues(new Uint8Array(Number(value))).buffer,
-	Type.functionType(Type.Buffer, [Type.Integer], { volatile: true }),
+	Type.functionType([[Type.Buffer, [Type.Integer]]], true),
 );
 
 const funcParseBuffer = new Constant(
 	(value: string | undefined) =>
 		parseBuffer(value),
-	Type.functionType(Type.OptionalBuffer, [Type.OptionalString]),
+	Type.functionType([[Type.OptionalBuffer, [Type.OptionalString]]]),
 );
 
 export const constBuffer = Object.assign(Object.create(null), {

@@ -2,103 +2,137 @@ import { Value } from "./Value.js";
 import { PrimitiveAtom, Primitive } from "./atom/PrimitiveAtom.js";
 import { ArrayAtom } from "./atom/ArrayAtom.js";
 import { ObjectAtom } from "./atom/ObjectAtom.js";
-import { FunctionAtom, FunctionOptions } from "./atom/FunctionAtom.js";
+import { FunctionAtom } from "./atom/FunctionAtom.js";
 
 type Atom = PrimitiveAtom | ArrayAtom | ObjectAtom | FunctionAtom;
 
 export class Type {
 
-	private constructor(
-		protected readonly _atoms: Atom[] = [],
-	) {}
+	protected readonly _atoms: Atom[] | undefined;
+
+	private constructor(atoms?: Atom[]) {
+		this._atoms = atoms;
+	}
+
+	private atom(ix: number) {
+		return (this._atoms ?? [])[ix];
+	}
+
+	get isNever() {
+		return !this._atoms;
+	}
 
 	get isUnknown() {
-		return this._atoms.length === 0;
+		return this._atoms?.length === 0;
 	}
 
 	get isAtom() {
-		return this._atoms.length === 1;
-	}
-
-	get isOptional() {
-		return this.isUnknown || this._atoms.length > 1 && this._atoms.some((a) => a.equate(Type.Void._atoms[0]));
+		return this._atoms?.length === 1;
 	}
 
 	get isVoid() {
-		return this.isAtom && this._atoms[0].equate(Type.Void._atoms[0]);
+		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Void.atom(0));
 	}
 
 	get isBoolean() {
-		return this.isAtom && this._atoms[0].equate(Type.Boolean._atoms[0]);
+		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Boolean.atom(0));
 	}
 
 	get isTimestamp() {
-		return this.isAtom && this._atoms[0].equate(Type.Timestamp._atoms[0]);
+		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Timestamp.atom(0));
 	}
 
 	get isFloat() {
-		return this.isAtom && this._atoms[0].equate(Type.Float._atoms[0]);
+		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Float.atom(0));
 	}
 
 	get isInteger() {
-		return this.isAtom && this._atoms[0].equate(Type.Integer._atoms[0]);
+		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Integer.atom(0));
 	}
 
 	get isBuffer() {
-		return this.isAtom && this._atoms[0].equate(Type.Buffer._atoms[0]);
+		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Buffer.atom(0));
 	}
 
 	get isString() {
-		return this.isAtom && this._atoms[0].equate(Type.String._atoms[0]);
+		return this._atoms?.length === 1 && this._atoms[0].equate(Type.String.atom(0));
 	}
 
 	get isArray() {
-		return this._atoms.every((a) => a instanceof ArrayAtom);
+		return Boolean(this._atoms?.every((a) => a instanceof ArrayAtom));
 	}
 
 	get isObject() {
-		return this._atoms.every((a) => a instanceof ObjectAtom);
+		return Boolean(this._atoms?.every((a) => a instanceof ObjectAtom));
 	}
 
 	get isFunction() {
-		return this._atoms.every((a) => a instanceof FunctionAtom);
+		return Boolean(this._atoms?.every((a) => a instanceof FunctionAtom));
 	}
 
-	get isVolatile() {
-		return this._atoms.some((a) => a instanceof FunctionAtom && a.isVolatile);
+	get isOptional() {
+		return Boolean(this._atoms?.length === 0 || this._atoms?.some((a) => a.equate(Type.Void.atom(0))));
+	}
+
+	get isUniformArray() {
+		return Boolean(this._atoms?.every((a) => a instanceof ArrayAtom && a.isUniform));
+	}
+
+	get isUniformObject() {
+		return Boolean(this._atoms?.every((a) => a instanceof ObjectAtom && a.isUniform));
+	}
+
+	get isVariadicFunction() {
+		return Boolean(this._atoms?.every((a) => a instanceof FunctionAtom && a.isVariadic));
+	}
+
+	get isVolatileFunction() {
+		return Boolean(this._atoms?.some((a) => a instanceof FunctionAtom && a.isVolatile));
 	}
 
 	equate(type: Type | undefined): boolean {
-		if (this._atoms.length !== type?._atoms.length) {
-			return false;
-		}
-		const unmatched = [...type._atoms];
-		for (const atom of this._atoms) {
-			const index = unmatched.findIndex((a) => atom.equate(a));
-			if (index < 0) {
+		if (this !== type) {
+			if (!type || this.isNever !== type.isNever || this._atoms?.length !== type._atoms?.length) {
 				return false;
 			}
-			unmatched.splice(index, 1);
+			const unmatched = [...type._atoms ?? []];
+			for (const atom of this._atoms ?? []) {
+				const index = unmatched.findIndex((a) => atom.equate(a));
+				if (index < 0) {
+					return false;
+				}
+				unmatched.splice(index, 1);
+			}
 		}
 		return true;
 	}
 
+	intersect(type: Type | Atom): boolean {
+		if (type instanceof Type) {
+			if (this.isNever || type.isNever) {
+				return false;
+			}
+			return Boolean(this.isUnknown || type.isUnknown || this._atoms?.some((a) => type._atoms?.some((atom) => a.intersect(atom))));
+		}
+		return Boolean(this.isUnknown || this._atoms?.some((atom) => atom.intersect(type)));
+	}
+
 	accept(type: Type | Atom): boolean {
 		if (type instanceof Type) {
-			if (this.isUnknown || type.isUnknown) {
+			if (this.isUnknown || type.isUnknown || type.isNever) {
 				return true;
 			}
-			return type._atoms.every((a) => this._atoms.some((atom) => atom.accept(a)));
+			return Boolean(type._atoms?.every((a) => this._atoms?.some((atom) => atom.accept(a))));
 		}
-		return this._atoms.some((a) => a.accept(type));
+		return Boolean(this._atoms?.some((a) => a.accept(type)));
 	}
 
 	acceptValue(value: Value): boolean {
 		if (this.isUnknown) {
 			return true;
 		}
-		const valueAtom = Type.of(value)._atoms[0];
-		return this._atoms.some((atom) => {
+		const valueAtom = Type.of(value)._atoms?.[0];
+		return Boolean(valueAtom && this._atoms?.some((atom) => {
 			if (!atom.accept(valueAtom)) {
 				return false;
 			}
@@ -127,37 +161,39 @@ export class Type {
 				);
 			}
 			return true;
-		});
+		}));
 	}
 
-	reduce(mask: Type) {
-		if (mask.isUnknown || mask.isVoid) {
+	hasFunction(): boolean {
+		return Boolean(this._atoms?.some((atom) => atom instanceof FunctionAtom
+			|| atom instanceof ArrayAtom && atom.valTypes().some((type) => type.hasFunction())
+			|| atom instanceof ObjectAtom && atom.valTypes().some(([, type]) => type.hasFunction())));
+	}
+
+	reduce(type: Type): Type | undefined {
+		if (this.isNever || type.isNever) {
+			return Type.Never;
+		}
+		if (type.isUnknown || type.isVoid) {
 			return this;
 		}
 		if (this.isUnknown) {
-			return mask;
+			return type;
 		}
-		const list = this._atoms.filter((a) => mask.accept(a));
-		return list.length === 0
+		const list = this._atoms?.filter((a) => type.accept(a));
+		return list?.length === 0
 			? undefined
-			: list.length === this._atoms.length
+			: list?.length === this._atoms?.length
 				? this
 				: new Type(list);
 	}
 
-	intersect(type: Type): boolean {
-		if (this.isUnknown || type.isUnknown) {
-			return true;
-		}
-		return this._atoms.some((a) => type._atoms.some((atom) => a.intersect(atom)));
-	}
-
 	weight(): number {
-		return this._atoms.reduce((acc, a) => acc + a.weight(), 0);
+		return this._atoms?.reduce((acc, a) => acc + a.weight(), 0) ?? 0;
 	}
 
-	arrayAtomValType(index: number): Type {
-		const atoms = this._atoms.filter((a): a is ArrayAtom => a instanceof ArrayAtom);
+	arrayAtomValType(index?: number): Type {
+		const atoms = this.arrayAtoms();
 		if (!atoms.length) {
 			return Type.Unknown;
 		}
@@ -174,8 +210,8 @@ export class Type {
 		return Type.union(...valTypes);
 	}
 
-	objectAtomValType(key: string): Type {
-		const atoms = this._atoms.filter((a): a is ObjectAtom => a instanceof ObjectAtom);
+	objectAtomValType(key?: string): Type {
+		const atoms = this.objectAtoms();
 		if (!atoms.length) {
 			return Type.Unknown;
 		}
@@ -191,41 +227,46 @@ export class Type {
 	}
 
 	functionAtomRetType() {
-		return Type.union(...this._atoms.filter((a) => a instanceof FunctionAtom).map((a) => a.retType));
+		return Type.union(...this.functionAtoms().flatMap((atom) => atom.signatures.map((signature) => signature.retType)));
 	}
 
-	objectAtoms(type: Type) {
+	arrayAtoms(): ArrayAtom[] {
+		if (this.isUnknown) {
+			return Type.Array._atoms as ArrayAtom[];
+		}
+		return this._atoms?.filter((a): a is ArrayAtom => a instanceof ArrayAtom) ?? [];
+	}
+
+	objectAtoms(): ObjectAtom[] {
 		if (this.isUnknown) {
 			return Type.Object._atoms as ObjectAtom[];
 		}
-		return this._atoms.filter((a): a is ObjectAtom =>
-			a instanceof ObjectAtom
-			&& Type.objectType(a.valTypes()).intersect(type)
-		);
+		return this._atoms?.filter((a): a is ObjectAtom => a instanceof ObjectAtom) ?? [];
 	}
 
-	functionAtoms(type: Type, argc: number) {
-		if (this.isUnknown) {
+	functionAtoms(): FunctionAtom[] {
+		if (this.isUnknown || this.isNever) {
 			return Type.Function._atoms as FunctionAtom[];
 		}
-		return this._atoms.filter((a) =>
-			a instanceof FunctionAtom && a.minArity <= argc && a.maxArity >= argc && (type.accept(a.retType) || type.isVoid)
-		) as FunctionAtom[];
+		return this._atoms?.filter((a): a is FunctionAtom => a instanceof FunctionAtom) ?? [];
 	}
 
 	toOptional() {
-		return this._atoms.length ? Type.union(Type.Void, this) : this;
+		return Type.union(Type.Void, this);
 	}
 
 	toMandatory() {
-		if (!this.isOptional || this.isUnknown) {
+		if (!this._atoms?.length || !this.isOptional || this.isVoid) {
 			return this;
 		}
-		return new Type(this._atoms.filter((a) => !a.equate(Type.Void._atoms[0])));
+		return new Type(this._atoms.filter((a) => !a.equate(Type.Void.atom(0))));
 	}
 
 	toString(): string {
-		return this._atoms.length
+		if (this.isNever) {
+			return "--";
+		}
+		return this._atoms?.length
 			? [...this._atoms]
 				.sort((a, b) => a.weight() - b.weight())
 				.map((a) => a.toString())
@@ -237,13 +278,18 @@ export class Type {
 		if (types.some((t) => t.isUnknown)) {
 			return Type.Unknown;
 		}
-		const type = new Type([]);
-		types.flatMap((t) => t._atoms).forEach((a) => {
-			if (!type._atoms.some((atom) => atom.equate(a))) {
-				type._atoms.push(a);
+		if (types.length && types.every((t) => t.isNever)) {
+			return Type.Never;
+		}
+		const atoms: Atom[] = [];
+		for (const type of types) {
+			for (const atom of type._atoms ?? []) {
+				if (!atoms.some((a) => a.equate(atom))) {
+					atoms.push(atom);
+				}
 			}
-		});
-		return type;
+		}
+		return new Type(atoms);
 	}
 
 	static of(value: Value) {
@@ -278,6 +324,10 @@ export class Type {
 			|| typeof value === "string";
 	}
 
+	static isFunction(value: Value) {
+		return typeof value === "function";
+	}
+
 	static primitiveType(primitive: Primitive) {
 		return new Type([new PrimitiveAtom(primitive)]);
 	}
@@ -286,15 +336,16 @@ export class Type {
 		return new Type([new ArrayAtom(itemTypes)]);
 	}
 
-	static objectType(propTypes: [string | undefined, Type][] = []) {
+	static objectType(propTypes: [key: string | undefined, valType: Type][] = []) {
 		return new Type([new ObjectAtom(propTypes)]);
 	}
 
-	static functionType(retType: Type = Type.Unknown, argTypes: Type[] = [], options?: FunctionOptions) {
-		return new Type([new FunctionAtom(retType, argTypes, options)]);
+	static functionType(signatures: [retType: Type, argTypes: Type[], variadic?: boolean][], volatile?: boolean) {
+		return new Type([new FunctionAtom(signatures, volatile)]);
 	}
 
-	static readonly Unknown = new Type();
+	static readonly Never = new Type();
+	static readonly Unknown = new Type([]);
 	static readonly Void = Type.primitiveType("void");
 	static readonly Boolean = Type.primitiveType("boolean");
 	static readonly OptionalBoolean = Type.union(Type.Void, Type.Boolean);
@@ -312,12 +363,14 @@ export class Type {
 	static readonly OptionalArray = Type.union(Type.Void, Type.Array);
 	static readonly Object = Type.objectType();
 	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
-	static readonly Function = Type.functionType(undefined, undefined, { variadic: true });
+	static readonly Function = Type.functionType([[Type.Unknown, [], true]]);
 	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
 	static readonly Reference = Type.union(Type.Array, Type.Object, Type.Function);
 	static readonly OptionalReference = Type.union(Type.Void, Type.Array, Type.Object, Type.Function);
 	static readonly Number = Type.union(Type.Float, Type.Integer);
 	static readonly OptionalNumber = Type.union(Type.Void, Type.Float, Type.Integer);
+	static readonly Composite = Type.union(Type.Array, Type.Object);
+	static readonly OptionalComposite = Type.union(Type.Void, Type.Array, Type.Object);
 	static readonly Enumerable = Type.union(Type.Buffer, Type.String, Type.Array);
 	static readonly OptionalEnumerable = Type.union(Type.Void, Type.Buffer, Type.String, Type.Array);
 	static readonly Iterable = Type.union(Type.Buffer, Type.String, Type.Array, Type.Object);

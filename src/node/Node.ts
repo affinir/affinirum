@@ -1,12 +1,12 @@
-import { ScriptSpan } from "../ScriptSpan.js";
+import { ParserSpan } from "../ParserSpan.js";
 import { Type } from "../Type.js";
 import { Value } from "../Value.js";
 import { CallFrame } from "../CallFrame.js";
 
-export abstract class Node extends ScriptSpan {
+export abstract class Node extends ParserSpan {
 
 	constructor(
-		span: ScriptSpan,
+		span: ParserSpan,
 	) {
 		super(span);
 	}
@@ -15,27 +15,29 @@ export abstract class Node extends ScriptSpan {
 		return Type.Void;
 	}
 
-	abstract compile(type: Type): Node;
+	abstract compile(hint: Type): Node;
 	abstract evaluate(frame: CallFrame): Value;
+
+	acceptType(type: Type): boolean {
+		return type.accept(this.type);
+	}
+
+	validateType(type: Type): void {
+		if (!type.isVoid && !this.acceptType(type)) {
+			this._throwTypeError(type);
+		}
+	}
 
 	get constant(): boolean {
 		return false;
 	}
 
-	protected reduceType(type: Type) {
-		const compiledType = this.type.reduce(type);
-		if (compiledType) {
-			return compiledType;
-		}
-		this.throwTypeError(type);
-	}
-
-	protected throwTypeError(type: Type): never {
-		return this.throwError(`type ${this.type} mismatch with expected type ${type}`);
-	}
-
 	toString(ident: number = 0): string {
 		return "  ".repeat(ident) + `[${this._start}:${this._end}] <${this.type}>`;
+	}
+
+	protected _throwTypeError(type: Type): never {
+		return this.throwError(`type ${this.type} mismatch with expected type ${type}`);
 	}
 
 }

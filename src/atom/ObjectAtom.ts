@@ -6,9 +6,9 @@ export class ObjectAtom implements IAtom {
 	protected readonly _valTypes: [string | undefined, Type][];
 
 	constructor(
-		valTypes: [string | undefined, Type][] = [],
+		valTypes: readonly [key: string | undefined, valType: Type][] = [],
 	) {
-		this._valTypes = valTypes[0]?.[0] == null ? valTypes : [...new Map(valTypes)];
+		this._valTypes = valTypes[0]?.[0] == null ? [...valTypes] : [...new Map(valTypes)];
 	}
 
 	private get _generic(): boolean {
@@ -16,7 +16,7 @@ export class ObjectAtom implements IAtom {
 	}
 
 	get isUniform(): boolean {
-		return this._valTypes.length === 1 && this._valTypes[0][0] === undefined;
+		return this._valTypes.length < 2 && this._valTypes[0]?.[0] === undefined;
 	}
 
 	valTypes(): [string | undefined, Type][] {

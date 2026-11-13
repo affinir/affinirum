@@ -119,22 +119,22 @@ export const formatLiteralInteger = (value: bigint) => {
 };
 
 const typeIntegerOrArray = Type.union(Type.Integer, Type.arrayType([Type.Integer]));
-const typeAggregator = Type.functionType(Type.Integer, [Type.arrayType([typeIntegerOrArray])], { variadic: true });
+const typeAggregator = Type.functionType([[Type.Integer, [Type.arrayType([typeIntegerOrArray])], true]]);
 
 const funcSum = new Constant(
-	(values: (bigint | bigint[])[]) =>
+	(...values: (bigint | bigint[])[]) =>
 		int64(values.flat().reduce((acc, val) => acc + val, 0n)),
 	typeAggregator,
 );
 
 const funcMin = new Constant(
-	(values: (bigint | bigint[])[]) =>
+	(...values: (bigint | bigint[])[]) =>
 		values.flat().reduce((min, val) => val < min ? val : min),
 	typeAggregator,
 );
 
 const funcMax = new Constant(
-	(values: (bigint | bigint[])[]) =>
+	(...values: (bigint | bigint[])[]) =>
 		values.flat().reduce((max, val) => val > max ? val : max),
 	typeAggregator,
 );
@@ -142,13 +142,13 @@ const funcMax = new Constant(
 const funcRandomInteger = new Constant(
 	(value: bigint) =>
 		value == null ? undefined : BigInt(Math.floor(Math.random() * Number(value))),
-	Type.functionType(Type.Integer, [Type.Integer], { volatile: true }),
+	Type.functionType([[Type.Integer, [Type.Integer]]], true),
 );
 
 const funcDecodeInteger = new Constant(
 	(value: ArrayBuffer | undefined, encoding: IntegerEncoding = "i64", byteOffset?: bigint) =>
 		decodeInteger(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
-	Type.functionType(Type.OptionalInteger, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]),
+	Type.functionType([[Type.OptionalInteger, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]]]),
 );
 
 const funcParseInteger = new Constant(
@@ -159,17 +159,17 @@ const funcParseInteger = new Constant(
 		catch {}
 		return undefined;
 	},
-	Type.functionType(Type.OptionalInteger, [Type.OptionalString]),
+	Type.functionType([[Type.OptionalInteger, [Type.OptionalString]]]),
 );
 
 export const funcInteger = new Constant(
 	(value: boolean | Date | number) =>
 		createInteger(Number(value)) ?? 0n,
-	Type.union(
-		Type.functionType(Type.Integer, [Type.Boolean]),
-		Type.functionType(Type.Integer, [Type.Timestamp]),
-		Type.functionType(Type.Integer, [Type.Float]),
-	),
+	Type.functionType([
+		[Type.Integer, [Type.Boolean]],
+		[Type.Integer, [Type.Timestamp]],
+		[Type.Integer, [Type.Float]],
+	]),
 );
 
 export const constInteger = Object.assign(Object.create(null), {

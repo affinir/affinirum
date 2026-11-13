@@ -13,7 +13,7 @@ export const funcLength = new Constant(
 				: typeof value === "string" || Array.isArray(value)
 					? value.length
 					: Object.keys(value).length),
-	Type.functionType(Type.Integer, [Type.Iterable]),
+	Type.functionType([[Type.Integer, [Type.Iterable]]]),
 );
 
 export const funcContains = new Constant(
@@ -27,47 +27,10 @@ export const funcContains = new Constant(
 					: Array.isArray(value)
 						? value.includes(search, start == null ? undefined : Number(start))
 						: Object.values(value).includes(search),
-	Type.union(
-		Type.functionType(Type.Boolean, [Type.Buffer, Type.Buffer, Type.OptionalInteger]),
-		Type.functionType(Type.Boolean, [Type.String, Type.String, Type.OptionalInteger, Type.OptionalBoolean]),
-		Type.functionType(Type.Boolean, [Type.Array, Type.Unknown, Type.OptionalInteger]),
-		Type.functionType(Type.Boolean, [Type.Object, Type.Unknown]),
-	),
-);
-
-export const funcAt = new Constant(
-	(value: Value[] | { [ key: string ]: Value } | null | undefined, index: bigint | string) => {
-		if (value == null) {
-			return undefined;
-		}
-		else if (Array.isArray(value)) {
-			const num = Number(index);
-			const ix = num < 0 ? value.length + num : num;
-			return ix >= 0 && ix < value.length ? value[ix] : undefined;
-		}
-		const key = String(index);
-		return Object.hasOwn(value, key) ? value[key] : undefined;
-	},
-	Type.union(
-		Type.functionType(Type.Unknown, [Type.Array, Type.Integer]),
-		Type.functionType(Type.Unknown, [Type.Object, Type.String]),
-	),
-);
-
-export const funcHas = new Constant(
-	(value: Value[] | { [ key: string ]: Value } | null | undefined, index: bigint | string) => {
-		if (value == null) {
-			return false;
-		}
-		else if (Array.isArray(value)) {
-			const num = Number(index);
-			const ix = num < 0 ? value.length + num : num;
-			return ix >= 0 && ix < value.length;
-		}
-		return Object.hasOwn(value, String(index));
-	},
-	Type.union(
-		Type.functionType(Type.Boolean, [Type.Array, Type.Integer]),
-		Type.functionType(Type.Boolean, [Type.Object, Type.String])
-	),
+	Type.functionType([
+		[Type.Boolean, [Type.Buffer, Type.Buffer, Type.OptionalInteger]],
+		[Type.Boolean, [Type.String, Type.String, Type.OptionalInteger, Type.OptionalBoolean]],
+		[Type.Boolean, [Type.Array, Type.Unknown, Type.OptionalInteger]],
+		[Type.Boolean, [Type.Object, Type.Unknown]],
+	]),
 );

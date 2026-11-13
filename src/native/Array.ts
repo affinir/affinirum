@@ -3,11 +3,11 @@ import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { equate } from "./Unknown.js";
 
-const typePredicate = Type.functionType(Type.Boolean, [Type.Unknown, Type.OptionalInteger, Type.OptionalArray]);
-const typeItemFinder = Type.functionType(Type.Unknown, [Type.Array, typePredicate]);
-const typeIndexFinder = Type.functionType(Type.OptionalInteger, [Type.Array, typePredicate]);
-const typeConditionSet = Type.functionType(Type.Boolean, [Type.Array, typePredicate]);
-const typeArrayOperator = Type.functionType(Type.Array, [Type.Array, Type.Array]);
+const typePredicate = Type.functionType([[Type.Boolean, [Type.Unknown, Type.OptionalInteger, Type.OptionalArray]]]);
+const typeItemFinder = Type.functionType([[Type.Unknown, [Type.Array, typePredicate]]]);
+const typeIndexFinder = Type.functionType([[Type.OptionalInteger, [Type.Array, typePredicate]]]);
+const typeConditionSet = Type.functionType([[Type.Boolean, [Type.Array, typePredicate]]]);
+const typeArrayOperator = Type.functionType([[Type.Array, [Type.Array, Type.Array]]]);
 
 export const funcFirst = new Constant(
 	(value: Value[], predicate: (v: Value, i: bigint, a: Value[]) => boolean) =>
@@ -71,25 +71,28 @@ export const funcAny = new Constant(
 export const funcFlatten = new Constant(
 	(values: Value[], depth: bigint = 1n) =>
 		values ? (values as [])?.flat(Number(depth)) as Value : undefined,
-	Type.functionType(Type.Array, [Type.Array, Type.OptionalInteger]),
+	Type.functionType([[Type.Array, [Type.Array, Type.OptionalInteger]]]),
 );
 
 export const funcReverse = new Constant(
 	(value: Value[]) =>
 		value ? [...value].reverse() : undefined,
-	Type.functionType(Type.Array, [Type.Array]),
+	Type.functionType([[Type.Array, [Type.Array]]]),
 );
 
 export const funcDerive = new Constant(
 	(value: Value[], transform: (v: Value, i: bigint, a: Value[]) => Value) =>
 		value?.map((v, i, a) => transform(v, BigInt(i), a)),
-	Type.functionType(Type.Array, [Type.Array, Type.functionType(Type.Unknown, [Type.Unknown, Type.OptionalInteger, Type.OptionalArray])]),
+	Type.functionType([[Type.Array, [
+		Type.Array,
+		Type.functionType([[Type.Unknown, [Type.Unknown, Type.OptionalInteger, Type.OptionalArray]]]),
+	]]]),
 );
 
 export const funcFilter = new Constant(
 	(value: Value[], predicate: (v: Value, i: bigint, a: Value[]) => boolean) =>
 		value?.filter((v, i, a) => predicate(v, BigInt(i), a)),
-	Type.functionType(Type.Array, [Type.Array, typePredicate]),
+	Type.functionType([[Type.Array, [Type.Array, typePredicate]]]),
 );
 
 export const funcReduce = new Constant(
@@ -97,7 +100,11 @@ export const funcReduce = new Constant(
 		initial != null
 			? value?.reduce((p, v, i, a) => reducer(p, v, BigInt(i), a), initial)
 			: value?.reduce((p, v, i, a) => reducer(p, v, BigInt(i), a)),
-	Type.functionType(Type.Unknown, [Type.Array, Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown, Type.OptionalInteger, Type.OptionalArray]), Type.Unknown]),
+	Type.functionType([[Type.Unknown, [
+		Type.Array,
+		Type.functionType([[Type.Unknown, [Type.Unknown, Type.Unknown, Type.OptionalInteger, Type.OptionalArray]]]),
+		Type.Unknown,
+	]]]),
 );
 
 export const funcCompose = new Constant(
@@ -113,13 +120,16 @@ export const funcCompose = new Constant(
 		}
 		return obj;
 	},
-	Type.functionType(Type.Object, [Type.Array, Type.functionType(Type.Unknown, [Type.Object, Type.String, Type.OptionalInteger, Type.OptionalArray])]),
+	Type.functionType([[Type.Object, [
+		Type.Array,
+		Type.functionType([[Type.Unknown, [Type.Object, Type.String, Type.OptionalInteger, Type.OptionalArray]]]),
+	]]]),
 );
 
 const funcJoin = new Constant(
-	(values: (Value[] | Value[][])[]) =>
+	(...values: (Value[] | Value[][])[]) =>
 		values.flat(),
-	Type.functionType(Type.Array, [Type.arrayType([Type.Array])], { variadic: true }),
+	Type.functionType([[Type.Array, [Type.arrayType([Type.Array])], true]]),
 );
 
 const funcRange = new Constant(
@@ -127,7 +137,7 @@ const funcRange = new Constant(
 		const [min, max] = value1 < value2 ? [value1, value2] : [value2, value1];
 		return [...Array(Number(max - min)).keys()].map((i) => BigInt(i) + min);
 	},
-	Type.functionType(Type.Array, [Type.Integer, Type.Integer]),
+	Type.functionType([[Type.Array, [Type.Integer, Type.Integer]]]),
 );
 
 const funcUnique = new Constant(
@@ -140,7 +150,7 @@ const funcUnique = new Constant(
 		});
 		return result;
 	},
-	Type.functionType(Type.Array, [Type.Array]),
+	Type.functionType([[Type.Array, [Type.Array]]]),
 );
 
 const funcIntersection = new Constant(

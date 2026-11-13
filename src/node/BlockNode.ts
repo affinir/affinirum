@@ -1,5 +1,5 @@
 import { Node } from "./Node.js";
-import { ScriptSpan } from "../ScriptSpan.js";
+import { ParserSpan } from "../ParserSpan.js";
 import { Constant } from "../Constant.js";
 import { ConstantNode } from "./ConstantNode.js";
 import { Value } from "../Value.js";
@@ -10,7 +10,7 @@ import { Variable } from "../Variable.js";
 export class BlockNode extends Node {
 
 	constructor(
-		span: ScriptSpan,
+		span: ParserSpan,
 		protected _subnodes: Node[],
 		protected readonly _variables: Variable[] = [],
 	) {
@@ -18,17 +18,33 @@ export class BlockNode extends Node {
 	}
 
 	override get type(): Type {
-		return this._subnodes.length ? this._subnodes[this._subnodes.length - 1].type : Type.Void;
+		if (this._subnodes.some((node) => node.type.isNever)) {
+			return Type.Never;
+		}
+		return this._subnodes.length ? this._subnodes[this._subnodes.length - 1].type : super.type;
 	}
 
-	override compile(type: Type): Node {
+	override acceptType(type: Type): boolean {
+		return this.type.isNever || (this._subnodes.at(-1)?.acceptType(type) ?? super.acceptType(type));
+	}
+
+	override validateType(type: Type): void {
+		const last = this._subnodes.at(-1);
+		if (last && !this.type.isNever) {
+			last.validateType(type);
+		}
+		else {
+			super.validateType(type);
+		}
+	}
+
+	override compile(hint: Type): Node {
 		if (this._subnodes.length === 0) {
-			this.reduceType(type);
 			return new ConstantNode(this, Constant.Null);
 		}
 		let constant = true;
 		for (let i = 0, last = this._subnodes.length - 1; i < this._subnodes.length; ++i) {
-			this._subnodes[i] = this._subnodes[i].compile(i < last ? Type.Unknown : type);
+			this._subnodes[i] = this._subnodes[i].compile(i < last ? Type.Unknown : hint);
 			constant &&= this._subnodes[i].constant;
 		}
 		if (constant && !this.type.intersect(Type.Reference)) {

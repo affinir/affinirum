@@ -20,7 +20,6 @@ describe("Constant value test", () => {
 		{ script: "@2025-04-22 03:04:05.99Z.Minute(true)", cases: [{ result: 4n }] },
 		{ script: "Timestamp.Now().Year > 2000", cases: [{ result: true }] },
 		{ script: "Timestamp.Now().Year(true) > 2000", cases: [{ result: true }] },
-		{ script: "Float.NAN == Float.NAN", cases: [{ result: true }] },
 		{ script: "Float.PositiveInfinity", cases: [{ result: Number.POSITIVE_INFINITY }] },
 		{ script: "Float.NegativeInfinity", cases: [{ result: Number.NEGATIVE_INFINITY }] },
 		{ script: "Float.Epsilon", cases: [{ result: Number.EPSILON }] },

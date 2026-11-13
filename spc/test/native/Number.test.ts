@@ -160,48 +160,48 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "a+=b",
+			script: "var x=a;x+=b",
 			cases: [
 				{ values: { a: 0, b: 10 }, result: 10 },
 				{ values: { a: 1, b: 10 }, result: 11 },
 			],
 		},
 		{
-			script: "a-=b",
+			script: "var x=a;x-=b",
 			cases: [
 				{ values: { a: 0, b: 2 }, result: -2 },
 				{ values: { a: 1, b: 0 }, result: 1 },
 			],
 		},
 		{
-			script: "a*=b",
+			script: "var x=a;x*=b",
 			cases: [
 				{ values: { a: 1, b: 2 }, result: 2 },
 				{ values: { a: 0, b: 2 }, result: 0 },
 			],
 		},
 		{
-			script: "a/=b",
+			script: "var x=a;x/=b",
 			cases: [
 				{ values: { a: 4, b: 2 }, result: 2 },
 				{ values: { a: 0, b: 2 }, result: 0 },
 			],
 		},
 		{
-			script: "a %= b",
+			script: "var x=a;x %= b",
 			cases: [
 				{ values: { a: 6, b: 5 }, result: 1 },
 				{ values: { a: 0, b: 2 }, result: 0 },
 			],
 		},
 		{
-			script: "(a+=10) + (b-=10) + (c*=2) + (d/=2) + (e %= 5)",
+			script: "var a0=a;var b0=b;var c0=c;var d0=d;var e0=e;(a0+=10) + (b0-=10) + (c0*=2) + (d0/=2) + (e0 %= 5)",
 			cases: [
 				{ values: { a: 1, b: 2, c: 3, d: 4, e: 6 }, result: 12 },
 			],
 		},
 		{
-			script: "a+=10 + b-=10 + c*=2 + d/=2 + e %= 2",
+			script: "var a0=a;var b0=b;var c0=c;var d0=d;var e0=e;a0+=10 + b0-=10 + c0*=2 + d0/=2 + e0 %= 2",
 			cases: [
 				{ values: { a: 10, b: 2, c: 3, d: 4, e: 6 }, result: 0 },
 			],
@@ -291,7 +291,7 @@ describe("Number function test", () => {
 			}
 			expect(expression.type.acceptValue(result)).toBe(true);
 			expect(() => new Affinirum("value.Root(index)", { ...config, type: resultType.toMandatory() }))
-				.toThrow(/return a type compatible/);
+				.toThrow(/mismatch with expected type/);
 		});
 
 		it.each<[string, Type, number | undefined]>([

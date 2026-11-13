@@ -35,8 +35,6 @@ describe("Compiled type test", () => {
 		["~  ():void{null}", "~():void"],
 		["~(){25+45}", "~():??"],
 		["~(){null}", "~():??"],
-		["~ (arg: float|string):void|float|string {null}", "~(float|string):void|float|string"],
-		["~ (arg: [float|string]):void|[float|string]{null}", "~([float|string]):void|[float|string]"],
 		["~ (i:float):boolean{i==0}", "~(float):boolean"],
 		["~ (x:string, y:...[string]):[string]{y+[x]}", "~(string,...[string]):[string]"],
 		["~ (x:integer, y:...[integer]):integer{([x]+y).Length}", "~(integer,...[integer]):integer"],
@@ -50,6 +48,15 @@ describe("Compiled type test", () => {
 			script.evaluate({});
 			expect(script.type.toString()).toBe(expected);
 		});
+	});
+	it("parses unions after composite and grouped types", () => {
+		const script = new Affinirum("~(value:(float|string)|[float|string]|['a':integer]|(~():integer)|boolean):(void|[float|string])|float|string{null}");
+		const valueType = Type.union(Type.Float, Type.String);
+		const arrayType = Type.arrayType([valueType]);
+		const type = Type.functionType([
+			[Type.union(Type.Void, arrayType, valueType), [Type.union(valueType, arrayType, Type.objectType([["a", Type.Integer]]), Type.functionType([[Type.Integer, []]]), Type.Boolean)]],
+		]);
+		expect(script.type.equate(type)).toBe(true);
 	});
 	it("parses pure constant expression and tests return type", () => {
 		const script = new Affinirum("(\"ABC\" + Timestamp.Parse(\"2000-01-01\").Format('YY')).Length");

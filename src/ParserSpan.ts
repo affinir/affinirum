@@ -1,10 +1,10 @@
-export class ScriptSpan {
+export class ParserSpan {
 
 	protected readonly _script: string;
 	protected _start = 0;
 	protected _end = 0;
 
-	protected constructor(span: ScriptSpan | string) {
+	protected constructor(span: ParserSpan | string) {
 		if (typeof span === "string") {
 			this._script = span;
 		}
@@ -16,10 +16,10 @@ export class ScriptSpan {
 	}
 
 	start() {
-		return new ScriptSpan(this);
+		return new ParserSpan(this);
 	}
 
-	end(span: ScriptSpan) {
+	end(span: ParserSpan) {
 		this._end = span._end;
 		return this;
 	}

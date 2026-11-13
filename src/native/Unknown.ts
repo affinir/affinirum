@@ -120,23 +120,23 @@ export const format = (value: Value, formatting?: string): string =>
 											.reduce((acc, val) => acc + val, "")
 										: "";
 
-const typeEquator = Type.functionType(Type.Boolean, [Type.Unknown, Type.Unknown]);
+const typeEquator = Type.functionType([[Type.Boolean, [Type.Unknown, Type.Unknown]]]);
 
 export const funcCoalesce = new Constant(
 	(value: Value, valueOtherwise: Value) =>
 		value ?? valueOtherwise,
-	Type.union(
-		Type.functionType(Type.Unknown, [Type.Unknown, Type.Unknown]),
-		Type.functionType(Type.OptionalFloat, [Type.OptionalFloat, Type.OptionalFloat]),
-		Type.functionType(Type.OptionalBoolean, [Type.OptionalBoolean, Type.OptionalBoolean]),
-		Type.functionType(Type.OptionalTimestamp, [Type.OptionalTimestamp, Type.OptionalTimestamp]),
-		Type.functionType(Type.OptionalInteger, [Type.OptionalInteger, Type.OptionalInteger]),
-		Type.functionType(Type.OptionalBuffer, [Type.OptionalBuffer, Type.OptionalBuffer]),
-		Type.functionType(Type.OptionalString, [Type.OptionalString, Type.OptionalString]),
-		Type.functionType(Type.OptionalArray, [Type.OptionalArray, Type.OptionalArray]),
-		Type.functionType(Type.OptionalObject, [Type.OptionalObject, Type.OptionalObject]),
-		Type.functionType(Type.OptionalFunction, [Type.OptionalFunction, Type.OptionalFunction]),
-	),
+	Type.functionType([
+		[Type.Unknown, [Type.Unknown, Type.Unknown]],
+		[Type.OptionalFloat, [Type.OptionalFloat, Type.OptionalFloat]],
+		[Type.OptionalBoolean, [Type.OptionalBoolean, Type.OptionalBoolean]],
+		[Type.OptionalTimestamp, [Type.OptionalTimestamp, Type.OptionalTimestamp]],
+		[Type.OptionalInteger, [Type.OptionalInteger, Type.OptionalInteger]],
+		[Type.OptionalBuffer, [Type.OptionalBuffer, Type.OptionalBuffer]],
+		[Type.OptionalString, [Type.OptionalString, Type.OptionalString]],
+		[Type.OptionalArray, [Type.OptionalArray, Type.OptionalArray]],
+		[Type.OptionalObject, [Type.OptionalObject, Type.OptionalObject]],
+		[Type.OptionalFunction, [Type.OptionalFunction, Type.OptionalFunction]],
+	]),
 );
 
 export const funcEqual = new Constant(
@@ -154,33 +154,33 @@ export const funcNotEqual = new Constant(
 export const funcEncode = new Constant(
 	(value: Value, encoding: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding) =>
 		encode(value, encoding),
-	Type.union(
-		Type.functionType(Type.Buffer, [Type.Void, Type.OptionalString]),
-		Type.functionType(Type.Buffer, [Type.Boolean]),
-		Type.functionType(Type.Buffer, [Type.Timestamp, Type.OptionalString]),
-		Type.functionType(Type.Buffer, [Type.Float, Type.OptionalString]),
-		Type.functionType(Type.Buffer, [Type.Integer, Type.OptionalString]),
-		Type.functionType(Type.Buffer, [Type.Buffer]),
-		Type.functionType(Type.Buffer, [Type.String, Type.OptionalString]),
-		Type.functionType(Type.Buffer, [Type.Array, Type.OptionalString]),
-		Type.functionType(Type.Buffer, [Type.Object, Type.OptionalString]),
-		Type.functionType(Type.Buffer, [Type.Function]),
-	),
+	Type.functionType([
+		[Type.Buffer, [Type.Void, Type.OptionalString]],
+		[Type.Buffer, [Type.Boolean]],
+		[Type.Buffer, [Type.Timestamp, Type.OptionalString]],
+		[Type.Buffer, [Type.Float, Type.OptionalString]],
+		[Type.Buffer, [Type.Integer, Type.OptionalString]],
+		[Type.Buffer, [Type.Buffer]],
+		[Type.Buffer, [Type.String, Type.OptionalString]],
+		[Type.Buffer, [Type.Array, Type.OptionalString]],
+		[Type.Buffer, [Type.Object, Type.OptionalString]],
+		[Type.Buffer, [Type.Function]],
+	]),
 );
 
 export const funcFormat = new Constant(
 	(value: Value, formatting?: string) =>
 		format(value, formatting),
-	Type.union(
-		Type.functionType(Type.String, [Type.Void, Type.OptionalString]),
-		Type.functionType(Type.String, [Type.Boolean]),
-		Type.functionType(Type.String, [Type.Timestamp, Type.OptionalString]),
-		Type.functionType(Type.String, [Type.Float, Type.OptionalString]),
-		Type.functionType(Type.String, [Type.Integer, Type.OptionalString]),
-		Type.functionType(Type.String, [Type.Buffer, Type.OptionalString]),
-		Type.functionType(Type.String, [Type.String]),
-		Type.functionType(Type.String, [Type.Array, Type.OptionalString]),
-		Type.functionType(Type.String, [Type.Object, Type.OptionalString]),
-		Type.functionType(Type.String, [Type.Function]),
-	),
+	Type.functionType([
+		[Type.String, [Type.Void, Type.OptionalString]],
+		[Type.String, [Type.Boolean]],
+		[Type.String, [Type.Timestamp, Type.OptionalString]],
+		[Type.String, [Type.Float, Type.OptionalString]],
+		[Type.String, [Type.Integer, Type.OptionalString]],
+		[Type.String, [Type.Buffer, Type.OptionalString]],
+		[Type.String, [Type.String]],
+		[Type.String, [Type.Array, Type.OptionalString]],
+		[Type.String, [Type.Object, Type.OptionalString]],
+		[Type.String, [Type.Function]],
+	]),
 );

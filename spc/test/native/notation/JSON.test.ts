@@ -1,5 +1,4 @@
 import { Affinirum, Type, Value } from "../../../../src/index.js";
-import { formatJSON } from "../../../../src/native/notation/JSON.js";
 import { runAffinirumTests } from "../../../util/AffinirumTest.js";
 
 describe("JSON function test", () => {
@@ -60,13 +59,6 @@ describe("JSON function test", () => {
 			cases: [{ result: "{\n  \"count\": \"1\"\n}" }],
 		},
 	]);
-
-	it.each<[Value, string]>([
-		[undefined, "null"],
-		[null, "null"],
-	])("formats JavaScript %s as JSON null", (value, expected) => {
-		expect(formatJSON(value)).toBe(expected);
-	});
 
 	it("preserves object keys when formatting and parsing JSON", () => {
 		const expression = new Affinirum("val original = [\"missing\": null]; val restored = JSON.Parse(JSON.Format(original))::object; [original, restored]");

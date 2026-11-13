@@ -308,9 +308,9 @@ const decodeString = (value?: ArrayBuffer, encoding: StringEncoding = "utf8", by
 	return str;
 };
 
-const typeStringEquator = Type.functionType(Type.Boolean, [Type.String, Type.String]);
-const typeStringComparator = Type.functionType(Type.Boolean, [Type.String, Type.String, Type.OptionalInteger, Type.OptionalBoolean]);
-const typeStringMutator = Type.functionType(Type.String, [Type.String]);
+const typeStringEquator = Type.functionType([[Type.Boolean, [Type.String, Type.String]]]);
+const typeStringComparator = Type.functionType([[Type.Boolean, [Type.String, Type.String, Type.OptionalInteger, Type.OptionalBoolean]]]);
+const typeStringMutator = Type.functionType([[Type.String, [Type.String]]]);
 const typeStringOrArray = Type.union(Type.String, Type.arrayType([Type.String]));
 
 export const funcLike = new Constant(
@@ -342,7 +342,7 @@ export const funcChar = new Constant(
 		value == null
 			? undefined
 			: value.charAt(pos < 0 ? value.length + Number(pos) : Number(pos)),
-	Type.functionType(Type.OptionalString, [Type.String, Type.Integer]),
+	Type.functionType([[Type.OptionalString, [Type.String, Type.Integer]]]),
 );
 
 export const funcCharCode = new Constant(
@@ -350,7 +350,7 @@ export const funcCharCode = new Constant(
 		value == null
 			? undefined
 			: createInteger(value.charCodeAt(pos < 0 ? value.length + Number(pos) : Number(pos))),
-	Type.functionType(Type.OptionalInteger, [Type.String, Type.Integer]),
+	Type.functionType([[Type.OptionalInteger, [Type.String, Type.Integer]]]),
 );
 
 export const funcTrim = new Constant(
@@ -386,13 +386,13 @@ export const funcUpperCase = new Constant(
 export const funcSplit = new Constant(
 	(value: string, separator: string = " ") =>
 		value?.split(separator) ?? [],
-	Type.functionType(Type.arrayType([Type.String]), [Type.String, Type.OptionalString]),
+	Type.functionType([[Type.arrayType([Type.String]), [Type.String, Type.OptionalString]]]),
 );
 
 export const funcReplaceWith = new Constant(
-	(value: string, replacement: string, search: (string | string[])[]) =>
+	(value: string, replacement: string, ...search: (string | string[])[]) =>
 		replaceWith(value, replacement, ...search.flat()),
-	Type.functionType(Type.String, [Type.String, Type.String, Type.arrayType([typeStringOrArray])], { variadic: true }),
+	Type.functionType([[Type.String, [Type.String, Type.String, Type.arrayType([typeStringOrArray])], true]]),
 );
 
 const funcAlphanum = new Constant(
@@ -421,13 +421,13 @@ const funcRandomString = new Constant(
 		}
 		return str.slice(0, length);
 	},
-	Type.functionType(Type.String, [Type.Integer], { volatile: true }),
+	Type.functionType([[Type.String, [Type.Integer]]], true),
 );
 
 const funcDecodeString = new Constant(
 	(value: ArrayBuffer | undefined, encoding: StringEncoding = "utf8", byteOffset?: bigint, byteLength?: bigint) =>
 		decodeString(value, encoding, byteOffset == null ? undefined : Number(byteOffset), byteLength == null ? undefined : Number(byteLength)),
-	Type.functionType(Type.OptionalString, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]),
+	Type.functionType([[Type.OptionalString, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]]]),
 );
 
 export const constString = Object.assign(Object.create(null), {

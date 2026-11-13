@@ -2,16 +2,16 @@ import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
 
 const typeBooleanOrArray = Type.union(Type.Boolean, Type.arrayType([Type.Boolean]));
-const typeBooleanLogic = Type.functionType(Type.Boolean, [Type.arrayType([typeBooleanOrArray])], { variadic: true });
+const typeBooleanLogic = Type.functionType([[Type.Boolean, [Type.arrayType([typeBooleanOrArray])], true]]);
 
 export const funcOr = new Constant(
-	(values: (boolean | boolean[])[]) =>
+	(...values: (boolean | boolean[])[]) =>
 		values.flat().some((v) => v),
 	typeBooleanLogic,
 );
 
 export const funcAnd = new Constant(
-	(values: (boolean | boolean[])[]) =>
+	(...values: (boolean | boolean[])[]) =>
 		values.flat().every((v) => v),
 	typeBooleanLogic,
 );
@@ -19,7 +19,7 @@ export const funcAnd = new Constant(
 export const funcNot = new Constant(
 	(value: boolean) =>
 		!value,
-	Type.functionType(Type.Boolean, [Type.Boolean]),
+	Type.functionType([[Type.Boolean, [Type.Boolean]]]),
 );
 
 const funcDecodeBoolean = new Constant(
@@ -29,7 +29,7 @@ const funcDecodeBoolean = new Constant(
 			? undefined
 			: Boolean(new Uint8Array(value)[offset]);
 	},
-	Type.functionType(Type.OptionalBoolean, [Type.OptionalBuffer, Type.OptionalInteger]),
+	Type.functionType([[Type.OptionalBoolean, [Type.OptionalBuffer, Type.OptionalInteger]]]),
 );
 
 const funcParseBoolean = new Constant(
@@ -40,17 +40,17 @@ const funcParseBoolean = new Constant(
 		const v = value.toLowerCase();
 		return v === "true" ? true : v === "false" ? false : undefined;
 	},
-	Type.functionType(Type.OptionalBoolean, [Type.OptionalString]),
+	Type.functionType([[Type.OptionalBoolean, [Type.OptionalString]]]),
 );
 
 export const funcBoolean = new Constant(
 	(value: Date | number | bigint) =>
 		typeof value === "bigint" ? value !== 0n : Boolean(Number(value)),
-	Type.union(
-		Type.functionType(Type.Boolean, [Type.Timestamp]),
-		Type.functionType(Type.Boolean, [Type.Float]),
-		Type.functionType(Type.Boolean, [Type.Integer]),
-	),
+	Type.functionType([
+		[Type.Boolean, [Type.Timestamp]],
+		[Type.Boolean, [Type.Float]],
+		[Type.Boolean, [Type.Integer]],
+	]),
 );
 
 export const constBoolean = Object.assign(Object.create(null), {

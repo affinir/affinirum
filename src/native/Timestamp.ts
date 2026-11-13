@@ -5,8 +5,8 @@ import { isNumericSymbol } from "./Number.js";
 export type TimestampEncoding = "i32" | "i32le" | "i64" | "i64le";
 
 const minuteMilliseconds = 60000;
-const typeTimestampPart = Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalBoolean]);
-const typeTimestampSince = Type.functionType(Type.Float, [Type.Timestamp, Type.Timestamp]);
+const typeTimestampPart = Type.functionType([[Type.Integer, [Type.Timestamp, Type.OptionalBoolean]]]);
+const typeTimestampSince = Type.functionType([[Type.Float, [Type.Timestamp, Type.Timestamp]]]);
 
 const isDateSeparatorSymbol = (c: string) => c === "-";
 const isTimeSeparatorSymbol = (c: string) => c === ":";
@@ -134,7 +134,7 @@ export const parseLiteralTimestamp = (value: string, offset = 0) => {
 const funcNow = new Constant(
 	() =>
 		new Date(),
-	Type.functionType(Type.Timestamp, [], { volatile: true }),
+	Type.functionType([[Type.Timestamp, []]], true),
 );
 
 export const funcYear = new Constant(
@@ -194,7 +194,7 @@ export const funcMillisecond = new Constant(
 export const funcEpochTime = new Constant(
 	(value: Date, epoch = new Date(0)) =>
 		value ? BigInt(value.getTime() - epoch.getTime()) : undefined,
-	Type.functionType(Type.Integer, [Type.Timestamp, Type.OptionalTimestamp]),
+	Type.functionType([[Type.Integer, [Type.Timestamp, Type.OptionalTimestamp]]]),
 );
 
 export const funcDaysSince = new Constant(
@@ -226,19 +226,19 @@ const funcEpochTimestamp = new Constant(
 		const ts = new Date(Number(value ?? 0) + epoch?.getTime());
 		return Number.isNaN(ts.getTime()) ? undefined : ts;
 	},
-	Type.functionType(Type.Timestamp, [Type.Number, Type.OptionalTimestamp]),
+	Type.functionType([[Type.Timestamp, [Type.Number, Type.OptionalTimestamp]]]),
 );
 
 const funcDecodeTimestamp = new Constant(
 	(value: ArrayBuffer | undefined, encoding: TimestampEncoding = "i64", byteOffset?: bigint) =>
 		decodeTimestamp(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
-	Type.functionType(Type.OptionalTimestamp, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]),
+	Type.functionType([[Type.OptionalTimestamp, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]]]),
 );
 
 const funcParseTimestamp = new Constant(
 	(value: string | undefined) =>
 		parseTimestamp(value),
-	Type.functionType(Type.OptionalTimestamp, [Type.OptionalString]),
+	Type.functionType([[Type.OptionalTimestamp, [Type.OptionalString]]]),
 );
 
 export const constTimestamp = Object.assign(Object.create(null), {

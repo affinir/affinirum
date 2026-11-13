@@ -203,13 +203,13 @@ export const parseAN = (value: string | undefined): Value => {
 const funcFormatAN = new Constant(
 	(value: Value, whitespace?: string) =>
 		formatAN(value, whitespace),
-	Type.functionType(Type.String, [Type.Unknown, Type.OptionalString]),
+	Type.functionType([[Type.String, [Type.Unknown, Type.OptionalString]]]),
 );
 
 const funcParseAN = new Constant(
 	(value: string | undefined) =>
 		parseAN(value),
-	Type.functionType(typeAN, [Type.OptionalString]),
+	Type.functionType([[typeAN, [Type.OptionalString]]]),
 );
 
 export const constAN = Object.assign(Object.create(null), {

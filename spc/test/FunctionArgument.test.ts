@@ -18,7 +18,7 @@ val cfunc = ~ (x: integer, y: integer, z: integer) : string {
   (x + y + z + cnum + vint + #vnum).Format;
 };
 var vfunc = ~ (f: ~(integer, integer, integer):(string)):string /// tetsstts /// {
-  f(1, 2, cobj."a" + vobj."b")
+  f(1, 2, (cobj."a" + vobj."b")::integer)
 };
 vfunc(cfunc)
 		`);
@@ -34,10 +34,7 @@ vfunc(cfunc)
 	});
 	it.each([
 		"~(n,n){n}",
-		"~(n:integer,n:integer):integer{n}",
-		"~(n:integer,n:string):string{n}",
 		"~(n:integer,m:integer,n:integer):integer{n}",
-		"~(n:integer,n:...[integer]):integer{n.Length}",
 	])("rejects duplicate function arguments in %s", (definition) => {
 		expect(() => new Affinirum(definition)).toThrow(/duplicate function argument name n/);
 	});
@@ -45,75 +42,179 @@ vfunc(cfunc)
 		const script = new Affinirum("val first=~(n:integer):integer{n};val second=~(n:integer):integer{n+1};[first(1),second(2)]");
 		expect<unknown>(script.evaluate()).toEqual([1n, 3n]);
 	});
-	it("compares optional function argument types", () => {
-		const expected = Type.functionType(
-			Type.Boolean,
-			[Type.Integer, Type.OptionalString],
-		);
-
-		expect(expected.accept(Type.functionType(
-			Type.Boolean,
-			[Type.Integer, Type.OptionalString],
-		))).toBe(true);
-
-		expect(expected.accept(Type.functionType(
-			Type.Boolean,
-			[Type.Integer, Type.OptionalBoolean],
-		))).toBe(false);
+	it("checks different uses of an untyped parameter", () => {
+		const expression = new Affinirum("~(x):float|integer{val first=x-1;x='two';first+x.Length}");
+		expect(expression.type.equate(Type.functionType([[Type.Number, [Type.Unknown]]]))).toBe(true);
+		const func = expression.evaluate() as (value: bigint | number) => bigint | number;
+		expect(func(4n)).toBe(6n);
+		expect(func(4)).toBe(6);
 	});
 
-	it("checks function arguments contravariantly", () => {
-		const acceptsInteger = Type.functionType(Type.Boolean, [Type.Integer]);
-		const acceptsNumber = Type.functionType(Type.Boolean, [Type.Number]);
-
-		expect(acceptsInteger.accept(acceptsNumber)).toBe(true);
-		expect(acceptsNumber.accept(acceptsInteger)).toBe(false);
-	});
-
-	it("checks optional function argument ranges", () => {
-		const acceptsOne = Type.functionType(Type.Boolean, [Type.Integer]);
-		const acceptsOneOrTwo = Type.functionType(Type.Boolean, [Type.Integer, Type.OptionalString]);
-		const requiresTwo = Type.functionType(Type.Boolean, [Type.Integer, Type.String]);
-
-		expect(acceptsOne.accept(acceptsOneOrTwo)).toBe(true);
-		expect(acceptsOneOrTwo.accept(acceptsOne)).toBe(true);
-		expect(acceptsOne.accept(requiresTwo)).toBe(false);
-	});
-
-	it("does not mix fixed and variadic calling conventions", () => {
-		const fixed = Type.functionType(Type.Boolean, [Type.Integer]);
-		const variadic = Type.functionType(Type.Boolean, [Type.arrayType([Type.Integer])], { variadic: true });
-
-		expect(fixed.accept(variadic)).toBe(false);
-		expect(variadic.accept(fixed)).toBe(false);
-		expect(variadic.accept(Type.functionType(
-			Type.Boolean,
-			[Type.arrayType([Type.Integer])],
-			{ variadic: true },
-		))).toBe(true);
+	it("uses the declared variadic signature after a later assignment", () => {
+		const expression = new Affinirum("var f:~(...[integer]):integer=~(items:...[integer]):integer{0};f=~(items:...[integer]):integer{Integer.Sum(items)};f(1,2)");
+		expect(expression.type.equate(Type.Integer)).toBe(true);
+		expect(expression.evaluate()).toBe(3n);
 	});
 
 	it("does not combine arguments from separate overloads", () => {
-		const type = Type.union(
-			Type.functionType(Type.Integer, [Type.Integer, Type.String]),
-			Type.functionType(Type.Integer, [Type.String, Type.Integer]),
-		);
+		const type = Type.functionType([
+			[Type.Integer, [Type.Integer, Type.String]],
+			[Type.Integer, [Type.String, Type.Integer]],
+		]);
 		expect(() => new Affinirum("f(1,1)", { variables: { f: type } }))
 			.toThrow(/cannot be called with 2 argument/);
 		expect(() => new Affinirum("f(1,\"x\")", { variables: { f: type } })).not.toThrow();
 		expect(() => new Affinirum("f(\"x\",1)", { variables: { f: type } })).not.toThrow();
 	});
 
+	it.each([
+		"~(s:string):string{s.UpperCase}",
+		"~(a:integer,b:integer):integer{a+b}",
+	])("requires the call to match both functions in a union with %s", (alternative) => {
+		const script = `val f=if flag{~(n:integer):integer{n}}else{${alternative}};f(1)`;
+		expect(() => new Affinirum(script)).toThrow(/cannot be called with 1 argument/);
+	});
+
+	it("matches one signature per callable when a union includes an overloaded function", () => {
+		const overloaded = Type.functionType([
+			[Type.Integer, [Type.Integer]],
+			[Type.String, [Type.String]],
+		]);
+		const config = { variables: { overloaded } };
+		const script = "val f=if flag{overloaded}else{~(n:integer):string{n.Format}};";
+		const expression = new Affinirum(script + "f(1)", config);
+		expect(expression.type.equate(Type.union(Type.Integer, Type.String))).toBe(true);
+		expect(expression.evaluate({ flag: true, overloaded: (value: bigint | string) => value })).toBe(1n);
+		expect(expression.evaluate({ flag: false, overloaded: (value: bigint | string) => value })).toBe("1");
+		expect(() => new Affinirum(script + "f('two')", config)).toThrow(/cannot be called with 1 argument/);
+	});
+
+	it.each([
+		"var f=overloaded;f=~(n:integer):integer{n}",
+		"var f=[overloaded];f[0]=~(n:integer):integer{n}",
+		"var f=[overloaded];f=[~(n:integer):integer{n}]",
+		"var f=['a':overloaded];f=['a':~(n:integer):integer{n}]",
+	])("rejects replacing an overloaded callable with a single signature in %s", (script) => {
+		const overloaded = Type.functionType([
+			[Type.Integer, [Type.Integer]],
+			[Type.String, [Type.String]],
+		]);
+		expect(() => new Affinirum(script, { variables: { overloaded } })).toThrow(/mismatch with expected type/);
+	});
+
+	it.each([false, true])("revalidates compiled arguments with variadic=%s", (variadic) => {
+		const type = Type.functionType([
+			[Type.Integer, [Type.Integer, variadic ? Type.arrayType([Type.String]) : Type.String], variadic],
+			[Type.Integer, [Type.String, variadic ? Type.arrayType([Type.Integer]) : Type.Integer], variadic],
+		]);
+		const call = variadic ? "f(x=1,y=1,y=1)" : "f(x=1,y=1)";
+		expect(() => new Affinirum(`var x:integer|string=0;var y:integer|string=0;${call}`, { variables: { f: type } }))
+			.toThrow(new RegExp(`cannot be called with ${variadic ? 3 : 2} argument`));
+		const expression = new Affinirum("var x:integer|string=0;f(x=1,x='two')", { variables: { f: type } });
+		expect(expression.evaluate({ f: (value: bigint | string) => typeof value === "bigint" ? value : BigInt(value.length) }))
+			.toBe(1n);
+	});
+
+	it("rejects a declared union passed through an argument block", () => {
+		expect(() => new Affinirum("val f=~(n:integer):integer{n};f({x})", {
+			variables: { x: Type.union(Type.Integer, Type.String) },
+		})).toThrow(/cannot be called with 1 argument/);
+	});
+
+	it("infers an implicit input passed through an argument block", () => {
+		const expression = new Affinirum("val f=~(n:integer):integer{n};f({x})");
+		expect(expression.variables().x.equate(Type.Integer)).toBe(true);
+		expect(expression.evaluate({ x: 1n })).toBe(1n);
+	});
+
+	it.each(["if choose{x}else{1}", "{val y=x;y}"])("checks the full compiled argument type of %s", (argument) => {
+		expect(() => new Affinirum(`val f=~(n:integer):integer{n};f(${argument})`, {
+			variables: { x: Type.union(Type.Integer, Type.String), choose: Type.Boolean },
+		})).toThrow(/cannot be called with 1 argument/);
+	});
+
+	it.each<[string, Type]>([
+		["[x]", Type.arrayType([Type.Integer])],
+		["['n':x]", Type.objectType([["n", Type.Integer]])],
+	])("infers an implicit input in %s and checks a declared type in full", (argument, type) => {
+		const f = Type.functionType([[Type.Integer, [type]]]);
+		const expression = new Affinirum(`f(${argument})`, { variables: { f } });
+		expect(expression.variables().x.equate(Type.Integer)).toBe(true);
+		expect(expression.evaluate({ x: 1n, f: () => 1n })).toBe(1n);
+		expect(() => new Affinirum(`f(${argument})`, {
+			variables: { f, x: Type.union(Type.Integer, Type.String) },
+		})).toThrow(/cannot be called with 1 argument/);
+	});
+
+	it("uses the compiled index type to narrow the next argument expectation", () => {
+		const type = Type.functionType([
+			[Type.Integer, [Type.Integer, Type.arrayType([Type.Integer])]],
+			[Type.String, [Type.String, Type.arrayType([Type.String])]],
+		]);
+		const expression = new Affinirum("var a:[string]=['two'];f(a[0],[value])", { variables: { f: type } });
+		expect(expression.variables().value.equate(Type.String)).toBe(true);
+		expect(expression.type.equate(Type.String)).toBe(true);
+		expect(expression.evaluate({
+			f: (first: string, values: string[]) => first + values[0],
+			value: "!",
+		})).toBe("two!");
+	});
+
+	it("checks an expected result against the full set of matching overloads", () => {
+		const f = Type.functionType([
+			[Type.Integer, [Type.Integer]],
+			[Type.String, [Type.String]],
+		]);
+		const union = Type.union(Type.Integer, Type.String);
+		const expression = new Affinirum("f(x)", { variables: { f } });
+		expect(expression.variables().x.equate(union)).toBe(true);
+		expect(expression.type.equate(union)).toBe(true);
+		expect(() => new Affinirum("f(x)", { type: Type.Integer, variables: { f } }))
+			.toThrow(/type integer\|string mismatch with expected type integer/);
+	});
+
+	it("retains array overloads until the next argument is compiled", () => {
+		const type = Type.functionType([
+			[Type.Integer, [Type.arrayType([Type.Integer]), Type.Integer]],
+			[Type.String, [Type.arrayType([Type.String]), Type.String]],
+		]);
+		const expression = new Affinirum("var a:[string]=['two'];f([value],a[0])", { variables: { f: type } });
+		expect(expression.type.equate(Type.String)).toBe(true);
+		expect(expression.evaluate({
+			f: (values: string[], last: string) => values[0] + last,
+			value: "one",
+		})).toBe("onetwo");
+	});
+
+	it.each([false, true])("refines overload results while preserving intersecting unions with variadic=%s", (variadic) => {
+		const type = Type.functionType([
+			[Type.Integer, [variadic ? Type.arrayType([Type.Integer]) : Type.Integer], variadic],
+			[Type.String, [variadic ? Type.arrayType([Type.String]) : Type.String], variadic],
+		]);
+		const f = (value: bigint | string) => value;
+		const expression = new Affinirum("var x:integer|string=0;f(x=1)", { variables: { f: type } });
+		expect(expression.type.equate(Type.Integer)).toBe(true);
+		expect(expression.evaluate({ f })).toBe(1n);
+		const union = Type.union(Type.Integer, Type.String);
+		const ambiguous = new Affinirum("f(value)", { variables: { f: type, value: union } });
+		expect(ambiguous.type.equate(union)).toBe(true);
+		expect(ambiguous.evaluate({ f, value: "two" })).toBe("two");
+		if (variadic) {
+			expect(() => new Affinirum("var x:integer|string=0;f(x=1,x='two')", { variables: { f: type } }))
+				.toThrow(/cannot be called with 2 argument/);
+		}
+	});
+
 	it("rejects a callback with a narrower argument type", () => {
 		expect(() => new Affinirum(`
 val use = ~(f: ~(float | integer):integer):integer { f(1.5) };
 use(~(x:integer):integer { x })
-		`)).toThrow(/type ~\(integer\):integer mismatch with expected type ~\(float\|integer\):integer/);
+		`)).toThrow(/cannot be called with 1 argument/);
 	});
 	it.each<[string, RegExp]>([
 		["[1].Derive(~(value:integer):integer{'bad'})", /type string mismatch with expected type integer/],
-		["['a'].Compose(~(acc:object,key:string):string{key.Char(0)})", /return a type compatible with string/],
-		["[1,2].Reduce(~(a:integer,b:integer):float{a.Subtract(b)})", /return a type compatible with float/],
+		["['a'].Compose(~(acc:object,key:string):string{key.Char(0)})", /type void\|string mismatch with expected type string/],
+		["[1,2].Reduce(~(a:integer,b:integer):float{a.Subtract(b)})", /type integer mismatch with expected type float/],
 	])("rejects a callback whose body does not match its declared return type in %s", (script, error) => {
 		expect(() => new Affinirum(script)).toThrow(error);
 	});

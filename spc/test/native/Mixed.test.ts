@@ -71,7 +71,7 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "1000 + {while a < b { a = a + 1 }; {b; a+100}}",
+			script: "var x=a;1000 + {while x < b { x = x + 1 }; {b; x+100}}",
 			cases: [
 				{ values: { a: 1, b: 10 }, result: 1110 },
 				{ values: { a: -5, b: -1 }, result: 1099 },
@@ -84,20 +84,20 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "val f=~():??{b = b + 1000; true}; Float.Sum(a.Filter(f)) + b",
+			script: "var x=b;val f=~():??{x = x + 1000; true}; Float.Sum(a.Filter(f)) + x",
 			cases: [
 				{ values: { a: [10, 20, 1, 2], b: 0 }, result: 4033 },
 			],
 		},
 		{
-			script: "var a=~(){b = b + 10}; a(); b",
+			script: "var x=b;var a=~(){x = x + 10}; a(); x",
 			cases: [
 				{ values: { b: 0n }, result: 10n },
 				{ values: { b: -10n }, result: 0n },
 			],
 		},
 		{
-			script: "(~(){~():??{b = b + 10}})()()",
+			script: "var x=b;(~(){~():??{x = x + 10}})()()",
 			cases: [
 				{ values: { b: 0n }, result: 10n },
 			],
@@ -110,13 +110,13 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "while a<10{a= while a+1<20{a=a+1}}",
+			script: "var x=a;while x<10{x= while x+1<20{x=x+1}}",
 			cases: [
 				{ values: { a: 1n }, result: 19n },
 			],
 		},
 		{
-			script: "while while a<10{a=a+1}<20{a=a+1}",
+			script: "var x=a;while while x<10{x=x+1}<20{x=x+1}",
 			cases: [
 				{ values: { a: 1n }, result: 11n },
 			],

@@ -8,7 +8,7 @@ Runs in browsers and Node.js with an ES2022 runtime. The package provides ESM, C
 
 - Parse once and evaluate repeatedly with different inputs.
 - Infer types and fold constant expressions during compilation.
-- Use immutable data values with reassignable `var` bindings.
+- Use reassignable `var` bindings and indexed array and object updates.
 - Define typed functions, callbacks, and variadic parameters.
 
 ## Contents
@@ -16,7 +16,7 @@ Runs in browsers and Node.js with an ES2022 runtime. The package provides ESM, C
 - [Install and quick start](#install-and-quick-start)
 - [Language basics](#language-basics)
   - [Statements and literals](#statements-and-literals)
-  - [Variables and immutable values](#variables-and-immutable-values)
+  - [Variables and values](#variables-and-values)
   - [Conditionals](#conditionals)
   - [Loops](#loops)
   - [Functions and returns](#functions-and-returns)
@@ -98,9 +98,9 @@ Arithmetic involving a float produces a float.
 Whitespace outside literals and comments is ignored. Names are case-sensitive. Line comments start with `//`;
 block comments are enclosed in `/// ... ///`. Strings support escapes such as `\n`, `\r`, `\t`, `\\`, and escaped quotes.
 
-### Variables and immutable values
+### Variables and values
 
-Use `val` for a binding that cannot be reassigned and `var` for one that can. Types can be inferred or declared after a colon:
+Use `var` for a reassignable binding and `val` for a fixed binding. Types can be inferred or declared after a colon:
 
 ```text
 val step = 2;
@@ -109,13 +109,24 @@ count += step;
 count // 3
 ```
 
+Variables follow these rules.
+
+- An explicit type annotation fixes the variable's type, including an explicit `??`.
+- A non-optional type requires an initial value in the declaration. A variable declared with an optional type or `??`
+  can omit its initializer and starts at `null`.
+- A variable without an annotation takes its type from its initializer. Later assignments must be compatible with that type.
+- A variable with neither an annotation nor an initializer, or a parameter without an annotation, has type `??`.
+  Later reads and assignments leave that binding type unchanged.
+
+A read or assignment expression can have a more specific type than the binding. That type applies only to the expression.
+
 Bindings declared inside a block are local to that block. Names must start with an ASCII letter, `#`, `$`, or `_`,
 followed by any combination of those characters and digits, such as `x`, `_a1$`, or `abc25`.
 Language keywords, including `var`, `val`, `if`, `else`, `while`, `next`, and `exit`, as well as type names and their
 aliases, are reserved.
 
-All values in Affinirum are immutable at the script level. Collection operations produce replacement values while
-preserving their inputs. Reassigning a `var` preserves the value held by other bindings:
+Collection methods and concatenation produce replacement values while preserving their inputs.
+Reassigning a `var` preserves the value held by other bindings:
 
 ```text
 var items = [1];
@@ -124,8 +135,14 @@ items += [2];
 [items, original] // [[1,2],[1]]
 ```
 
-Array items and object properties cannot be assigned in place. Use concatenation, collection methods, or `Object.Merge`
-to create an updated value.
+Array items and object properties support `=` and compound assignment. Indexed writes update the existing collection,
+so other bindings holding the same collection observe the change. Direct writes through `val` or external input bindings
+are rejected. Array writes require an existing index; object writes can create own properties. Negative array indexes
+count from the end. For compound assignment, the container, key, and current value are evaluated before the right-hand side.
+
+Array and object literals retain their compiled types as constraints on indexed writes. These constraints apply through
+wider bindings and casts that reference the same collection. After `var items: array = [1]`, assigning `'two'` to
+`items[0]` raises a runtime type error because the literal has type `[integer]`.
 
 ### Conditionals
 
@@ -172,7 +189,8 @@ absolute(-5) // 5
 ```
 
 Functions are values and can be passed as callbacks. A final variadic parameter collects the remaining arguments into
-an array. Declare it with `...` followed by an array type:
+an array. Declare it with `...` followed by a uniform array type such as `[integer]`. Use `...[]` to accept
+arguments of any type.
 
 ```text
 val sum = ~(values: ...[integer]): integer { Integer.Sum(values) };
@@ -299,17 +317,24 @@ Boolean negation binds after comparisons: `!a == b` means `!(a == b)`.
 Use `if` when only one branch should run.
 
 Assign with `=` or combine assignment with an operation: `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, and `|=`.
+Assigning to an external input variable with any of these operators causes a compilation error.
 Assignments and returns consume the expression that follows them; separate them into statements for clarity.
 
 ## Embedding API
 
 `new Affinirum(script, config?)` parses and compiles the script. `evaluate(inputs?)` executes it with the current inputs.
-By default, a name that is not a local binding, keyword, or built-in is treated as an input variable, and its type is inferred
-from how it is used.
+An input variable is a name that resolves to neither a scope variable nor a built-in. The host supplies its value, and the
+script can only read the binding.
+
+- A type supplied in `config.variables` stays fixed in either mode.
+- Strict mode requires a configured type for every referenced input.
+- Non-strict mode allows implicit inputs. An implicit input starts at `??` and accumulates the union of the types expected
+  at its uses. This includes uses in skipped branches, skipped loop bodies, and functions that are never called.
+  An unconstrained use contributes no type information.
 
 ### Typed inputs and strict mode
 
-Use constructor configuration to declare input types, require declarations, and constrain the result type:
+Use constructor configuration to declare input value types, require declarations, and constrain the result type:
 
 ```js
 import { Affinirum, Type } from "affinirum";
@@ -326,26 +351,28 @@ const expression = new Affinirum("price * quantity", {
 console.log(expression.evaluate({ price: 12.5, quantity: 3n })); // 37.5
 ```
 
-- `variables` declares input types; structured types can be built with helpers such as `Type.arrayType([Type.Integer])`
+- `variables` declares input value types; structured types can be built with helpers such as `Type.arrayType([Type.Integer])`
   and `Type.objectType([["name", Type.String]])`.
 - `strict: true` rejects undeclared input names during compilation. It does not change the language's type compatibility rules.
-- `type` specifies the expected result type and is checked during compilation.
+- `type` specifies the expected result type to be checked during compilation.
 
 Every referenced input must be supplied as an own property of the object passed to `evaluate`, even if its value is `undefined`.
-Non-function input values are checked against their inferred or declared types, including array items and object properties.
+Before checking input values against their inferred or declared types, `evaluate()` wraps input `bigint` values to the signed
+64-bit range, including integers inside arrays and objects.
 
 | Instance member | Result |
 | --- | --- |
 | `script` | Original script text |
 | `type` | Inferred result `Type`; use `.toString()` for its readable form |
-| `variables()` | Record of referenced input names and their inferred types |
+| `variables()` | Record of referenced input names and their inferred or declared types |
 | `toString()` | Compiled tree representation |
 | `evaluate(inputs?)` | Script result as a JavaScript value |
 
 ### Host functions
 
 Declare a function's type in `variables`, then supply its JavaScript implementation on evaluation.
-`Type.functionType` takes the return type first and the parameter types second:
+`Type.functionType` takes an array of signatures. Each signature lists the return type and parameter types.
+The optional third entry defaults to `false`. Set it to `true` for a variadic signature.
 
 ```ts
 import { Affinirum, Type } from "affinirum";
@@ -355,7 +382,7 @@ const expression = new Affinirum("discount(total)", {
     type: Type.Float,
     variables: {
         total: Type.Float,
-        discount: Type.functionType(Type.Float, [Type.Float]),
+        discount: Type.functionType([[Type.Float, [Type.Float]]]),
     },
 });
 
@@ -365,8 +392,21 @@ const result = expression.evaluate({
 }); // 90
 ```
 
-Injected functions are checked to be callable. Their JavaScript parameter behavior and return values are trusted
-according to their declared Affinirum types. Supply synchronous functions that return supported values.
+Affinirum checks that injected functions are callable and trusts their behavior and return values. Supply synchronous
+functions that return values matching their declared Affinirum types. Every returned `bigint` must be in the signed 64-bit
+range, including integers inside arrays and objects. `evaluate()` passes the final result through unchanged, with a top-level
+`null` returned as `undefined`.
+
+List multiple signatures in one `Type.functionType` call when the implementation supports overloads:
+
+```ts
+const identityType = Type.functionType([
+    [Type.Integer, [Type.Integer]],
+    [Type.String, [Type.String]],
+]);
+```
+
+Pass `true` as the second argument to `Type.functionType` for a volatile function.
 
 ### JavaScript value mapping
 
@@ -700,8 +740,8 @@ for every possible runtime value.
   may receive `null`, JavaScript `undefined`, or be omitted.
 - An optional type such as `integer?` is the union `void | integer`. Optional function parameters may receive `null`,
   JavaScript `undefined`, or be omitted.
-- A call with known argument types must match one complete function overload. Parameter matches from separate
-  overloads are not combined to accept a call.
+- A call to an overloaded function must match one complete signature. A call through a union of functions must match
+  one complete signature for each possible function.
 - Object types are open structural constraints: required properties and their values are checked, while additional
   properties are allowed.
 - Tuple types are prefix constraints: declared item types are checked in order, optional trailing items may be
@@ -713,16 +753,16 @@ for every possible runtime value.
 - Function parameter types are checked contravariantly where both signatures declare a parameter: the receiving
   function must accept the expected parameter type. Return types are checked covariantly: the returned type must fit
   the expected result type. `??` remains compatible with any parameter type.
-- Fixed and variadic signatures are not interchangeable. Variadic arguments use a distinct packed-array calling
-  convention and are only compatible with corresponding variadic signatures.
+- Function-type compatibility distinguishes fixed and variadic signatures. Two non-generic variadic signatures must
+  declare their variadic parameter in the same position to be compatible.
 
 For example, a callback declared as `~(value: float):boolean` is compatible with an expected callback type such as
 `~(??, integer?, array?):boolean`: their argument-count ranges overlap, `??` accepts the concrete value type,
 and the callback may ignore the additional arguments. Affinirum does not enforce strict function subtyping.
 
-For a variadic host function, pass `{ variadic: true }` as the third argument of `Type.functionType` and declare the last
-parameter as an array type. The JavaScript implementation receives the trailing arguments as one packed array, rather than
-separate JavaScript rest arguments:
+For a variadic host function, set the third entry of the signature to `true` and declare its last parameter as a uniform
+array type. Use `Type.arrayType()` for the unconstrained `[]` type. Affinirum passes the arguments
+individually. The JavaScript implementation collects the trailing arguments with a rest parameter.
 
 ```ts
 import { Affinirum, Type } from "affinirum";
@@ -730,14 +770,16 @@ import { Affinirum, Type } from "affinirum";
 const expression = new Affinirum("sum(1, 2, 3)", {
     strict: true,
     variables: {
-        sum: Type.functionType(Type.Integer, [Type.arrayType([Type.Integer])], { variadic: true }),
+        sum: Type.functionType([[Type.Integer, [Type.arrayType([Type.Integer])], true]]),
     },
 });
 
 const result = expression.evaluate({
-    sum: (values: bigint[]) => values.reduce((total, value) => total + value, 0n),
+    sum: (...values: bigint[]) => values.reduce((total, value) => total + value, 0n),
 }); // 6n
 ```
+
+When JavaScript calls a variadic script function returned by `evaluate()`, pass the arguments individually as well.
 
 Casts require compatible source and target types at compile time, and the evaluated value must satisfy the target
 type at runtime. A cast checks the value; it does not perform a conversion.

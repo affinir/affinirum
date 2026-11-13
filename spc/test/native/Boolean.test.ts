@@ -85,7 +85,7 @@ describe("Boolean function test", () => {
 			],
 		},
 		{
-			script: "a|=b",
+			script: "var x=a;x|=b",
 			cases: [
 				{ values: { a: true, b: false }, result: true },
 				{ values: { a: false, b: true }, result: true },
@@ -94,7 +94,7 @@ describe("Boolean function test", () => {
 			],
 		},
 		{
-			script: "a&=b",
+			script: "var x=a;x&=b",
 			cases: [
 				{ values: { a: true, b: false }, result: false },
 				{ values: { a: false, b: true }, result: false },

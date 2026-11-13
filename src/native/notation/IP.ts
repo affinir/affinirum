@@ -205,7 +205,7 @@ class IPSet {
 const typeStringOrArray = Type.union(Type.String, Type.arrayType([Type.String]));
 
 const funcMatchIP = new Constant(
-	(values: string[], search: (string | string[])[]) => {
+	(values: string[], ...search: (string | string[])[]) => {
 		try {
 			const ipset = new IPSet().add(values);
 			for (const ip of search.flat()) {
@@ -220,7 +220,7 @@ const funcMatchIP = new Constant(
 		catch {}
 		return false;
 	},
-	Type.functionType(Type.Boolean, [Type.arrayType([Type.String]), Type.arrayType([typeStringOrArray])], { variadic: true }),
+	Type.functionType([[Type.Boolean, [Type.arrayType([Type.String]), Type.arrayType([typeStringOrArray])], true]]),
 );
 
 const funcEncodeIP = new Constant(
@@ -235,7 +235,7 @@ const funcEncodeIP = new Constant(
 			return EmptyBuffer;
 		}
 	},
-	Type.functionType(Type.Buffer, [Type.OptionalString]),
+	Type.functionType([[Type.Buffer, [Type.OptionalString]]]),
 );
 
 const funcDecodeIP = new Constant(
@@ -250,7 +250,7 @@ const funcDecodeIP = new Constant(
 			return undefined;
 		}
 	},
-	Type.functionType(Type.OptionalString, [Type.OptionalBuffer]),
+	Type.functionType([[Type.OptionalString, [Type.OptionalBuffer]]]),
 );
 
 export const constIP = Object.assign(Object.create(null), {

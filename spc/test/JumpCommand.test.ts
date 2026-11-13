@@ -51,6 +51,15 @@ describe("Jump command test", () => {
 		const script = new Affinirum("[1,2,3].Derive(~(x:integer):integer{=>x*2});99");
 		expect(script.evaluate() as bigint).toBe(2n);
 	});
+	it.each([
+		"Integer.Sum({=>'done'},1)",
+		"val f=~(a:[integer]):integer{0};f([=>'done'])",
+		"val g=~(a:integer):string{'fallback'};val f=~(n:integer):integer{n};f(g({=>'done'}))",
+	])("infers the global result when an argument exits before a call in %s", (source) => {
+		const script = new Affinirum(source, { type: Type.String });
+		expect(script.type.equate(Type.String)).toBe(true);
+		expect(script.evaluate()).toBe("done");
+	});
 	it("checks return types through nested blocks and function boundaries", () => {
 		const invalidReturns: [string, RegExp][] = [
 			["val f=~():integer{{if true{while true{{~>'bad'}}}};1};f()", /type string mismatch with expected type integer/],
@@ -99,8 +108,8 @@ r;
 	});
 	it("parses and evaluates a function return inside a loop", () => {
 		const script = new Affinirum(`
-var i = a;
-val f = ~():integer while i<100 {
+var i = a::integer;
+val f = ~():integer? while i<100 {
   if i>50 {
 		800;
 		~>i*1000;

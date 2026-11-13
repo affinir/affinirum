@@ -14,11 +14,76 @@ describe("Assignment test", () => {
 	});
 
 	it.each<[string, Type]>([
-		["var x:array|[string];x=[1]", Type.Array],
-		["var x:object|['a':string];x=['a':1]", Type.Object],
+		["var x:array|[string]=['one'];x=[1]", Type.Array],
+		["var x:object|['a':string]=['a':'one'];x=['a':1]", Type.Object],
 	])("preserves inferred assignment types for %s", (script, type) => {
 		const expression = new Affinirum(script);
 		expect(expression.type.equate(type)).toBe(true);
+	});
+
+	it.each(["var", "val"])("retains the declared union after initialization for %s", (declaration) => {
+		const expression = new Affinirum(`${declaration} x:integer|string=1;x`);
+		expect(expression.type.equate(Type.union(Type.Integer, Type.String))).toBe(true);
+		expect(expression.evaluate()).toBe(1n);
+	});
+
+	it("allows assignments of different members of a declared union", () => {
+		const expression = new Affinirum("var x:integer|string=1;x='two';x=2;x");
+		expect(expression.type.equate(Type.union(Type.Integer, Type.String))).toBe(true);
+		expect(expression.evaluate()).toBe(2n);
+	});
+
+	it("keeps an inferred union from the initializer on later assignments", () => {
+		const expression = new Affinirum("var x=if condition{1}else{'two'};x=2;x='three';x", {
+			variables: { condition: Type.Boolean },
+		});
+		expect(expression.type.equate(Type.union(Type.Integer, Type.String))).toBe(true);
+		expect(expression.evaluate({ condition: false })).toBe("three");
+	});
+
+	it("keeps an unknown initializer type on later assignments", () => {
+		const expression = new Affinirum("var x=read();x=1;x");
+		expect(expression.type.isUnknown).toBe(true);
+		expect(expression.evaluate({ read: () => "two" })).toBe(1n);
+	});
+
+	it("rejects assignments outside a declared union", () => {
+		expect(() => new Affinirum("var x:integer|string=1;x=true"))
+			.toThrow(/mismatch with expected type boolean/);
+	});
+
+	it.each(["var y:integer=x;y", "var y:integer=0;y=x;y"])("checks the assigned value against the binding type in %s", (script) => {
+		const expression = new Affinirum(script, { variables: { x: Type.union(Type.Integer, Type.String) } });
+		expect(expression.evaluate({ x: 1n })).toBe(1n);
+		expect(() => expression.evaluate({ x: "two" })).toThrow(/type string mismatch with expected type integer/);
+	});
+
+	it("allows reassignment with an explicitly declared unknown type", () => {
+		const expression = new Affinirum("var x:??=1;x='two';x");
+		expect(expression.type.isUnknown).toBe(true);
+		expect(expression.evaluate()).toBe("two");
+	});
+
+	it("rejects an incompatible inferred read type after an earlier read", () => {
+		expect(() => new Affinirum("val x='two';x;x-1")).toThrow(/cannot be called/);
+	});
+
+	it("validates input values against the fixed declared type", () => {
+		const expression = new Affinirum("x-1", {
+			variables: { x: Type.union(Type.Integer, Type.String) },
+		});
+		expect(expression.variables().x.equate(Type.union(Type.Integer, Type.String))).toBe(true);
+		expect(expression.evaluate({ x: 3n })).toBe(2n);
+		expect(() => expression.evaluate({ x: true })).toThrow(/unexpected type boolean/);
+	});
+
+	it("preserves a declared function parameter union across assignments", () => {
+		const expression = new Affinirum("~(x:integer|string):integer|string{x=1;x='two';x}");
+		const type = Type.union(Type.Integer, Type.String);
+		expect(expression.type.equate(Type.functionType([[type, [type]]]))).toBe(true);
+		const func = expression.evaluate() as (value: bigint | string) => bigint | string;
+		expect(func(0n)).toBe("two");
+		expect(func("one")).toBe("two");
 	});
 
 	it.each<[string, bigint, bigint]>([
@@ -28,7 +93,7 @@ describe("Assignment test", () => {
 		let calls = 0;
 		const expression = new Affinirum(`var x=2;${assignment};x`, {
 			strict: true,
-			variables: { produce: Type.functionType(Type.Integer, []) },
+			variables: { produce: Type.functionType([[Type.Integer, []]]) },
 		});
 		const values = { produce: () => BigInt(++calls) };
 		expect(expression.type.equate(Type.Integer)).toBe(true);
@@ -43,8 +108,19 @@ describe("Assignment test", () => {
 		expect(() => new Affinirum(`val x=1;${assignment}`)).toThrow(/illegal re-assignment/);
 	});
 
-	it("rejects assignment of an incompatible type to an uninitialized variable", () => {
-		expect(() => new Affinirum("var x:integer;x='text'"))
+	it.each(["x=2", "x+=2"])("rejects assignment to input with %s", (assignment) => {
+		expect(() => new Affinirum(assignment)).toThrow(/illegal re-assignment/);
+		expect(() => new Affinirum(assignment, { variables: { x: Type.Integer } })).toThrow(/illegal re-assignment/);
+		expect(() => new Affinirum(assignment, { variables: { x: Type.Unknown } })).toThrow(/illegal re-assignment/);
+	});
+
+	it("requires an initializer for a non-optional variable", () => {
+		expect(() => new Affinirum("var x:integer;x=1;x"))
+			.toThrow(/variable x of type integer requires initial value/);
+	});
+
+	it("rejects assignment of an incompatible type to a typed variable", () => {
+		expect(() => new Affinirum("var x:integer=0;x='text'"))
 			.toThrow(/type integer mismatch with expected type string/);
 	});
 });

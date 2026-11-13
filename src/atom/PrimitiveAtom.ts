@@ -4,9 +4,13 @@ export type Primitive = "void" | "boolean" | "timestamp" | "float" | "integer" |
 
 export class PrimitiveAtom implements IAtom {
 
+	protected readonly _primitive: Primitive;
+
 	constructor(
-		protected readonly _primitive: Primitive = "void",
-	) {}
+		primitive: Primitive = "void",
+	) {
+		this._primitive = primitive;
+	}
 
 	equate(atom: IAtom): boolean {
 		if (atom instanceof PrimitiveAtom) {

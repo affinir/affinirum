@@ -1,49 +1,53 @@
-import { parseAN, formatAN } from "./native/notation/AN.js"
-import { funcOr, funcAnd, funcNot } from "./native/Boolean.js";
-import { funcAdd } from "./native/Aggregable.js";
-import { funcAt, funcHas } from "./native/Iterable.js";
-import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from "./native/Number.js";
-import { funcCoalesce, funcEqual, funcNotEqual } from "./native/Unknown.js";
-import { Constant } from "./Constant.js";
-import { Variable } from "./Variable.js";
-import { Value, normalize } from "./Value.js";
 import { Type } from "./Type.js";
+import { Value, normalize } from "./Value.js";
+import { Constant } from "./Constant.js";
+import { LocalVariable, InputVariable } from "./Variable.js";
 import { Keywords } from "./Keywords.js";
 import { Constants } from "./Constants.js";
 import { Functions } from "./Functions.js";
+import { CallFrame } from "./CallFrame.js";
+import { ParserSpan } from "./ParserSpan.js";
+import { ParserState } from "./ParserState.js";
+import { LexicalScope } from "./LexicalScope.js";
+import { TypeParser } from "./TypeParser.js";
 import { Node } from "./node/Node.js";
 import { ArrayNode } from "./node/ArrayNode.js";
 import { AssignmentNode } from "./node/AssignmentNode.js";
+import { AssignableNode } from "./node/AssignableNode.js";
+import { AccessNode } from "./node/AccessNode.js";
 import { BlockNode } from "./node/BlockNode.js";
 import { CallNode } from "./node/CallNode.js";
 import { CastNode } from "./node/CastNode.js";
 import { ConstantNode } from "./node/ConstantNode.js";
 import { FunctionNode } from "./node/FunctionNode.js";
-import { ReturnNode } from "./node/ReturnNode.js";
-import { JumpNode } from "./node/JumpNode.js";
-import { LoopNode } from "./node/LoopNode.js";
-import { ObjectNode } from "./node/ObjectNode.js";
 import { TernaryNode } from "./node/TernaryNode.js";
+import { LoopNode } from "./node/LoopNode.js";
+import { JumpNode } from "./node/JumpNode.js";
+import { FinalNode } from "./node/FinalNode.js";
+import { ObjectNode } from "./node/ObjectNode.js";
 import { VariableNode } from "./node/VariableNode.js";
-import { ScriptSpan } from "./ScriptSpan.js";
-import { ParserState } from "./ParserState.js";
-import { LexicalScope } from "./LexicalScope.js";
-import { CallFrame } from "./CallFrame.js";
+import { funcAdd } from "./native/Aggregable.js";
+import { funcOr, funcAnd, funcNot } from "./native/Boolean.js";
+import { funcHas } from "./native/Composite.js";
+import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
+	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from "./native/Number.js";
+import { funcCoalesce, funcEqual, funcNotEqual } from "./native/Unknown.js";
+import { parseAN, formatAN } from "./native/notation/AN.js"
 
 export class Affinirum {
 
 	static readonly keywords = [...Keywords, ...Constants.map((c) => c[0])];
 	protected readonly _script: string;
 	protected readonly _strict: boolean;
+	protected readonly _scope: LexicalScope;
 	protected readonly _root: Node;
-
+	protected readonly _type = new TypeParser();
 	protected readonly _vartypes = new Map<string, Type>();
-	protected readonly _varspans = new Map<string, ScriptSpan>();
-	protected readonly _variables = new Map<string, Variable>();
+	protected readonly _varspans = new Map<string, ParserSpan>();
+	protected readonly _variables = new Map<string, InputVariable>();
 	protected readonly _constants = new Map<string, Record<string, Constant>>(Constants);
 	protected readonly _functions = new Map<string, Constant>(Functions);
-	protected readonly _scope: LexicalScope;
+	protected _results: FinalNode[] = [];
 
 	/**
 		Creates compiled expression. Any parsed token not recognized as a constant or a function will be compiled as a variable.
@@ -58,7 +62,7 @@ export class Affinirum {
 		variables?: Record<string, Type>,
 	}) {
 		this._script = script;
-		this._scope = new LexicalScope(undefined, undefined, config?.type ?? Type.Unknown);
+		this._scope = new LexicalScope(undefined, undefined, config?.type);
 		this._strict = config?.strict ?? false;
 		if (config?.variables) {
 			for (const [vname, vtype] of Object.entries(config.variables)) {
@@ -70,7 +74,8 @@ export class Affinirum {
 		if (!state.isEmpty) {
 			state.throwError("unexpected expression token or expression end");
 		}
-		this._root = this._root.compile(this._scope.type());
+		this._root = this._root.compile(this._scope.type);
+		this._root.validateType(this._scope.type);
 	}
 
 	/**
@@ -84,7 +89,7 @@ export class Affinirum {
 		Returns compiled expression return value type.
 	*/
 	get type(): Type {
-		return this._root.type;
+		return Type.union(this._root.type, ...this._results.map((i) => i.valueType));
 	}
 
 	/**
@@ -96,8 +101,7 @@ export class Affinirum {
 	}
 
 	/**
-		Returns record with compiled variable names and expected types.
-		@returns Record with variable names and types.
+		Returns the configured or inferred type of each referenced input variable.
 	*/
 	variables(): Record<string, Type> {
 		const types: Record<string, Type> = Object.create(null);
@@ -126,15 +130,15 @@ export class Affinirum {
 				}
 				frame.add(variable, value);
 			}
-			return normalize(this._root.evaluate(frame) ?? undefined);
+			return this._root.evaluate(frame) ?? undefined;
 		}
 		catch (e) {
-			if (e instanceof ReturnNode) {
-				if (e.scope === "global") {
-					return normalize(e.value ?? undefined);
+			if (e instanceof FinalNode) {
+				if (e.level === "result") {
+					return e.value ?? undefined;
 				}
 				else {
-					throw this._root.throwError(`unexpected ${e.scope} return`);
+					throw this._root.throwError(`unexpected ${e.level} return`);
 				}
 			}
 			if (e instanceof JumpNode) {
@@ -285,10 +289,12 @@ export class Affinirum {
 		let node = this._term(state, scope);
 		while (state.isDot || state.isQuestion || state.isParenthesesOpen || state.isBracketsOpen || state.isCast) {
 			if (state.isDot || state.isQuestion) { // property access or property existance operator
-				const operator = state.isDot ? funcAt : funcHas;
+				const operator = state.isQuestion ? funcHas : undefined;
 				if (state.next().isLiteral && (typeof state.literal.value === "string" || typeof state.literal.value === "bigint")) {
-					const fnode = new ConstantNode(span.end(state), operator);
-					node = new CallNode(span, fnode, [node, new ConstantNode(state, new Constant(state.literal.value))]);
+					const inode = new ConstantNode(state, new Constant(state.literal.value));
+					node = operator
+						? new CallNode(span, new ConstantNode(span.end(state), operator), [node, inode])
+						: new AccessNode(span.end(state), node, inode);
 					state.next();
 				}
 				else if (state.isToken) {
@@ -304,7 +310,8 @@ export class Affinirum {
 							}
 							const fnode = new ConstantNode(span.end(state), func);
 							node = new CallNode(span, fnode, subnodes);
-							state.closeParentheses().next();
+							state.closeParentheses();
+							state.next();
 						}
 						else {
 							const fnode = new ConstantNode(span.end(state), func);
@@ -312,8 +319,10 @@ export class Affinirum {
 						}
 					}
 					else {
-						const fnode = new ConstantNode(span.end(state), operator);
-						node = new CallNode(span, fnode, [node, new ConstantNode(state, new Constant(state.token))]);
+						const inode = new ConstantNode(state, new Constant(state.token));
+						node = operator
+							? new CallNode(span, new ConstantNode(span.end(state), operator), [node, inode])
+							: new AccessNode(span.end(state), node, inode);
 						state.next();
 					}
 				}
@@ -330,20 +339,31 @@ export class Affinirum {
 					}
 				}
 				state.closeParentheses();
+				state.next();
 				node = new CallNode(span.end(state), node, subnodes);
-				state.next();
 			}
-			else if (state.isBracketsOpen) { // index access operator
-				const subnodes = [node, this._unit(state.next(), scope)];
+			else if (state.isBracketsOpen) { // access operator
+				const inode = this._unit(state.next(), scope);
 				state.closeBrackets();
-				const fnode = new ConstantNode(span.end(state), funcAt);
-				node = new CallNode(span, fnode, subnodes);
 				state.next();
+				node = new AccessNode(span.end(state), node, inode);
 			}
 			else if (state.isCast) { // type cast operator
-				const type = this._type(state.next(), scope);
+				const type = this._type.parse(state.next(), scope);
 				node = new CastNode(span.end(state), node, type);
 			}
+		}
+		if (state.isAssignment) {
+			if (!(node instanceof AssignableNode) || !node.assignable) {
+				state.throwError("illegal re-assignment");
+			}
+			const operator = state.assignment.operator;
+			const subnode = this._unit(state.next(), scope);
+			if (operator) {
+				const fnode = new ConstantNode(span, operator);
+				return new AssignmentNode(span, node, new CallNode(span, fnode, [node, subnode]), true);
+			}
+			return new AssignmentNode(span, node, subnode);
 		}
 		return node;
 	}
@@ -355,132 +375,32 @@ export class Affinirum {
 			state.next();
 			return new ConstantNode(span, constant);
 		}
-		else if (state.isToken) { // variable
-			const span = state.start();
-			const constants = this._constants.get(state.token);
-			if (constants != null) {
-				if (!state.next().isDot) {
-					state.throwError("missing constant accessor operator");
-				}
-				if (!state.next().isToken) {
-					state.throwError("missing constant name");
-				}
-				const constant = constants[state.token];
-				if (!constant) {
-					state.throwError(`unknown constant ${state.token}`);
-				}
-				state.next();
-				return new ConstantNode(span, constant);
-			}
-			let variable = scope.get(state.token) ?? this._variables.get(state.token);
-			if (variable == null) {
-				const type = this._vartypes.get(state.token);
-				if (type == null && this._strict) {
-					state.throwError(`undefined variable ${state.token} in strict mode`);
-				}
-				variable = new Variable(type);
-				this._variables.set(state.token, variable);
-				this._varspans.set(state.token, state.start());
-			}
-			if (state.next().isAssignment) {
-				if (!variable.assignable) {
-					state.throwError("illegal re-assignment");
-				}
-				if (state.assignment.operator) {
-					const operator = state.assignment.operator;
-					const fnode = new ConstantNode(span, operator);
-					const subnode = new CallNode(span, fnode, [new VariableNode(span, variable), this._unit(state.next(), scope)]);
-					return new AssignmentNode(span, new VariableNode(span, variable), subnode);
-				}
-				else {
-					const subnode = this._unit(state.next(), scope);
-					return new AssignmentNode(span, new VariableNode(span, variable), subnode);
-				}
-			}
-			return new VariableNode(span, variable);
+		else if (state.isToken) { // constant or variable
+			return this._token(state, scope);
 		}
 		else if (state.isBracesOpen) { // code block
-			const span = state.start();
-			const subscope = scope.subscope();
-			const subnodes: Node[] = [];
-			while (!state.next().isBracesClose) {
-				subnodes.push(this._unit(state, subscope));
-				if (!state.isSemicolon) {
-					break;
-				}
-			}
-			span.end(state);
-			state.closeBraces().next();
-			return new BlockNode(span, subnodes, [...subscope.variables()]);
+			return this._block(state, scope);
 		}
 		else if (state.isBracesClose) {
 			state.throwError("unexpected closing braces");
 		}
 		else if (state.isParenthesesOpen) { // unit grouping
 			const node = this._unit(state.next(), scope);
-			state.closeParentheses().next();
+			state.closeParentheses();
+			state.next();
 			return node;
 		}
 		else if (state.isParenthesesClose) {
 			state.throwError("unexpected closing parentheses");
 		}
 		else if (state.isBracketsOpen) { // array or object
-			const span = state.start();
-			const subnodes: [number | Node, Node][] = [];
-			let index = 0, colon = false;
-			while (!state.next().isBracketsClose) {
-				if (state.isColon) {
-					colon = true;
-					state.next();
-					break;
-				}
-				const node = this._unit(state, scope);
-				if (state.isColon) {
-					colon = true;
-					subnodes.push([node, this._unit(state.next(), scope)]);
-				}
-				else {
-					subnodes.push([index++, node]);
-				}
-				if (!state.isComma) {
-					break;
-				}
-			}
-			span.end(state);
-			state.closeBrackets().next();
-			if (colon) {
-				return new ObjectNode(span, subnodes.map(([k, v]) =>
-					[typeof k === "number" ? new ConstantNode(v, new Constant(String(k))) : k, v] as const
-				));
-			}
-			return new ArrayNode(span, subnodes.map(([, v]) => v));
+			return this._composite(state, scope);
 		}
 		else if (state.isBracketsClose) {
 			state.throwError("unexpected closing brackets");
 		}
 		else if (state.isVar || state.isVal) { // variable declaration
-			const assignable = state.isVar;
-			if (!state.next().isToken) {
-				state.throwError("missing variable name");
-			}
-			const token = state.token;
-			if (scope.has(token)) {
-				state.throwError(`illegal redefinition of variable ${token}`);
-			}
-			const span = state.start();
-			let type: Type | undefined;
-			if (state.next().isColon) {
-				type = this._type(state.next(), scope);
-			}
-			const variable = new Variable(type, assignable);
-			scope.set(token, variable);
-			if (state.isAssignment) {
-				if (state.assignment.operator) {
-					state.throwError(`illegal assignment operator with variable ${token}`);
-				}
-				return new AssignmentNode(span, new VariableNode(span, variable), this._unit(state.next(), scope));
-			}
-			return new VariableNode(span, variable);
+			return this._declaration(state, scope);
 		}
 		else if (state.isTilda) {
 			return this._function(state, scope);
@@ -492,10 +412,12 @@ export class Affinirum {
 			return this._loop(state, scope);
 		}
 		else if (state.isReturn) {
-			return new ReturnNode(state, "function", this._unit(state.next(), scope), scope.type());
+			return new FinalNode(state, "return", this._unit(state.next(), scope), scope.type);
 		}
 		else if (state.isResult) {
-			return new ReturnNode(state, "global", this._unit(state.next(), scope), this._scope.type());
+			const node = new FinalNode(state, "result", this._unit(state.next(), scope), this._scope.type);
+			this._results.push(node);
+			return node;
 		}
 		else if (state.isExit) {
 			const node = new JumpNode(state, "exit");
@@ -513,11 +435,123 @@ export class Affinirum {
 		state.throwError("unexpected expression token");
 	}
 
+	protected _token(state: ParserState, scope: LexicalScope): Node {
+		const span = state.start();
+		const constants = this._constants.get(state.token);
+		if (constants != null) {
+			if (!state.next().isDot) {
+				state.throwError("missing constant accessor operator");
+			}
+			if (!state.next().isToken) {
+				state.throwError("missing constant name");
+			}
+			const constant = constants[state.token];
+			if (!constant) {
+				state.throwError(`unknown constant ${state.token}`);
+			}
+			state.next();
+			return new ConstantNode(span, constant);
+		}
+		let variable = scope.get(state.token) ?? this._variables.get(state.token);
+		if (variable == null) {
+			const type = this._vartypes.get(state.token);
+			if (type == null && this._strict) {
+				state.throwError(`undefined variable ${state.token} in strict mode`);
+			}
+			variable = new InputVariable(type);
+			this._variables.set(state.token, variable);
+			this._varspans.set(state.token, state.start());
+		}
+		state.next();
+		return new VariableNode(span, variable);
+	}
+
+	protected _declaration(state: ParserState, scope: LexicalScope): Node {
+		const assignable = state.isVar;
+		if (!state.next().isToken) {
+			state.throwError("missing variable name");
+		}
+		const token = state.token;
+		if (scope.has(token)) {
+			state.throwError(`illegal redefinition of variable ${token}`);
+		}
+		const span = state.start();
+		let type: Type | undefined;
+		if (state.next().isColon) {
+			type = this._type.parse(state.next(), scope);
+		}
+		const variable = new LocalVariable(type, assignable);
+		scope.set(token, variable);
+		if (state.isAssignment) {
+			if (state.assignment.operator) {
+				state.throwError(`illegal assignment operator with variable ${token}`);
+			}
+			const subnode = this._unit(state.next(), scope);
+			if (subnode instanceof FunctionNode) {
+				variable.declare(subnode.type);
+			}
+			return new AssignmentNode(span, new VariableNode(span, variable, true), subnode);
+		}
+		else if (type && !type.isOptional) {
+			state.throwError(`variable ${token} of type ${type} requires initial value`);
+		}
+		return new VariableNode(span, variable);
+	}
+
+	protected _block(state: ParserState, scope: LexicalScope): Node {
+		const span = state.start();
+		const subscope = scope.subscope();
+		const subnodes: Node[] = [];
+		while (!state.next().isBracesClose) {
+			subnodes.push(this._unit(state, subscope));
+			if (!state.isSemicolon) {
+				break;
+			}
+		}
+		span.end(state);
+		state.closeBraces();
+		state.next();
+		return new BlockNode(span, subnodes, [...subscope.variables()]);
+	}
+
+	protected _composite(state: ParserState, scope: LexicalScope): Node {
+		const span = state.start();
+		const subnodes: [number | Node, Node][] = [];
+		let index = 0, colon = false;
+		while (!state.next().isBracketsClose) {
+			if (state.isColon) {
+				colon = true;
+				state.next();
+				break;
+			}
+			const node = this._unit(state, scope);
+			if (state.isColon) {
+				colon = true;
+				subnodes.push([node, this._unit(state.next(), scope)]);
+			}
+			else {
+				subnodes.push([index++, node]);
+			}
+			if (!state.isComma) {
+				break;
+			}
+		}
+		span.end(state);
+		state.closeBrackets();
+		state.next();
+		if (colon) {
+			return new ObjectNode(span, subnodes.map(([k, v]) =>
+				[typeof k === "number" ? new ConstantNode(v, new Constant(String(k))) : k, v] as const
+			));
+		}
+		return new ArrayNode(span, subnodes.map(([, v]) => v));
+	}
+
 	protected _function(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
 		state.next().openParentheses();
 		let variadic = false;
-		const variables = new Map<string, Variable>();
+		const variables = new Map<string, LocalVariable>();
 		while (!state.next().isParenthesesClose) {
 			if (!state.isToken) {
 				state.throwError("missing function argument name");
@@ -529,131 +563,50 @@ export class Affinirum {
 			if (scope.has(token)) {
 				state.throwError(`variable ${token} redefinition`);
 			}
-			let argType = Type.Unknown;
+			let argType: Type | undefined;
 			if (state.next().isColon) {
 				variadic = state.next().isEllipsis;
 				if (variadic) {
 					state.next();
 				}
-				argType = this._type(state, scope);
+				argType = this._type.parse(state, scope);
 			}
-			variables.set(token, new Variable(argType));
+			const variable = new LocalVariable(argType, true);
+			variables.set(token, variable);
 			if (variadic) {
-				if (argType.isArray) {
-					break;
-				}
-				else {
-					state.throwError("variadic function argument must be an array type");
-				}
+				break;
 			}
 			if (!state.isComma) {
 				break;
 			}
 		}
-		state.closeParentheses().next();
-		const returnType = state.isColon ? this._type(state.next(), scope) : Type.Unknown;
+		state.closeParentheses();
+		state.next();
+		const returnType = state.isColon ? this._type.parse(state.next(), scope) : Type.Unknown;
 		span.end(state);
 		const args = Array.from(variables.values());
 		const subscope = scope.subscope(variables, returnType);
 		const subnode =  this._unit(state, subscope);
-		const functionType = Type.functionType(returnType, args.map((v) => v.type), { variadic });
+		const functionType = Type.functionType([[returnType, args.map((v) => v.type), variadic]]);
 		return new FunctionNode(span, subnode, args, [...subscope.variables()], functionType);
 	}
 
-	protected _loop(state: ParserState, scope: LexicalScope) {
+	protected _ternary(state: ParserState, scope: LexicalScope): Node {
+		const span = state.start();
+		const cnode = this._unit(state.next(), scope);
+		span.end(state);
+		const tnode = this._unit(state, scope);
+		const enode = state.isElse
+			? this._unit(state.next(), scope)
+			: new ConstantNode(state.start(), Constant.Null);
+		return new TernaryNode(span, cnode, [tnode, enode]);
+	}
+
+	protected _loop(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
 		const cnode = this._unit(state.next(), scope);
 		span.end(state);
 		return new LoopNode(span, cnode, this._unit(state, scope));
-	}
-
-	protected _ternary(state: ParserState, scope: LexicalScope) {
-		const span = state.start();
-		const cnode = this._unit(state.next(), scope);
-		span.end(state);
-		const cthen = this._unit(state, scope);
-		const celse = state.isElse
-			? this._unit(state.next(), scope)
-			: new ConstantNode(state.start(), Constant.Null);
-		return new TernaryNode(span, cnode, [cthen, celse]);
-	}
-
-	protected _type(state: ParserState, scope: LexicalScope): Type {
-		if (state.isType) { // literal type
-			let type = state.type;
-			if (state.next().isQuestion) {
-				type = type.toOptional();
-				state.next();
-			}
-			if (state.operator === funcOr) { // type union
-				return Type.union(type, this._type(state.next(), scope));
-			}
-			return type;
-		}
-		else if (state.isBracketsOpen) { // array or object type
-			const valTypes: [number | string | undefined, Type][] = [];
-			let index = 0, colon = false;
-			while (!state.next().isBracketsClose) {
-				if (state.isLiteral && typeof state.literal.value === "string") {
-					const key = state.literal.value;
-					state.next().separateByColon().next();
-					valTypes.push([key, this._type(state, scope)]);
-					colon = true;
-				}
-				else if (state.isColon) {
-					colon = true;
-					if (!state.next().isBracketsClose) {
-						valTypes.push([undefined, this._type(state, scope)]);
-						break;
-					}
-				}
-				else {
-					valTypes.push([index++, this._type(state, scope)]);
-				}
-				if (!state.isComma) {
-					break;
-				}
-			}
-			state.closeBrackets().next();
-			return colon
-				? Type.objectType(valTypes.map(([key, type]) => [key as string | undefined, type]))
-				: Type.arrayType(valTypes.map(([, v]) => v));
-		}
-		else if (state.isTilda) { // function type
-			state.next().openParentheses();
-			let variadic = false;
-			const argTypes: Type[] = [];
-			while (!state.next().isParenthesesClose) {
-				variadic = state.isEllipsis;
-				if (variadic) {
-					state.next();
-				}
-				const argType = this._type(state, scope);
-				argTypes.push(argType);
-				if (variadic) {
-					if (argType.isArray) {
-						break;
-					}
-					else {
-						state.throwError("variadic function argument must be an array type");
-					}
-				}
-				if (!state.isComma) {
-					break;
-				}
-			}
-			state.closeParentheses().next();
-			const retType = state.isColon ? this._type(state.next(), scope) : Type.Unknown;
-			return Type.functionType(retType, argTypes, { variadic });
-		}
-		else if (state.isParenthesesOpen) { // type grouping
-			const type = this._type(state.next(), scope);
-			state.closeParentheses().next();
-			return type;
-		}
-		else {
-			state.throwError("missing type name");
-		}
 	}
 
 }

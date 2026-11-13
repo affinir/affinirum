@@ -19,4 +19,15 @@ describe("Strict mode test", () => {
 		});
 		expect(() => script.evaluate({ items: [1n, "two"] })).toThrow(/unexpected type array/);
 	});
+
+	it.each([true, false])("checks configured input types with strict=%s", (strict) => {
+		expect(() => new Affinirum("value.UpperCase", { strict, variables: { value: Type.Integer } }))
+			.toThrow(/cannot be called/);
+	});
+
+	it("keeps explicitly unknown inputs from acquiring inferred types", () => {
+		const script = new Affinirum("value-1", { strict: true, variables: { value: Type.Unknown } });
+		expect(script.variables().value.isUnknown).toBe(true);
+		expect(script.evaluate({ value: 2n })).toBe(1n);
+	});
 });

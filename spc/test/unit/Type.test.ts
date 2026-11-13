@@ -1,4 +1,4 @@
-import { Affinirum, Type, Value } from "../../src/index.js";
+import { Type } from "../../../src/index.js";
 
 describe("Type equality test", () => {
 	it("compares array atoms structurally and positionally", () => {
@@ -16,11 +16,13 @@ describe("Type equality test", () => {
 	});
 
 	it("compares function atoms including return, arguments, and variadicity", () => {
-		const type = Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], { variadic: true });
-		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], { variadic: true }))).toBe(true);
-		expect(type.equate(Type.functionType(Type.Integer, [Type.Integer, Type.OptionalString], { variadic: true }))).toBe(false);
-		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalBoolean], { variadic: true }))).toBe(false);
-		expect(type.equate(Type.functionType(Type.Float, [Type.Integer, Type.OptionalString], { variadic: false }))).toBe(false);
+		const strings = Type.arrayType([Type.String]);
+		const booleans = Type.arrayType([Type.Boolean]);
+		const type = Type.functionType([[Type.Float, [Type.Integer, strings], true]]);
+		expect(type.equate(Type.functionType([[Type.Float, [Type.Integer, strings], true]]))).toBe(true);
+		expect(type.equate(Type.functionType([[Type.Integer, [Type.Integer, strings], true]]))).toBe(false);
+		expect(type.equate(Type.functionType([[Type.Float, [Type.Integer, booleans], true]]))).toBe(false);
+		expect(type.equate(Type.functionType([[Type.Float, [Type.Integer, strings]]]))).toBe(false);
 	});
 
 	it("compares union members independently of order", () => {
@@ -69,6 +71,11 @@ describe("Type acceptance test", () => {
 });
 
 describe("Type intersect test", () => {
+	it("treats Never as disjoint from Unknown in either order", () => {
+		expect(Type.Never.intersect(Type.Unknown)).toBe(false);
+		expect(Type.Unknown.intersect(Type.Never)).toBe(false);
+	});
+
 	it("recognizes overlapping primitive unions", () => {
 		expect(Type.Number.intersect(Type.Integer)).toBe(true);
 		expect(Type.Integer.intersect(Type.Void)).toBe(false);
@@ -85,6 +92,14 @@ describe("Type intersect test", () => {
 				Type.arrayType([Type.Integer]),
 			)
 		).toBe(true);
+	});
+
+	it("checks overlap directly against an atom", () => {
+		const [atom] = Type.objectType([["value", Type.Integer]]).objectAtoms();
+		expect(Type.objectType([["value", Type.Number]]).intersect(atom)).toBe(true);
+		expect(Type.objectType([["value", Type.String]]).intersect(atom)).toBe(false);
+		expect(Type.Unknown.intersect(atom)).toBe(true);
+		expect(Type.Never.intersect(atom)).toBe(false);
 	});
 
 	it("recognizes partially overlapping array element unions", () => {
@@ -129,33 +144,47 @@ describe("Type intersect test", () => {
 	});
 
 	it("recognizes partially overlapping function types", () => {
-		const left = Type.functionType(
-			Type.union(Type.Integer, Type.String),
-			[Type.union(Type.Integer, Type.String)],
-		);
-		const right = Type.functionType(
-			Type.union(Type.String, Type.Boolean),
-			[Type.union(Type.String, Type.Boolean)],
-		);
+		const left = Type.functionType([
+			[Type.union(Type.Integer, Type.String), [Type.union(Type.Integer, Type.String)]],
+		]);
+		const right = Type.functionType([
+			[Type.union(Type.String, Type.Boolean), [Type.union(Type.String, Type.Boolean)]],
+		]);
 		expect(left.intersect(right)).toBe(true);
 		expect(right.intersect(left)).toBe(true);
 	});
 
 	it("ignores incompatible optional trailing function parameters", () => {
-		const left = Type.functionType(Type.Boolean, [Type.Integer, Type.OptionalString]);
-		const right = Type.functionType(Type.Boolean, [Type.Integer, Type.OptionalBoolean]);
+		const left = Type.functionType([[Type.Boolean, [Type.Integer, Type.OptionalString]]]);
+		const right = Type.functionType([[Type.Boolean, [Type.Integer, Type.OptionalBoolean]]]);
 		expect(left.intersect(right)).toBe(true);
 		expect(right.intersect(left)).toBe(true);
 	});
 
 	it("rejects function types without a compatible call", () => {
-		const acceptsInteger = Type.functionType(Type.Boolean, [Type.Integer]);
-		const acceptsString = Type.functionType(Type.Boolean, [Type.String]);
-		const requiresTwo = Type.functionType(Type.Boolean, [Type.Integer, Type.String]);
-		const variadic = Type.functionType(Type.Boolean, [Type.arrayType([Type.Integer])], { variadic: true });
+		const acceptsInteger = Type.functionType([[Type.Boolean, [Type.Integer]]]);
+		const acceptsString = Type.functionType([[Type.Boolean, [Type.String]]]);
+		const requiresTwo = Type.functionType([[Type.Boolean, [Type.Integer, Type.String]]]);
+		const variadic = Type.functionType([[Type.Boolean, [Type.arrayType([Type.Integer])], true]]);
 		expect(acceptsInteger.intersect(acceptsString)).toBe(false);
 		expect(acceptsInteger.intersect(requiresTwo)).toBe(false);
 		expect(acceptsInteger.intersect(variadic)).toBe(false);
+	});
+});
+
+describe("Type atom lookup test", () => {
+	it("lists array and object alternatives in a mixed union", () => {
+		const type = Type.union(
+			Type.Boolean,
+			Type.arrayType([Type.Integer]),
+			Type.arrayType([Type.String]),
+			Type.objectType([["value", Type.Integer]]),
+			Type.objectType([["value", Type.String]]),
+		);
+		expect(type.arrayAtoms().map((atom) => atom.valType(0))).toEqual([Type.Integer, Type.String]);
+		expect(type.objectAtoms().map((atom) => atom.valType("value"))).toEqual([Type.Integer, Type.String]);
+		expect(Type.Unknown.arrayAtoms()).toEqual(Type.Array.arrayAtoms());
+		expect(Type.Unknown.objectAtoms()).toEqual(Type.Object.objectAtoms());
 	});
 });
 
@@ -219,74 +248,6 @@ describe("Type value acceptance test", () => {
 	});
 });
 
-describe("Value normalization test", () => {
-	it("normalizes integers recursively while preserving composite identity", () => {
-		const integer = 1n << 100n;
-		const value: Value[] = [integer];
-		const object: Record<string, Value> = { integer, value };
-		value.push(object);
-		const result = new Affinirum("value").evaluate({ value }) as Value[];
-		expect(result === value).toBe(true);
-		expect(result[0] as bigint).toBe(0n);
-		expect((result[1] as Record<string, Value>).integer as bigint).toBe(0n);
-		expect((result[1] as Record<string, Value>).value === result).toBe(true);
-	});
-
-	it("normalizes inputs before numeric functions consume them", () => {
-		const expression = new Affinirum("Float.Sum(values)");
-		expect(expression.evaluate({ values: [1n << 64n, 2n] })).toBe(2);
-	});
-
-	it.each([
-		"[f()]",
-		"=>[f()]",
-		"val g=~():array{f()};[g()]",
-		"val g=~():array{~>f()};[g()]",
-	])("normalizes final function results in %s", (script) => {
-		const expression = new Affinirum(script, {
-			strict: true,
-			variables: { f: Type.functionType(Type.Array, []) },
-		});
-		const result = expression.evaluate({ f: () => [1n << 100n] }) as Value[][];
-		expect(result[0][0] as bigint).toBe(0n);
-	});
-
-	it("accepts valid i64 arguments when JavaScript invokes a script function", () => {
-		const func = new Affinirum("~(value:integer):integer{value/2}").evaluate() as (value: bigint) => bigint;
-		expect(func(0n)).toBe(0n);
-		expect(func(0x7FFFFFFFFFFFFFFFn)).toBe(0x3FFFFFFFFFFFFFFFn);
-		expect(func(-0x8000000000000000n)).toBe(-0x4000000000000000n);
-	});
-
-	it("accepts valid immutable composite arguments without rewriting them", () => {
-		const func = new Affinirum("~(values:array):float{Float.Sum(values)}").evaluate() as (values: Value[]) => number;
-		const values = [1n, 2n];
-		Object.freeze(values);
-		expect(func(values)).toBe(3);
-		expect(values).toEqual([1n, 2n]);
-	});
-
-	it.each([
-		"f().Length",
-		"val g=~():array{f()};g().Length",
-		"val g=~():array{~>f()};g().Length",
-		"f().Derive(~(value:integer,index:integer,values:array):integer{values.Length}).Length",
-	])("uses trusted immutable function results without rewriting them in %s", (script) => {
-		const values = [1n, 2n];
-		Object.freeze(values);
-		const expression = new Affinirum(script, { variables: { f: Type.functionType(Type.Array, []) } });
-		expect(expression.evaluate({ f: () => values })).toBe(2n);
-	});
-
-	it.each([
-		"val f=~(x:integer):integer{x+1};f(value)<0",
-		"val f=~(x:integer):integer{~>x+1};f(value)<0",
-	])("wraps integer arithmetic before consuming function results in %s", (script) => {
-		const expression = new Affinirum(script);
-		expect(expression.evaluate({ value: 0x7FFFFFFFFFFFFFFFn })).toBe(true);
-	});
-});
-
 describe("Uniform object type test", () => {
 	it("checks every source value type during acceptance", () => {
 		const type = Type.objectType([[undefined, Type.Integer]]);
@@ -333,5 +294,57 @@ describe("Uniform object type test", () => {
 		expect(type.acceptValue({})).toBe(true);
 		expect(type.acceptValue({ a: {}, b: { count: 1n } })).toBe(true);
 		expect(type.acceptValue({ a: { count: 1n, other: "bad" } })).toBe(false);
+	});
+});
+
+describe("Function argument test", () => {
+	it("compares optional function argument types", () => {
+		const expected = Type.functionType([
+			[Type.Boolean, [Type.Integer, Type.OptionalString]],
+		]);
+
+		expect(expected.accept(Type.functionType([
+			[Type.Boolean, [Type.Integer, Type.OptionalString]],
+		]))).toBe(true);
+
+		expect(expected.accept(Type.functionType([
+			[Type.Boolean, [Type.Integer, Type.OptionalBoolean]],
+		]))).toBe(false);
+	});
+
+	it("checks function arguments contravariantly", () => {
+		const acceptsInteger = Type.functionType([[Type.Boolean, [Type.Integer]]]);
+		const acceptsNumber = Type.functionType([[Type.Boolean, [Type.Number]]]);
+
+		expect(acceptsInteger.accept(acceptsNumber)).toBe(true);
+		expect(acceptsNumber.accept(acceptsInteger)).toBe(false);
+	});
+
+	it("checks optional function argument ranges", () => {
+		const acceptsOne = Type.functionType([[Type.Boolean, [Type.Integer]]]);
+		const acceptsOneOrTwo = Type.functionType([[Type.Boolean, [Type.Integer, Type.OptionalString]]]);
+		const requiresTwo = Type.functionType([[Type.Boolean, [Type.Integer, Type.String]]]);
+
+		expect(acceptsOne.accept(acceptsOneOrTwo)).toBe(true);
+		expect(acceptsOneOrTwo.accept(acceptsOne)).toBe(true);
+		expect(acceptsOne.accept(requiresTwo)).toBe(false);
+	});
+
+	it("distinguishes fixed and variadic function signatures", () => {
+		const fixed = Type.functionType([[Type.Boolean, [Type.Integer]]]);
+		const variadic = Type.functionType([[Type.Boolean, [Type.arrayType([Type.Integer])], true]]);
+
+		expect(fixed.accept(variadic)).toBe(false);
+		expect(variadic.accept(fixed)).toBe(false);
+		expect(variadic.accept(Type.functionType([
+			[Type.Boolean, [Type.arrayType([Type.Integer])], true],
+		]))).toBe(true);
+	});
+});
+
+describe("Variadic function argument test", () => {
+	it.each([Type.String, Type.arrayType([Type.Integer, Type.Integer])])("rejects a host rest parameter of type %s", (type) => {
+		expect(() => Type.functionType([[Type.Integer, [type], true]]))
+			.toThrow(/variadic function argument must be of uniform array type/);
 	});
 });

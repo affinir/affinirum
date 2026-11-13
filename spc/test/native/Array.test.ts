@@ -31,7 +31,7 @@ describe("Array function test", () => {
 	});
 
 	it("gives composition callbacks immutable snapshots of the accumulated properties", () => {
-		const expression = new Affinirum("var first:object;var second:object;val built=['a','b'].Compose(~(acc:object,key:string):integer{if key=='a'{first=acc}else{second=acc};1});[first,second,built]");
+		const expression = new Affinirum("var first:object=[:];var second:object=[:];val built=['a','b'].Compose(~(acc:object,key:string):integer{if key=='a'{first=acc}else{second=acc};1});[first,second,built]");
 		const result = expression.evaluate() as Value[];
 		expect(result).toEqual([{}, { a: 1n }, { a: 1n, b: 1n }]);
 		expect(result[0]).not.toBe(result[1]);

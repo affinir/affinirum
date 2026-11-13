@@ -1,4 +1,4 @@
-import { Affinirum } from "../../src/index.js";
+import { Affinirum, Type } from "../../src/index.js";
 
 describe("Closure test", () => {
 	it("retains a captured parameter after the enclosing function returns", () => {
@@ -21,13 +21,6 @@ describe("Closure test", () => {
 		expect<unknown>(expression.evaluate()).toEqual([1n, 2n, 2n]);
 	});
 
-	it("retains captured state after evaluate returns", () => {
-		const expression = new Affinirum("var n=7;~():integer{n+=1}");
-		const increment = expression.evaluate() as () => bigint;
-		expect(increment()).toBe(8n);
-		expect(increment()).toBe(9n);
-	});
-
 	it("keeps closures from separate evaluations independent", () => {
 		const expression = new Affinirum("var n=7;~():integer{n+=1}");
 		const first = expression.evaluate() as () => bigint;
@@ -36,5 +29,35 @@ describe("Closure test", () => {
 		expect(second()).toBe(8n);
 		expect(first()).toBe(9n);
 		expect(second()).toBe(9n);
+	});
+
+	it("keeps assignments in an uncalled function out of enclosing type inference", () => {
+		const expression = new Affinirum("var x:integer|string=1;val f=~():string{x='two'};x-1");
+		expect(expression.type.equate(Type.Integer)).toBe(true);
+		expect(expression.evaluate()).toBe(0n);
+	});
+
+	it.each([
+		"val read=~():integer{x.Length};x='two';read()",
+		"val change=~():string{x='two'};change();x.Length",
+	])("checks captured reads against the fixed declaration in %s", (script) => {
+		const expression = new Affinirum("var x:integer|string=1;" + script);
+		expect(expression.evaluate()).toBe(3n);
+	});
+
+	it("includes input uses from an uncalled function", () => {
+		const expression = new Affinirum("val f=~():float|integer{value-1};value.Length");
+		expect(expression.variables().value.equate(Type.union(Type.Number, Type.Iterable))).toBe(true);
+		expect(expression.type.equate(Type.Integer)).toBe(true);
+		expect(expression.evaluate({ value: "kept" })).toBe(4n);
+	});
+
+	it("keeps a captured parameter's declared type across nested functions", () => {
+		const expression = new Affinirum("~(value:integer|string):integer|string{value=1;val change=~():string{value='two'};value}");
+		const type = Type.union(Type.Integer, Type.String);
+		expect(expression.type.equate(Type.functionType([[type, [type]]]))).toBe(true);
+		const func = expression.evaluate() as (value: bigint | string) => bigint | string;
+		expect(func(0n)).toBe(1n);
+		expect(func("one")).toBe(1n);
 	});
 });

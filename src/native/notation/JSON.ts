@@ -14,13 +14,13 @@ export const formatJSON = (value: Value, whitespace?: string): string =>
 const funcFormatJSON = new Constant(
 	(value: Value, whitespace?: string) =>
 		formatJSON(value, whitespace),
-	Type.functionType(Type.String, [typeJson, Type.OptionalString]),
+	Type.functionType([[Type.String, [typeJson, Type.OptionalString]]]),
 );
 
 const funcParseJSON = new Constant(
 	(value: string | undefined) =>
 		value == null ? undefined : JSON.parse(value) as Value,
-	Type.functionType(typeJson, [Type.OptionalString]),
+	Type.functionType([[typeJson, [Type.OptionalString]]]),
 );
 
 export const constJSON = Object.assign(Object.create(null), {
