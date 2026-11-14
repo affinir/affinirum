@@ -44,15 +44,15 @@ vfunc(cfunc)
 	});
 	it("checks different uses of an untyped parameter", () => {
 		const expression = new Affinirum("~(x):float|integer{val first=x-1;x='two';first+x.Length}");
-		expect(expression.type.equate(Type.functionType([[Type.Number, [Type.Unknown]]]))).toBe(true);
+		expect(expression.type.equals(Type.functionType([[Type.Number, [Type.Unknown]]]))).toBe(true);
 		const func = expression.evaluate() as (value: bigint | number) => bigint | number;
 		expect(func(4n)).toBe(6n);
 		expect(func(4)).toBe(6);
 	});
 
 	it("uses the declared variadic signature after a later assignment", () => {
-		const expression = new Affinirum("var f:~(...[integer]):integer=~(items:...[integer]):integer{0};f=~(items:...[integer]):integer{Integer.Sum(items)};f(1,2)");
-		expect(expression.type.equate(Type.Integer)).toBe(true);
+		const expression = new Affinirum("var f:~(...integer):integer=~(items:...integer):integer{0};f=~(items:...integer):integer{Integer.Sum(items)};f(1,2)");
+		expect(expression.type.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate()).toBe(3n);
 	});
 
@@ -85,7 +85,8 @@ vfunc(cfunc)
 	});
 
 	it.each(["Float.Abs(x)", "val abs=Float.Abs;abs(x)"])("uses the same argument checks for %s", (script) => {
-		expect(() => new Affinirum(script, { variables: { x: Type.OptionalInteger } })).toThrow(/cannot be called/);
+		expect(() => new Affinirum(script, { variables: { x: Type.OptionalInteger } }))
+			.toThrow(/mismatch with expected type float\|integer/);
 		const expression = new Affinirum(script, { variables: { x: Type.Integer } });
 		expect(expression.evaluate({ x: -2n })).toBe(2);
 	});
@@ -93,11 +94,14 @@ vfunc(cfunc)
 	it.each([
 		"~(s:string):string{s.UpperCase}",
 		"~(a:integer,b:integer):integer{a+b}",
-		"2",
-		"null",
 	])("requires the call to match both functions in a union with %s", (alternative) => {
 		const script = `val f=if flag{~(n:integer):integer{n}}else{${alternative}};f(1)`;
 		expect(() => new Affinirum(script)).toThrow(/cannot be called with 1 argument/);
+	});
+
+	it.each(["2", "null"])("rejects a callee union containing %s", (alternative) => {
+		const script = `val f=if flag{~(n:integer):integer{n}}else{${alternative}};f(1)`;
+		expect(() => new Affinirum(script)).toThrow(/mismatch with expected type function/);
 	});
 
 	it("matches one signature per callable when a union includes an overloaded function", () => {
@@ -108,7 +112,7 @@ vfunc(cfunc)
 		const config = { variables: { overloaded } };
 		const script = "val f=if flag{overloaded}else{~(n:integer):string{n.Format}};";
 		const expression = new Affinirum(script + "f(1)", config);
-		expect(expression.type.equate(Type.union(Type.Integer, Type.String))).toBe(true);
+		expect(expression.type.equals(Type.union(Type.Integer, Type.String))).toBe(true);
 		expect(expression.evaluate({ flag: true, overloaded: (value: bigint | string) => value })).toBe(1n);
 		expect(expression.evaluate({ flag: false, overloaded: (value: bigint | string) => value })).toBe("1");
 		expect(() => new Affinirum(script + "f('two')", config)).toThrow(/cannot be called with 1 argument/);
@@ -137,8 +141,8 @@ vfunc(cfunc)
 
 	it.each([false, true])("revalidates compiled arguments with variadic=%s", (variadic) => {
 		const type = Type.functionType([
-			[Type.Integer, [Type.Integer, variadic ? Type.arrayType([Type.String]) : Type.String], variadic],
-			[Type.Integer, [Type.String, variadic ? Type.arrayType([Type.Integer]) : Type.Integer], variadic],
+			[Type.Integer, [Type.Integer, variadic ? Type.arrayType(Type.String) : Type.String], variadic],
+			[Type.Integer, [Type.String, variadic ? Type.arrayType(Type.Integer) : Type.Integer], variadic],
 		]);
 		const call = variadic ? "f(x=1,y=1,y=1)" : "f(x=1,y=1)";
 		expect(() => new Affinirum(`var x:integer|string=0;var y:integer|string=0;${call}`, { variables: { f: type } }))
@@ -150,14 +154,14 @@ vfunc(cfunc)
 
 	it("infers an implicit input passed through an argument block", () => {
 		const expression = new Affinirum("val f=~(n:integer):integer{n};f({x})");
-		expect(expression.variables().x.equate(Type.Integer)).toBe(true);
+		expect(expression.variables().x.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate({ x: 1n })).toBe(1n);
 	});
 
 	it.each(["{x}", "if choose{x}else{1}", "{val y=x;y}"])("checks the compiled argument type of %s", (argument) => {
 		expect(() => new Affinirum(`val f=~(n:integer):integer{n};f(${argument})`, {
 			variables: { x: Type.union(Type.Integer, Type.String), choose: Type.Boolean },
-		})).toThrow(/cannot be called/);
+		})).toThrow(/mismatch with expected type integer/);
 	});
 
 	it.each<[string, Type]>([
@@ -166,21 +170,21 @@ vfunc(cfunc)
 	])("infers an implicit input in %s and checks a declared union at compile time", (argument, type) => {
 		const f = Type.functionType([[Type.Integer, [type]]]);
 		const expression = new Affinirum(`f(${argument})`, { variables: { f } });
-		expect(expression.variables().x.equate(Type.Integer)).toBe(true);
+		expect(expression.variables().x.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate({ x: 1n, f: () => 1n })).toBe(1n);
 		expect(() => new Affinirum(`f(${argument})`, {
 			variables: { f, x: Type.union(Type.Integer, Type.String) },
-		})).toThrow(/cannot be called/);
+		})).toThrow(/mismatch with expected type integer/);
 	});
 
 	it("uses the compiled index type to narrow the next argument expectation", () => {
 		const type = Type.functionType([
-			[Type.Integer, [Type.Integer, Type.arrayType([Type.Integer])]],
-			[Type.String, [Type.String, Type.arrayType([Type.String])]],
+			[Type.Integer, [Type.Integer, Type.arrayType(Type.Integer)]],
+			[Type.String, [Type.String, Type.arrayType(Type.String)]],
 		]);
-		const expression = new Affinirum("var a:[string]=['two'];f(a[0]::string,[value])", { variables: { f: type } });
-		expect(expression.variables().value.equate(Type.String)).toBe(true);
-		expect(expression.type.equate(Type.String)).toBe(true);
+		const expression = new Affinirum("var a:[...string]=['two'];f(a[0]::string,[value])", { variables: { f: type } });
+		expect(expression.variables().value.equals(Type.String)).toBe(true);
+		expect(expression.type.equals(Type.String)).toBe(true);
 		expect(expression.evaluate({
 			f: (first: string, values: string[]) => first + values[0],
 			value: "!",
@@ -194,8 +198,8 @@ vfunc(cfunc)
 		]);
 		const union = Type.union(Type.Integer, Type.String);
 		const expression = new Affinirum("f(x)", { variables: { f, x: Type.Unknown } });
-		expect(expression.variables().x.equate(Type.Unknown)).toBe(true);
-		expect(expression.type.equate(union)).toBe(true);
+		expect(expression.variables().x.equals(Type.Unknown)).toBe(true);
+		expect(expression.type.equals(union)).toBe(true);
 		expect(() => new Affinirum("f(x)", { type: Type.Integer, variables: { f, x: Type.Unknown } }))
 			.toThrow(/type integer\|string mismatch with expected type integer/);
 	});
@@ -206,17 +210,17 @@ vfunc(cfunc)
 			[Type.Number, [Type.Number]],
 		]);
 		const expression = new Affinirum("f(x)", { variables: { f, x: Type.Integer } });
-		expect(expression.type.equate(Type.Integer)).toBe(true);
+		expect(expression.type.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate({ f: (value: bigint) => value, x: 1n })).toBe(1n);
 	});
 
 	it("retains array overloads until the next argument is compiled", () => {
 		const type = Type.functionType([
-			[Type.Integer, [Type.arrayType([Type.Integer]), Type.Integer]],
-			[Type.String, [Type.arrayType([Type.String]), Type.String]],
+			[Type.Integer, [Type.arrayType(Type.Integer), Type.Integer]],
+			[Type.String, [Type.arrayType(Type.String), Type.String]],
 		]);
-		const expression = new Affinirum("var a:[string]=['two'];f([value],a[0]::string)", { variables: { f: type } });
-		expect(expression.type.equate(Type.String)).toBe(true);
+		const expression = new Affinirum("var a:[...string]=['two'];f([value],a[0]::string)", { variables: { f: type } });
+		expect(expression.type.equals(Type.String)).toBe(true);
 		expect(expression.evaluate({
 			f: (values: string[], last: string) => values[0] + last,
 			value: "one",
@@ -225,12 +229,12 @@ vfunc(cfunc)
 
 	it.each([false, true])("resolves a complete overload at compile time with variadic=%s", (variadic) => {
 		const type = Type.functionType([
-			[Type.Integer, [variadic ? Type.arrayType([Type.Integer]) : Type.Integer], variadic],
-			[Type.String, [variadic ? Type.arrayType([Type.String]) : Type.String], variadic],
+			[Type.Integer, [variadic ? Type.arrayType(Type.Integer) : Type.Integer], variadic],
+			[Type.String, [variadic ? Type.arrayType(Type.String) : Type.String], variadic],
 		]);
 		const f = (value: bigint | string) => value;
 		const expression = new Affinirum("var x:integer|string=0;f(x=1)", { variables: { f: type } });
-		expect(expression.type.equate(Type.Integer)).toBe(true);
+		expect(expression.type.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate({ f })).toBe(1n);
 		const union = Type.union(Type.Integer, Type.String);
 		expect(() => new Affinirum("f(value)", { variables: { f: type, value: union } })).toThrow(/cannot be called/);
@@ -244,7 +248,26 @@ vfunc(cfunc)
 		expect(() => new Affinirum(`
 val use = ~(f: ~(float | integer):integer):integer { f(1.5) };
 use(~(x:integer):integer { x })
-		`)).toThrow(/cannot be called with 1 argument/);
+		`)).toThrow(/mismatch with expected type ~\(float\|integer\):integer/);
+	});
+
+	it("rejects a replacement that requires an argument callers may omit", () => {
+		expect(() => new Affinirum("val f:~(integer?):integer=~(x:integer):integer{x};f()"))
+			.toThrow(/mismatch with expected type/);
+	});
+
+	it("allows null before a required parameter without allowing the required parameter to be omitted", () => {
+		const fn = "(~(x:integer?,y:integer):integer{y})";
+		expect(new Affinirum(`${fn}(null,2)`).evaluate()).toBe(2n);
+		expect(() => new Affinirum(`${fn}(null)`)).toThrow(/cannot be called with 1 argument/);
+	});
+
+	it.each([
+		"~(item:integer):boolean{item>1}",
+		"~(item:integer,index:integer):boolean{index>0}",
+		"~(item:integer,index:integer,items:array):boolean{index>0 & items.Length==3}",
+	])("allows Filter to use %s", (callback) => {
+		expect(new Affinirum(`[1,2,3].Filter(${callback})`).evaluate()).toEqual([2n, 3n]);
 	});
 	it.each<[string, RegExp]>([
 		["[1].Derive(~(value:integer):integer{'bad'})", /type string mismatch with expected type integer/],

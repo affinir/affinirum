@@ -153,7 +153,7 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "val a:float=myvar/3;var b=mv*2;a/b",
+			script: "val a:float=(myvar::float)/3;var b=mv*2;a/b",
 			cases: [
 				{ values: { myvar: 6, mv: 1 }, result: 1 },
 				{ values: { myvar: 30, mv: 5 }, result: 1 },
@@ -219,7 +219,7 @@ describe("Number function test", () => {
 			["(-2) ** 2", 4n],
 		])("evaluates %s with integer type", (script, expected) => {
 			const expression = new Affinirum(script);
-			expect(expression.type.equate(Type.Integer)).toBe(true);
+			expect(expression.type.equals(Type.Integer)).toBe(true);
 			expect(expression.evaluate()).toBe(expected);
 		});
 
@@ -228,7 +228,7 @@ describe("Number function test", () => {
 				strict: true,
 				variables: { a: Type.Integer, b: Type.Integer },
 			});
-			expect(expression.type.equate(Type.Integer)).toBe(true);
+			expect(expression.type.equals(Type.Integer)).toBe(true);
 			expect(expression.evaluate({ a: 2n, b: 3n })).toBe(8n);
 		});
 
@@ -252,14 +252,14 @@ describe("Number function test", () => {
 			["9.0.Power(0.5)", "a.Power(b)", 9, 0.5, 3],
 		])("evaluates %s with literals and declared float inputs", (literalScript, inputScript, a, b, expected) => {
 			const literal = new Affinirum(literalScript);
-			expect(literal.type.equate(Type.Float)).toBe(true);
+			expect(literal.type.equals(Type.Float)).toBe(true);
 			expect(literal.evaluate()).toBe(expected);
 
 			const expression = new Affinirum(inputScript, {
 				strict: true,
 				variables: { a: Type.Float, b: Type.Float },
 			});
-			expect(expression.type.equate(Type.Float)).toBe(true);
+			expect(expression.type.equals(Type.Float)).toBe(true);
 			expect(expression.evaluate({ a, b })).toBe(expected);
 		});
 	});
@@ -273,13 +273,13 @@ describe("Number function test", () => {
 		])("declares %s.Root(%s) as %s", (valueType, indexType, resultType, value, index) => {
 			const config = { strict: true, variables: { value: valueType, index: indexType } };
 			const expression = new Affinirum("value.Root(index)", { ...config, type: resultType });
-			expect(expression.type.equate(resultType)).toBe(true);
+			expect(expression.type.equals(resultType)).toBe(true);
 			expect(expression.evaluate({ value, index })).toBe(typeof value === "bigint" && typeof index === "bigint" ? 3n : 3);
 
 			for (const invalidIndex of typeof index === "bigint" ? [0n, -2n] : [0, -2]) {
 				const result = expression.evaluate({ value, index: invalidIndex });
 				expect(result).toBeUndefined();
-				expect(expression.type.acceptValue(result)).toBe(true);
+				expect(expression.type.acceptsValue(result)).toBe(true);
 			}
 
 			const result = expression.evaluate({ value: typeof value === "bigint" ? -16n : -16, index });
@@ -289,7 +289,7 @@ describe("Number function test", () => {
 			else {
 				expect(result).toBeNaN();
 			}
-			expect(expression.type.acceptValue(result)).toBe(true);
+			expect(expression.type.acceptsValue(result)).toBe(true);
 			expect(() => new Affinirum("value.Root(index)", { ...config, type: resultType.toMandatory() }))
 				.toThrow(/mismatch with expected type/);
 		});
@@ -299,7 +299,7 @@ describe("Number function test", () => {
 			["(-16).Root(2)", Type.Void, undefined],
 		])("folds %s to its concrete result type", (script, type, expected) => {
 			const expression = new Affinirum(script);
-			expect(expression.type.equate(type)).toBe(true);
+			expect(expression.type.equals(type)).toBe(true);
 			expect(expression.evaluate()).toBe(expected);
 		});
 
@@ -308,7 +308,7 @@ describe("Number function test", () => {
 				strict: true,
 				variables: { a: Type.Integer, b: Type.Integer },
 			});
-			expect(expression.type.equate(Type.OptionalInteger)).toBe(true);
+			expect(expression.type.equals(Type.OptionalInteger)).toBe(true);
 			expect(expression.evaluate({ a: 9n, b: 2n })).toBe(3n);
 			expect(expression.evaluate({ a: -16n, b: 2n })).toBeUndefined();
 		});

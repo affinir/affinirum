@@ -9,12 +9,17 @@ import { Variable } from "../Variable.js";
 
 export class BlockNode extends Node {
 
+	protected _subnodes: Node[];
+	protected readonly _variables: Variable[];
+
 	constructor(
 		span: ParserSpan,
-		protected _subnodes: Node[],
-		protected readonly _variables: Variable[] = [],
+		subnodes: Node[],
+		variables: Variable[] = [],
 	) {
 		super(span);
+		this._subnodes = subnodes;
+		this._variables = variables;
 	}
 
 	override get type(): Type {
@@ -24,30 +29,22 @@ export class BlockNode extends Node {
 		return this._subnodes.length ? this._subnodes[this._subnodes.length - 1].type : super.type;
 	}
 
-	override acceptType(type: Type): boolean {
-		return this.type.isNever || (this._subnodes.at(-1)?.acceptType(type) ?? super.acceptType(type));
+	override satisfies(type: Type): boolean {
+		return this.type.isNever || (this._subnodes.at(-1)?.satisfies(type) ?? super.satisfies(type));
 	}
 
-	override validateType(type: Type): void {
-		const last = this._subnodes.at(-1);
-		if (last && !this.type.isNever) {
-			last.validateType(type);
-		}
-		else {
-			super.validateType(type);
-		}
-	}
-
-	override compile(hint: Type): Node {
+	override compile(type = Type.Unknown): Node {
 		if (this._subnodes.length === 0) {
-			return new ConstantNode(this, Constant.Null);
+			return new ConstantNode(this, Constant.Null).compile(type);
 		}
 		let constant = true;
+		let never = false;
 		for (let i = 0, last = this._subnodes.length - 1; i < this._subnodes.length; ++i) {
-			this._subnodes[i] = this._subnodes[i].compile(i < last ? Type.Unknown : hint);
-			constant &&= this._subnodes[i].constant;
+			const node: Node = this._subnodes[i] = this._subnodes[i].compile(i < last || never ? Type.Unknown : type);
+			never ||= node.type.isNever;
+			constant &&= node.constant;
 		}
-		if (constant && !this.type.intersect(Type.Reference)) {
+		if (constant && !this.type.intersects(Type.Reference)) {
 			return new ConstantNode(this, new Constant(this.evaluate(new CallFrame()), this.type));
 		}
 		if (this._subnodes.length === 1 && this._variables.length === 0) {

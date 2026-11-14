@@ -3,7 +3,7 @@ import { parseLiteralBuffer } from "./native/Buffer.js";
 import { funcAdd } from "./native/Aggregable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, isNumericSymbol, parseLiteralNumber } from "./native/Number.js";
-import { funcCoalesce, funcEqual, funcNotEqual } from "./native/Unknown.js";
+import { funcCoalesce, funcEquals, funcNotEquals } from "./native/Unknown.js";
 import { isTokenStartSymbol, isTokenSymbol, parseLiteralString } from "./native/String.js";
 import { parseLiteralTimestamp } from "./native/Timestamp.js";
 import { Constant } from "./Constant.js";
@@ -52,9 +52,7 @@ export class ParserState extends ParserSpan {
 
 	protected _fragment: Literal | Assignment | Constant | Type | symbol | string | undefined;
 
-	constructor(
-		script: string,
-	) {
+	constructor(script: string) {
 		super(script);
 	}
 
@@ -305,13 +303,13 @@ export class ParserState extends ParserSpan {
 					break;
 				case "!":
 					switch (this._script.charAt(this._end)) {
-						case "=": ++this._end; this._fragment = funcNotEqual; break;
+						case "=": ++this._end; this._fragment = funcNotEquals; break;
 						default: this._fragment = funcNot; break;
 					}
 					break;
 				case "=":
 					switch (this._script.charAt(this._end)) {
-						case "=": ++this._end; this._fragment = funcEqual; break;
+						case "=": ++this._end; this._fragment = funcEquals; break;
 						case ">": ++this._end; this._fragment = idResult; break;
 						default: this._fragment = funcAssignment; break;
 					}

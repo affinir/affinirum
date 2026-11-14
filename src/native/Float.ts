@@ -74,8 +74,8 @@ export const formatLiteralFloat = (value: number) => {
 		: str;
 };
 
-const typeNumberOrArray = Type.union(Type.Number, Type.arrayType([Type.Number]));
-const typeAggregator = Type.functionType([[Type.Float, [Type.arrayType([typeNumberOrArray])], true]]);
+const typeNumberOrArray = Type.union(Type.Number, Type.arrayType(Type.Number));
+const typeAggregator = Type.functionType([[Type.Float, [Type.arrayType(typeNumberOrArray)], true]]);
 const typeTransform = Type.functionType([[Type.Float, [Type.Number]]]);
 
 const funcSum = new Constant(

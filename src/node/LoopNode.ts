@@ -7,34 +7,31 @@ import { CallFrame } from "../CallFrame.js";
 
 export class LoopNode extends Node {
 
+	protected _cnode: Node;
+	protected _subnode: Node;
+
 	constructor(
 		span: ParserSpan,
-		protected _cnode: Node,
-		protected _subnode: Node,
+		cnode: Node,
+		subnode: Node,
 	) {
 		super(span);
+		this._cnode = cnode;
+		this._subnode = subnode;
 	}
 
 	override get type(): Type {
 		return this._cnode.type.isNever ? Type.Never : this._subnode.type.toOptional();
 	}
 
-	override acceptType(type: Type): boolean {
-		return this.type.isNever || super.acceptType(type) && this._subnode.acceptType(type);
+	override satisfies(type: Type): boolean {
+		return this.type.isNever || super.satisfies(type) && this._subnode.satisfies(type);
 	}
 
-	override validateType(type: Type): void {
-		super.validateType(type);
-		if (!this.type.isNever) {
-			this._subnode.validateType(type);
-		}
-	}
-
-	override compile(hint: Type): Node {
+	override compile(type = Type.Unknown): Node {
 		this._cnode = this._cnode.compile(Type.Boolean);
-		this._cnode.validateType(this._cnode.type.isOptional ? Type.OptionalBoolean : Type.Boolean);
-		this._subnode = this._subnode.compile(hint);
-		return this;
+		this._subnode = this._subnode.compile(this._cnode.type.isNever ? Type.Unknown : type);
+		return super.compile(type);
 	}
 
 	override evaluate(frame: CallFrame): Value {

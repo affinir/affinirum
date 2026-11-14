@@ -63,8 +63,8 @@ describe("Prototype property test", () => {
 	});
 
 	it("does not expose the JavaScript Function constructor through parsed objects", () => {
-		const propertyExpression = new Affinirum("val a = JSON.Parse(\"{}\"); a.constructor");
-		expect(propertyExpression.evaluate({})).toBeUndefined();
+		expect(() => new Affinirum("val a = JSON.Parse(\"{}\"); a.constructor"))
+			.toThrow(/mismatch with expected type/);
 		const castPropertyExpression = new Affinirum("JSON.Parse(\"{}\")::object.constructor");
 		expect(castPropertyExpression.evaluate({})).toBeUndefined();
 		const constructorExpression = new Affinirum("JSON.Parse(\"{}\")::object.constructor(\"return 7\")()");

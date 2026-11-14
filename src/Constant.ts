@@ -3,10 +3,16 @@ import { Type } from "./Type.js";
 
 export class Constant {
 
+	protected readonly _value: Value;
+	protected _type: Type;
+
 	constructor(
-		protected readonly _value: Value,
-		protected _type: Type = Type.of(_value),
-	) {}
+		value: Value,
+		type: Type = Type.of(value),
+	) {
+		this._value = value;
+		this._type = type;
+	}
 
 	get value() {
 		return this._value;

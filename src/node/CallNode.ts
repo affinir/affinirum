@@ -9,22 +9,26 @@ import { CallFrame } from "../CallFrame.js";
 
 export class CallNode extends InvocationNode {
 
+	protected _fnode: Node;
+	protected _subnodes: Node[];
 	protected _type: Type;
 
 	constructor(
 		span: ParserSpan,
-		protected _fnode: Node,
-		protected _subnodes: Node[],
+		fnode: Node,
+		subnodes: Node[],
 	) {
 		super(span);
-		const argc = this._subnodes.length;
-		const signatures = this._fnode.type.functionAtoms().flatMap((atom) =>
+		this._fnode = fnode;
+		this._subnodes = subnodes;
+		const argc = subnodes.length;
+		const signatures = fnode.type.functionAtoms().flatMap((atom) =>
 			atom.signatures
 		).filter((signature) =>
 			signature.minArity <= argc && argc <= signature.maxArity
 		);
 		if (!signatures.length) {
-			this.throwError(`value of type ${this._fnode.type} cannot be called with ${argc} argument(s)`);
+			this.throwError(`value of type ${fnode.type} cannot be called with ${argc} argument(s)`);
 		}
 		this._type = Type.union(...signatures.map((signature) => signature.retType));
 	}
@@ -33,11 +37,12 @@ export class CallNode extends InvocationNode {
 		return this._type;
 	}
 
-	override compile(): Node {
+	override compile(type = Type.Unknown): Node {
 		this._fnode = this._fnode.compile(Type.Function);
 		this._type = this.compileArguments(this._fnode.type, this._subnodes);
+		super.compile(type);
 		if (this._fnode.constant && !this._fnode.type.isVolatileFunction
-			&& this._subnodes.every((node) => node.constant) && !this.type.intersect(Type.Reference)) {
+			&& this._subnodes.every((node) => node.constant) && !this.type.intersects(Type.Reference)) {
 			return new ConstantNode(this, new Constant(this.evaluate(new CallFrame()), this.type));
 		}
 		return this;

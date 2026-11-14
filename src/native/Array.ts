@@ -1,9 +1,9 @@
 import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
-import { equate } from "./Unknown.js";
+import { equals } from "./Unknown.js";
 
-const typePredicate = Type.functionType([[Type.Boolean, [Type.Unknown, Type.OptionalInteger, Type.OptionalArray]]]);
+const typePredicate = Type.functionType([[Type.Boolean, [Type.Unknown, Type.Integer, Type.Array]]]);
 const typeItemFinder = Type.functionType([[Type.Unknown, [Type.Array, typePredicate]]]);
 const typeIndexFinder = Type.functionType([[Type.OptionalInteger, [Type.Array, typePredicate]]]);
 const typeConditionSet = Type.functionType([[Type.Boolean, [Type.Array, typePredicate]]]);
@@ -85,7 +85,7 @@ export const funcDerive = new Constant(
 		value?.map((v, i, a) => transform(v, BigInt(i), a)),
 	Type.functionType([[Type.Array, [
 		Type.Array,
-		Type.functionType([[Type.Unknown, [Type.Unknown, Type.OptionalInteger, Type.OptionalArray]]]),
+		Type.functionType([[Type.Unknown, [Type.Unknown, Type.Integer, Type.Array]]]),
 	]]]),
 );
 
@@ -102,7 +102,7 @@ export const funcReduce = new Constant(
 			: value?.reduce((p, v, i, a) => reducer(p, v, BigInt(i), a)),
 	Type.functionType([[Type.Unknown, [
 		Type.Array,
-		Type.functionType([[Type.Unknown, [Type.Unknown, Type.Unknown, Type.OptionalInteger, Type.OptionalArray]]]),
+		Type.functionType([[Type.Unknown, [Type.Unknown, Type.Unknown, Type.Integer, Type.Array]]]),
 		Type.Unknown,
 	]]]),
 );
@@ -122,14 +122,14 @@ export const funcCompose = new Constant(
 	},
 	Type.functionType([[Type.Object, [
 		Type.Array,
-		Type.functionType([[Type.Unknown, [Type.Object, Type.String, Type.OptionalInteger, Type.OptionalArray]]]),
+		Type.functionType([[Type.Unknown, [Type.Object, Type.String, Type.Integer, Type.Array]]]),
 	]]]),
 );
 
 const funcJoin = new Constant(
 	(...values: (Value[] | Value[][])[]) =>
 		values.flat(),
-	Type.functionType([[Type.Array, [Type.arrayType([Type.Array])], true]]),
+	Type.functionType([[Type.Array, [Type.arrayType(Type.Array)], true]]),
 );
 
 const funcRange = new Constant(
@@ -144,7 +144,7 @@ const funcUnique = new Constant(
 	(value: Value[]) => {
 		const result: Value[] = [];
 		value?.forEach((i) => {
-			if (result.every((v) => !equate(v, i))) {
+			if (result.every((v) => !equals(v, i))) {
 				result.push(i);
 			}
 		});
@@ -155,13 +155,13 @@ const funcUnique = new Constant(
 
 const funcIntersection = new Constant(
 	(value1: Value[], value2: Value[]) =>
-		value1?.filter((i) => value2?.some((v) => equate(v, i))) ?? [],
+		value1?.filter((i) => value2?.some((v) => equals(v, i))) ?? [],
 	typeArrayOperator,
 );
 
 const funcDifference = new Constant(
 	(value1: Value[], value2: Value[]) =>
-		[...value1?.filter((i) => value2?.every((v) => !equate(v, i))) ?? [], ...value2?.filter((i) => value1?.every((v) => !equate(v, i))) ?? []],
+		[...value1?.filter((i) => value2?.every((v) => !equals(v, i))) ?? [], ...value2?.filter((i) => value1?.every((v) => !equals(v, i))) ?? []],
 	typeArrayOperator,
 );
 

@@ -118,8 +118,8 @@ export const formatLiteralInteger = (value: bigint) => {
 	return int64(value).toString();
 };
 
-const typeIntegerOrArray = Type.union(Type.Integer, Type.arrayType([Type.Integer]));
-const typeAggregator = Type.functionType([[Type.Integer, [Type.arrayType([typeIntegerOrArray])], true]]);
+const typeIntegerOrArray = Type.union(Type.Integer, Type.arrayType(Type.Integer));
+const typeAggregator = Type.functionType([[Type.Integer, [Type.arrayType(typeIntegerOrArray)], true]]);
 
 const funcSum = new Constant(
 	(...values: (bigint | bigint[])[]) =>

@@ -202,7 +202,7 @@ class IPSet {
 
 }
 
-const typeStringOrArray = Type.union(Type.String, Type.arrayType([Type.String]));
+const typeStringOrArray = Type.union(Type.String, Type.arrayType(Type.String));
 
 const funcMatchIP = new Constant(
 	(values: string[], ...search: (string | string[])[]) => {
@@ -220,7 +220,7 @@ const funcMatchIP = new Constant(
 		catch {}
 		return false;
 	},
-	Type.functionType([[Type.Boolean, [Type.arrayType([Type.String]), Type.arrayType([typeStringOrArray])], true]]),
+	Type.functionType([[Type.Boolean, [Type.arrayType(Type.String), Type.arrayType(typeStringOrArray)], true]]),
 );
 
 const funcEncodeIP = new Constant(

@@ -74,14 +74,14 @@ describe("Composite function test", () => {
 			script: "a.b.c.d ?: 10",
 			cases: [
 				{ values: { a: { b: { c: { d: 50n } } } }, result: 50n },
-				{ values: { a: { b: {} } }, result: 10n },
+				{ values: { a: { b: { c: {} } } }, result: 10n },
 			],
 		},
 		{
-			script: "a[4][0][0] ?: 10",
+			script: "a[0][0][4] ?: 10",
 			cases: [
-				{ values: { a: [0] }, result: 10n },
-				{ values: { a: [[0]] }, result: 10n },
+				{ values: { a: [[[]]] }, result: 10n },
+				{ values: { a: [[[0]]] }, result: 10n },
 			],
 		},
 		{
@@ -115,7 +115,7 @@ describe("Composite function test", () => {
 			],
 		},
 		{
-			script: "[\"entity\":[d.id:[\"a1\", \"a2\"]]].entity.abc[0]",
+			script: "val entity=[\"entity\":[d.id:[\"a1\", \"a2\"]]].entity::object;if entity?abc{(entity.abc::array)[0]}",
 			cases: [
 				{ values: { d: { id: "abc" } }, result: "a1" },
 				{ values: { d: { id: "a" } }, result: undefined },

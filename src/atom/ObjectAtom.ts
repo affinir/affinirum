@@ -3,86 +3,94 @@ import { Type } from "../Type.js";
 
 export class ObjectAtom implements IAtom {
 
-	protected readonly _valTypes: [string | undefined, Type][];
+	protected readonly _valTypes: Type | readonly (readonly [string, Type])[];
 
 	constructor(
-		valTypes: readonly [key: string | undefined, valType: Type][] = [],
+		valTypes: Type | readonly (readonly [key: string, valType: Type])[] = [],
 	) {
-		this._valTypes = valTypes[0]?.[0] == null ? [...valTypes] : [...new Map(valTypes)];
-	}
-
-	private get _generic(): boolean {
-		return this._valTypes.length === 0;
+		this._valTypes = Array.isArray(valTypes) ? [...new Map<string, Type>(valTypes)] : valTypes;
 	}
 
 	get isUniform(): boolean {
-		return this._valTypes.length < 2 && this._valTypes[0]?.[0] === undefined;
+		return !Array.isArray(this._valTypes);
 	}
 
-	valTypes(): [string | undefined, Type][] {
+	get isRecord(): boolean {
+		return Array.isArray(this._valTypes);
+	}
+
+	get types(): Type | readonly (readonly [string, Type])[] {
 		return this._valTypes;
 	}
 
+	valTypes(): readonly (readonly [string | undefined, Type])[] {
+		const types = this._valTypes;
+		return types instanceof Type ? [[undefined, types]] : types;
+	}
+
 	valType(key: string | undefined): Type | undefined {
-		return this._valTypes.find((i) => i[0] === key)?.[1];
+		const types = this._valTypes;
+		return types instanceof Type ? types : types.find(([name]) => name === key)?.[1];
 	}
 
-	equate(atom: IAtom): boolean {
+	equals(atom: IAtom): boolean {
 		if (!(atom instanceof ObjectAtom)) {
 			return false;
 		}
-		return this._valTypes.length === atom._valTypes.length && this._valTypes.every(([key, type]) => type.equate(atom.valType(key)));
-	}
-
-	accept(atom: IAtom): boolean {
-		if (atom instanceof ObjectAtom) {
-			if (this._generic || atom._generic) {
-				return true;
-			}
-			if (this.isUniform) {
-				return atom._valTypes.every(([, type]) => this._valTypes[0][1].accept(type));
-			}
-			for (const [key, type] of this._valTypes) {
-				const atype = atom.isUniform
-					? atom._valTypes[0][1].toOptional()
-					: atom.valType(key) ?? Type.Void;
-				if (!type.accept(atype)) {
-					return false;
-				}
-			}
-			return true;
+		const types = this._valTypes;
+		const other = atom._valTypes;
+		if (types instanceof Type) {
+			return other instanceof Type && types.equals(other);
 		}
-		return false;
+		return !(other instanceof Type)
+			&& types.length === other.length
+			&& types.every(([key, type]) => type.equals(atom.valType(key)));
 	}
 
-	intersect(atom: IAtom): boolean {
+	accepts(atom: IAtom): boolean {
 		if (!(atom instanceof ObjectAtom)) {
 			return false;
 		}
-		if (this._generic || atom._generic) {
-			return true;
+		const types = this._valTypes;
+		const other = atom._valTypes;
+		if (types instanceof Type) {
+			return atom.valTypes().every(([, type]) => types.accepts(type));
 		}
-		if (this.isUniform) {
-			return atom.isUniform || atom.intersect(this);
+		if (other instanceof Type) {
+			return types.every(([, type]) => type.isOptional && type.accepts(other));
 		}
-		for (const [key, type] of this._valTypes) {
-			const atype = atom.isUniform ? atom._valTypes[0][1] : atom.valType(key);
-			if (atype && !type.intersect(atype) && !(atom.isUniform && type.accept(Type.Void))) {
-				return false;
-			}
+		return types.every(([key, type]) => type.accepts(atom.valType(key) ?? Type.Void));
+	}
+
+	intersects(atom: IAtom): boolean {
+		if (!(atom instanceof ObjectAtom)) {
+			return false;
 		}
-		return true;
+		const types = this._valTypes;
+		const other = atom._valTypes;
+		if (types instanceof Type) {
+			// Any two uniform objects can both be empty.
+			return other instanceof Type || atom.intersects(this);
+		}
+		if (other instanceof Type) {
+			return types.every(([, type]) => type.isOptional || type.intersects(other));
+		}
+		return types.every(([key, type]) => {
+			const otherType = atom.valType(key);
+			return !otherType || type.intersects(otherType) || type.isOptional && otherType.isOptional;
+		});
 	}
 
 	weight(): number {
-		return 0x100000000 + this._valTypes.reduce((acc, i) => acc + i[1].weight(), 0);
+		return 0x100000000 + this.valTypes().reduce((acc, [, type]) => acc + type.weight(), 0);
 	}
 
 	toString(): string {
-		if (this._generic) {
-			return "object";
+		const types = this._valTypes;
+		if (types instanceof Type) {
+			return types.isUnknown ? "object" : `[...:${types}]`;
 		}
-		return `[${this._valTypes.map(([k, v]) => `${k == null ? "" : `"${k}"`}:${v}`).join(",")}]`;
+		return types.length ? `[${types.map(([key, type]) => `"${key}":${type}`).join(",")}]` : "[:]";
 	}
 
 }

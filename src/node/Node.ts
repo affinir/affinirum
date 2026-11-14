@@ -5,9 +5,7 @@ import { CallFrame } from "../CallFrame.js";
 
 export abstract class Node extends ParserSpan {
 
-	constructor(
-		span: ParserSpan,
-	) {
+	constructor(span: ParserSpan) {
 		super(span);
 	}
 
@@ -15,17 +13,17 @@ export abstract class Node extends ParserSpan {
 		return Type.Void;
 	}
 
-	abstract compile(hint: Type): Node;
-	abstract evaluate(frame: CallFrame): Value;
-
-	acceptType(type: Type): boolean {
-		return type.accept(this.type);
-	}
-
-	validateType(type: Type): void {
-		if (!type.isVoid && !this.acceptType(type)) {
+	compile(type = Type.Unknown): Node {
+		if (!this.satisfies(type)) {
 			this._throwTypeError(type);
 		}
+		return this;
+	}
+
+	abstract evaluate(frame: CallFrame): Value;
+
+	satisfies(type: Type): boolean {
+		return type.accepts(this.type);
 	}
 
 	get constant(): boolean {

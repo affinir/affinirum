@@ -6,11 +6,14 @@ import { CallFrame } from "../CallFrame.js";
 
 export class JumpNode extends Node {
 
+	protected _action: "exit" | "next";
+
 	constructor(
 		span: ParserSpan,
-		protected _action: "exit" | "next",
+		action: "exit" | "next",
 	) {
 		super(span);
+		this._action = action;
 	}
 
 	get action() {

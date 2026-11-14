@@ -23,35 +23,40 @@ export class TypeParser {
 			return type;
 		}
 		else if (state.isBracketsOpen) { // array or object type
-			const valTypes: [number | string | undefined, Type][] = [];
-			let index = 0, colon = false;
-			while (!state.next().isBracketsClose) {
+			if (state.next().isEllipsis) {
+				const object = state.next().isColon;
+				if (object) {
+					state.next();
+				}
+				const valType = this.parse(state, scope);
+				state.closeBrackets();
+				state.next();
+				return object ? Type.objectType(valType) : Type.arrayType(valType);
+			}
+			const valTypes: [string, Type][] = [];
+			let index = 0, colon = state.isColon;
+			if (colon) {
+				state.next().closeBrackets();
+			}
+			while (!state.isBracketsClose) {
 				if (state.isLiteral && typeof state.literal.value === "string") {
 					const key = state.literal.value;
-					state.next();
-					state.separateByColon();
-					state.next();
-					valTypes.push([key, this.parse(state, scope)]);
+					state.next().separateByColon();
+					valTypes.push([key, this.parse(state.next(), scope)]);
 					colon = true;
-				}
-				else if (state.isColon) {
-					colon = true;
-					if (!state.next().isBracketsClose) {
-						valTypes.push([undefined, this.parse(state, scope)]);
-						break;
-					}
 				}
 				else {
-					valTypes.push([index++, this.parse(state, scope)]);
+					valTypes.push([String(index++), this.parse(state, scope)]);
 				}
 				if (!state.isComma) {
 					break;
 				}
+				state.next();
 			}
 			state.closeBrackets();
 			state.next();
 			return colon
-				? Type.objectType(valTypes.map(([key, type]) => [key as string | undefined, type]))
+				? Type.objectType(valTypes)
 				: Type.arrayType(valTypes.map(([, v]) => v));
 		}
 		else if (state.isTilda) { // function type
@@ -64,7 +69,7 @@ export class TypeParser {
 					state.next();
 				}
 				const argType = this.parse(state, scope);
-				argTypes.push(argType);
+				argTypes.push(variadic ? Type.arrayType(argType) : argType);
 				if (variadic) {
 					break;
 				}

@@ -1,13 +1,13 @@
 import { Constant } from "../Constant.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
-import { BufferFormatting, formatBuffer, concatBuffers, equateBuffers, EmptyBuffer } from "./Buffer.js";
+import { BufferFormatting, formatBuffer, concatBuffers, equalsBuffers, EmptyBuffer } from "./Buffer.js";
 import { FloatEncoding, encodeFloat, formatFloat } from "./Float.js";
 import { IntegerEncoding, encodeInteger, formatInteger } from "./Integer.js";
 import { StringEncoding, encodeString } from "./String.js";
 import { TimestampEncoding, encodeTimestamp, formatTimestamp } from "./Timestamp.js";
 
-export const equate = (value1: Value, value2: Value, pairs?: WeakMap<object, WeakSet<object>>): boolean => {
+export const equals = (value1: Value, value2: Value, pairs?: WeakMap<object, WeakSet<object>>): boolean => {
 	if (value1 == null || value2 == null) {
 		return value1 == value2;
 	}
@@ -36,7 +36,7 @@ export const equate = (value1: Value, value2: Value, pairs?: WeakMap<object, Wea
 		return false;
 	}
 	if (value1 instanceof ArrayBuffer && value2 instanceof ArrayBuffer) {
-		return equateBuffers(value1, value2);
+		return equalsBuffers(value1, value2);
 	}
 	if (value1 instanceof ArrayBuffer || value2 instanceof ArrayBuffer) {
 		return false;
@@ -54,7 +54,7 @@ export const equate = (value1: Value, value2: Value, pairs?: WeakMap<object, Wea
 	if (Array.isArray(value1) && Array.isArray(value2)) {
 		if (value1.length === value2.length) {
 			for (let i = 0; i < value1.length; ++i) {
-				if (!equate(value1[i], value2[i], pairs)) {
+				if (!equals(value1[i], value2[i], pairs)) {
 					return false;
 				}
 			}
@@ -67,7 +67,7 @@ export const equate = (value1: Value, value2: Value, pairs?: WeakMap<object, Wea
 	}
 	const props = new Set([...Object.getOwnPropertyNames(value1), ...Object.getOwnPropertyNames(value2)]);
 	for (const prop of props) {
-		if (!equate((value1 as any)[prop] as Value, (value2 as any)[prop] as Value, pairs)) {
+		if (!equals((value1 as any)[prop] as Value, (value2 as any)[prop] as Value, pairs)) {
 			return false;
 		}
 	}
@@ -139,15 +139,15 @@ export const funcCoalesce = new Constant(
 	]),
 );
 
-export const funcEqual = new Constant(
+export const funcEquals = new Constant(
 	(value1: Value, value2: Value) =>
-		equate(value1, value2),
+		equals(value1, value2),
 	typeEquator,
 );
 
-export const funcNotEqual = new Constant(
+export const funcNotEquals = new Constant(
 	(value1: Value, value2: Value) =>
-		!equate(value1, value2),
+		!equals(value1, value2),
 	typeEquator,
 );
 

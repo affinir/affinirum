@@ -3,9 +3,9 @@ import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { aggregate } from "./Aggregable.js";
 
-const typeBufferArray = Type.arrayType([Type.Buffer]);
-const typeStringArray = Type.arrayType([Type.String]);
-const typeArrayArray = Type.arrayType([Type.Array]);
+const typeBufferArray = Type.arrayType(Type.Buffer);
+const typeStringArray = Type.arrayType(Type.String);
+const typeArrayArray = Type.arrayType(Type.Array);
 
 export const funcSlice = new Constant(
 	(value: ArrayBuffer | string | Value[], start: bigint = 0n, end?: bigint) =>

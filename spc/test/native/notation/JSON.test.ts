@@ -74,7 +74,7 @@ describe("JSON function test", () => {
 			strict: true,
 			variables: { value: Type.OptionalString },
 		});
-		expect(expression.type.equate(Type.String)).toBe(true);
+		expect(expression.type.equals(Type.String)).toBe(true);
 		expect(expression.evaluate({ value: undefined })).toBe("null");
 		expect(expression.evaluate({ value: "text" })).toBe("\"text\"");
 	});

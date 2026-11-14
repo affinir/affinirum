@@ -31,7 +31,7 @@ import { funcOr, funcAnd, funcNot } from "./native/Boolean.js";
 import { funcHas } from "./native/Composite.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from "./native/Number.js";
-import { funcCoalesce, funcEqual, funcNotEqual } from "./native/Unknown.js";
+import { funcCoalesce, funcEquals, funcNotEquals } from "./native/Unknown.js";
 import { parseAN, formatAN } from "./native/notation/AN.js"
 
 export class Affinirum {
@@ -75,7 +75,6 @@ export class Affinirum {
 			state.throwError("unexpected expression token or expression end");
 		}
 		this._root = this._root.compile(this._scope.type);
-		this._root.validateType(this._scope.type);
 	}
 
 	/**
@@ -125,7 +124,7 @@ export class Affinirum {
 					this._varspans.get(name)?.throwError(`undefined variable ${name}:\n`);
 				}
 				const value = normalize(values?.[name] ?? undefined);
-				if (!variable.type.acceptValue(value)) {
+				if (!variable.type.acceptsValue(value)) {
 					this._varspans.get(name)?.throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
 				}
 				frame.add(variable, value);
@@ -232,7 +231,7 @@ export class Affinirum {
 		let node = this._aggregate(state, scope);
 		while (state.operator === funcGreaterThan || state.operator === funcLessThan
 			|| state.operator === funcGreaterOrEqual || state.operator === funcLessOrEqual
-			|| state.operator === funcEqual || state.operator === funcNotEqual) {
+			|| state.operator === funcEquals || state.operator === funcNotEquals) {
 			const fnode = new ConstantNode(state, state.operator);
 			node = new CallNode(state, fnode, [node, this._aggregate(state.next(), scope)]);
 		}
@@ -513,9 +512,16 @@ export class Affinirum {
 	protected _composite(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
 		const subnodes: [number | Node, Node][] = [];
-		let index = 0, colon = false;
+		let index = 0, colon = false, ellipsis = false;
 		while (!state.next().isBracketsClose) {
-			if (state.isColon) {
+			if (state.isEllipsis) {
+				if (ellipsis) {
+					state.throwError("repeated ellipsis");
+				}
+				ellipsis = true;
+				state.next();
+			}
+			else if (state.isColon) {
 				colon = true;
 				state.next();
 				break;
@@ -538,9 +544,9 @@ export class Affinirum {
 		if (colon) {
 			return new ObjectNode(span, subnodes.map(([k, v]) =>
 				[typeof k === "number" ? new ConstantNode(v, new Constant(String(k))) : k, v] as const
-			));
+			), ellipsis);
 		}
-		return new ArrayNode(span, subnodes.map(([, v]) => v));
+		return new ArrayNode(span, subnodes.map(([, v]) => v), ellipsis);
 	}
 
 	protected _function(state: ParserState, scope: LexicalScope): Node {
@@ -566,6 +572,9 @@ export class Affinirum {
 					state.next();
 				}
 				argType = this._type.parse(state, scope);
+				if (variadic) {
+					argType = Type.arrayType(argType);
+				}
 			}
 			const variable = new LocalVariable(argType, true);
 			variables.set(token, variable);
@@ -584,7 +593,7 @@ export class Affinirum {
 		const subscope = scope.subscope(variables, returnType);
 		const subnode =  this._unit(state, subscope);
 		const functionType = Type.functionType([[returnType, args.map((v) => v.type), variadic]]);
-		return new FunctionNode(span, subnode, args, [...subscope.variables()], functionType);
+		return new FunctionNode(span, subnode, [...subscope.variables()], args, functionType);
 	}
 
 	protected _ternary(state: ParserState, scope: LexicalScope): Node {

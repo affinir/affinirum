@@ -23,6 +23,7 @@ Runs in browsers and Node.js with an ES2022 runtime. The package provides ESM, C
   - [Arrays and objects](#arrays-and-objects)
   - [Method calls and chaining](#method-calls-and-chaining)
   - [Types](#types)
+    - [Collection and variadic types](#collection-and-variadic-types)
   - [Operators and precedence](#operators-and-precedence)
 - [Embedding API](#embedding-api)
   - [Typed inputs and strict mode](#typed-inputs-and-strict-mode)
@@ -189,11 +190,10 @@ absolute(-5) // 5
 ```
 
 Functions are values and can be passed as callbacks. A final variadic parameter collects the remaining arguments into
-an array. Declare it with `...` followed by a uniform array type such as `[integer]`. Use `...[]` to accept
-arguments of any type.
+an array. Use `...integer` for integer arguments and `...??` for arguments of any type.
 
 ```text
-val sum = ~(values: ...[integer]): integer { Integer.Sum(values) };
+val sum = ~(values: ...integer): integer { Integer.Sum(values) };
 sum(1, 2, 3) // 6
 ```
 
@@ -224,6 +224,7 @@ Use `+` to concatenate arrays. Wrap an individual item in an array when adding i
 ```
 
 Objects hold named values. Define them with string keys and colons inside brackets; `[:]` is an empty object.
+Object literals reject duplicate keys that are known at compile time.
 Access properties with `record.key`, `record."key"`, or `record["key"]`. Use `record?key` to check for a literal key,
 or `record.Has(keyVariable)` for a computed key.
 
@@ -271,9 +272,6 @@ Use brackets or a quoted key to read such a property, for example `record["Lengt
 | `object` | Named values |
 | `function` | Built-in, host-provided, or script-defined function |
 | `??` | Unknown or variant type, compatible with every type |
-| `[string]` | Array of strings |
-| `[integer, string]` | Tuple with integer and string entries |
-| `["name": string]` | Object with a required string property named `name` |
 | `~(integer): string` | Function taking an integer and returning a string |
 | `integer?` | Optional integer: `void` or `integer` |
 | `integer \| string` | Union of types |
@@ -290,6 +288,28 @@ parsed::object.answer // 42.0
 
 Standard JSON numbers are floats. Use conversion methods such as `.Integer()` or `.Float()` to convert numeric types.
 An incompatible cast raises an error. Casts can be followed by property access, indexing, calls, or another cast.
+
+#### Collection and variadic types
+
+| Type | Meaning |
+| --- | --- |
+| `[...float]` | Uniform array. Every item is a float. |
+| `[float]` | Tuple with a float at index 0. Extra items may have any type. |
+| `[float, string]` | Tuple with a float at index 0 and a string at index 1. Extra items may have any type. |
+| `[...:float]` | Uniform object. Every property value is a float. |
+| `["a": float]` | Record with a float property named `a`. Extra properties may have any type. |
+| `["a": float, "b": string]` | Record with a float property named `a` and a string property named `b`. Extra properties may have any type. |
+
+The ellipsis marks a uniform type for zero or more entries. For example, `[...integer | string]` is a uniform
+array whose items may be integers or strings.
+
+Tuples and records use plain brackets. They specify a minimum shape and allow additional entries. The empty shapes
+`[]` and `[:]` require no entries. Unannotated array literals infer tuples, and unannotated object literals with
+known keys infer records.
+
+A final variadic parameter collects zero or more arguments into an array. `~(...integer):void` is the function
+type, and `~(a: ...integer):void{}` is a function value of that type. Each collected argument must be an integer,
+and `a` has type `[...integer]` inside the function.
 
 ### Operators and precedence
 
@@ -351,7 +371,7 @@ const expression = new Affinirum("price * quantity", {
 console.log(expression.evaluate({ price: 12.5, quantity: 3n })); // 37.5
 ```
 
-- `variables` declares input value types; structured types can be built with helpers such as `Type.arrayType([Type.Integer])`
+- `variables` declares input value types; structured types can be built with helpers such as `Type.arrayType(Type.Integer)`
   and `Type.objectType([["name", Type.String]])`.
 - `strict: true` rejects undeclared input names during compilation. It does not change the language's type compatibility rules.
 - `type` specifies the expected result type to be checked during compilation.
@@ -532,7 +552,7 @@ Invalid inputs other than `null` may raise an evaluation error, depending on the
 
 #### String
 
-- **String.Alphanum(value: string):string** — Keep only ASCII letters and digits
+- **String.Alphanumeric(value: string):string** — Keep only ASCII letters and digits
 - **String.Random(length: integer):string** — Random alphanumeric string
 - **String.Decode(value: buffer?, encoding: string?, offset: integer?, length: integer?):string?** — Decode using `utf8` (default), `sbcs`, `ucs2`, or `ucs2le`
 
@@ -592,8 +612,8 @@ JSON.Format(["missing": null, "count": 1])  // '{"missing":null,"count":"1"}'
 #### General Functions
 
 - **??.Coalesce(otherwise: ??):??** — Null coalescence
-- **??.Equal(value: ??):boolean** — Equals to
-- **??.Unequal(value: ??):boolean** — Not equals to
+- **??.Equals(value: ??):boolean** — Tests whether the values are equal
+- **??.NotEquals(value: ??):boolean** — Tests whether the values differ
 - **(boolean | buffer | function).Encode():buffer** — Encode value to buffer
 - **(void | timestamp | float | integer | string | array | object).Encode(encoding: string?):buffer** — Encode a value; timestamps support `i32` and `i32le` minutes or `i64` and `i64le` milliseconds, while defaults are `i64` for timestamps and integers, `f64` for floats, and `utf8` for strings
 - **(boolean | string | function).Format():string** — Format value to string
@@ -611,18 +631,18 @@ JSON.Format(["missing": null, "count": 1])  // '{"missing":null,"count":"1"}'
 
 #### Array Functions
 
-- **array.First(condition: ~(??, integer?, array?):boolean):??** — First item satisfying condition
-- **array.Last(condition: ~(??, integer?, array?):boolean):??** — Last item satisfying condition
-- **array.FirstIndex(condition: ~(??, integer?, array?):boolean):integer?** — First index satisfying condition, or `null` if none does
-- **array.LastIndex(condition: ~(??, integer?, array?):boolean):integer?** — Last index satisfying condition, or `null` if none does
-- **array.Every(condition: ~(??, integer?, array?):boolean):boolean** — All items satisfy condition
-- **array.Any(condition: ~(??, integer?, array?):boolean):boolean** — Any item satisfies condition
+- **array.First(condition: ~(??, integer, array):boolean):??** — First item satisfying condition
+- **array.Last(condition: ~(??, integer, array):boolean):??** — Last item satisfying condition
+- **array.FirstIndex(condition: ~(??, integer, array):boolean):integer?** — First index satisfying condition, or `null` if none does
+- **array.LastIndex(condition: ~(??, integer, array):boolean):integer?** — Last index satisfying condition, or `null` if none does
+- **array.Every(condition: ~(??, integer, array):boolean):boolean** — All items satisfy condition
+- **array.Any(condition: ~(??, integer, array):boolean):boolean** — Any item satisfies condition
 - **array.Reverse():array** — Reversed array
 - **array.Flatten(depth: integer = 1):array** — Flatten array
-- **array.Derive(transformation: ~(??, integer?, array?):??):array** — Derived array
-- **array.Filter(condition: ~(??, integer?, array?):boolean):array** — Filtered array
-- **array.Reduce(reducer: ~(??, ??, integer?, array?):??, initial: ?? = null):??** — Reduced value
-- **array.Compose(generator: ~(object, string, integer?, array?):??):object** — Compose object from array
+- **array.Derive(transformation: ~(??, integer, array):??):array** — Derived array
+- **array.Filter(condition: ~(??, integer, array):boolean):array** — Filtered array
+- **array.Reduce(reducer: ~(??, ??, integer, array):??, initial: ?? = null):??** — Reduced value
+- **array.Compose(generator: ~(object, string, integer, array):??):object** — Compose object from array
 
 `Compose` builds a new object. Each callback receives an immutable snapshot of the properties produced by earlier callbacks.
 Retaining that snapshot preserves its contents as subsequent properties are added to the result.
@@ -700,7 +720,7 @@ Floating-point root calculations can return `NaN`, which is a float.
 #### String Functions
 
 - **string.Like(value: string):boolean** — Alphanumeric equality
-- **string.Unlike(value: string):boolean** — Alphanumeric inequality
+- **string.NotLike(value: string):boolean** — Alphanumeric inequality
 - **string.StartsWith(search: string, startPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Prefix check
 - **string.EndsWith(search: string, endPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Suffix check
 - **string.Char(pos: integer):string?** — Character at position, or `null` when unavailable
@@ -736,10 +756,9 @@ Affinirum uses intentionally permissive type checking. Type information helps re
 select function overloads, and report compilation errors. It does not prove that every accepted expression is safe
 for every possible runtime value.
 
-- `??` is the unknown or variant type and is compatible with every type, including `void`. A `??` function parameter
-  may receive `null`, JavaScript `undefined`, or be omitted.
-- An optional type such as `integer?` is the union `void | integer`. Optional function parameters may receive `null`,
-  JavaScript `undefined`, or be omitted.
+- `??` is the unknown or variant type and is compatible with every type, including `void`.
+- An optional type such as `integer?` is the union `void | integer`. Optional parameters, including `??`, accept
+  `null` or JavaScript `undefined`. Only trailing optional parameters can be omitted.
 - A call to an overloaded function must match one complete signature. A call through a union of functions must match
   one complete signature for each possible function. For typed calls, the full argument types must fit the signature
   at compile time. The first matching overload determines the result type for each callable. Implicit arguments can
@@ -748,22 +767,21 @@ for every possible runtime value.
   properties are allowed.
 - Tuple types are prefix constraints: declared item types are checked in order, optional trailing items may be
   omitted, and additional items are allowed.
-- Function compatibility is deliberately flexible. Accepted argument-count ranges only need to overlap;
-  one function's complete range does not need to contain the other's.
+- A replacement function may require at most as many arguments as the declared signature requires.
 - A callback may declare fewer parameters than the caller provides. Additional arguments are ignored at runtime,
   following JavaScript function-call behavior.
-- Function parameter types are checked contravariantly where both signatures declare a parameter: the receiving
-  function must accept the expected parameter type. Return types are checked covariantly: the returned type must fit
+- Function parameter types are checked contravariantly where both signatures declare a parameter. The receiving
+  function must accept the full expected parameter type, including `void` when present. Return types are checked covariantly. The returned type must fit
   the expected result type. `??` remains compatible with any parameter type.
 - Function-type compatibility distinguishes fixed and variadic signatures. Two non-generic variadic signatures must
   declare their variadic parameter in the same position to be compatible.
 
 For example, a callback declared as `~(value: float):boolean` is compatible with an expected callback type such as
-`~(??, integer?, array?):boolean`: their argument-count ranges overlap, `??` accepts the concrete value type,
-and the callback may ignore the additional arguments. Affinirum does not enforce strict function subtyping.
+`~(??, integer, array):boolean`. The array method supplies all three arguments, and the callback can ignore
+the index and array. `??` keeps the item type flexible.
 
 For a variadic host function, set the third entry of the signature to `true` and declare its last parameter as a uniform
-array type. Use `Type.arrayType()` for the unconstrained `[]` type. Affinirum passes the arguments
+array type. Use `Type.Array` to accept arguments of any type. Affinirum passes the arguments
 individually. The JavaScript implementation collects the trailing arguments with a rest parameter.
 
 ```ts
@@ -772,7 +790,7 @@ import { Affinirum, Type } from "affinirum";
 const expression = new Affinirum("sum(1, 2, 3)", {
     strict: true,
     variables: {
-        sum: Type.functionType([[Type.Integer, [Type.arrayType([Type.Integer])], true]]),
+        sum: Type.functionType([[Type.Integer, [Type.arrayType(Type.Integer)], true]]),
     },
 });
 

@@ -33,7 +33,7 @@ describe("Closure test", () => {
 
 	it("keeps assignments in an uncalled function out of enclosing type inference", () => {
 		const expression = new Affinirum("var x:integer|string=1;val f=~():string{x='two'};(x::integer)-1");
-		expect(expression.type.equate(Type.Integer)).toBe(true);
+		expect(expression.type.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate()).toBe(0n);
 	});
 
@@ -47,15 +47,15 @@ describe("Closure test", () => {
 
 	it("includes input uses from an uncalled function", () => {
 		const expression = new Affinirum("val f=~():float|integer{value-1};value.Length");
-		expect(expression.variables().value.equate(Type.union(Type.Number, Type.OptionalIterable))).toBe(true);
-		expect(expression.type.equate(Type.Integer)).toBe(true);
+		expect(expression.variables().value.equals(Type.union(Type.Number, Type.OptionalIterable))).toBe(true);
+		expect(expression.type.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate({ value: "kept" })).toBe(4n);
 	});
 
 	it("keeps a captured parameter's declared type across nested functions", () => {
 		const expression = new Affinirum("~(value:integer|string):integer|string{value=1;val change=~():string{value='two'};value}");
 		const type = Type.union(Type.Integer, Type.String);
-		expect(expression.type.equate(Type.functionType([[type, [type]]]))).toBe(true);
+		expect(expression.type.equals(Type.functionType([[type, [type]]]))).toBe(true);
 		const func = expression.evaluate() as (value: bigint | string) => bigint | string;
 		expect(func(0n)).toBe(1n);
 		expect(func("one")).toBe(1n);

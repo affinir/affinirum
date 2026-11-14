@@ -5,7 +5,7 @@ describe("Variadic function test", () => {
 	runAffinirumTests([
 		{
 			script: `
-val f = ~(x: integer, a: ...[integer]):integer {
+val f = ~(x: integer, a: ...integer):integer {
 	x * Integer.Sum(a)
 };
 f(x, 1, 2, 3, 4)
@@ -26,43 +26,43 @@ describe("Variadic function argument test", () => {
 		expect(expression.evaluate({ x: 5n }) as bigint).toBe(7n);
 	});
 	it("preserves variadic parameters when producing concatenated results", () => {
-		const expression = new Affinirum("val f=~(a:...[integer]):[integer]{val extended=a+[9];[a.Length,extended.Length]};val g=~():[integer]{f(1,2)};[g(),g()]");
+		const expression = new Affinirum("val f=~(a:...integer):[...integer]{val extended=a+[9];[a.Length,extended.Length]};val g=~():[...integer]{f(1,2)};[g(),g()]");
 		expect(expression.evaluate()).toEqual([[2n, 3n], [2n, 3n]]);
 		expect(expression.evaluate()).toEqual([[2n, 3n], [2n, 3n]]);
 	});
 	it("binds rest arguments when JavaScript calls a script function", () => {
-		const expression = new Affinirum("~(x:integer,a:...[integer]):integer{x*Integer.Sum(a)}");
+		const expression = new Affinirum("~(x:integer,a:...integer):integer{x*Integer.Sum(a)}");
 		const func = expression.evaluate() as (x: bigint, ...values: bigint[]) => bigint;
 		expect(func(2n, 3n, 4n)).toBe(14n);
 	});
 	it("binds rest arguments when a variable has no declared function signature", () => {
-		const expression = new Affinirum("var f;f=~(a:...[integer]):integer{Integer.Sum(a)};f(1,2)");
+		const expression = new Affinirum("var f;f=~(a:...integer):integer{Integer.Sum(a)};f(1,2)");
 		expect(expression.evaluate()).toBe(3n);
 	});
 	it("uses the complete variadic overload for a numeric union", () => {
 		const overloaded = Type.functionType([
 			[Type.Integer, [Type.Integer, Type.Integer]],
-			[Type.Float, [Type.arrayType([Type.Number])], true],
+			[Type.Float, [Type.arrayType(Type.Number)], true],
 		]);
 		const expression = new Affinirum("f(value, 2)", { variables: { f: overloaded } });
-		expect(expression.variables().value.equate(Type.Number)).toBe(true);
-		expect(expression.type.equate(Type.Float)).toBe(true);
+		expect(expression.variables().value.equals(Type.Number)).toBe(true);
+		expect(expression.type.equals(Type.Float)).toBe(true);
 		expect(expression.evaluate({
 			value: 1.5,
 			f: (...args: unknown[]) => args.length,
 		})).toBe(2);
 	});
-	it.each(["var items:[string]=['two'];f(items[0]::string)", "f(g('two'))"])("uses a variadic overload after compiling the argument in %s", (script) => {
+	it.each(["var items:[...string]=['two'];f(items[0]::string)", "f(g('two'))"])("uses a variadic overload after compiling the argument in %s", (script) => {
 		const f = Type.functionType([
 			[Type.Integer, [Type.Integer]],
-			[Type.String, [Type.arrayType([Type.String])], true],
+			[Type.String, [Type.arrayType(Type.String)], true],
 		]);
 		const g = Type.functionType([
 			[Type.Integer, [Type.Integer]],
 			[Type.String, [Type.String]],
 		]);
 		const expression = new Affinirum(script, { variables: { f, g } });
-		expect(expression.type.equate(Type.String)).toBe(true);
+		expect(expression.type.equals(Type.String)).toBe(true);
 		expect(expression.evaluate({
 			f: (...values: string[]) => values.join(" "),
 			g: (value: bigint | string) => value,
@@ -72,21 +72,25 @@ describe("Variadic function argument test", () => {
 		const f = Type.functionType([
 			[Type.Integer, [Type.Integer, Type.String]],
 			[Type.Integer, [Type.String, Type.Integer]],
-			[Type.Integer, [Type.arrayType([Type.Integer])], true],
+			[Type.Integer, [Type.arrayType(Type.Integer)], true],
 		]);
-		const expression = new Affinirum("var items:[integer]=[1,2];f(items[0]::integer,items[1]::integer)", { variables: { f } });
+		const expression = new Affinirum("var items:[...integer]=[1,2];f(items[0]::integer,items[1]::integer)", { variables: { f } });
 		expect(expression.evaluate({ f: (...values: bigint[]) => values.reduce((sum, value) => sum + value, 0n) })).toBe(3n);
 	});
-	it.each([
-		"~(items:...[integer,integer]):integer{items.Length}",
-		"~(f:~(...[integer,integer]):integer):integer{f(1)}",
-	])("rejects a tuple rest parameter in %s", (script) => {
-		expect(() => new Affinirum(script)).toThrow(/variadic function argument must be of uniform array type/);
+	it("collects zero or more arguments of the declared element type", () => {
+		const script = "val f:~(...integer):[...integer]=~(items:...integer):[...integer]{items};";
+		expect(new Affinirum(script + "[f(),f(1,2)]").evaluate()).toEqual([[], [1n, 2n]]);
+		expect(() => new Affinirum(script + "f('bad')")).toThrow(/mismatch with expected type integer/);
+	});
+	it("treats a tuple rest element type as one argument", () => {
+		const script = "val f=~(items:...[integer,integer]):integer{items.Length};";
+		expect(new Affinirum(script + "f([1,2],[3,4,5])").evaluate()).toBe(2n);
+		expect(() => new Affinirum(script + "f([1])")).toThrow(/mismatch with expected type \[integer,integer\]/);
 	});
 	it("checks the variadic tail against one complete uniform array type", () => {
 		const tail = Type.union(
-			Type.arrayType([Type.Integer]),
-			Type.arrayType([Type.String]),
+			Type.arrayType(Type.Integer),
+			Type.arrayType(Type.String),
 		);
 		const f = Type.functionType([[Type.Integer, [tail], true]]);
 		expect(() => new Affinirum("f(1,2)", { variables: { f } })).not.toThrow();
@@ -98,7 +102,7 @@ describe("Variadic function argument test", () => {
 	it("uses a matching variadic overload when fixed overloads are incompatible", () => {
 		const overloaded = Type.functionType([
 			[Type.Integer, [Type.String, Type.String]],
-			[Type.Integer, [Type.arrayType([Type.Number])], true],
+			[Type.Integer, [Type.arrayType(Type.Number)], true],
 		]);
 		const expression = new Affinirum("f(1, 2)", {
 			strict: true,

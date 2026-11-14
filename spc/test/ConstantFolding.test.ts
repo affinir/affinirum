@@ -35,13 +35,13 @@ describe("Constant folding test", () => {
 		const expression = new Affinirum(`if ${condition}{value}else{'fallback'}`, {
 			variables: { value: Type.Integer },
 		});
-		expect(expression.type.equate(type)).toBe(true);
+		expect(expression.type.equals(type)).toBe(true);
 		expect(expression.evaluate({ value: 5n })).toEqual(expected);
 	});
 
 	it("checks the selected result against the expected type after folding", () => {
 		const expression = new Affinirum("if true{1}else{'other'}", { type: Type.Integer });
-		expect(expression.type.equate(Type.Integer)).toBe(true);
+		expect(expression.type.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate()).toBe(1n);
 		expect(() => new Affinirum("if false{1}else{'other'}", { type: Type.Integer }))
 			.toThrow(/type string mismatch with expected type integer/);

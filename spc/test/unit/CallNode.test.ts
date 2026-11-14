@@ -60,7 +60,7 @@ describe("Constant folding test", () => {
 		const functionNode = new ConstantNode(span, new Constant((items: bigint[]) => {
 			++calls;
 			return items.reduce((sum, value) => sum + value, 0n);
-		}, Type.functionType([[Type.Integer, [Type.arrayType([Type.Integer])]]])));
+		}, Type.functionType([[Type.Integer, [Type.arrayType(Type.Integer)]]])));
 		const arrayNode = new ArrayNode(span, values.map((value) => new ConstantNode(span, new Constant(value))));
 		const node = new CallNode(span, functionNode, [arrayNode]).compile();
 		const frame = new CallFrame();
@@ -77,7 +77,7 @@ describe("Constant folding test", () => {
 		const next = new ConstantNode(span, new Constant(() => BigInt(++calls),
 			Type.functionType([[Type.Integer, []]], true)));
 		const sum = new ConstantNode(span, new Constant((items: bigint[]) => items[0],
-			Type.functionType([[Type.Integer, [Type.arrayType([Type.Integer])]]])));
+			Type.functionType([[Type.Integer, [Type.arrayType(Type.Integer)]]])));
 		const arrayNode = new ArrayNode(span, [new CallNode(span, next, [])]);
 		const node = new CallNode(span, sum, [arrayNode]).compile();
 		const frame = new CallFrame();
@@ -93,7 +93,7 @@ describe("Constant folding test", () => {
 		const functionNode = new ConstantNode(span, new Constant((first: bigint, ...rest: bigint[]) => {
 			++calls;
 			return rest.reduce((sum, value) => sum + value, first);
-		}, Type.functionType([[Type.Integer, [Type.Integer, Type.arrayType([Type.Integer])], true]])));
+		}, Type.functionType([[Type.Integer, [Type.Integer, Type.arrayType(Type.Integer)], true]])));
 		const arguments_ = [1n, 2n, 3n].map((value) => new ConstantNode(span, new Constant(value)));
 		const node = new CallNode(span, functionNode, arguments_).compile();
 		const frame = new CallFrame();
@@ -109,7 +109,7 @@ describe("Constant folding test", () => {
 		const functionNode = new ConstantNode(span, new Constant((...items: bigint[]) => {
 			++calls;
 			return items;
-		}, Type.functionType([[Type.Array, [Type.arrayType([Type.Integer])], true]])));
+		}, Type.functionType([[Type.Array, [Type.arrayType(Type.Integer)], true]])));
 		const arguments_ = [1n, 2n].map((value) => new ConstantNode(span, new Constant(value)));
 		const node = new CallNode(span, functionNode, arguments_).compile();
 		const frame = new CallFrame();

@@ -10,14 +10,18 @@ import { funcAt } from "../native/Composite.js";
 
 export class AccessNode extends AssignableNode {
 
+	protected _subnode: Node;
+	protected _inode: Node;
 	protected _type?: Type;
 
 	constructor(
 		span: ParserSpan,
-		protected _subnode: Node,
-		protected _inode: Node,
+		subnode: Node,
+		inode: Node,
 	) {
 		super(span);
+		this._subnode = subnode;
+		this._inode = inode;
 	}
 
 	override get type(): Type {
@@ -32,12 +36,13 @@ export class AccessNode extends AssignableNode {
 		return this._subnode.constant && this._inode.constant;
 	}
 
-	override compile(): Node {
+	override compile(type = Type.Unknown): Node {
 		this._compileAccess();
 		if (!this.type.isNever) {
 			this._type = this.type.toOptional();
 		}
-		if (this.constant && !this.type.intersect(Type.Reference)) {
+		super.compile(type);
+		if (this.constant && !this.type.intersects(Type.Reference)) {
 			return new ConstantNode(this, new Constant(this.evaluate(new CallFrame()), this.type));
 		}
 		return this;
@@ -55,8 +60,12 @@ export class AccessNode extends AssignableNode {
 
 	override evaluate(frame: CallFrame): Value {
 		const func = funcAt.value as (indexer: Value, index: Value) => Value;
-		const value = func(this._subnode.evaluate(frame), this._inode.evaluate(frame));
-		if (value != null && !this.type.acceptValue(value)) {
+		const receiver = this._subnode.evaluate(frame);
+		if (!Type.Composite.acceptsValue(receiver)) {
+			this.throwError("indexed value must be an array or object");
+		}
+		const value = func(receiver, this._inode.evaluate(frame));
+		if (value != null && !this.type.acceptsValue(value)) {
 			this.throwError(`indexed value mismatch with expected type ${this._type}`);
 		}
 		return value;
@@ -87,19 +96,19 @@ export class AccessNode extends AssignableNode {
 					if (index < 0 || index >= composite.length) {
 						this.throwError("array index is out of range");
 					}
-					if (!type.acceptValue(value)) {
+					if (!type.acceptsValue(value)) {
 						this.throwError(`indexed value mismatch with expected type ${type}`);
 					}
 					let arr: Value[] | undefined;
 					for (const constraint of new Set([compositeType, ...frame.definitions(composite)])) {
-						if (constraint.isUnknown || constraint.equate(Type.Array)) {
+						if (constraint.isUnknown || constraint.equals(Type.Array)) {
 							continue;
 						}
 						arr ??= Object.defineProperties([], {
 							...Object.getOwnPropertyDescriptors<object>(composite),
 							[index]: { value },
 						});
-						if (!constraint.acceptValue(arr)) {
+						if (!constraint.acceptsValue(arr)) {
 							this.throwError(`indexed value mismatch with expected type ${constraint}`);
 						}
 					}
@@ -108,7 +117,7 @@ export class AccessNode extends AssignableNode {
 				},
 			};
 		}
-		if (!Type.Object.acceptValue(composite)) {
+		if (!Type.Object.acceptsValue(composite)) {
 			this.throwError("indexed value must be an array or object");
 		}
 		if (typeof key !== "string") {
@@ -120,7 +129,7 @@ export class AccessNode extends AssignableNode {
 			type,
 			get: () => Object.hasOwn(object, key) ? object[key] : undefined,
 			set: (value: Value) => {
-				if (!type.acceptValue(value)) {
+				if (!type.acceptsValue(value)) {
 					this.throwError(`indexed value mismatch with expected type ${type}`);
 				}
 				const current = Object.getOwnPropertyDescriptor(object, key);
@@ -129,14 +138,14 @@ export class AccessNode extends AssignableNode {
 					: { value, writable: true, enumerable: true, configurable: true };
 				let obj: Record<string, Value> | undefined;
 				for (const constraint of new Set([compositeType, ...frame.definitions(object)])) {
-					if (constraint.isUnknown || constraint.equate(Type.Object)) {
+					if (constraint.isUnknown || constraint.equals(Type.Object)) {
 						continue;
 					}
 					obj ??= Object.create(Object.getPrototypeOf(object), {
 						...Object.getOwnPropertyDescriptors(object),
 						[key]: descriptor,
 					}) as Record<string, Value>;
-					if (!constraint.acceptValue(obj)) {
+					if (!constraint.acceptsValue(obj)) {
 						this.throwError(`indexed value mismatch with expected type ${constraint}`);
 					}
 				}
@@ -155,12 +164,8 @@ export class AccessNode extends AssignableNode {
 		if (this._type) {
 			return;
 		}
-		const compositeType = Type.union(Type.Array, Type.Object);
-		this._subnode = this._subnode.compile(compositeType);
-		const receiverType = this._subnode.type.toMandatory();
-		if (!receiverType.isNever && !receiverType.intersect(compositeType)) {
-			this._subnode.throwError(`type ${this._subnode.type} mismatch with expected type ${compositeType}`);
-		}
+		this._subnode = this._subnode.compile(Type.Composite);
+		const receiverType = this._subnode.type;
 		let indexType = Type.union(Type.Integer, Type.String);
 		if (!receiverType.isUnknown && !receiverType.isNever) {
 			if (receiverType.isArray) {
@@ -171,9 +176,6 @@ export class AccessNode extends AssignableNode {
 			}
 		}
 		this._inode = this._inode.compile(indexType);
-		if (!this._inode.type.isNever && !this._inode.type.intersect(indexType)) {
-			this._inode.throwError(`type ${this._inode.type} mismatch with expected type ${indexType}`);
-		}
 		const index = this._inode instanceof ConstantNode ? this._inode.value : undefined;
 		if (receiverType.isNever || this._inode.type.isNever) {
 			this._type = Type.Never;

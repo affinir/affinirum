@@ -9,25 +9,33 @@ import { JumpNode } from "./JumpNode.js";
 
 export class FunctionNode extends Node {
 
+	protected _subnode: Node;
+	protected readonly _variables: readonly Variable[];
+	protected readonly _arguments: readonly Variable[];
+	protected _type: Type;
+
 	constructor(
 		span: ParserSpan,
-		protected _subnode: Node,
-		protected readonly _arguments: readonly Variable[],
-		protected readonly _variables: readonly Variable[],
-		protected _type: Type,
+		subnode: Node,
+		variables: readonly Variable[],
+		args: readonly Variable[],
+		type: Type,
 	) {
 		super(span);
+		this._subnode = subnode;
+		this._arguments = args;
+		this._variables = variables;
+		this._type = type;
 	}
 
 	override get type(): Type {
 		return this._type;
 	}
 
-	override compile(): Node {
+	override compile(type = Type.Unknown): Node {
 		const returnType = this._type.functionAtomRetType();
 		this._subnode = this._subnode.compile(returnType);
-		this._subnode.validateType(returnType);
-		return this;
+		return super.compile(type);
 	}
 
 	override evaluate(frame: CallFrame): Value {

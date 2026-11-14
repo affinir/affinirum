@@ -2,11 +2,11 @@ import { Affinirum } from "../../src/index.js";
 
 describe("Cast test", () => {
 	it("checks homogeneous array values", () => {
-		const expression = new Affinirum("JSON.Parse(value)::[float]");
+		const expression = new Affinirum("JSON.Parse(value)::[...float]");
 		expect(() => expression.evaluate({ value: "[1,2]" }))
 			.not.toThrow();
 		expect(() => expression.evaluate({ value: "[1,\"two\"]" }))
-			.toThrow(/cannot cast value of type array to \[float\]/);
+			.toThrow(/cannot cast value of type array to type \[\.\.\.float\]/);
 	});
 
 	it("checks tuple prefixes and permits additional values", () => {
@@ -14,15 +14,15 @@ describe("Cast test", () => {
 		expect(() => expression.evaluate({ value: "[1,\"two\",true]" }))
 			.not.toThrow();
 		expect(() => expression.evaluate({ value: "[1]" }))
-			.toThrow(/cannot cast value of type array to \[float,string\]/);
+			.toThrow(/cannot cast value of type array to type \[float,string\]/);
 		expect(() => expression.evaluate({ value: "[1,false]" }))
-			.toThrow(/cannot cast value of type array to \[float,string\]/);
+			.toThrow(/cannot cast value of type array to type \[float,string\]/);
 		expect(() => new Affinirum("JSON.Parse(value)::[float,string?]").evaluate({ value: "[1]" }))
 			.not.toThrow();
 	});
 
 	it("checks required, optional, additional, and nested object properties", () => {
-		const expression = new Affinirum("JSON.Parse(value)::[\"items\":[float],\"label\":string?]");
+		const expression = new Affinirum("JSON.Parse(value)::[\"items\":[...float],\"label\":string?]");
 		expect(() => expression.evaluate({ value: "{\"items\":[1,2],\"extra\":true}" }))
 			.not.toThrow();
 		expect(() => expression.evaluate({ value: "{\"label\":\"missing items\"}" }))

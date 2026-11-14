@@ -311,7 +311,7 @@ const decodeString = (value?: ArrayBuffer, encoding: StringEncoding = "utf8", by
 const typeStringEquator = Type.functionType([[Type.Boolean, [Type.String, Type.String]]]);
 const typeStringComparator = Type.functionType([[Type.Boolean, [Type.String, Type.String, Type.OptionalInteger, Type.OptionalBoolean]]]);
 const typeStringMutator = Type.functionType([[Type.String, [Type.String]]]);
-const typeStringOrArray = Type.union(Type.String, Type.arrayType([Type.String]));
+const typeStringOrArray = Type.union(Type.String, Type.arrayType(Type.String));
 
 export const funcLike = new Constant(
 	(value1: string, value2: string) =>
@@ -319,7 +319,7 @@ export const funcLike = new Constant(
 	typeStringEquator,
 );
 
-export const funcUnlike = new Constant(
+export const funcNotLike = new Constant(
 	(value1: string, value2: string) =>
 		!equateStrings(value1, value2, true),
 	typeStringEquator,
@@ -386,16 +386,16 @@ export const funcUpperCase = new Constant(
 export const funcSplit = new Constant(
 	(value: string, separator: string = " ") =>
 		value?.split(separator) ?? [],
-	Type.functionType([[Type.arrayType([Type.String]), [Type.String, Type.OptionalString]]]),
+	Type.functionType([[Type.arrayType(Type.String), [Type.String, Type.OptionalString]]]),
 );
 
 export const funcReplaceWith = new Constant(
 	(value: string, replacement: string, ...search: (string | string[])[]) =>
 		replaceWith(value, replacement, ...search.flat()),
-	Type.functionType([[Type.String, [Type.String, Type.String, Type.arrayType([typeStringOrArray])], true]]),
+	Type.functionType([[Type.String, [Type.String, Type.String, Type.arrayType(typeStringOrArray)], true]]),
 );
 
-const funcAlphanum = new Constant(
+const funcAlphanumeric = new Constant(
 	(value: string) => {
 		if (!value) {
 			return undefined;
@@ -431,7 +431,7 @@ const funcDecodeString = new Constant(
 );
 
 export const constString = Object.assign(Object.create(null), {
-	Alphanum: funcAlphanum,
+	Alphanumeric: funcAlphanumeric,
 	Random: funcRandomString,
 	Decode: funcDecodeString,
 });

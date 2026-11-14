@@ -50,7 +50,7 @@ export class CallFrame {
 		throw new Error("variable is not declared in call frame");
 	}
 
-	define(value: Value, type: Type) {
+	define(value: Value, type: Type): Value {
 		if (type.isUnknown || typeof value !== "object" || Type.isPrimitive(value) || Type.isFunction(value)) {
 			return value;
 		}
@@ -58,7 +58,7 @@ export class CallFrame {
 		if (!types) {
 			this._types.set(value, [type]);
 		}
-		else if (!types.some((i) => i.equate(type))) {
+		else if (!types.some((i) => i.equals(type))) {
 			types.push(type);
 		}
 		return value;

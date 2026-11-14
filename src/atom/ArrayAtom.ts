@@ -3,81 +3,89 @@ import { Type } from "../Type.js";
 
 export class ArrayAtom implements IAtom {
 
-	protected readonly _valTypes: Type[];
+	protected readonly _valTypes: Type | readonly Type[];
 
 	constructor(
-		valTypes: readonly Type[] = [],
+		valTypes: Type | readonly Type[] = [],
 	) {
-		this._valTypes = [...valTypes];
-	}
-
-	private get _generic(): boolean {
-		return this._valTypes.length === 0;
+		this._valTypes = Array.isArray(valTypes) ? [...valTypes] : valTypes;
 	}
 
 	get isUniform(): boolean {
-		return this._valTypes.length < 2;
+		return !Array.isArray(this._valTypes);
 	}
 
-	valTypes(): Type[] {
+	get isTuple(): boolean {
+		return Array.isArray(this._valTypes);
+	}
+
+	get types(): Type | readonly Type[] {
 		return this._valTypes;
 	}
 
+	valTypes(): readonly Type[] {
+		const types = this._valTypes;
+		return types instanceof Type ? [types] : types;
+	}
+
 	valType(index: number | undefined): Type | undefined {
-		return index == null ? undefined : this._valTypes[index];
-	}
-
-	equate(atom: IAtom): boolean {
-		return atom instanceof ArrayAtom
-			&& this._valTypes.length === atom._valTypes.length
-			&& this._valTypes.every((type, index) => type.equate(atom._valTypes[index]));
-	}
-
-	accept(atom: IAtom): boolean {
-		if (atom instanceof ArrayAtom) {
-			if (this._generic || atom._generic) {
-				return true;
-			}
-			if (this.isUniform) {
-				for (let i = 0; i < atom.valTypes().length; ++i) {
-					const vtype = atom.valType(i);
-					if (!vtype || !this._valTypes[0].accept(vtype)) {
-						return false;
-					}
-				}
-			}
-			else {
-				for (let i = 0; i < this._valTypes.length; ++i) {
-					const vtype = atom.isUniform
-						? atom.valType(0)
-						: atom.valType(i) ?? Type.Void;
-					if (!vtype || !this._valTypes[i].accept(vtype)) {
-						return false;
-					}
-				}
-			}
-			return true;
+		const types = this._valTypes;
+		if (types instanceof Type) {
+			return types;
 		}
-		return false;
+		return index == null ? undefined : types[index];
 	}
 
-	intersect(atom: IAtom): boolean {
+	equals(atom: IAtom): boolean {
 		if (!(atom instanceof ArrayAtom)) {
 			return false;
 		}
-		if (this._generic || atom._generic) {
+		const types = this._valTypes;
+		const other = atom._valTypes;
+		if (types instanceof Type) {
+			return other instanceof Type && types.equals(other);
+		}
+		return !(other instanceof Type)
+			&& types.length === other.length
+			&& types.every((type, index) => type.equals(other[index]));
+	}
+
+	accepts(atom: IAtom): boolean {
+		if (!(atom instanceof ArrayAtom)) {
+			return false;
+		}
+		const types = this._valTypes;
+		const other = atom._valTypes;
+		if (other instanceof Type && other.isUnknown) {
 			return true;
 		}
-		const length = this.isUniform
-			? atom.isUniform ? 1 : atom._valTypes.length
-			: atom.isUniform ? this._valTypes.length : Math.min(this._valTypes.length, atom._valTypes.length);
-		for (let i = 0; i < length; ++i) {
-			const type = this.isUniform ? this._valTypes[0] : this._valTypes[i];
-			const atype = atom.isUniform ? atom._valTypes[0] : atom._valTypes[i];
-			if (!type.intersect(atype)) {
-				return !(this.isUniform && atom.isUniform)
-					&& (this.isUniform || this._valTypes.slice(i).every((type) => type.isOptional))
-					&& (atom.isUniform || atom._valTypes.slice(i).every((type) => type.isOptional));
+		if (types instanceof Type) {
+			return atom.valTypes().every((type) => types.accepts(type));
+		}
+		if (other instanceof Type) {
+			return types.every((type) => type.isOptional && type.accepts(other));
+		}
+		return types.every((type, index) => type.accepts(other[index] ?? Type.Void));
+	}
+
+	intersects(atom: IAtom): boolean {
+		if (!(atom instanceof ArrayAtom)) {
+			return false;
+		}
+		const types = this._valTypes;
+		const other = atom._valTypes;
+		if (types instanceof Type) {
+			// Any two uniform arrays can both be empty.
+			return other instanceof Type || atom.intersects(this);
+		}
+		for (let index = 0; index < types.length; ++index) {
+			const otherType = other instanceof Type ? other : other[index];
+			if (!otherType) {
+				break;
+			}
+			if (!types[index].intersects(otherType)) {
+				return types.slice(index).every((type) => type.isOptional)
+					&& (other instanceof Type || other.slice(index).every((type) => type.isOptional));
 			}
 		}
 		return true;
@@ -88,10 +96,11 @@ export class ArrayAtom implements IAtom {
 	}
 
 	toString(): string {
-		if (this._generic) {
-			return "array";
+		const types = this._valTypes;
+		if (types instanceof Type) {
+			return types.isUnknown ? "array" : `[...${types}]`;
 		}
-		return `[${this._valTypes.join(",")}]`;
+		return types.length ? `[${types.join(",")}]` : "[]";
 	}
 
 }

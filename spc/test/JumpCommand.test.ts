@@ -57,7 +57,7 @@ describe("Jump command test", () => {
 		"val g=~(a:integer):string{'fallback'};val f=~(n:integer):integer{n};f(g({=>'done'}))",
 	])("infers the global result when an argument exits before a call in %s", (source) => {
 		const script = new Affinirum(source, { type: Type.String });
-		expect(script.type.equate(Type.String)).toBe(true);
+		expect(script.type.equals(Type.String)).toBe(true);
 		expect(script.evaluate()).toBe("done");
 	});
 	it("checks return types through nested blocks and function boundaries", () => {

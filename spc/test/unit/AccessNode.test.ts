@@ -1,4 +1,4 @@
-import { Type, Value } from "../../../src/index.js";
+import { Affinirum, Type, Value } from "../../../src/index.js";
 import { Constant } from "../../../src/Constant.js";
 import { CallFrame } from "../../../src/CallFrame.js";
 import { ParserState } from "../../../src/ParserState.js";
@@ -38,11 +38,24 @@ describe("Access node test", () => {
 		expect(() => node.compile()).toThrow(/mismatch with expected type/);
 	});
 
+	it("rejects a receiver union containing a non-collection type", () => {
+		expect(() => new Affinirum("x[0]", { variables: { x: Type.union(Type.Integer, Type.Array) } }))
+			.toThrow(/type integer\|array mismatch with expected type array\|object/);
+	});
+
+	it.each<[string, Type]>([
+		["x[0]", Type.OptionalArray],
+		["x.key", Type.OptionalObject],
+	])("rejects a nullable receiver in %s", (script, x) => {
+		expect(() => new Affinirum(script, { variables: { x } }))
+			.toThrow(/mismatch with expected type array\|object/);
+	});
+
 	it("checks indexed reads against the expected result type", () => {
-		const source = new CallNode(span, constant(() => [1n], Type.functionType([[Type.arrayType([Type.Integer]), []]])), []);
-		const node = new AccessNode(span, source, constant(0n)).compile();
-		expect(node.type.equate(Type.OptionalInteger)).toBe(true);
-		expect(() => node.validateType(Type.String)).toThrow(/mismatch with expected type string/);
+		const source = new CallNode(span, constant(() => [1n], Type.functionType([[Type.arrayType(Type.Integer), []]])), []);
+		const node = new AccessNode(span, source, constant(0n));
+		expect(() => node.compile(Type.String)).toThrow(/mismatch with expected type string/);
+		expect(node.type.equals(Type.OptionalInteger)).toBe(true);
 	});
 
 	it("accepts a string key when the container type is unknown", () => {

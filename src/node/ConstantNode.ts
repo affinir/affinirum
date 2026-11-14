@@ -7,11 +7,14 @@ import { CallFrame } from "../CallFrame.js";
 
 export class ConstantNode extends Node {
 
+	protected readonly _constant: Constant;
+
 	constructor(
 		span: ParserSpan,
-		protected readonly _constant: Constant,
+		constant: Constant,
 	) {
 		super(span);
+		this._constant = constant;
 	}
 
 	get value(): Value {
@@ -20,10 +23,6 @@ export class ConstantNode extends Node {
 
 	override get type(): Type {
 		return this._constant.type;
-	}
-
-	override compile(): Node {
-		return this;
 	}
 
 	override evaluate(frame: CallFrame): Value {

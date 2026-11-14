@@ -31,31 +31,31 @@ export class Type {
 	}
 
 	get isVoid() {
-		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Void.atom(0));
+		return this._atoms?.length === 1 && this._atoms[0].equals(Type.Void.atom(0));
 	}
 
 	get isBoolean() {
-		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Boolean.atom(0));
+		return this._atoms?.length === 1 && this._atoms[0].equals(Type.Boolean.atom(0));
 	}
 
 	get isTimestamp() {
-		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Timestamp.atom(0));
+		return this._atoms?.length === 1 && this._atoms[0].equals(Type.Timestamp.atom(0));
 	}
 
 	get isFloat() {
-		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Float.atom(0));
+		return this._atoms?.length === 1 && this._atoms[0].equals(Type.Float.atom(0));
 	}
 
 	get isInteger() {
-		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Integer.atom(0));
+		return this._atoms?.length === 1 && this._atoms[0].equals(Type.Integer.atom(0));
 	}
 
 	get isBuffer() {
-		return this._atoms?.length === 1 && this._atoms[0].equate(Type.Buffer.atom(0));
+		return this._atoms?.length === 1 && this._atoms[0].equals(Type.Buffer.atom(0));
 	}
 
 	get isString() {
-		return this._atoms?.length === 1 && this._atoms[0].equate(Type.String.atom(0));
+		return this._atoms?.length === 1 && this._atoms[0].equals(Type.String.atom(0));
 	}
 
 	get isArray() {
@@ -71,7 +71,7 @@ export class Type {
 	}
 
 	get isOptional() {
-		return Boolean(this._atoms?.length === 0 || this._atoms?.some((a) => a.equate(Type.Void.atom(0))));
+		return Boolean(this._atoms?.length === 0 || this._atoms?.some((a) => a.equals(Type.Void.atom(0))));
 	}
 
 	get isUniformArray() {
@@ -90,14 +90,14 @@ export class Type {
 		return Boolean(this._atoms?.some((a) => a instanceof FunctionAtom && a.isVolatile));
 	}
 
-	equate(type: Type | undefined): boolean {
+	equals(type: Type | undefined): boolean {
 		if (this !== type) {
 			if (!type || this.isNever !== type.isNever || this._atoms?.length !== type._atoms?.length) {
 				return false;
 			}
 			const unmatched = [...type._atoms ?? []];
 			for (const atom of this._atoms ?? []) {
-				const index = unmatched.findIndex((a) => atom.equate(a));
+				const index = unmatched.findIndex((a) => atom.equals(a));
 				if (index < 0) {
 					return false;
 				}
@@ -107,34 +107,37 @@ export class Type {
 		return true;
 	}
 
-	intersect(type: Type | Atom): boolean {
+	intersects(type: Type | Atom): boolean {
 		if (type instanceof Type) {
 			if (this.isNever || type.isNever) {
 				return false;
 			}
-			return Boolean(this.isUnknown || type.isUnknown || this._atoms?.some((a) => type._atoms?.some((atom) => a.intersect(atom))));
+			return Boolean(this.isUnknown || type.isUnknown || this._atoms?.some((a) => type._atoms?.some((atom) => a.intersects(atom))));
 		}
-		return Boolean(this.isUnknown || this._atoms?.some((atom) => atom.intersect(type)));
+		return Boolean(this.isUnknown || this._atoms?.some((atom) => atom.intersects(type)));
 	}
 
-	accept(type: Type | Atom): boolean {
+	accepts(type: Type | Atom): boolean {
 		if (type instanceof Type) {
 			if (this.isUnknown || type.isUnknown || type.isNever) {
 				return true;
 			}
-			return Boolean(type._atoms?.every((a) => this._atoms?.some((atom) => atom.accept(a))));
+			return Boolean(type._atoms?.every((a) => this._atoms?.some((atom) => atom.accepts(a))));
 		}
-		return Boolean(this._atoms?.some((a) => a.accept(type)));
+		return Boolean(this._atoms?.some((a) => a.accepts(type)));
 	}
 
-	acceptValue(value: Value): boolean {
+	acceptsValue(value: Value): boolean {
 		if (this.isUnknown) {
 			return true;
 		}
 		const valueAtom = Type.of(value)._atoms?.[0];
 		return Boolean(valueAtom && this._atoms?.some((atom) => {
-			if (!atom.accept(valueAtom)) {
+			if (atom instanceof ObjectAtom ? !(valueAtom instanceof ObjectAtom) : !atom.accepts(valueAtom)) {
 				return false;
+			}
+			if ((atom instanceof ArrayAtom || atom instanceof ObjectAtom) && atom.valType(undefined)?.isUnknown) {
+				return true;
 			}
 			if (atom instanceof ArrayAtom) {
 				const values = value as Value[];
@@ -143,10 +146,10 @@ export class Type {
 					return true;
 				}
 				if (!atom.isUniform) {
-					return types.every((type, ix) => type.acceptValue(Object.hasOwn(values, ix) ? values[ix] : undefined));
+					return types.every((type, ix) => type.acceptsValue(Object.hasOwn(values, ix) ? values[ix] : undefined));
 				}
 				for (let i = 0; i < values.length; ++i) {
-					if (!types[0].acceptValue(Object.hasOwn(values, i) ? values[i] : undefined)) {
+					if (!types[0].acceptsValue(Object.hasOwn(values, i) ? values[i] : undefined)) {
 						return false;
 					}
 				}
@@ -156,8 +159,8 @@ export class Type {
 				const values = value as Record<string, Value>;
 				return atom.valTypes().every(([key, type]) =>
 					key != null
-						? type.acceptValue(Object.hasOwn(values, key) ? values[key] : undefined)
-						: Object.values(values).every((v) => type.acceptValue(v))
+						? type.acceptsValue(Object.hasOwn(values, key) ? values[key] : undefined)
+						: Object.values(values).every((v) => type.acceptsValue(v))
 				);
 			}
 			return true;
@@ -180,7 +183,7 @@ export class Type {
 		if (this.isUnknown) {
 			return type;
 		}
-		const list = this._atoms?.filter((a) => type.accept(a));
+		const list = this._atoms?.filter((a) => type.accepts(a));
 		return list?.length === 0
 			? undefined
 			: list?.length === this._atoms?.length
@@ -199,9 +202,7 @@ export class Type {
 		}
 		const valTypes: Type[] = [];
 		for (const atom of atoms) {
-			const valType = atom.isUniform
-				? atom.valType(0)
-				: atom.valType(index);
+			const valType = atom.valType(index);
 			if (!valType) {
 				return Type.Unknown;
 			}
@@ -217,7 +218,7 @@ export class Type {
 		}
 		const valTypes: Type[] = [];
 		for (const atom of atoms) {
-			const valType = atom.valType(atom.isUniform ? undefined : key);
+			const valType = atom.valType(key);
 			if (!valType) {
 				return Type.Unknown;
 			}
@@ -259,7 +260,7 @@ export class Type {
 		if (!this._atoms?.length || !this.isOptional || this.isVoid) {
 			return this;
 		}
-		return new Type(this._atoms.filter((a) => !a.equate(Type.Void.atom(0))));
+		return new Type(this._atoms.filter((a) => !a.equals(Type.Void.atom(0))));
 	}
 
 	toString(): string {
@@ -284,7 +285,7 @@ export class Type {
 		const atoms: Atom[] = [];
 		for (const type of types) {
 			for (const atom of type._atoms ?? []) {
-				if (!atoms.some((a) => a.equate(atom))) {
+				if (!atoms.some((a) => a.equals(atom))) {
 					atoms.push(atom);
 				}
 			}
@@ -332,12 +333,12 @@ export class Type {
 		return new Type([new PrimitiveAtom(primitive)]);
 	}
 
-	static arrayType(itemTypes: Type[] = []) {
-		return new Type([new ArrayAtom(itemTypes)]);
+	static arrayType(types: Type | readonly Type[] = Type.Unknown) {
+		return new Type([new ArrayAtom(types)]);
 	}
 
-	static objectType(propTypes: [key: string | undefined, valType: Type][] = []) {
-		return new Type([new ObjectAtom(propTypes)]);
+	static objectType(types: Type | readonly (readonly [key: string, valType: Type])[] = Type.Unknown) {
+		return new Type([new ObjectAtom(types)]);
 	}
 
 	static functionType(signatures: [retType: Type, argTypes: Type[], variadic?: boolean][], volatile?: boolean) {

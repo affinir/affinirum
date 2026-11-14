@@ -26,7 +26,7 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "(a[n+1] + 2)**2",
+			script: "(a[(n+1)::integer] + 2)**2",
 			cases: [
 				{ values: { a: [0, 1, 2], n: 1n }, result: 16 },
 			],
@@ -116,7 +116,7 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "var x=a;while while x<10{x=x+1}<20{x=x+1}",
+			script: "var x=a;while (while x<10{x=x+1}<20)==true{x=x+1}",
 			cases: [
 				{ values: { a: 1n }, result: 11n },
 			],

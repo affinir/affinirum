@@ -15,14 +15,14 @@ describe("Strict mode test", () => {
 	it("validates injected structured values recursively", () => {
 		const script = new Affinirum("items", {
 			strict: true,
-			variables: { items: Type.arrayType([Type.Integer]) },
+			variables: { items: Type.arrayType(Type.Integer) },
 		});
 		expect(() => script.evaluate({ items: [1n, "two"] })).toThrow(/unexpected type array/);
 	});
 
 	it.each([true, false])("checks configured input types with strict=%s", (strict) => {
 		expect(() => new Affinirum("value.UpperCase", { strict, variables: { value: Type.Integer } }))
-			.toThrow(/cannot be called/);
+			.toThrow(/mismatch with expected type string/);
 	});
 
 	it("keeps explicitly unknown inputs from acquiring inferred types", () => {

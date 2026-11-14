@@ -6,7 +6,7 @@ describe("Indexed assignment test", () => {
 		["var items=[1,2];items[-1]+=3;items", [1n, 5n]],
 		["var record=['a':1];record['b']=2;record", { a: 1n, b: 2n }],
 		["var record=['a':1];record.\"a\"+=2;record", { a: 3n }],
-		["var value=['items':[['count':1]]];value.items[0].count+=2;value", { items: [{ count: 3n }] }],
+		["var value=['items':[['count':1]]];((value.items::array)[0]::['count':integer]).count+=2;value", { items: [{ count: 3n }] }],
 		["var items=[1,2];items[0]=items[1]=7;items", [7n, 7n]],
 		["var items=[[1],[2]];items[0]+=[3];items", [[1n, 3n], [2n]]],
 		["var items=[1,2];val original=items;items[0]=7;original", [7n, 2n]],
@@ -59,7 +59,7 @@ describe("Indexed assignment test", () => {
 	});
 
 	it("rejects a missing typed item before a compound operation", () => {
-		const expression = new Affinirum("var items:[integer]=[];items[0]+=1");
+		const expression = new Affinirum("var items:[...integer]=[];items[0]+=1");
 		expect(() => expression.evaluate()).toThrow(/indexed value mismatch with expected type integer/);
 	});
 
@@ -100,23 +100,23 @@ describe("Indexed assignment test", () => {
 
 	it.each(["items[0]=2", "items[0]+=2"])("rejects indexed assignment through an input in %s", (script) => {
 		expect(() => new Affinirum(script)).toThrow(/illegal re-assignment/);
-		expect(() => new Affinirum(script, { variables: { items: Type.arrayType([Type.Integer]) } }))
+		expect(() => new Affinirum(script, { variables: { items: Type.arrayType(Type.Integer) } }))
 			.toThrow(/illegal re-assignment/);
 	});
 
 	it.each([
-		"var items:[integer]=[1,2];items[0]='bad'",
+		"var items:[...integer]=[1,2];items[0]='bad'",
 		"var record:['a':integer]=['a':1];record.a='bad'",
-		"var value:['items':[integer]]=['items':[1]];value.items[0]='bad'",
+		"var value:['items':[...integer]]=['items':[1]];value.items[0]='bad'",
 		"var value:['child':['count':integer]]=['child':['count':1]];value.child.count='bad'",
-		"var value:[[integer]]=[[1],[2]];value[index][0]='bad'",
+		"var value:[...[...integer]]=[[1],[2]];value[index][0]='bad'",
 	])("rejects an assignment incompatible with a known member type in %s", (script) => {
 		expect(() => new Affinirum(script)).toThrow(/mismatch with expected type/);
 	});
 
 	it("preserves the type of an array written through a broader alias", () => {
 		const values = [1n];
-		const expression = new Affinirum("var typed:[integer]=values;var alias:array=typed;alias[0]=replacement;typed", {
+		const expression = new Affinirum("var typed:[...integer]=values;var alias:array=typed;alias[0]=replacement;typed", {
 			variables: { values: Type.Array },
 		});
 		expect(() => expression.evaluate({ values, replacement: "bad" })).toThrow(/indexed value mismatch with expected type/);
@@ -126,7 +126,7 @@ describe("Indexed assignment test", () => {
 	});
 
 	it("checks the whole array against the receiver type before an indexed write", () => {
-		const type = Type.union(Type.arrayType([Type.Integer]), Type.arrayType([Type.String]));
+		const type = Type.union(Type.arrayType(Type.Integer), Type.arrayType(Type.String));
 		const expression = new Affinirum("items()[0]='two'", {
 			variables: { items: Type.functionType([[type, []]]) },
 		});
@@ -146,7 +146,7 @@ describe("Indexed assignment test", () => {
 		});
 		Object.setPrototypeOf(items, Object.assign(Object.create(Array.prototype), { 2: "inherited" }));
 		const expression = new Affinirum("items()[0]=replacement", {
-			variables: { items: Type.functionType([[Type.arrayType([Type.OptionalInteger]), []]]) },
+			variables: { items: Type.functionType([[Type.arrayType(Type.OptionalInteger), []]]) },
 		});
 		expect(expression.evaluate({ items: () => items, replacement: 1n })).toBe(1n);
 		expect(() => expression.evaluate({ items: () => items, replacement: 2n }))
@@ -174,12 +174,12 @@ describe("Indexed assignment test", () => {
 	});
 
 	it.each<[string, Type, Value]>([
-		["var value:['items':[integer]]=['items':[1]];value.items", Type.arrayType([Type.Integer]), [1n]],
-		["var value:['child':['count':integer]]=['child':['count':1]];value.child.count", Type.Integer, 1n],
-		["var value:[[integer]]=[[1]];value[0]", Type.arrayType([Type.Integer]), [1n]],
+		["var value:['items':[...integer]]=['items':[1]];value.items", Type.arrayType(Type.Integer), [1n]],
+		["var value:['child':['count':integer]]=['child':['count':1]];(value.child::['count':integer]).count", Type.Integer, 1n],
+		["var value:[...[...integer]]=[[1]];value[0]", Type.arrayType(Type.Integer), [1n]],
 	])("reports the indexed member type as optional in %s", (script, type, expected) => {
 		const expression = new Affinirum(script);
-		expect(expression.type.equate(type.toOptional())).toBe(true);
+		expect(expression.type.equals(type.toOptional())).toBe(true);
 		expect(expression.evaluate()).toEqual(expected);
 	});
 
@@ -199,11 +199,11 @@ describe("Indexed assignment test", () => {
 	});
 
 	it("preserves uniform object member types through a computed key", () => {
-		const type = Type.arrayType([Type.Integer]);
-		const expression = new Affinirum("var value=values;value[key][0]=2;value[key]", {
-			variables: { values: Type.objectType([[undefined, type]]), key: Type.String },
+		const type = Type.arrayType(Type.Integer);
+		const expression = new Affinirum("var value=values;(value[key]::[...integer])[0]=2;value[key]", {
+			variables: { values: Type.objectType(type), key: Type.String },
 		});
-		expect(expression.type.equate(type.toOptional())).toBe(true);
+		expect(expression.type.equals(type.toOptional())).toBe(true);
 		expect(expression.evaluate({ values: { a: [1n] }, key: "a" })).toEqual([2n]);
 	});
 
@@ -251,16 +251,16 @@ describe("Indexed assignment test", () => {
 		expect(indexes).toBe(1);
 	});
 
-	it("preserves null-safe indexed reads", () => {
+	it.each([undefined, 1n])("rejects a non-collection receiver at runtime for %s", (receiver) => {
 		const expression = new Affinirum("value().missing.Length", {
 			variables: { value: Type.functionType([[Type.Unknown, []]]) },
 		});
-		expect(expression.evaluate({ value: () => undefined })).toBe(0n);
+		expect(() => expression.evaluate({ value: () => receiver })).toThrow(/indexed value must be an array or object/);
 	});
 
 	it("returns the assigned value with its inferred type", () => {
 		const expression = new Affinirum("var items=[1];items[0]=2");
-		expect(expression.type.equate(Type.Integer)).toBe(true);
+		expect(expression.type.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate()).toBe(2n);
 	});
 });

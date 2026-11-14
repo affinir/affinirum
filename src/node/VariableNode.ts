@@ -7,14 +7,18 @@ import { CallFrame } from "../CallFrame.js";
 
 export class VariableNode extends AssignableNode {
 
+	protected readonly _variable: Variable;
+	protected readonly _initializer: boolean;
 	protected _type?: Type;
 
 	constructor(
 		span: ParserSpan,
-		protected readonly _variable: Variable,
-		protected readonly _initializer = false,
+		variable: Variable,
+		initializer: boolean = false,
 	) {
 		super(span);
+		this._variable = variable;
+		this._initializer = initializer;
 	}
 
 	override get assignable(): boolean {
@@ -27,14 +31,15 @@ export class VariableNode extends AssignableNode {
 			: this._variable.type);
 	}
 
-	override compile(hint: Type): AssignableNode {
+	override compile(type = Type.Unknown): AssignableNode {
 		if (this._variable instanceof InputVariable && !this._variable.declared) {
 			this._type = this._variable.type;
-			if (!hint.isUnknown && !hint.isVoid && !hint.isNever) {
-				this._type = hint === Type.Function ? this._type.reduce(hint) ?? hint : hint;
+			if (!type.isUnknown && !type.isVoid && !type.isNever) {
+				this._type = type === Type.Function ? this._type.reduce(type) ?? type : type;
 				this._variable.declare(this._type);
 			}
 		}
+		super.compile(type);
 		return this;
 	}
 
@@ -59,7 +64,7 @@ export class VariableNode extends AssignableNode {
 		return {
 			set: (value: Value) => {
 				const type = this._variable.type;
-				if (!type.acceptValue(value)) {
+				if (!type.acceptsValue(value)) {
 					this.throwError(`type ${Type.of(value)} mismatch with expected type ${type}`);
 				}
 				return frame.set(this._variable, value);

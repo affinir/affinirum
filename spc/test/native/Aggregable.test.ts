@@ -23,7 +23,7 @@ describe("Aggregable function test", () => {
 			],
 		},
 		{
-			script: "a.Add(b)[i]",
+			script: "(a.Add(b)::array)[i]",
 			cases: [
 				{ values: { a: [1, 2], b: [3, 4], i: 2n }, result: 3 },
 				{ values: { a: ["a"], b: ["b", "c"], i: 1n }, result: "b" },

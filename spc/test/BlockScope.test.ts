@@ -22,7 +22,7 @@ describe("Block scope test", () => {
 	});
 
 	it("initializes unassigned block locals again on each iteration", () => {
-		const expression = new Affinirum("var i=0;var sum=0;while i<2{var n:integer?;if i==0{n=7};sum+=n?:0;i+=1};sum");
+		const expression = new Affinirum("var i=0;var sum=0;while i<2{var n:integer?;if i==0{n=7};sum+=(n?:0)::integer;i+=1};sum");
 		expect(expression.evaluate() as bigint).toBe(7n);
 	});
 });

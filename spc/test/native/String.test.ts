@@ -17,7 +17,7 @@ describe("String function test", () => {
 			],
 		},
 		{
-			script: "a.Unlike(b)",
+			script: "a.NotLike(b)",
 			cases: [
 				{ values: { a: "  abcd  0123  !", b: "abcd-00123  " }, result: true },
 				{ values: { a: "  abcd  0123  ! ", b: "Ab cD-0123  " }, result: false },
@@ -95,7 +95,7 @@ describe("String function test", () => {
 			],
 		},
 		{
-			script: "String.Alphanum(a)",
+			script: "String.Alphanumeric(a)",
 			cases: [
 				{ values: { a: "---abcd===" }, result: "abcd" },
 				{ values: { a: "+abc-def!" }, result: "abcdef" },

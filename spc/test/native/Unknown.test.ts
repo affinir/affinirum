@@ -36,7 +36,7 @@ describe("Unknown function test", () => {
 			],
 		},
 		{
-			script: "a.Equal(b)",
+			script: "a.Equals(b)",
 			cases: [
 				{ values: { a: undefined, b: undefined }, result: true },
 				{ values: { a: 1, b: 1n }, result: true },
@@ -58,7 +58,7 @@ describe("Unknown function test", () => {
 			],
 		},
 		{
-			script: "a.Unequal(b)",
+			script: "a.NotEquals(b)",
 			cases: [
 				{ values: { a: new Date("2020-01-01T00:00:00.000Z"), b: new Date("2020-01-01T00:00:00.001Z") }, result: true },
 				{ values: { a: new Uint8Array([1, 2]).buffer, b: new Uint8Array([1, 3]).buffer }, result: true },
@@ -151,7 +151,7 @@ describe("Mixed numeric equality", () => {
 		[Infinity, 0n, false],
 		[-Infinity, 0n, false],
 	])("compares float %s and integer %s in both operand orders", (float, integer, equal) => {
-		const expression = new Affinirum("[a==b,b==a,a!=b,b!=a,a.Equal(b),b.Equal(a),a.Unequal(b),b.Unequal(a)]");
+		const expression = new Affinirum("[a==b,b==a,a!=b,b!=a,a.Equals(b),b.Equals(a),a.NotEquals(b),b.NotEquals(a)]");
 		expect(expression.evaluate({ a: float, b: integer }))
 			.toEqual([equal, equal, !equal, !equal, equal, equal, !equal, !equal]);
 	});
@@ -182,7 +182,7 @@ describe("Object category equality", () => {
 		{ categories: "empty array and object with matching properties", a: [], b: { length: 0n } },
 		{ categories: "array and object with matching properties", a: [1n], b: { "0": 1n, length: 1n } },
 	];
-	const comparisonScript = "[a==b,b==a,a.Equal(b),b.Equal(a),a!=b,b!=a,a.Unequal(b),b.Unequal(a)]";
+	const comparisonScript = "[a==b,b==a,a.Equals(b),b.Equals(a),a!=b,b!=a,a.NotEquals(b),b.NotEquals(a)]";
 
 	it.each(pairs)("distinguishes $categories in both operand orders", ({ a, b }) => {
 		const expression = new Affinirum(comparisonScript);
@@ -225,7 +225,7 @@ describe("Object category equality", () => {
 });
 
 describe("Cyclic structural equality", () => {
-	const comparisonScript = "[a==b,b==a,a.Equal(b),b.Equal(a),a!=b,b!=a,a.Unequal(b),b.Unequal(a)]";
+	const comparisonScript = "[a==b,b==a,a.Equals(b),b.Equals(a),a!=b,b!=a,a.NotEquals(b),b.NotEquals(a)]";
 	const createObject = (value: bigint): Record<string, Value> => {
 		const object: Record<string, Value> = {};
 		object.self = object;

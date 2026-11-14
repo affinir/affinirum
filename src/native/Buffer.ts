@@ -36,7 +36,7 @@ export const parseBoundedInteger = (input: string, base: 10 | 16, min: number, m
 	return value;
 }
 
-export const equateBuffers = (value1: ArrayBuffer, value2: ArrayBuffer) => {
+export const equalsBuffers = (value1: ArrayBuffer, value2: ArrayBuffer) => {
 	if (value1.byteLength !== value2.byteLength) {
 		return false;
 	}

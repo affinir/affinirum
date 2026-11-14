@@ -12,11 +12,11 @@ import { funcLength, funcContains } from "./native/Iterable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
 	funcPower, funcRoot, funcNegate } from "./native/Number.js";
 import { funcEntries, funcKeys, funcValues } from "./native/Object.js";
-import { funcLike, funcUnlike, funcStartsWith, funcEndsWith,
+import { funcLike, funcNotLike, funcStartsWith, funcEndsWith,
 	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit, funcReplaceWith } from "./native/String.js";
 import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay, funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime,
 	funcDaysSince, funcHoursSince, funcMinutesSince, funcSecondsSince } from "./native/Timestamp.js";
-import { funcCoalesce, funcEqual, funcNotEqual, funcEncode, funcFormat } from "./native/Unknown.js";
+import { funcCoalesce, funcEquals, funcNotEquals, funcEncode, funcFormat } from "./native/Unknown.js";
 
 export const Functions: [string, Constant][] = [
 	// Aggregable
@@ -68,7 +68,7 @@ export const Functions: [string, Constant][] = [
 	["Values", funcValues],
 	// String
 	["Like", funcLike],
-	["Unlike", funcUnlike],
+	["NotLike", funcNotLike],
 	["StartsWith", funcStartsWith],
 	["EndsWith", funcEndsWith],
 	["Char", funcChar],
@@ -97,8 +97,8 @@ export const Functions: [string, Constant][] = [
 	["SecondsSince", funcSecondsSince],
 	// Unknown
 	["Coalesce", funcCoalesce],
-	["Equal", funcEqual],
-	["Unequal", funcNotEqual],
+	["Equals", funcEquals],
+	["NotEquals", funcNotEquals],
 	["Encode", funcEncode],
 	["Format", funcFormat],
 ];

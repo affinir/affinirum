@@ -12,22 +12,22 @@ export class PrimitiveAtom implements IAtom {
 		this._primitive = primitive;
 	}
 
-	equate(atom: IAtom): boolean {
+	equals(atom: IAtom): boolean {
 		if (atom instanceof PrimitiveAtom) {
 			return atom._primitive === this._primitive;
 		}
 		return false;
 	}
 
-	accept(atom: IAtom): boolean {
+	accepts(atom: IAtom): boolean {
 		if (atom instanceof PrimitiveAtom) {
 			return atom._primitive === this._primitive;
 		}
 		return false;
 	}
 
-	intersect(atom: IAtom): boolean {
-		return this.equate(atom);
+	intersects(atom: IAtom): boolean {
+		return this.equals(atom);
 	}
 
 	weight(): number {

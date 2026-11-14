@@ -6,42 +6,43 @@ import { CallFrame } from "../CallFrame.js";
 
 export class ArrayNode extends Node {
 
+	protected _subnodes: Node[];
+	protected _uniform: boolean;
 	protected _type: Type;
 
 	constructor(
 		span: ParserSpan,
-		protected _subnodes: Node[],
+		subnodes: Node[],
+		uniform: boolean = false,
 	) {
 		super(span);
-		this._type = Type.arrayType(_subnodes.map((i) => i.type));
+		this._subnodes = subnodes;
+		this._uniform = uniform;
+		const types = subnodes.map((i) => i.type);
+		this._type = Type.arrayType(uniform ? Type.union(...types) : types);
 	}
 
 	override get type(): Type {
 		return this._type;
 	}
 
-	override acceptType(type: Type): boolean {
-		return this.type.isNever || super.acceptType(type)
-			&& this._subnodes.every((node, index) => node.acceptType(type.arrayAtomValType(index)));
+	override satisfies(type: Type): boolean {
+		return this.type.isNever || super.satisfies(type)
+			&& this._subnodes.every((node, index) => node.satisfies(type.arrayAtomValType(index)));
 	}
 
-	override validateType(type: Type): void {
-		super.validateType(type);
-		if (!type.isVoid && !this.type.isNever) {
-			for (let i = 0; i < this._subnodes.length; ++i) {
-				this._subnodes[i].validateType(type.arrayAtomValType(i));
-			}
-		}
-	}
-
-	override compile(hint: Type): Node {
+	override compile(type = Type.Unknown): Node {
 		const valTypes: Type[] = [];
+		let never = false;
 		for (let i = 0; i < this._subnodes.length; ++i) {
-			this._subnodes[i] = this._subnodes[i].compile(hint.arrayAtomValType(i));
+			this._subnodes[i] = this._subnodes[i].compile(type.arrayAtomValType(i));
+			never ||= this._subnodes[i].type.isNever;
 			valTypes.push(this._subnodes[i].type);
 		}
-		this._type = valTypes.some((type) => type.isNever) ? Type.Never : Type.arrayType(valTypes);
-		return this;
+		this._type = never
+			? Type.Never
+			: Type.arrayType(this._uniform ? Type.union(...valTypes) : valTypes);
+		return super.compile(type);
 	}
 
 	override evaluate(frame: CallFrame): Value {

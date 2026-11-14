@@ -16,17 +16,11 @@ export class FunctionSignature {
 		this._retType = retType;
 		this._argTypes = [...argTypes];
 		this._isVariadic = variadic;
-		let ix = 0;
-		while (ix < this._argTypes.length && !this._argTypes[ix].isOptional) {
-			++ix;
+		let minArity = variadic ? Math.max(0, this._argTypes.length - 1) : this._argTypes.length;
+		while (minArity > 0 && this._argTypes[minArity - 1].isOptional) {
+			--minArity;
 		}
-		this._minArity = ix;
-		while (ix < this._argTypes.length && this._argTypes[ix].isOptional) {
-			++ix;
-		}
-		if (ix < this._argTypes.length) {
-			throw new Error("a required parameter illegally follows an optional one");
-		}
+		this._minArity = minArity;
 		if (this._isVariadic && this._argTypes.length > 0 && !this._argTypes[this._argTypes.length - 1].isUniformArray) {
 			throw new Error("variadic function argument must be of uniform array type");
 		}
@@ -81,8 +75,8 @@ export class FunctionSignature {
 	equate(signature: FunctionSignature): boolean {
 		return this._isVariadic === signature._isVariadic
 			&& this._argTypes.length === signature._argTypes.length
-			&& this._retType.equate(signature._retType)
-			&& this._argTypes.every((type, index) => type.equate(signature._argTypes[index]));
+			&& this._retType.equals(signature._retType)
+			&& this._argTypes.every((type, index) => type.equals(signature._argTypes[index]));
 	}
 
 	accept(signature: FunctionSignature): boolean {
@@ -91,16 +85,15 @@ export class FunctionSignature {
 		}
 		if (this._isVariadic !== signature._isVariadic
 			|| this._isVariadic && this.arity !== signature.arity
-			|| !this._retType.accept(signature._retType)
-			|| this.minArity > signature.maxArity
-			|| this.maxArity < signature.minArity) {
+			|| !this._retType.accepts(signature._retType)
+			|| signature.minArity > this.minArity) {
 			return false;
 		}
 		const argc = Math.min(this.arity, signature.arity);
 		for (let i = 0; i < argc; ++i) {
-			const type = this.argType(i)?.toMandatory();
+			const type = this.argType(i);
 			const argType = signature.argType(i);
-			if (type && (!argType || !argType.accept(type))) {
+			if (type && (!argType || !argType.accepts(type))) {
 				return false;
 			}
 		}
@@ -113,7 +106,7 @@ export class FunctionSignature {
 		}
 		if (this._isVariadic !== signature._isVariadic
 			|| this._isVariadic && this.arity !== signature.arity
-			|| !this._retType.intersect(signature._retType)
+			|| !this._retType.intersects(signature._retType)
 			|| this.minArity > signature.maxArity
 			|| this.maxArity < signature.minArity) {
 			return false;
@@ -122,7 +115,7 @@ export class FunctionSignature {
 		for (let i = 0; i < argc; ++i) {
 			const type = this.argType(i);
 			const argType = signature.argType(i);
-			if (!type || !argType || !type.intersect(argType)) {
+			if (!type || !argType || !type.intersects(argType)) {
 				return false;
 			}
 		}
@@ -137,7 +130,9 @@ export class FunctionSignature {
 		if (this._generic) {
 			return "function";
 		}
-		const argTypes = this._argTypes.map((type, ix) => ix === this._argTypes.length - 1 && this._isVariadic ? `...${type}` : type.toString()).join(",");
+		const argTypes = this._argTypes.map((type, ix) =>
+			this._isVariadic && ix === this.arity - 1 ? `...${type.arrayAtomValType()}` : type.toString()
+		).join(",");
 		return `~(${argTypes}):${this._retType}`;
 	}
 
@@ -178,19 +173,19 @@ export class FunctionAtom implements IAtom {
 		return this._isVolatile;
 	}
 
-	equate(atom: IAtom): boolean {
+	equals(atom: IAtom): boolean {
 		return atom instanceof FunctionAtom
 			&& this._isVolatile === atom._isVolatile
 			&& this._signatures.length === atom._signatures.length
 			&& this._signatures.every((signature) => atom._signatures.some((i) => signature.equate(i)));
 	}
 
-	accept(atom: IAtom): boolean {
+	accepts(atom: IAtom): boolean {
 		return atom instanceof FunctionAtom
 			&& this._signatures.every((signature) => atom._signatures.some((i) => signature.accept(i)));
 	}
 
-	intersect(atom: IAtom): boolean {
+	intersects(atom: IAtom): boolean {
 		return atom instanceof FunctionAtom
 			&& this._signatures.some((signature) => atom._signatures.some((i) => signature.intersect(i)));
 	}

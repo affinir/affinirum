@@ -12,17 +12,16 @@ export interface AssignmentResolver {
 export abstract class AssignableNode extends Node {
 
 	abstract get assignable(): boolean;
-	abstract override compile(hint: Type): Node;
 	abstract compileAssignment(type: Type): AssignableNode;
 	abstract resolver(frame: CallFrame): AssignmentResolver;
 
 	reduceAssignmentType(type: Type): Type | undefined {
-		const target = this.type;
-		const hasFunction = target.hasFunction();
-		if (hasFunction && !target.accept(type)) {
+		const targetType = this.type;
+		if (!targetType.accepts(type)) {
 			return undefined;
 		}
-		return target.reduce(type) ?? (hasFunction ? target : undefined);
+		const compiledType = targetType.reduce(type);
+		return compiledType?.accepts(type) ? compiledType : targetType;
 	}
 
 }

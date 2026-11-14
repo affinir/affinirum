@@ -6,15 +6,21 @@ import { CallFrame } from "../CallFrame.js";
 
 export class FinalNode extends Node {
 
+	protected _level: "result" | "return";
+	protected _subnode: Node;
+	protected readonly _type: Type;
 	protected _value: Value;
 
 	constructor(
 		span: ParserSpan,
-		protected _level: "result" | "return",
-		protected _subnode: Node,
-		protected readonly _expectedType: Type,
+		level: "result" | "return",
+		subnode: Node,
+		type: Type,
 	) {
 		super(span);
+		this._level = level;
+		this._subnode = subnode;
+		this._type = type;
 	}
 
 	get level() {
@@ -34,8 +40,7 @@ export class FinalNode extends Node {
 	}
 
 	override compile(): Node {
-		this._subnode = this._subnode.compile(this._expectedType);
-		this._subnode.validateType(this._expectedType);
+		this._subnode = this._subnode.compile(this._type);
 		return this;
 	}
 
