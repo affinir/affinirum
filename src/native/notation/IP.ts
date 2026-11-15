@@ -253,7 +253,7 @@ const funcDecodeIP = new Constant(
 	Type.functionType([[Type.OptionalString, [Type.OptionalBuffer]]]),
 );
 
-export const constIP = Object.assign(Object.create(null), {
+export const globIP = Object.assign(Object.create(null), {
 	Match: funcMatchIP,
 	Encode: funcEncodeIP,
 	Decode: funcDecodeIP,

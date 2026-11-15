@@ -2,12 +2,9 @@ import { Type } from "./Type.js";
 import { Value, normalize } from "./Value.js";
 import { Constant } from "./Constant.js";
 import { LocalVariable, InputVariable } from "./Variable.js";
-import { Keywords } from "./Keywords.js";
-import { Constants } from "./Constants.js";
-import { Functions } from "./Functions.js";
 import { CallFrame } from "./CallFrame.js";
 import { ParserSpan } from "./ParserSpan.js";
-import { ParserState } from "./ParserState.js";
+import { ParserState, keywords } from "./ParserState.js";
 import { LexicalScope } from "./LexicalScope.js";
 import { TypeParser } from "./TypeParser.js";
 import { Node } from "./node/Node.js";
@@ -26,17 +23,16 @@ import { JumpNode } from "./node/JumpNode.js";
 import { FinalNode } from "./node/FinalNode.js";
 import { ObjectNode } from "./node/ObjectNode.js";
 import { VariableNode } from "./node/VariableNode.js";
-import { funcAdd } from "./native/Aggregable.js";
-import { funcOr, funcAnd, funcNot } from "./native/Boolean.js";
+import { constants } from "./dictionary/Constants.js";
+import { functions } from "./dictionary/Functions.js";
+import { funcNot } from "./native/Boolean.js";
 import { funcHas } from "./native/Composite.js";
-import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
-	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, funcNegate } from "./native/Number.js";
-import { funcCoalesce, funcEquals, funcNotEquals } from "./native/Unknown.js";
+import { funcNegate } from "./native/Number.js";
 import { parseAN, formatAN } from "./native/notation/AN.js"
 
 export class Affinirum {
 
-	static readonly keywords = [...Keywords, ...Constants.map((c) => c[0])];
+	static readonly keywords = [...keywords, ...constants.map((c) => c[0])];
 	protected readonly _script: string;
 	protected readonly _strict: boolean;
 	protected readonly _scope: LexicalScope;
@@ -45,12 +41,12 @@ export class Affinirum {
 	protected readonly _vartypes = new Map<string, Type>();
 	protected readonly _varspans = new Map<string, ParserSpan>();
 	protected readonly _variables = new Map<string, InputVariable>();
-	protected readonly _constants = new Map<string, Record<string, Constant>>(Constants);
-	protected readonly _functions = new Map<string, Constant>(Functions);
+	protected readonly _constants = new Map<string, Record<string, Constant>>(constants);
+	protected readonly _functions = new Map<string, Constant>(functions);
 	protected _results: FinalNode[] = [];
 
 	/**
-		Creates compiled expression. Any parsed token not recognized as a constant or a function will be compiled as a variable.
+		Creates compiled expression. Any parsed identifier not recognized as a constant or a function will be compiled as a variable.
 		@param script Math expression to compile.
 		@param config Optional expected type, strict mode, variable types, constant values and functions to add for the compilation.
 			If expected type is provided then expression return type is matched against it.
@@ -71,7 +67,7 @@ export class Affinirum {
 		}
 		const state = new ParserState(this._script);
 		this._root = this._list(state.next(), this._scope);
-		if (!state.isEmpty) {
+		if (!state.isEnded) {
 			state.throwError("unexpected expression token or expression end");
 		}
 		this._root = this._root.compile(this._scope.type);
@@ -168,9 +164,9 @@ export class Affinirum {
 	protected _list(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
 		const subnodes: Node[] = [];
-		while (!state.isEmpty) {
+		while (!state.isEnded) {
 			subnodes.push(this._unit(state, scope));
-			if (!state.isSemicolon) {
+			if (!state.equals(";")) {
 				break;
 			}
 			else {
@@ -186,8 +182,8 @@ export class Affinirum {
 
 	protected _coalescence(state: ParserState, scope: LexicalScope): Node {
 		let node = this._disjunction(state, scope);
-		while (state.operator === funcCoalesce) {
-			const fnode = new ConstantNode(state, state.operator);
+		while (state.equals("?:")) {
+			const fnode = new ConstantNode(state, state.constant);
 			node = new CallNode(state, fnode, [node, this._disjunction(state.next(), scope)]);
 		}
 		return node;
@@ -195,8 +191,8 @@ export class Affinirum {
 
 	protected _disjunction(state: ParserState, scope: LexicalScope): Node {
 		let node = this._conjunction(state, scope);
-		while (state.operator === funcOr) {
-			const fnode = new ConstantNode(state, state.operator);
+		while (state.equals("|", "or")) {
+			const fnode = new ConstantNode(state, state.constant);
 			node = new CallNode(state, fnode, [node, this._conjunction(state.next(), scope)]);
 		}
 		return node;
@@ -204,8 +200,8 @@ export class Affinirum {
 
 	protected _conjunction(state: ParserState, scope: LexicalScope): Node {
 		let node = this._negation(state, scope);
-		while (state.operator === funcAnd) {
-			const fnode = new ConstantNode(state, state.operator);
+		while (state.equals("&", "and")) {
+			const fnode = new ConstantNode(state, state.constant);
 			node = new CallNode(state, fnode, [node, this._negation(state.next(), scope)]);
 		}
 		return node;
@@ -214,7 +210,7 @@ export class Affinirum {
 	protected _negation(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
 		let negate = false;
-		while (state.operator === funcNot) {
+		while (state.equals("!", "not")) {
 			negate = !negate;
 			span.end(state);
 			state.next();
@@ -229,10 +225,8 @@ export class Affinirum {
 
 	protected _comparison(state: ParserState, scope: LexicalScope): Node {
 		let node = this._aggregate(state, scope);
-		while (state.operator === funcGreaterThan || state.operator === funcLessThan
-			|| state.operator === funcGreaterOrEqual || state.operator === funcLessOrEqual
-			|| state.operator === funcEquals || state.operator === funcNotEquals) {
-			const fnode = new ConstantNode(state, state.operator);
+		while (state.equals(">", "<", ">=", "<=", "==", "!=")) {
+			const fnode = new ConstantNode(state, state.constant);
 			node = new CallNode(state, fnode, [node, this._aggregate(state.next(), scope)]);
 		}
 		return node;
@@ -240,8 +234,8 @@ export class Affinirum {
 
 	protected _aggregate(state: ParserState, scope: LexicalScope): Node {
 		let node = this._product(state, scope);
-		while (state.operator === funcAdd || state.operator === funcSubtract) {
-			const fnode = new ConstantNode(state, state.operator);
+		while (state.equals("+", "-")) {
+			const fnode = new ConstantNode(state, state.constant);
 			node = new CallNode(state, fnode, [node, this._product(state.next(), scope)]);
 		}
 		return node;
@@ -249,8 +243,8 @@ export class Affinirum {
 
 	protected _product(state: ParserState, scope: LexicalScope): Node {
 		let node = this._signum(state, scope);
-		while (state.operator === funcMultiply || state.operator === funcDivide || state.operator === funcRemainder) {
-			const fnode = new ConstantNode(state, state.operator);
+		while (state.equals("*", "/", "%")) {
+			const fnode = new ConstantNode(state, state.constant);
 			node = new CallNode(state, fnode, [node, this._signum(state.next(), scope)]);
 		}
 		return node;
@@ -259,8 +253,8 @@ export class Affinirum {
 	protected _signum(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
 		let negate = false;
-		while (state.operator === funcAdd || state.operator === funcSubtract) {
-			if (state.operator === funcSubtract) {
+		while (state.equals("+", "-")) {
+			if (state.equals("-")) {
 				negate = !negate;
 			}
 			span.end(state);
@@ -276,8 +270,8 @@ export class Affinirum {
 
 	protected _factor(state: ParserState, scope: LexicalScope): Node {
 		let node = this._accessor(state, scope);
-		while (state.operator === funcPower) {
-			const fnode = new ConstantNode(state, state.operator);
+		while (state.equals("**")) {
+			const fnode = new ConstantNode(state, state.constant);
 			node = new CallNode(state, fnode, [node, this._accessor(state.next(), scope)]);
 		}
 		return node;
@@ -286,9 +280,9 @@ export class Affinirum {
 	protected _accessor(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
 		let node = this._term(state, scope);
-		while (state.isDot || state.isQuestion || state.isParenthesesOpen || state.isBracketsOpen || state.isCast) {
-			if (state.isDot || state.isQuestion) { // property access or property existance operator
-				const operator = state.isQuestion ? funcHas : undefined;
+		while (state.equals(".", "?", "(", "[", "::")) {
+			if (state.equals(".", "?")) { // property access or property existance operator
+				const operator = state.equals("?") ? funcHas : undefined;
 				if (state.next().isLiteral && (typeof state.literal.value === "string" || typeof state.literal.value === "bigint")) {
 					const inode = new ConstantNode(state, new Constant(state.literal.value));
 					node = operator
@@ -296,14 +290,14 @@ export class Affinirum {
 						: new AccessNode(span.end(state), node, inode);
 					state.next();
 				}
-				else if (state.isToken) {
-					const func = this._functions.get(state.token);
+				else if (state.isIdentifier) {
+					const func = this._functions.get(state.identifier);
 					if (func) {
-						if (state.next().isParenthesesOpen) {
+						if (state.next().equals("(")) {
 							const subnodes: Node[] = [node];
-							while (!state.next().isParenthesesClose) {
+							while (!state.next().equals(")")) {
 								subnodes.push(this._unit(state, scope));
-								if (!state.isComma) {
+								if (!state.equals(",")) {
 									break;
 								}
 							}
@@ -318,7 +312,7 @@ export class Affinirum {
 						}
 					}
 					else {
-						const inode = new ConstantNode(state, new Constant(state.token));
+						const inode = new ConstantNode(state, new Constant(state.identifier));
 						node = operator
 							? new CallNode(span, new ConstantNode(span.end(state), operator), [node, inode])
 							: new AccessNode(span.end(state), node, inode);
@@ -329,11 +323,11 @@ export class Affinirum {
 					state.throwError("missing array index or object key");
 				}
 			}
-			else if (state.isParenthesesOpen) { // function call
+			else if (state.equals("(")) { // function call
 				const subnodes: Node[] = [];
-				while (!state.next().isParenthesesClose) {
+				while (!state.next().equals(")")) {
 					subnodes.push(this._unit(state, scope));
-					if (!state.isComma) {
+					if (!state.equals(",")) {
 						break;
 					}
 				}
@@ -341,13 +335,13 @@ export class Affinirum {
 				state.next();
 				node = new CallNode(span.end(state), node, subnodes);
 			}
-			else if (state.isBracketsOpen) { // access operator
+			else if (state.equals("[")) { // access operator
 				const inode = this._unit(state.next(), scope);
 				state.closeBrackets();
 				state.next();
 				node = new AccessNode(span.end(state), node, inode);
 			}
-			else if (state.isCast) { // type cast operator
+			else if (state.equals("::")) { // type cast operator
 				const type = this._type.parse(state.next(), scope);
 				node = new CastNode(span.end(state), node, type);
 			}
@@ -356,7 +350,7 @@ export class Affinirum {
 			if (!(node instanceof AssignableNode) || !node.assignable) {
 				state.throwError("illegal re-assignment");
 			}
-			const operator = state.assignment.operator;
+			const operator = state.isConstant ? state.constant : undefined;
 			const subnode = this._unit(state.next(), scope);
 			return new AssignmentNode(span, node, subnode, operator);
 		}
@@ -370,116 +364,116 @@ export class Affinirum {
 			state.next();
 			return new ConstantNode(span, constant);
 		}
-		else if (state.isToken) { // constant or variable
-			return this._token(state, scope);
+		else if (state.isIdentifier) { // constant or variable identifier
+			return this._identifier(state, scope);
 		}
-		else if (state.isBracesOpen) { // code block
+		else if (state.equals("{")) { // code block
 			return this._block(state, scope);
 		}
-		else if (state.isBracesClose) {
+		else if (state.equals("}")) {
 			state.throwError("unexpected closing braces");
 		}
-		else if (state.isParenthesesOpen) { // unit grouping
+		else if (state.equals("(")) { // unit grouping
 			const node = this._unit(state.next(), scope);
 			state.closeParentheses();
 			state.next();
 			return node;
 		}
-		else if (state.isParenthesesClose) {
+		else if (state.equals(")")) {
 			state.throwError("unexpected closing parentheses");
 		}
-		else if (state.isBracketsOpen) { // array or object
+		else if (state.equals("[")) { // array or object composite
 			return this._composite(state, scope);
 		}
-		else if (state.isBracketsClose) {
+		else if (state.equals("]")) {
 			state.throwError("unexpected closing brackets");
 		}
-		else if (state.isVar || state.isVal) { // variable declaration
+		else if (state.equals("var", "val")) { // variable declaration
 			return this._declaration(state, scope);
 		}
-		else if (state.isTilda) {
+		else if (state.equals("~")) {
 			return this._function(state, scope);
 		}
-		else if (state.isIf) {
+		else if (state.equals("if")) {
 			return this._ternary(state, scope);
 		}
-		else if (state.isWhile) {
+		else if (state.equals("while")) {
 			return this._loop(state, scope);
 		}
-		else if (state.isReturn) {
+		else if (state.equals("~>")) {
 			return new FinalNode(state, "return", this._unit(state.next(), scope), scope.type);
 		}
-		else if (state.isResult) {
+		else if (state.equals("=>")) {
 			const node = new FinalNode(state, "result", this._unit(state.next(), scope), this._scope.type);
 			this._results.push(node);
 			return node;
 		}
-		else if (state.isExit) {
+		else if (state.equals("exit")) {
 			const node = new JumpNode(state, "exit");
 			state.next();
 			return node;
 		}
-		else if (state.isNext) {
+		else if (state.equals("next")) {
 			const node = new JumpNode(state, "next");
 			state.next();
 			return node;
 		}
-		else if (state.isEmpty) {
+		else if (state.isEnded) {
 			state.throwError("unexpected end of expression");
 		}
 		state.throwError("unexpected expression token");
 	}
 
-	protected _token(state: ParserState, scope: LexicalScope): Node {
+	protected _identifier(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
-		const constants = this._constants.get(state.token);
+		const constants = this._constants.get(state.identifier);
 		if (constants != null) {
-			if (!state.next().isDot) {
+			if (!state.next().equals(".")) {
 				state.throwError("missing constant accessor operator");
 			}
-			if (!state.next().isToken) {
+			if (!state.next().isIdentifier) {
 				state.throwError("missing constant name");
 			}
-			const constant = constants[state.token];
+			const constant = constants[state.identifier];
 			if (!constant) {
-				state.throwError(`unknown constant ${state.token}`);
+				state.throwError(`unknown constant ${state.identifier}`);
 			}
 			state.next();
-			return new ConstantNode(span, constant);
+			return new ConstantNode(span.end(state), constant);
 		}
-		let variable = scope.get(state.token) ?? this._variables.get(state.token);
+		let variable = scope.get(state.identifier) ?? this._variables.get(state.identifier);
 		if (variable == null) {
-			const type = this._vartypes.get(state.token);
+			const type = this._vartypes.get(state.identifier);
 			if (type == null && this._strict) {
-				state.throwError(`undefined variable ${state.token} in strict mode`);
+				state.throwError(`undefined variable ${state.identifier} in strict mode`);
 			}
 			variable = new InputVariable(type);
-			this._variables.set(state.token, variable);
-			this._varspans.set(state.token, state.start());
+			this._variables.set(state.identifier, variable);
+			this._varspans.set(state.identifier, state.start());
 		}
 		state.next();
 		return new VariableNode(span, variable);
 	}
 
 	protected _declaration(state: ParserState, scope: LexicalScope): Node {
-		const assignable = state.isVar;
-		if (!state.next().isToken) {
+		const assignable = state.equals("var");
+		if (!state.next().isIdentifier) {
 			state.throwError("missing variable name");
 		}
-		const token = state.token;
-		if (scope.has(token)) {
-			state.throwError(`illegal redefinition of variable ${token}`);
+		const identifier = state.identifier;
+		if (scope.has(identifier)) {
+			state.throwError(`illegal redefinition of variable ${identifier}`);
 		}
 		const span = state.start();
 		let type: Type | undefined;
-		if (state.next().isColon) {
+		if (state.next().equals(":")) {
 			type = this._type.parse(state.next(), scope);
 		}
 		const variable = new LocalVariable(type, assignable);
-		scope.set(token, variable);
+		scope.set(identifier, variable);
 		if (state.isAssignment) {
-			if (state.assignment.operator) {
-				state.throwError(`illegal assignment operator with variable ${token}`);
+			if (state.isConstant) {
+				state.throwError(`illegal assignment operator with variable ${identifier}`);
 			}
 			const subnode = this._unit(state.next(), scope);
 			if (subnode instanceof FunctionNode) {
@@ -488,7 +482,7 @@ export class Affinirum {
 			return new AssignmentNode(span, new VariableNode(span, variable, true), subnode);
 		}
 		else if (type && !type.isOptional) {
-			state.throwError(`variable ${token} of type ${type} requires initial value`);
+			state.throwError(`variable ${identifier} of type ${type} requires initial value`);
 		}
 		return new VariableNode(span, variable);
 	}
@@ -497,9 +491,9 @@ export class Affinirum {
 		const span = state.start();
 		const subscope = scope.subscope();
 		const subnodes: Node[] = [];
-		while (!state.next().isBracesClose) {
+		while (!state.next().equals("}")) {
 			subnodes.push(this._unit(state, subscope));
-			if (!state.isSemicolon) {
+			if (!state.equals(";")) {
 				break;
 			}
 		}
@@ -513,28 +507,28 @@ export class Affinirum {
 		const span = state.start();
 		const subnodes: [number | Node, Node][] = [];
 		let index = 0, colon = false, ellipsis = false;
-		while (!state.next().isBracketsClose) {
-			if (state.isEllipsis) {
+		while (!state.next().equals("]")) {
+			if (state.equals("...")) {
 				if (ellipsis) {
 					state.throwError("repeated ellipsis");
 				}
 				ellipsis = true;
 				state.next();
 			}
-			else if (state.isColon) {
+			else if (state.equals(":")) {
 				colon = true;
 				state.next();
 				break;
 			}
 			const node = this._unit(state, scope);
-			if (state.isColon) {
+			if (state.equals(":")) {
 				colon = true;
 				subnodes.push([node, this._unit(state.next(), scope)]);
 			}
 			else {
 				subnodes.push([index++, node]);
 			}
-			if (!state.isComma) {
+			if (!state.equals(",")) {
 				break;
 			}
 		}
@@ -554,20 +548,20 @@ export class Affinirum {
 		state.next().openParentheses();
 		let variadic = false;
 		const variables = new Map<string, LocalVariable>();
-		while (!state.next().isParenthesesClose) {
-			if (!state.isToken) {
+		while (!state.next().equals(")")) {
+			if (!state.isIdentifier) {
 				state.throwError("missing function argument name");
 			}
-			const token = state.token;
-			if (variables.has(token)) {
-				state.throwError(`duplicate function argument name ${token}`);
+			const identifier = state.identifier;
+			if (variables.has(identifier)) {
+				state.throwError(`duplicate function argument name ${identifier}`);
 			}
-			if (scope.has(token)) {
-				state.throwError(`variable ${token} redefinition`);
+			if (scope.has(identifier)) {
+				state.throwError(`variable ${identifier} redefinition`);
 			}
 			let argType: Type | undefined;
-			if (state.next().isColon) {
-				variadic = state.next().isEllipsis;
+			if (state.next().equals(":")) {
+				variadic = state.next().equals("...");
 				if (variadic) {
 					state.next();
 				}
@@ -577,17 +571,17 @@ export class Affinirum {
 				}
 			}
 			const variable = new LocalVariable(argType, true);
-			variables.set(token, variable);
+			variables.set(identifier, variable);
 			if (variadic) {
 				break;
 			}
-			if (!state.isComma) {
+			if (!state.equals(",")) {
 				break;
 			}
 		}
 		state.closeParentheses();
 		state.next();
-		const returnType = state.isColon ? this._type.parse(state.next(), scope) : Type.Unknown;
+		const returnType = state.equals(":") ? this._type.parse(state.next(), scope) : Type.Unknown;
 		span.end(state);
 		const args = Array.from(variables.values());
 		const subscope = scope.subscope(variables, returnType);
@@ -601,7 +595,7 @@ export class Affinirum {
 		const cnode = this._unit(state.next(), scope);
 		span.end(state);
 		const tnode = this._unit(state, scope);
-		const enode = state.isElse
+		const enode = state.equals("else")
 			? this._unit(state.next(), scope)
 			: new ConstantNode(state.start(), Constant.Null);
 		return new TernaryNode(span, cnode, [tnode, enode]);

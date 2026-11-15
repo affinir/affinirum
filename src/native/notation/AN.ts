@@ -2,10 +2,8 @@ import { Constant } from "../../Constant.js";
 import { ParserState } from "../../ParserState.js";
 import { Value } from "../../Value.js";
 import { Type } from "../../Type.js";
-import { funcAdd } from "../Aggregable.js";
 import { formatLiteralFloat } from "../Float.js";
 import { formatLiteralInteger, int64 } from "../Integer.js";
-import { funcSubtract } from "../Number.js";
 import { formatLiteralBuffer } from "../Buffer.js";
 import { formatLiteralString } from "../String.js";
 import { formatLiteralTimestamp } from "../Timestamp.js";
@@ -63,20 +61,20 @@ export const formatAN = (value: Value, whitespace?: string): string => {
 
 const parseArray = (state: ParserState, firstValue: Value): Value[] => {
 	const arr = [firstValue];
-	while (!state.isEmpty) {
-		if (state.isBracketsClose) {
+	while (!state.isEnded) {
+		if (state.equals("]")) {
 			state.next();
 			return arr;
 		}
-		if (!state.isComma) {
+		if (!state.equals(",")) {
 			state.throwError("missing array value separator");
 		}
 		state.next();
-		if (state.isBracketsClose) {
+		if (state.equals("]")) {
 			state.next();
 			return arr;
 		}
-		if (state.isComma) {
+		if (state.equals(",")) {
 			arr.push(undefined);
 			continue;
 		}
@@ -88,21 +86,21 @@ const parseArray = (state: ParserState, firstValue: Value): Value[] => {
 const parseObject = (state: ParserState, firstKey: string): { [key: string]: Value } => {
 	const obj = Object.create(null) as { [key: string]: Value };
 	let key = firstKey;
-	while (!state.isEmpty) {
-		if (!state.isColon) {
+	while (!state.isEnded) {
+		if (!state.equals(":")) {
 			state.throwError("missing object key separator");
 		}
 		state.next();
-		obj[key] = state.isComma || state.isBracketsClose ? undefined : parseLiteral(state);
-		if (state.isBracketsClose) {
+		obj[key] = state.equals(",") || state.equals("]") ? undefined : parseLiteral(state);
+		if (state.equals("]")) {
 			state.next();
 			return obj;
 		}
-		if (!state.isComma) {
+		if (!state.equals(",")) {
 			state.throwError("missing object property separator");
 		}
 		state.next();
-		if (state.isBracketsClose) {
+		if (state.equals("]")) {
 			state.next();
 			return obj;
 		}
@@ -128,8 +126,8 @@ const parseLiteral = (state: ParserState): Value => {
 		state.next();
 		return undefined;
 	}
-	if (state.isToken) {
-		const token = state.token;
+	if (state.isIdentifier) {
+		const token = state.identifier;
 		if (token === "NaN") {
 			state.next();
 			return NaN;
@@ -140,10 +138,10 @@ const parseLiteral = (state: ParserState): Value => {
 		}
 		state.throwError(`invalid value ${token}`);
 	}
-	if (state.isOperator && (state.operator === funcAdd || state.operator === funcSubtract)) {
-		const negative = state.operator === funcSubtract;
+	if (state.equals("+", "-")) {
+		const negative = state.equals("-");
 		state.next();
-		if (state.isToken && state.token === "Infinity") {
+		if (state.isIdentifier && state.identifier === "Infinity") {
 			state.next();
 			return negative ? -Infinity : Infinity;
 		}
@@ -156,25 +154,25 @@ const parseLiteral = (state: ParserState): Value => {
 			? typeof value === "bigint" ? int64(-value) : -value
 			: value;
 	}
-	if (state.isBracketsOpen) {
+	if (state.equals("[")) {
 		state.next();
-		if (state.isBracketsClose) {
+		if (state.equals("]")) {
 			state.next();
 			return [];
 		}
-		if (state.isColon) {
+		if (state.equals(":")) {
 			state.next();
-			if (!state.isBracketsClose) {
+			if (!state.equals("]")) {
 				state.throwError("missing closing object bracket");
 			}
 			state.next();
 			return Object.create(null) as { [key: string]: Value };
 		}
-		if (state.isComma) {
+		if (state.equals(",")) {
 			return parseArray(state, undefined);
 		}
 		const first = parseLiteral(state);
-		if (state.isColon) {
+		if (state.equals(":")) {
 			if (typeof first !== "string") {
 				state.throwError("object key must be a string");
 			}
@@ -190,11 +188,11 @@ export const parseAN = (value: string | undefined): Value => {
 		return undefined;
 	}
 	const state = new ParserState(value).next();
-	if (state.isEmpty) {
+	if (state.isEnded) {
 		return undefined;
 	}
 	const result = parseLiteral(state);
-	if (!state.isEmpty) {
+	if (!state.isEnded) {
 		state.throwError("unexpected token");
 	}
 	return result;
@@ -212,7 +210,7 @@ const funcParseAN = new Constant(
 	Type.functionType([[typeAN, [Type.OptionalString]]]),
 );
 
-export const constAN = Object.assign(Object.create(null), {
+export const globAN = Object.assign(Object.create(null), {
 	Format: funcFormatAN,
 	Parse: funcParseAN,
 });

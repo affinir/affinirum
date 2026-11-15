@@ -53,7 +53,7 @@ export const funcBoolean = new Constant(
 	]),
 );
 
-export const constBoolean = Object.assign(Object.create(null), {
+export const globBoolean = Object.assign(Object.create(null), {
 	Or: funcOr,
 	And: funcAnd,
 	Not: funcNot,

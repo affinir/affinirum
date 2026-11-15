@@ -4,8 +4,8 @@ describe("Indexed assignment test", () => {
 	it.each<[string, Value]>([
 		["var items=[1,2];items.1=7;items", [1n, 7n]],
 		["var items=[1,2];items[-1]+=3;items", [1n, 5n]],
-		["var record=['a':1];record['b']=2;record", { a: 1n, b: 2n }],
-		["var record=['a':1];record.\"a\"+=2;record", { a: 3n }],
+		["var entry=['a':1];entry['b']=2;entry", { a: 1n, b: 2n }],
+		["var entry=['a':1];entry.\"a\"+=2;entry", { a: 3n }],
 		["var value=['items':[['count':1]]];((value.items::array)[0]::['count':integer]).count+=2;value", { items: [{ count: 3n }] }],
 		["var items=[1,2];items[0]=items[1]=7;items", [7n, 7n]],
 		["var items=[[1],[2]];items[0]+=[3];items", [[1n, 3n], [2n]]],
@@ -51,7 +51,7 @@ describe("Indexed assignment test", () => {
 
 	it("evaluates a computed object key once", () => {
 		let calls = 0;
-		const expression = new Affinirum("var record=['a':1];record[key()]+=2;record.a", {
+		const expression = new Affinirum("var entry=['a':1];entry[key()]+=2;entry.a", {
 			variables: { key: Type.functionType([[Type.String, []]]) },
 		});
 		expect(expression.evaluate({ key: () => { ++calls; return "a"; } })).toBe(3n);
@@ -81,18 +81,18 @@ describe("Indexed assignment test", () => {
 	])("reads the target only when needed for %s", (operator, expectedReads, expected) => {
 		let reads = 0;
 		const record = { get a() { ++reads; return 10n; } };
-		const expression = new Affinirum(`record().a${operator}2`, {
-			variables: { record: Type.functionType([[Type.Object, []]]) },
+		const expression = new Affinirum(`getRecord().a${operator}2`, {
+			variables: { getRecord: Type.functionType([[Type.Object, []]]) },
 		});
-		expect(expression.evaluate({ record: () => record })).toBe(expected);
+		expect(expression.evaluate({ getRecord: () => record })).toBe(expected);
 		expect(reads).toBe(expectedReads);
 		expect(record.a).toBe(expected);
 	});
 
 	it.each([
 		"val items=[1];items[0]=2",
-		"val record=['a':1];record.a+=2",
-		"val record=['nested':['a':1]];record.nested.a=2",
+		"val entry=['a':1];entry.a+=2",
+		"val entry=['nested':['a':1]];entry.nested.a=2",
 		"(1+2)=3",
 	])("rejects a non-assignable target in %s", (script) => {
 		expect(() => new Affinirum(script)).toThrow(/illegal re-assignment/);
@@ -106,7 +106,7 @@ describe("Indexed assignment test", () => {
 
 	it.each([
 		"var items:[...integer]=[1,2];items[0]='bad'",
-		"var record:['a':integer]=['a':1];record.a='bad'",
+		"var entry:['a':integer]=['a':1];entry.a='bad'",
 		"var value:['items':[...integer]]=['items':[1]];value.items[0]='bad'",
 		"var value:['child':['count':integer]]=['child':['count':1]];value.child.count='bad'",
 		"var value:[...[...integer]]=[[1],[2]];value[index][0]='bad'",
@@ -216,19 +216,19 @@ describe("Indexed assignment test", () => {
 			Object.seal(record);
 		}
 		const descriptor = Object.getOwnPropertyDescriptor(record, "a");
-		const expression = new Affinirum(`record().a${operator}2`, {
-			variables: { record: Type.functionType([[Type.Object, []]]) },
+		const expression = new Affinirum(`getRecord().a${operator}2`, {
+			variables: { getRecord: Type.functionType([[Type.Object, []]]) },
 		});
-		expect(expression.evaluate({ record: () => record })).toBe(expected);
+		expect(expression.evaluate({ getRecord: () => record })).toBe(expected);
 		expect(Object.getOwnPropertyDescriptor(record, "a")).toEqual({ ...descriptor, value: expected });
 	});
 
 	it("rejects writes to a frozen data property", () => {
 		const record = Object.freeze({ a: 1n });
-		const expression = new Affinirum("record().a=2", {
-			variables: { record: Type.functionType([[Type.Object, []]]) },
+		const expression = new Affinirum("getRecord().a=2", {
+			variables: { getRecord: Type.functionType([[Type.Object, []]]) },
 		});
-		expect(() => expression.evaluate({ record: () => record })).toThrow(TypeError);
+		expect(() => expression.evaluate({ getRecord: () => record })).toThrow(TypeError);
 		expect(record.a).toBe(1n);
 	});
 

@@ -23,7 +23,7 @@ const funcParseJSON = new Constant(
 	Type.functionType([[typeJson, [Type.OptionalString]]]),
 );
 
-export const constJSON = Object.assign(Object.create(null), {
+export const globJSON = Object.assign(Object.create(null), {
 	Format: funcFormatJSON,
 	Parse: funcParseJSON,
 });

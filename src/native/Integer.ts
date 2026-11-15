@@ -172,7 +172,7 @@ export const funcInteger = new Constant(
 	]),
 );
 
-export const constInteger = Object.assign(Object.create(null), {
+export const globInteger = Object.assign(Object.create(null), {
 	Sum: funcSum,
 	Min: funcMin,
 	Max: funcMax,

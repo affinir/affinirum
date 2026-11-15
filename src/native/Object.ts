@@ -29,6 +29,6 @@ const funcMerge = new Constant(
 	Type.functionType([[Type.Object, [Type.arrayType(typeObjectOrArray)], true]]),
 );
 
-export const constObject = Object.assign(Object.create(null), {
+export const globObject = Object.assign(Object.create(null), {
 	Merge: funcMerge,
 });

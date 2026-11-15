@@ -187,7 +187,7 @@ const funcParseBuffer = new Constant(
 	Type.functionType([[Type.OptionalBuffer, [Type.OptionalString]]]),
 );
 
-export const constBuffer = Object.assign(Object.create(null), {
+export const globBuffer = Object.assign(Object.create(null), {
 	Random: funcRandomBuffer,
 	Parse: funcParseBuffer,
 });

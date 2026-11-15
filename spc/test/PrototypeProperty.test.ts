@@ -1,5 +1,5 @@
 import { Affinirum, Type, Value } from "../../src/index.js";
-import { Constants } from "../../src/Constants.js";
+import { constants } from "../../src/dictionary/Constants.js";
 
 type ObjectValue = Record<string, Value>;
 
@@ -97,7 +97,7 @@ describe("Prototype property test", () => {
 		expect(expression.evaluate(values) as bigint).toBe(6n);
 	});
 
-	it.each(Constants)("stores the %s constant namespace in a null-prototype record", (name, constants) => {
+	it.each(constants)("stores the %s constant namespace in a null-prototype record", (name, constants) => {
 		expect(Object.getPrototypeOf(constants)).toBeNull();
 		expect(() => new Affinirum(`${name}.constructor`)).toThrow(/unknown constant constructor/);
 	});

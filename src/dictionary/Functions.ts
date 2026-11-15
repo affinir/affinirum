@@ -1,24 +1,24 @@
-import { Constant } from "./Constant.js";
-import { funcAdd } from "./native/Aggregable.js";
+import type { Constant } from "../Constant.js";
+import { funcAdd } from "../native/Aggregable.js";
 import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
-	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose } from "./native/Array.js";
-import { funcBoolean } from "./native/Boolean.js";
-import { funcByte } from "./native/Buffer.js";
-import { funcAt, funcHas } from "./native/Composite.js";
-import { funcSlice, funcSplice, funcInject } from "./native/Enumerable.js";
-import { funcFloat } from "./native/Float.js";
-import { funcInteger } from "./native/Integer.js";
-import { funcLength, funcContains } from "./native/Iterable.js";
+	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose } from "../native/Array.js";
+import { funcBoolean } from "../native/Boolean.js";
+import { funcByte } from "../native/Buffer.js";
+import { funcAt, funcHas } from "../native/Composite.js";
+import { funcSlice, funcSplice, funcInject } from "../native/Enumerable.js";
+import { funcFloat } from "../native/Float.js";
+import { funcInteger } from "../native/Integer.js";
+import { funcLength, funcContains } from "../native/Iterable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, funcSubtract, funcMultiply, funcDivide, funcRemainder, funcModulo,
-	funcPower, funcRoot, funcNegate } from "./native/Number.js";
-import { funcEntries, funcKeys, funcValues } from "./native/Object.js";
+	funcPower, funcRoot, funcNegate } from "../native/Number.js";
+import { funcEntries, funcKeys, funcValues } from "../native/Object.js";
 import { funcLike, funcNotLike, funcStartsWith, funcEndsWith,
-	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit, funcReplaceWith } from "./native/String.js";
+	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit, funcReplaceWith } from "../native/String.js";
 import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay, funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime,
-	funcDaysSince, funcHoursSince, funcMinutesSince, funcSecondsSince } from "./native/Timestamp.js";
-import { funcCoalesce, funcEquals, funcNotEquals, funcEncode, funcFormat } from "./native/Unknown.js";
+	funcDaysSince, funcHoursSince, funcMinutesSince, funcSecondsSince } from "../native/Timestamp.js";
+import { funcCoalesce, funcEquals, funcNotEquals, funcEncode, funcFormat } from "../native/Unknown.js";
 
-export const Functions: [string, Constant][] = [
+export const functions: [string, Constant][] = [
 	// Aggregable
 	["Add", funcAdd],
 	// Array

@@ -165,7 +165,7 @@ const funcDifference = new Constant(
 	typeArrayOperator,
 );
 
-export const constArray = Object.assign(Object.create(null), {
+export const globArray = Object.assign(Object.create(null), {
 	Join: funcJoin,
 	Range: funcRange,
 	Unique: funcUnique,

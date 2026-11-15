@@ -166,7 +166,7 @@ export const funcFloat = new Constant(
 	]),
 );
 
-export const constFloat = Object.assign(Object.create(null), {
+export const globFloat = Object.assign(Object.create(null), {
 	NAN: new Constant(Number.NaN),
 	PositiveInfinity: new Constant(Number.POSITIVE_INFINITY),
 	NegativeInfinity: new Constant(Number.NEGATIVE_INFINITY),

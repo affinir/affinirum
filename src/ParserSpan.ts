@@ -24,13 +24,17 @@ export class ParserSpan {
 		return this;
 	}
 
+	text() {
+		return this._script.substring(this._start, this._end);
+	}
+
 	throwError(message: string): never {
 		const offset = this._start < 32 ? 0 : this._start - 32;
-		const length = this._end < this._start ? 0 : this._end - this._start - 1;
+		const length = this._end <= this._start ? 0 : this._end - this._start - 1;
 		let expr = "";
 		for (let i = 0; i < this._script.length; ++i) {
 			const c = this._script[i];
-			expr += SPACE_SYMBOLS.includes(c) ? " " : c;
+			expr += spaceSymbols.includes(c) ? " " : c;
 		}
 		throw new Error(`error: ${message} at position ${this._start}:\n${expr.substring(offset, offset + 60)}\n` +
 			`${" ".repeat(expr.substring(offset, this._start).length)}^${"'".repeat(length)}`);
@@ -42,7 +46,7 @@ export class ParserSpan {
 
 }
 
-const SPACE_SYMBOLS = [
+const spaceSymbols = [
 	// Whitespace and line-breaking characters
 	"\t", // tab
 	"\n", // newline

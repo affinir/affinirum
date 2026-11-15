@@ -35,7 +35,7 @@ describe("Assignment test", () => {
 	});
 
 	it("accepts extra fields in an open object initializer", () => {
-		const expression = new Affinirum("val record:['a':integer]=['a':1,'b':'two'];record");
+		const expression = new Affinirum("val entry:['a':integer]=['a':1,'b':'two'];entry");
 		expect(expression.evaluate()).toEqual({ a: 1n, b: "two" });
 	});
 

@@ -5,9 +5,10 @@ import { createInteger } from "./Integer.js";
 export type StringEncoding = "utf8" | "sbcs" | "ucs2" | "ucs2le";
 
 export const isAlphanumericSymbol = (c: string) => c >= "a" && c <= "z" || c >= "0" && c <= "9";
-export const isTokenStartSymbol = (c: string) =>  c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_" || c === "#" || c === "$";
-export const isTokenSymbol = (c: string) => isTokenStartSymbol(c) || c >= "0" && c <= "9";
+export const isIdentifierStartSymbol = (c: string) =>  c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_" || c === "#" || c === "$";
+export const isIdentifierSymbol = (c: string) => isIdentifierStartSymbol(c) || c >= "0" && c <= "9";
 export const isHexadecimalSymbol = (c: string) => c >= "0" && c <= "9" || c >= "a" && c <= "f" || c >= "A" && c <= "F";
+export const isWhiteSpaceSymbol = (c: string) => c === " " || c === "\t" || c === "\n" || c === "\r" || c === "\v" || c === "\f";
 
 export const formatLiteralString = (value: string) => {
 	let str = "\"";
@@ -430,7 +431,7 @@ const funcDecodeString = new Constant(
 	Type.functionType([[Type.OptionalString, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]]]),
 );
 
-export const constString = Object.assign(Object.create(null), {
+export const globString = Object.assign(Object.create(null), {
 	Alphanumeric: funcAlphanumeric,
 	Random: funcRandomString,
 	Decode: funcDecodeString,
