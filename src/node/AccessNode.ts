@@ -6,22 +6,24 @@ import { ParserSpan } from "../ParserSpan.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
-import { funcAt } from "../native/Composite.js";
 
 export class AccessNode extends AssignableNode {
 
 	protected _subnode: Node;
 	protected _inode: Node;
+	protected readonly _operator: Constant;
 	protected _type?: Type;
 
 	constructor(
 		span: ParserSpan,
 		subnode: Node,
 		inode: Node,
+		operator: Constant,
 	) {
 		super(span);
 		this._subnode = subnode;
 		this._inode = inode;
+		this._operator = operator;
 	}
 
 	override get type(): Type {
@@ -59,11 +61,11 @@ export class AccessNode extends AssignableNode {
 	}
 
 	override evaluate(frame: CallFrame): Value {
-		const func = funcAt.value as (indexer: Value, index: Value) => Value;
 		const receiver = this._subnode.evaluate(frame);
-		if (!Type.Composite.acceptsValue(receiver)) {
+		if (!this._operator.type.functionAtomArgType(0).acceptsValue(receiver)) {
 			this.throwError("indexed value must be an array or object");
 		}
+		const func = this._operator.value as (composite: Value, index: Value) => Value;
 		const value = func(receiver, this._inode.evaluate(frame));
 		if (value != null && !this.type.acceptsValue(value)) {
 			this.throwError(`indexed value mismatch with expected type ${this._type}`);
@@ -164,27 +166,28 @@ export class AccessNode extends AssignableNode {
 		if (this._type) {
 			return;
 		}
-		this._subnode = this._subnode.compile(Type.Composite);
-		const receiverType = this._subnode.type;
-		let indexType = Type.union(Type.Integer, Type.String);
-		if (!receiverType.isUnknown && !receiverType.isNever) {
-			if (receiverType.isArray) {
+		this._subnode = this._subnode.compile(this._operator.type.functionAtomArgType(0));
+		const compositeType = this._subnode.type;
+		const mandatoryType = compositeType.toMandatory();
+		let indexType = this._operator.type.functionAtomArgType(1);
+		if (!mandatoryType.isUnknown && !mandatoryType.isNever) {
+			if (mandatoryType.isArray) {
 				indexType = Type.Integer;
 			}
-			else if (receiverType.isObject) {
+			else if (mandatoryType.isObject) {
 				indexType = Type.String;
 			}
 		}
 		this._inode = this._inode.compile(indexType);
 		const index = this._inode instanceof ConstantNode ? this._inode.value : undefined;
-		if (receiverType.isNever || this._inode.type.isNever) {
+		if (compositeType.isNever || this._inode.type.isNever) {
 			this._type = Type.Never;
 		}
 		else if (this._inode.type.isInteger) {
-			this._type = receiverType.arrayAtomValType(typeof index === "bigint" ? Number(index) : undefined);
+			this._type = compositeType.arrayAtomValType(typeof index === "bigint" ? Number(index) : undefined);
 		}
 		else if (this._inode.type.isString) {
-			this._type = receiverType.objectAtomValType(typeof index === "string" ? index : undefined);
+			this._type = compositeType.objectAtomValType(typeof index === "string" ? index : undefined);
 		}
 		else {
 			this._type = Type.Unknown;

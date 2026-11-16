@@ -208,11 +208,11 @@ stop();
 ### Arrays and objects
 
 Arrays hold ordered values of any type and use zero-based indexes. Access an item with brackets or a dot followed by
-an integer. The presence operator `?` checks whether an index exists:
+an integer. Use `.?` to check whether an index exists.
 
 ```text
 val items = [10, 20, 30];
-[items[0], items.1, items?2, items?3] // [10,20,true,false]
+[items[0], items.1, items.?2, items.?3] // [10,20,true,false]
 ```
 
 Use `+` to concatenate arrays. Wrap an individual item in an array when adding it:
@@ -225,8 +225,8 @@ Use `+` to concatenate arrays. Wrap an individual item in an array when adding i
 
 Objects hold named values. Define them with string keys and colons inside brackets; `[:]` is an empty object.
 Object literals reject duplicate keys that are known at compile time.
-Access properties with `record.key`, `record."key"`, or `record["key"]`. Use `record?key` to check for a literal key,
-or `record.Has(keyVariable)` for a computed key.
+Access properties with `entry.key`, `entry."key"`, or `entry["key"]`. Use `entry.?key` to check for a literal key,
+or `entry.Has(keyVariable)` for a computed key.
 
 ```text
 val original = ["name": "Ada", "score": 10];
@@ -317,7 +317,7 @@ Expression operators are listed from highest precedence to lowest. Parentheses o
 
 | Precedence | Operators | Meaning |
 | --- | --- | --- |
-| Highest | `.`, `[]`, `?`, `()`, `::` | Access, presence, calls, and casts |
+| Highest | `.`, `[]`, `.?`, `()`, `::` | Access, presence, calls, and casts |
 | | `**` | Exponentiation |
 | | Unary `+`, `-` | Arithmetic sign |
 | | `*`, `/`, `%` | Multiplication, division, remainder |

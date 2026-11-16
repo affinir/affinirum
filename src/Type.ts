@@ -231,6 +231,13 @@ export class Type {
 		return Type.union(...this.functionAtoms().flatMap((atom) => atom.signatures.map((signature) => signature.retType)));
 	}
 
+	functionAtomArgType(index: number): Type {
+		const types = this.functionAtoms().flatMap((atom) =>
+			atom.signatures.map((signature) => signature.argType(index))
+		).filter((type) => type !== undefined);
+		return Type.union(...types);
+	}
+
 	arrayAtoms(): ArrayAtom[] {
 		if (this.isUnknown) {
 			return Type.Array._atoms as ArrayAtom[];

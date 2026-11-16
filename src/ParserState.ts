@@ -4,6 +4,7 @@ import { Constant } from "./Constant.js";
 import { ParserSpan } from "./ParserSpan.js";
 import { funcOr, funcAnd, funcNot } from "./native/Boolean.js";
 import { parseLiteralBuffer } from "./native/Buffer.js";
+import { funcAt, funcOptionalAt, funcHas, funcOptionalHas } from "./native/Composite.js";
 import { funcAdd } from "./native/Aggregable.js";
 import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual,
 	funcSubtract, funcMultiply, funcDivide, funcRemainder, funcPower, isNumericSymbol, parseLiteralNumber } from "./native/Number.js";
@@ -205,8 +206,11 @@ const tokens: [string, Type | Constant | Literal | false][] = [
 	["var", false],
 	["val", false],
 	["if", false],
+	["then", false],
 	["else", false],
 	["while", false],
+	["do", false],
+	["until", false],
 	["next", false],
 	["exit", false],
 	["??", Type.Unknown],
@@ -259,6 +263,11 @@ const tokens: [string, Type | Constant | Literal | false][] = [
 	["**", funcPower],
 	["/", funcDivide],
 	["%", funcRemainder],
+	[".", funcAt],
+	[".?", funcHas],
+	["?.", funcOptionalAt],
+	["?.?", funcOptionalHas],
+	["?[", funcOptionalAt],
 	["=", false],
 	["|=", funcOr],
 	["&=", funcAnd],
@@ -269,7 +278,7 @@ const tokens: [string, Type | Constant | Literal | false][] = [
 	["%=", funcRemainder],
 	["(", false],
 	[")", false],
-	["[", false],
+	["[", funcAt],
 	["]", false],
 	["{", false],
 	["}", false],
@@ -281,7 +290,6 @@ const tokens: [string, Type | Constant | Literal | false][] = [
 	["~>", false],
 	["?", false],
 	["=>", false],
-	[".", false],
 	["..", false],
 	["...", false],
 	["//", false],
@@ -319,6 +327,7 @@ const punctuators: string[] = [
 	"?",
 	"=>",
 	".",
+	".?",
 	"..",
 	"...",
 	"//",

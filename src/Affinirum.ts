@@ -26,7 +26,6 @@ import { VariableNode } from "./node/VariableNode.js";
 import { constants } from "./dictionary/Constants.js";
 import { functions } from "./dictionary/Functions.js";
 import { funcNot } from "./native/Boolean.js";
-import { funcHas } from "./native/Composite.js";
 import { funcNegate } from "./native/Number.js";
 import { parseAN, formatAN } from "./native/notation/AN.js"
 
@@ -269,29 +268,31 @@ export class Affinirum {
 	}
 
 	protected _factor(state: ParserState, scope: LexicalScope): Node {
-		let node = this._accessor(state, scope);
+		let node = this._postfix(state, scope);
 		while (state.equals("**")) {
 			const fnode = new ConstantNode(state, state.constant);
-			node = new CallNode(state, fnode, [node, this._accessor(state.next(), scope)]);
+			node = new CallNode(state, fnode, [node, this._postfix(state.next(), scope)]);
 		}
 		return node;
 	}
 
-	protected _accessor(state: ParserState, scope: LexicalScope): Node {
+	protected _postfix(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
 		let node = this._term(state, scope);
-		while (state.equals(".", "?", "(", "[", "::")) {
-			if (state.equals(".", "?")) { // property access or property existance operator
-				const operator = state.equals("?") ? funcHas : undefined;
+		while (state.equals(".", ".?", "?.", "?.?", "(", "[", "?[", "::")) {
+			if (state.equals(".", ".?", "?.", "?.?")) { // index access or existence check operator
+				const access = state.equals(".", "?.");
+				const optional = state.equals("?.");
+				const operator = state.constant;
 				if (state.next().isLiteral && (typeof state.literal.value === "string" || typeof state.literal.value === "bigint")) {
 					const inode = new ConstantNode(state, new Constant(state.literal.value));
-					node = operator
-						? new CallNode(span, new ConstantNode(span.end(state), operator), [node, inode])
-						: new AccessNode(span.end(state), node, inode);
+					node = access
+						? new AccessNode(span.end(state), node, inode, operator)
+						: new CallNode(span, new ConstantNode(span.end(state), operator), [node, inode]);
 					state.next();
 				}
 				else if (state.isIdentifier) {
-					const func = this._functions.get(state.identifier);
+					const func = access ? this._functions.get(state.identifier) : undefined;
 					if (func) {
 						if (state.next().equals("(")) {
 							const subnodes: Node[] = [node];
@@ -302,26 +303,33 @@ export class Affinirum {
 								}
 							}
 							const fnode = new ConstantNode(span.end(state), func);
-							node = new CallNode(span, fnode, subnodes);
+							node = new CallNode(span, fnode, subnodes, optional);
 							state.closeParentheses();
 							state.next();
 						}
 						else {
 							const fnode = new ConstantNode(span.end(state), func);
-							node = new CallNode(span, fnode, [node]);
+							node = new CallNode(span, fnode, [node], optional);
 						}
 					}
 					else {
 						const inode = new ConstantNode(state, new Constant(state.identifier));
-						node = operator
-							? new CallNode(span, new ConstantNode(span.end(state), operator), [node, inode])
-							: new AccessNode(span.end(state), node, inode);
+						node = access
+							? new AccessNode(span.end(state), node, inode, operator)
+							: new CallNode(span, new ConstantNode(span.end(state), operator), [node, inode]);
 						state.next();
 					}
 				}
 				else {
 					state.throwError("missing array index or object key");
 				}
+			}
+			else if (state.equals("[", "?[")) { // access operator
+				const operator = state.constant;
+				const inode = this._unit(state.next(), scope);
+				state.closeBrackets();
+				state.next();
+				node = new AccessNode(span.end(state), node, inode, operator);
 			}
 			else if (state.equals("(")) { // function call
 				const subnodes: Node[] = [];
@@ -334,12 +342,6 @@ export class Affinirum {
 				state.closeParentheses();
 				state.next();
 				node = new CallNode(span.end(state), node, subnodes);
-			}
-			else if (state.equals("[")) { // access operator
-				const inode = this._unit(state.next(), scope);
-				state.closeBrackets();
-				state.next();
-				node = new AccessNode(span.end(state), node, inode);
 			}
 			else if (state.equals("::")) { // type cast operator
 				const type = this._type.parse(state.next(), scope);
@@ -605,7 +607,8 @@ export class Affinirum {
 		const span = state.start();
 		const cnode = this._unit(state.next(), scope);
 		span.end(state);
-		return new LoopNode(span, cnode, this._unit(state, scope));
+		const subnode = this._unit(state, scope);
+		return new LoopNode(span, cnode, subnode);
 	}
 
 }

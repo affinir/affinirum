@@ -4,7 +4,7 @@ import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
 	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose } from "../native/Array.js";
 import { funcBoolean } from "../native/Boolean.js";
 import { funcByte } from "../native/Buffer.js";
-import { funcAt, funcHas } from "../native/Composite.js";
+import { funcAt, funcOptionalAt, funcHas, funcOptionalHas } from "../native/Composite.js";
 import { funcSlice, funcSplice, funcInject } from "../native/Enumerable.js";
 import { funcFloat } from "../native/Float.js";
 import { funcInteger } from "../native/Integer.js";
@@ -38,7 +38,9 @@ export const functions: [string, Constant][] = [
 	["Byte", funcByte],
 	// Composite
 	["At", funcAt],
+	["OptionalAt", funcOptionalAt],
 	["Has", funcHas],
+	["OptionalHas", funcOptionalHas],
 	// Enumerable
 	["Slice", funcSlice],
 	["Splice", funcSplice],

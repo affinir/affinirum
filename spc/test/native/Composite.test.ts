@@ -115,7 +115,7 @@ describe("Composite function test", () => {
 			],
 		},
 		{
-			script: "val entity=[\"entity\":[d.id:[\"a1\", \"a2\"]]].entity::object;if entity?abc{(entity.abc::array)[0]}",
+			script: "val entity=[\"entity\":[d.id:[\"a1\", \"a2\"]]].entity::object;if entity.?abc{(entity.abc::array)[0]}",
 			cases: [
 				{ values: { d: { id: "abc" } }, result: "a1" },
 				{ values: { d: { id: "a" } }, result: undefined },
@@ -136,7 +136,7 @@ describe("Composite function test", () => {
 			],
 		},
 		{
-			script: "v.Has(\"prop\") & v?z",
+			script: "v.Has(\"prop\") & v::object.?z",
 			cases: [
 				{ values: { v: { prop: "abc", z: 10n } }, result: true },
 				{ values: { v: { prop: "abc" } }, result: false },
@@ -149,7 +149,57 @@ describe("Composite function test", () => {
 				{ values: { v: [10, 20], i: 2n }, result: false },
 			],
 		},
+		{
+			script: "v?.name",
+			cases: [
+				{ values: { v: { name: "Ada" } }, result: "Ada" },
+				{ values: { v: {} }, result: undefined },
+				{ values: { v: undefined }, result: undefined },
+			],
+		},
+		{
+			script: "v?.1",
+			cases: [
+				{ values: { v: [10, 0] }, result: 0 },
+				{ values: { v: [10] }, result: undefined },
+				{ values: { v: undefined }, result: undefined },
+			],
+		},
+		{
+			script: "v.?name",
+			cases: [
+				{ values: { v: { name: "Ada" } }, result: true },
+				{ values: { v: {} }, result: false },
+			],
+		},
+		{
+			script: "v?.?\"name\"",
+			cases: [
+				{ values: { v: { name: undefined } }, result: true },
+				{ values: { v: {} }, result: false },
+				{ values: { v: undefined }, result: undefined },
+			],
+		},
+		{
+			script: "v?.?1",
+			cases: [
+				{ values: { v: [10, undefined] }, result: true },
+				{ values: { v: [10] }, result: false },
+				{ values: { v: undefined }, result: undefined },
+			],
+		},
 	]);
+
+	it("infers an optional Boolean for an optional property check", () => {
+		const expression = new Affinirum("v?.?name", { variables: { v: Type.OptionalObject } });
+		expect(expression.type.equals(Type.OptionalBoolean)).toBe(true);
+	});
+
+	it("checks for a key named after a built-in method with optional presence", () => {
+		const expression = new Affinirum("v?.?Length", { variables: { v: Type.OptionalObject } });
+		expect(expression.evaluate({ v: { Length: undefined } })).toBe(true);
+		expect(expression.evaluate({ v: undefined })).toBeUndefined();
+	});
 
 	it("rejects a missing property used as an operand of addition", () => {
 		const type = Type.objectType([["prop", Type.Integer], ["z", Type.OptionalInteger]]);
