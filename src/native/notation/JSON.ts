@@ -2,7 +2,7 @@ import { Constant } from "../../Constant.js";
 import { Value } from "../../Value.js";
 import { Type } from "../../Type.js";
 
-const typeJson = Type.union(Type.Void, Type.Boolean, Type.Timestamp, Type.Float, Type.Integer, Type.String, Type.Array, Type.Object);
+const typeJson = Type.union(Type.Null, Type.Boolean, Type.Timestamp, Type.Float, Type.Integer, Type.String, Type.Array, Type.Object);
 
 export const formatJSON = (value: Value, whitespace?: string): string =>
 	value == null ? "null" : JSON.stringify(

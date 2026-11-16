@@ -27,7 +27,7 @@ export class AccessNode extends AssignableNode {
 	}
 
 	override get type(): Type {
-		return this._type ?? Type.Unknown;
+		return this._type ?? Type.Any;
 	}
 
 	override get assignable(): boolean {
@@ -38,7 +38,7 @@ export class AccessNode extends AssignableNode {
 		return this._subnode.constant && this._inode.constant;
 	}
 
-	override compile(type = Type.Unknown): Node {
+	override compile(type = Type.Any): Node {
 		this._compileAccess();
 		if (!this.type.isNever) {
 			this._type = this.type.toOptional();
@@ -62,7 +62,8 @@ export class AccessNode extends AssignableNode {
 
 	override evaluate(frame: CallFrame): Value {
 		const receiver = this._subnode.evaluate(frame);
-		if (!this._operator.type.functionAtomArgType(0).acceptsValue(receiver)) {
+		const receiverType = this._operator.type.functionAtomArgType(0) ?? Type.Any;
+		if (!receiverType.acceptsValue(receiver)) {
 			this.throwError("indexed value must be an array or object");
 		}
 		const func = this._operator.value as (composite: Value, index: Value) => Value;
@@ -103,7 +104,7 @@ export class AccessNode extends AssignableNode {
 					}
 					let arr: Value[] | undefined;
 					for (const constraint of new Set([compositeType, ...frame.definitions(composite)])) {
-						if (constraint.isUnknown || constraint.equals(Type.Array)) {
+						if (constraint.isAny || constraint.equals(Type.Array)) {
 							continue;
 						}
 						arr ??= Object.defineProperties([], {
@@ -140,7 +141,7 @@ export class AccessNode extends AssignableNode {
 					: { value, writable: true, enumerable: true, configurable: true };
 				let obj: Record<string, Value> | undefined;
 				for (const constraint of new Set([compositeType, ...frame.definitions(object)])) {
-					if (constraint.isUnknown || constraint.equals(Type.Object)) {
+					if (constraint.isAny || constraint.equals(Type.Object)) {
 						continue;
 					}
 					obj ??= Object.create(Object.getPrototypeOf(object), {
@@ -166,11 +167,12 @@ export class AccessNode extends AssignableNode {
 		if (this._type) {
 			return;
 		}
-		this._subnode = this._subnode.compile(this._operator.type.functionAtomArgType(0));
+		const receiverType = this._operator.type.functionAtomArgType(0) ?? Type.Any;
+		this._subnode = this._subnode.compile(receiverType);
 		const compositeType = this._subnode.type;
 		const mandatoryType = compositeType.toMandatory();
-		let indexType = this._operator.type.functionAtomArgType(1);
-		if (!mandatoryType.isUnknown && !mandatoryType.isNever) {
+		let indexType = this._operator.type.functionAtomArgType(1) ?? Type.Any;
+		if (!mandatoryType.isAny && !mandatoryType.isNever) {
 			if (mandatoryType.isArray) {
 				indexType = Type.Integer;
 			}
@@ -190,7 +192,7 @@ export class AccessNode extends AssignableNode {
 			this._type = compositeType.objectAtomValType(typeof index === "string" ? index : undefined);
 		}
 		else {
-			this._type = Type.Unknown;
+			this._type = Type.Any;
 		}
 	}
 

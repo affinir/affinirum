@@ -22,7 +22,7 @@ export class Type {
 		return !this._atoms;
 	}
 
-	get isUnknown() {
+	get isAny() {
 		return this._atoms?.length === 0;
 	}
 
@@ -30,8 +30,8 @@ export class Type {
 		return this._atoms?.length === 1;
 	}
 
-	get isVoid() {
-		return this._atoms?.length === 1 && this._atoms[0].equals(Type.Void.atom(0));
+	get isNull() {
+		return this._atoms?.length === 1 && this._atoms[0].equals(Type.Null.atom(0));
 	}
 
 	get isBoolean() {
@@ -71,7 +71,7 @@ export class Type {
 	}
 
 	get isOptional() {
-		return Boolean(this._atoms?.length === 0 || this._atoms?.some((a) => a.equals(Type.Void.atom(0))));
+		return Boolean(this._atoms?.length === 0 || this._atoms?.some((a) => a.equals(Type.Null.atom(0))));
 	}
 
 	get isUniformArray() {
@@ -112,14 +112,14 @@ export class Type {
 			if (this.isNever || type.isNever) {
 				return false;
 			}
-			return Boolean(this.isUnknown || type.isUnknown || this._atoms?.some((a) => type._atoms?.some((atom) => a.intersects(atom))));
+			return Boolean(this.isAny || type.isAny || this._atoms?.some((a) => type._atoms?.some((atom) => a.intersects(atom))));
 		}
-		return Boolean(this.isUnknown || this._atoms?.some((atom) => atom.intersects(type)));
+		return Boolean(this.isAny || this._atoms?.some((atom) => atom.intersects(type)));
 	}
 
 	accepts(type: Type | Atom): boolean {
 		if (type instanceof Type) {
-			if (this.isUnknown || type.isUnknown || type.isNever) {
+			if (this.isAny || type.isAny || type.isNever) {
 				return true;
 			}
 			return Boolean(type._atoms?.every((a) => this._atoms?.some((atom) => atom.accepts(a))));
@@ -128,7 +128,7 @@ export class Type {
 	}
 
 	acceptsValue(value: Value): boolean {
-		if (this.isUnknown) {
+		if (this.isAny) {
 			return true;
 		}
 		const valueAtom = Type.of(value)._atoms?.[0];
@@ -136,7 +136,7 @@ export class Type {
 			if (atom instanceof ObjectAtom ? !(valueAtom instanceof ObjectAtom) : !atom.accepts(valueAtom)) {
 				return false;
 			}
-			if ((atom instanceof ArrayAtom || atom instanceof ObjectAtom) && atom.valType(undefined)?.isUnknown) {
+			if ((atom instanceof ArrayAtom || atom instanceof ObjectAtom) && atom.valType(undefined)?.isAny) {
 				return true;
 			}
 			if (atom instanceof ArrayAtom) {
@@ -177,10 +177,10 @@ export class Type {
 		if (this.isNever || type.isNever) {
 			return Type.Never;
 		}
-		if (type.isUnknown || type.isVoid) {
+		if (type.isAny || type.isNull) {
 			return this;
 		}
-		if (this.isUnknown) {
+		if (this.isAny) {
 			return type;
 		}
 		const list = this._atoms?.filter((a) => type.accepts(a));
@@ -198,13 +198,13 @@ export class Type {
 	arrayAtomValType(index?: number): Type {
 		const atoms = this.arrayAtoms();
 		if (!atoms.length) {
-			return Type.Unknown;
+			return Type.Any;
 		}
 		const valTypes: Type[] = [];
 		for (const atom of atoms) {
 			const valType = atom.valType(index);
 			if (!valType) {
-				return Type.Unknown;
+				return Type.Any;
 			}
 			valTypes.push(valType);
 		}
@@ -214,77 +214,83 @@ export class Type {
 	objectAtomValType(key?: string): Type {
 		const atoms = this.objectAtoms();
 		if (!atoms.length) {
-			return Type.Unknown;
+			return Type.Any;
 		}
 		const valTypes: Type[] = [];
 		for (const atom of atoms) {
 			const valType = atom.valType(key);
 			if (!valType) {
-				return Type.Unknown;
+				return Type.Any;
 			}
 			valTypes.push(valType);
 		}
 		return Type.union(...valTypes);
 	}
 
-	functionAtomRetType() {
-		return Type.union(...this.functionAtoms().flatMap((atom) => atom.signatures.map((signature) => signature.retType)));
+	functionAtomRetType(): Type | undefined {
+		const types = this.functionAtoms().map((atom) => atom.retType());
+		return types.length ? Type.union(...types) : undefined;
 	}
 
-	functionAtomArgType(index: number): Type {
-		const types = this.functionAtoms().flatMap((atom) =>
-			atom.signatures.map((signature) => signature.argType(index))
-		).filter((type) => type !== undefined);
-		return Type.union(...types);
+	functionAtomArgType(index: number): Type | undefined {
+		const types = this.functionAtoms().map((atom) => atom.argType(index)).filter((type) => type !== undefined);
+		return types.length ? Type.union(...types) : undefined;
 	}
 
 	arrayAtoms(): ArrayAtom[] {
-		if (this.isUnknown) {
+		if (this.isAny) {
 			return Type.Array._atoms as ArrayAtom[];
 		}
 		return this._atoms?.filter((a): a is ArrayAtom => a instanceof ArrayAtom) ?? [];
 	}
 
 	objectAtoms(): ObjectAtom[] {
-		if (this.isUnknown) {
+		if (this.isAny) {
 			return Type.Object._atoms as ObjectAtom[];
 		}
 		return this._atoms?.filter((a): a is ObjectAtom => a instanceof ObjectAtom) ?? [];
 	}
 
 	functionAtoms(): FunctionAtom[] {
-		if (this.isUnknown || this.isNever) {
+		if (this.isAny || this.isNever) {
 			return Type.Function._atoms as FunctionAtom[];
 		}
 		return this._atoms?.filter((a): a is FunctionAtom => a instanceof FunctionAtom) ?? [];
 	}
 
+	optionalFirstParameter(): Type {
+		return this.isNever
+			? this
+			: Type.union(...this.functionAtoms().map((atom) => new Type([atom.firstArgOptional()])));
+	}
+
 	toOptional() {
-		return Type.union(Type.Void, this);
+		return Type.union(Type.Null, this);
 	}
 
 	toMandatory() {
-		if (!this._atoms?.length || !this.isOptional || this.isVoid) {
+		if (!this._atoms?.length || !this.isOptional || this.isNull) {
 			return this;
 		}
-		return new Type(this._atoms.filter((a) => !a.equals(Type.Void.atom(0))));
+		return new Type(this._atoms.filter((a) => !a.equals(Type.Null.atom(0))));
 	}
 
 	toString(): string {
-		if (this.isNever) {
-			return "--";
+		if (this._atoms == null) {
+			return "never";
 		}
-		return this._atoms?.length
-			? [...this._atoms]
-				.sort((a, b) => a.weight() - b.weight())
-				.map((a) => a.toString())
-				.join("|")
-			: "??";
+		if (this._atoms.length === 0) {
+			return "any";
+		}
+		return [...this._atoms]
+			.sort((a, b) => a.weight() - b.weight())
+			.map((a) => a.toString())
+			.join("|");
 	}
 
 	static union(...types: Type[]) {
-		if (types.some((t) => t.isUnknown)) {
-			return Type.Unknown;
+		if (types.some((t) => t.isAny)) {
+			return Type.Any;
 		}
 		if (types.length && types.every((t) => t.isNever)) {
 			return Type.Never;
@@ -302,7 +308,7 @@ export class Type {
 
 	static of(value: Value) {
 		return value == null
-			? Type.Void
+			? Type.Null
 			: typeof value === "boolean"
 				? Type.Boolean
 				: value instanceof Date
@@ -340,48 +346,52 @@ export class Type {
 		return new Type([new PrimitiveAtom(primitive)]);
 	}
 
-	static arrayType(types: Type | readonly Type[] = Type.Unknown) {
+	static arrayType(types: Type | readonly Type[] = Type.Any) {
 		return new Type([new ArrayAtom(types)]);
 	}
 
-	static objectType(types: Type | readonly (readonly [key: string, valType: Type])[] = Type.Unknown) {
+	static objectType(types: Type | readonly (readonly [key: string, valType: Type])[] = Type.Any) {
 		return new Type([new ObjectAtom(types)]);
 	}
 
-	static functionType(signatures: [retType: Type, argTypes: Type[], variadic?: boolean][], volatile?: boolean) {
+	static functionType(signatures: [retType: Type, argTypes: Type[], variadic?: boolean][] = [[Type.Any, [], true]], volatile?: boolean) {
 		return new Type([new FunctionAtom(signatures, volatile)]);
 	}
 
 	static readonly Never = new Type();
-	static readonly Unknown = new Type([]);
-	static readonly Void = Type.primitiveType("void");
+	static readonly Any = new Type([]);
+	static readonly Null = Type.primitiveType("null");
 	static readonly Boolean = Type.primitiveType("boolean");
-	static readonly OptionalBoolean = Type.union(Type.Void, Type.Boolean);
+	static readonly OptionalBoolean = Type.union(Type.Null, Type.Boolean);
 	static readonly Timestamp = Type.primitiveType("timestamp");
-	static readonly OptionalTimestamp = Type.union(Type.Void, Type.Timestamp);
+	static readonly OptionalTimestamp = Type.union(Type.Null, Type.Timestamp);
 	static readonly Float = Type.primitiveType("float");
-	static readonly OptionalFloat = Type.union(Type.Void, Type.Float);
+	static readonly OptionalFloat = Type.union(Type.Null, Type.Float);
 	static readonly Integer = Type.primitiveType("integer");
-	static readonly OptionalInteger = Type.union(Type.Void, Type.Integer);
+	static readonly OptionalInteger = Type.union(Type.Null, Type.Integer);
 	static readonly Buffer = Type.primitiveType("buffer");
-	static readonly OptionalBuffer = Type.union(Type.Void, Type.Buffer);
+	static readonly OptionalBuffer = Type.union(Type.Null, Type.Buffer);
 	static readonly String = Type.primitiveType("string");
-	static readonly OptionalString = Type.union(Type.Void, Type.String);
+	static readonly OptionalString = Type.union(Type.Null, Type.String);
 	static readonly Array = Type.arrayType();
-	static readonly OptionalArray = Type.union(Type.Void, Type.Array);
+	static readonly OptionalArray = Type.union(Type.Null, Type.Array);
+	static readonly Tuple = Type.arrayType([]);
+	static readonly OptionalTuple = Type.union(Type.Null, Type.Tuple);
 	static readonly Object = Type.objectType();
-	static readonly OptionalObject = Type.union(Type.Void, Type.Object);
-	static readonly Function = Type.functionType([[Type.Unknown, [], true]]);
-	static readonly OptionalFunction = Type.union(Type.Void, Type.Function);
+	static readonly OptionalObject = Type.union(Type.Null, Type.Object);
+	static readonly Record = Type.objectType([]);
+	static readonly OptionalRecord = Type.union(Type.Null, Type.Record);
+	static readonly Function = Type.functionType();
+	static readonly OptionalFunction = Type.union(Type.Null, Type.Function);
 	static readonly Reference = Type.union(Type.Array, Type.Object, Type.Function);
-	static readonly OptionalReference = Type.union(Type.Void, Type.Array, Type.Object, Type.Function);
+	static readonly OptionalReference = Type.union(Type.Null, Type.Array, Type.Object, Type.Function);
 	static readonly Number = Type.union(Type.Float, Type.Integer);
-	static readonly OptionalNumber = Type.union(Type.Void, Type.Float, Type.Integer);
+	static readonly OptionalNumber = Type.union(Type.Null, Type.Float, Type.Integer);
 	static readonly Composite = Type.union(Type.Array, Type.Object);
-	static readonly OptionalComposite = Type.union(Type.Void, Type.Array, Type.Object);
+	static readonly OptionalComposite = Type.union(Type.Null, Type.Array, Type.Object);
 	static readonly Enumerable = Type.union(Type.Buffer, Type.String, Type.Array);
-	static readonly OptionalEnumerable = Type.union(Type.Void, Type.Buffer, Type.String, Type.Array);
+	static readonly OptionalEnumerable = Type.union(Type.Null, Type.Buffer, Type.String, Type.Array);
 	static readonly Iterable = Type.union(Type.Buffer, Type.String, Type.Array, Type.Object);
-	static readonly OptionalIterable = Type.union(Type.Void, Type.Buffer, Type.String, Type.Array, Type.Object);
+	static readonly OptionalIterable = Type.union(Type.Null, Type.Buffer, Type.String, Type.Array, Type.Object);
 
 }

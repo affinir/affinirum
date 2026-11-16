@@ -24,8 +24,8 @@ export const funcAt = new Constant(
 	(value: Value[] | { [ key: string ]: Value }, index: bigint | string) =>
 		Array.isArray(value) ? arrayAt(value, Number(index)) : objectAt(value, String(index)),
 	Type.functionType([
-		[Type.Unknown, [Type.Array, Type.Integer]],
-		[Type.Unknown, [Type.Object, Type.String]],
+		[Type.Any, [Type.Array, Type.Integer]],
+		[Type.Any, [Type.Object, Type.String]],
 	]),
 );
 
@@ -33,8 +33,8 @@ export const funcOptionalAt = new Constant(
 	(value: Value[] | { [ key: string ]: Value } | null | undefined, index: bigint | string) =>
 		value == null ? undefined : Array.isArray(value) ? arrayAt(value, Number(index)) : objectAt(value, String(index)),
 	Type.functionType([
-		[Type.Unknown, [Type.OptionalArray, Type.Integer]],
-		[Type.Unknown, [Type.OptionalObject, Type.String]],
+		[Type.Any, [Type.OptionalArray, Type.Integer]],
+		[Type.Any, [Type.OptionalObject, Type.String]],
 	]),
 );
 

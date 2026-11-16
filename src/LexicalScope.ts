@@ -16,7 +16,7 @@ export class LexicalScope {
 		superscope?._subscopes.push(this);
 		this._superscope = superscope;
 		this._variables = variables ?? new Map();
-		this._type = type ?? superscope?.type ?? Type.Unknown;
+		this._type = type ?? superscope?.type ?? Type.Any;
 	}
 
 	has(name: string): boolean {

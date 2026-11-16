@@ -2,7 +2,12 @@ import { Affinirum, Type } from "../../src/index.js";
 
 describe("Compiled type test", () => {
 	([
-		["null", "void"],
+		["null", "null"],
+		["val x: null = null; x", "null"],
+		["val x: null | integer = 1; x", "null|integer"],
+		["val x: integer | null = null; x", "null|integer"],
+		["val x: [null] = [null]; x", "[null]"],
+		["null::null", "null"],
 		["true", "boolean"],
 		["false", "boolean"],
 		["0", "integer"],
@@ -39,9 +44,9 @@ describe("Compiled type test", () => {
 		["[0,1,2,3]", "[integer,integer,integer,integer]"],
 		["[\"0\",1,2,\"3\"]", "[string,integer,integer,string]"],
 		["[\"a\":100,\"b\":\"100\"]", "[\"a\":integer,\"b\":string]"],
-		["~  ():void{null}", "~():void"],
-		["~(){25+45}", "~():??"],
-		["~(){null}", "~():??"],
+		["~  ():null{null}", "~():null"],
+		["~(){25+45}", "~():any"],
+		["~(){null}", "~():any"],
 		["~ (i:float):boolean{i==0}", "~(float):boolean"],
 		["~ (x:string, y:...string):[...string]{y+[x]}", "~(string,...string):[...string]"],
 		["~ (x:integer, y:...integer):integer{([x]+y).Length}", "~(integer,...integer):integer"],
@@ -57,11 +62,11 @@ describe("Compiled type test", () => {
 		});
 	});
 	it("parses unions after composite and grouped types", () => {
-		const script = new Affinirum("~(value:(float|string)|[...float|string]|['a':integer]|(~():integer)|boolean):(void|[...float|string])|float|string{null}");
+		const script = new Affinirum("~(value:(float|string)|[...float|string]|['a':integer]|(~():integer)|boolean):(null|[...float|string])|float|string{null}");
 		const valueType = Type.union(Type.Float, Type.String);
 		const arrayType = Type.arrayType(valueType);
 		const type = Type.functionType([
-			[Type.union(Type.Void, arrayType, valueType), [Type.union(valueType, arrayType, Type.objectType([["a", Type.Integer]]), Type.functionType([[Type.Integer, []]]), Type.Boolean)]],
+			[Type.union(Type.Null, arrayType, valueType), [Type.union(valueType, arrayType, Type.objectType([["a", Type.Integer]]), Type.functionType([[Type.Integer, []]]), Type.Boolean)]],
 		]);
 		expect(script.type.equals(type)).toBe(true);
 	});
@@ -80,16 +85,19 @@ describe("Compiled type test", () => {
 	it("accepts a missing optional tuple item", () => {
 		expect(new Affinirum("val a:[integer,string?]=[1];a").evaluate()).toEqual([1n]);
 	});
+	it("rejects an optional suffix on the null type", () => {
+		expect(() => new Affinirum("val x: null? = null; x")).toThrow();
+	});
 	it("rejects an empty block for a function declared to return integer", () => {
 		expect(() => new Affinirum("val f=~():integer {}; f()"))
-			.toThrow(/type void mismatch with expected type integer/);
+			.toThrow(/type null mismatch with expected type integer/);
 	});
-	it.each(["7", "~>7", "['a':7]", "~>['a':7]"])("rejects %s as the result of a void function", (body) => {
-		expect(() => new Affinirum(`(~():void{${body}})()`))
-			.toThrow(/mismatch with expected type void/);
+	it.each(["7", "~>7", "['a':7]", "~>['a':7]"])("rejects %s as the result of a function returning null", (body) => {
+		expect(() => new Affinirum(`(~():null{${body}})()`))
+			.toThrow(/mismatch with expected type null/);
 	});
-	it.each(["null", "~>null"])("accepts %s as the result of a void function", (body) => {
-		expect(new Affinirum(`(~():void{${body}})()`).evaluate()).toBeUndefined();
+	it.each(["null", "~>null"])("accepts %s as the result of a function returning null", (body) => {
+		expect(new Affinirum(`(~():null{${body}})()`).evaluate()).toBeUndefined();
 	});
 	it("infers float when adding an integer and a float", () => {
 		const script = new Affinirum("a + b", { variables: { a: Type.Integer, b: Type.Float } });

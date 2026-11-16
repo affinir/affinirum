@@ -9,7 +9,7 @@ export abstract class Variable {
 	}
 
 	get type() {
-		return this._type ?? Type.Unknown;
+		return this._type ?? Type.Any;
 	}
 
 	get declared() {

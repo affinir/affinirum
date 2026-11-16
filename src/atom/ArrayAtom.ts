@@ -56,7 +56,7 @@ export class ArrayAtom implements IAtom {
 		}
 		const types = this._valTypes;
 		const other = atom._valTypes;
-		if (other instanceof Type && other.isUnknown) {
+		if (other instanceof Type && other.isAny) {
 			return true;
 		}
 		if (types instanceof Type) {
@@ -65,7 +65,7 @@ export class ArrayAtom implements IAtom {
 		if (other instanceof Type) {
 			return types.every((type) => type.isOptional && type.accepts(other));
 		}
-		return types.every((type, index) => type.accepts(other[index] ?? Type.Void));
+		return types.every((type, index) => type.accepts(other[index] ?? Type.Null));
 	}
 
 	intersects(atom: IAtom): boolean {
@@ -98,7 +98,7 @@ export class ArrayAtom implements IAtom {
 	toString(): string {
 		const types = this._valTypes;
 		if (types instanceof Type) {
-			return types.isUnknown ? "array" : `[...${types}]`;
+			return `[...${types.isAny ? "" : types}]`;
 		}
 		return types.length ? `[${types.join(",")}]` : "[]";
 	}

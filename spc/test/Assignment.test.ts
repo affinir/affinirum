@@ -53,9 +53,9 @@ describe("Assignment test", () => {
 		expect(expression.evaluate({ condition: false })).toBe("three");
 	});
 
-	it("keeps an unknown initializer type on later assignments", () => {
+	it("keeps an initializer of type any on later assignments", () => {
 		const expression = new Affinirum("var x=read();x=1;x");
-		expect(expression.type.isUnknown).toBe(true);
+		expect(expression.type.isAny).toBe(true);
 		expect(expression.evaluate({ read: () => "two" })).toBe(1n);
 	});
 
@@ -69,9 +69,9 @@ describe("Assignment test", () => {
 			.toThrow(/type integer mismatch with expected type integer\|string/);
 	});
 
-	it("allows reassignment with an explicitly declared unknown type", () => {
-		const expression = new Affinirum("var x:??=1;x='two';x");
-		expect(expression.type.isUnknown).toBe(true);
+	it("allows reassignment with an explicit any type", () => {
+		const expression = new Affinirum("var x:any=1;x='two';x");
+		expect(expression.type.isAny).toBe(true);
 		expect(expression.evaluate()).toBe("two");
 	});
 
@@ -122,7 +122,7 @@ describe("Assignment test", () => {
 	it.each(["x=2", "x+=2"])("rejects assignment to input with %s", (assignment) => {
 		expect(() => new Affinirum(assignment)).toThrow(/illegal re-assignment/);
 		expect(() => new Affinirum(assignment, { variables: { x: Type.Integer } })).toThrow(/illegal re-assignment/);
-		expect(() => new Affinirum(assignment, { variables: { x: Type.Unknown } })).toThrow(/illegal re-assignment/);
+		expect(() => new Affinirum(assignment, { variables: { x: Type.Any } })).toThrow(/illegal re-assignment/);
 	});
 
 	it("requires an initializer for a non-optional variable", () => {

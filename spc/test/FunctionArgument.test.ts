@@ -44,7 +44,7 @@ vfunc(cfunc)
 	});
 	it("checks different uses of an untyped parameter", () => {
 		const expression = new Affinirum("~(x):float|integer{val first=x-1;x='two';first+x.Length}");
-		expect(expression.type.equals(Type.functionType([[Type.Number, [Type.Unknown]]]))).toBe(true);
+		expect(expression.type.equals(Type.functionType([[Type.Number, [Type.Any]]]))).toBe(true);
 		const func = expression.evaluate() as (value: bigint | number) => bigint | number;
 		expect(func(4n)).toBe(6n);
 		expect(func(4)).toBe(6);
@@ -101,7 +101,7 @@ vfunc(cfunc)
 
 	it.each(["2", "null"])("rejects a callee union containing %s", (alternative) => {
 		const script = `val f=if flag{~(n:integer):integer{n}}else{${alternative}};f(1)`;
-		expect(() => new Affinirum(script)).toThrow(/mismatch with expected type function/);
+		expect(() => new Affinirum(script)).toThrow(/mismatch with expected type ~\(\.\.\.\)/);
 	});
 
 	it("matches one signature per callable when a union includes an overloaded function", () => {
@@ -197,10 +197,10 @@ vfunc(cfunc)
 			[Type.String, [Type.String]],
 		]);
 		const union = Type.union(Type.Integer, Type.String);
-		const expression = new Affinirum("f(x)", { variables: { f, x: Type.Unknown } });
-		expect(expression.variables().x.equals(Type.Unknown)).toBe(true);
+		const expression = new Affinirum("f(x)", { variables: { f, x: Type.Any } });
+		expect(expression.variables().x.equals(Type.Any)).toBe(true);
 		expect(expression.type.equals(union)).toBe(true);
-		expect(() => new Affinirum("f(x)", { type: Type.Integer, variables: { f, x: Type.Unknown } }))
+		expect(() => new Affinirum("f(x)", { type: Type.Integer, variables: { f, x: Type.Any } }))
 			.toThrow(/type integer\|string mismatch with expected type integer/);
 	});
 
@@ -271,7 +271,7 @@ use(~(x:integer):integer { x })
 	});
 	it.each<[string, RegExp]>([
 		["[1].Derive(~(value:integer):integer{'bad'})", /type string mismatch with expected type integer/],
-		["['a'].Compose(~(acc:object,key:string):string{key.Char(0)})", /type void\|string mismatch with expected type string/],
+		["['a'].Compose(~(acc:object,key:string):string{key.Char(0)})", /type null\|string mismatch with expected type string/],
 		["[1,2].Reduce(~(a:integer,b:integer):float{a.Subtract(b)})", /type integer mismatch with expected type float/],
 	])("rejects a callback whose body does not match its declared return type in %s", (script, error) => {
 		expect(() => new Affinirum(script)).toThrow(error);

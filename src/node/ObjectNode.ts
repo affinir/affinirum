@@ -30,15 +30,15 @@ export class ObjectNode extends Node {
 	}
 
 	override satisfies(type: Type): boolean {
-		return type.isUnknown || this.type.isNever || type.objectAtoms().some((atom) =>
+		return type.isAny || this.type.isNever || type.objectAtoms().some((atom) =>
 			this.type.intersects(atom) && Type.objectType(atom.types).accepts(this.type) && this._subnodes.every(([keyNode, value]) => {
 				const key = keyNode instanceof ConstantNode && keyNode.constant ? keyNode.value as string : undefined;
-				return value.satisfies(atom.valType(key) ?? Type.Unknown);
+				return value.satisfies(atom.valType(key) ?? Type.Any);
 			})
 		);
 	}
 
-	override compile(type = Type.Unknown): Node {
+	override compile(type = Type.Any): Node {
 		let objectAtoms = type.objectAtoms().filter((atom) => this._type.intersects(atom));
 		const valTypes = new Map<string, Type>();
 		let never = false;
@@ -48,9 +48,9 @@ export class ObjectNode extends Node {
 			if (key !== undefined && valTypes.has(key)) {
 				keyNode.throwError(`duplicate object key ${JSON.stringify(key)}`);
 			}
-			const constraints = objectAtoms.map((atom) => atom.valType(key) ?? Type.Unknown);
+			const constraints = objectAtoms.map((atom) => atom.valType(key) ?? Type.Any);
 			const firstType = constraints[0];
-			const valueType = firstType && constraints.every((candidate) => firstType.equals(candidate)) ? firstType : Type.Unknown;
+			const valueType = firstType && constraints.every((candidate) => firstType.equals(candidate)) ? firstType : Type.Any;
 			this._subnodes[i][1] = this._subnodes[i][1].compile(valueType);
 			objectAtoms = objectAtoms.filter((_, index) => this._subnodes[i][1].satisfies(constraints[index]));
 			never ||= this._subnodes[i][0].type.isNever || this._subnodes[i][1].type.isNever;

@@ -30,7 +30,7 @@ export const funcContains = new Constant(
 	Type.functionType([
 		[Type.Boolean, [Type.Buffer, Type.Buffer, Type.OptionalInteger]],
 		[Type.Boolean, [Type.String, Type.String, Type.OptionalInteger, Type.OptionalBoolean]],
-		[Type.Boolean, [Type.Array, Type.Unknown, Type.OptionalInteger]],
-		[Type.Boolean, [Type.Object, Type.Unknown]],
+		[Type.Boolean, [Type.Array, Type.Any, Type.OptionalInteger]],
+		[Type.Boolean, [Type.Object, Type.Any]],
 	]),
 );

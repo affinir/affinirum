@@ -33,7 +33,7 @@ describe("Ternary node test", () => {
 		const expression = new Affinirum("var x;if condition{x='two';x=2}else{x=3};x", {
 			variables: { condition: Type.Boolean },
 		});
-		expect(expression.type.isUnknown).toBe(true);
+		expect(expression.type.isAny).toBe(true);
 		expect(expression.evaluate({ condition: true })).toBe(2n);
 		expect(expression.evaluate({ condition: false })).toBe(3n);
 	});

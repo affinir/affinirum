@@ -5,14 +5,14 @@ import { LexicalScope } from "./LexicalScope.js";
 export class TypeParser {
 
 	parse(state: ParserState, scope: LexicalScope): Type {
-		let type = this._element(state, scope);
+		let type = this._atom(state, scope);
 		while (state.equals("|")) { // type union
-			type = Type.union(type, this._element(state.next(), scope));
+			type = Type.union(type, this._atom(state.next(), scope));
 		}
 		return type;
 	}
 
-	protected _element(state: ParserState, scope: LexicalScope): Type {
+	protected _atom(state: ParserState, scope: LexicalScope): Type {
 		if (state.isType) { // literal type
 			let type = state.type;
 			if (state.next().equals("?")) {
@@ -21,11 +21,23 @@ export class TypeParser {
 			}
 			return type;
 		}
+		if (state.equals("null")) {
+			state.next();
+			return Type.Null;
+		}
+		if (state.equals("never")) {
+			state.next();
+			return Type.Never;
+		}
 		else if (state.equals("[")) { // array or object type
 			if (state.next().equals("...")) {
 				const object = state.next().equals(":");
 				if (object) {
 					state.next();
+				}
+				if (state.equals("]")) {
+					state.next();
+					return object ? Type.Object : Type.Array;
 				}
 				const valType = this.parse(state, scope);
 				state.closeBrackets();
@@ -78,7 +90,7 @@ export class TypeParser {
 			}
 			state.closeParentheses();
 			state.next();
-			const retType = state.equals(":") ? this.parse(state.next(), scope) : Type.Unknown;
+			const retType = state.equals(":") ? this.parse(state.next(), scope) : Type.Any;
 			return Type.functionType([[retType, argTypes, variadic]]);
 		}
 		else if (state.equals("(")) { // type grouping

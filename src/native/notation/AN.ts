@@ -9,7 +9,7 @@ import { formatLiteralString } from "../String.js";
 import { formatLiteralTimestamp } from "../Timestamp.js";
 
 const typeAN = Type.union(
-	Type.Void,
+	Type.Null,
 	Type.Boolean,
 	Type.Timestamp,
 	Type.Float,
@@ -122,7 +122,7 @@ const parseLiteral = (state: ParserState): Value => {
 		state.next();
 		return value;
 	}
-	if (state.isType && state.type.isVoid) {
+	if (state.isType && state.type.isNull) {
 		state.next();
 		return undefined;
 	}
@@ -201,7 +201,7 @@ export const parseAN = (value: string | undefined): Value => {
 const funcFormatAN = new Constant(
 	(value: Value, whitespace?: string) =>
 		formatAN(value, whitespace),
-	Type.functionType([[Type.String, [Type.Unknown, Type.OptionalString]]]),
+	Type.functionType([[Type.String, [Type.Any, Type.OptionalString]]]),
 );
 
 const funcParseAN = new Constant(

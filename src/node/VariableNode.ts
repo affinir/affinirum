@@ -27,14 +27,14 @@ export class VariableNode extends AssignableNode {
 
 	override get type(): Type {
 		return this._type ?? (this._variable instanceof InputVariable && !this._variable.declared
-			? Type.Unknown
+			? Type.Any
 			: this._variable.type);
 	}
 
-	override compile(type = Type.Unknown): AssignableNode {
+	override compile(type = Type.Any): AssignableNode {
 		if (this._variable instanceof InputVariable && !this._variable.declared) {
 			this._type = this._variable.type;
-			if (!type.isUnknown && !type.isVoid && !type.isNever) {
+			if (!type.isAny && !type.isNull && !type.isNever) {
 				this._type = type === Type.Function ? this._type.reduce(type) ?? type : type;
 				this._variable.declare(this._type);
 			}

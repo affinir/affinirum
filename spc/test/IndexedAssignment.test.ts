@@ -253,7 +253,7 @@ describe("Indexed assignment test", () => {
 
 	it.each([undefined, 1n])("rejects a non-collection receiver at runtime for %s", (receiver) => {
 		const expression = new Affinirum("value().missing.Length", {
-			variables: { value: Type.functionType([[Type.Unknown, []]]) },
+			variables: { value: Type.functionType([[Type.Any, []]]) },
 		});
 		expect(() => expression.evaluate({ value: () => receiver })).toThrow(/indexed value must be an array or object/);
 	});

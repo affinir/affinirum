@@ -33,14 +33,14 @@ export class BlockNode extends Node {
 		return this.type.isNever || (this._subnodes.at(-1)?.satisfies(type) ?? super.satisfies(type));
 	}
 
-	override compile(type = Type.Unknown): Node {
+	override compile(type = Type.Any): Node {
 		if (this._subnodes.length === 0) {
 			return new ConstantNode(this, Constant.Null).compile(type);
 		}
 		let constant = true;
 		let never = false;
 		for (let i = 0, last = this._subnodes.length - 1; i < this._subnodes.length; ++i) {
-			const node: Node = this._subnodes[i] = this._subnodes[i].compile(i < last || never ? Type.Unknown : type);
+			const node: Node = this._subnodes[i] = this._subnodes[i].compile(i < last || never ? Type.Any : type);
 			never ||= node.type.isNever;
 			constant &&= node.constant;
 		}

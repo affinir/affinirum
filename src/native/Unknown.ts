@@ -120,13 +120,13 @@ export const format = (value: Value, formatting?: string): string =>
 											.reduce((acc, val) => acc + val, "")
 										: "";
 
-const typeEquator = Type.functionType([[Type.Boolean, [Type.Unknown, Type.Unknown]]]);
+const typeEquator = Type.functionType([[Type.Boolean, [Type.Any, Type.Any]]]);
 
 export const funcCoalesce = new Constant(
 	(value: Value, valueOtherwise: Value) =>
 		value ?? valueOtherwise,
 	Type.functionType([
-		[Type.Unknown, [Type.Unknown, Type.Unknown]],
+		[Type.Any, [Type.Any, Type.Any]],
 		[Type.OptionalFloat, [Type.OptionalFloat, Type.OptionalFloat]],
 		[Type.OptionalBoolean, [Type.OptionalBoolean, Type.OptionalBoolean]],
 		[Type.OptionalTimestamp, [Type.OptionalTimestamp, Type.OptionalTimestamp]],
@@ -151,14 +151,14 @@ export const funcNotEquals = new Constant(
 	typeEquator,
 );
 
-const typeWithEncoding = Type.union(Type.Void, Type.Timestamp, Type.Number, Type.String, Type.Composite);
-const typeWithFormatting = Type.union(Type.Void, Type.Timestamp, Type.Number, Type.Buffer, Type.Composite);
+const typeWithEncoding = Type.union(Type.Null, Type.Timestamp, Type.Number, Type.String, Type.Composite);
+const typeWithFormatting = Type.union(Type.Null, Type.Timestamp, Type.Number, Type.Buffer, Type.Composite);
 
 export const funcEncode = new Constant(
 	(value: Value, encoding: FloatEncoding | IntegerEncoding | TimestampEncoding | StringEncoding) =>
 		encode(value, encoding),
 	Type.functionType([
-		[Type.Buffer, [Type.Unknown]],
+		[Type.Buffer, [Type.Any]],
 		[Type.Buffer, [typeWithEncoding, Type.OptionalString]],
 	]),
 );
@@ -167,7 +167,7 @@ export const funcFormat = new Constant(
 	(value: Value, formatting?: string) =>
 		format(value, formatting),
 	Type.functionType([
-		[Type.String, [Type.Unknown]],
+		[Type.String, [Type.Any]],
 		[Type.String, [typeWithFormatting, Type.OptionalString]],
 	]),
 );

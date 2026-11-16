@@ -4,7 +4,11 @@ import { ParserState } from "../../../src/ParserState.js";
 import { ArrayNode } from "../../../src/node/ArrayNode.js";
 import { CallNode } from "../../../src/node/CallNode.js";
 import { ConstantNode } from "../../../src/node/ConstantNode.js";
+import { FinalNode } from "../../../src/node/FinalNode.js";
+import { VariableNode } from "../../../src/node/VariableNode.js";
 import { CallFrame } from "../../../src/CallFrame.js";
+import { InputVariable } from "../../../src/Variable.js";
+import { funcLength } from "../../../src/native/Iterable.js";
 
 describe("Constant folding test", () => {
 	const referenceFactories: [string, Type, () => Value][] = [
@@ -15,7 +19,7 @@ describe("Constant folding test", () => {
 		["optional object", Type.OptionalObject, () => ({})],
 		["optional function", Type.OptionalFunction, () => () => 1n],
 		["mixed union", Type.union(Type.Integer, Type.Array), () => []],
-		["unknown", Type.Unknown, () => []],
+		["unknown", Type.Any, () => []],
 	];
 
 	referenceFactories.forEach(([name, type, factory]) => {
@@ -120,5 +124,51 @@ describe("Constant folding test", () => {
 		expect(second).toEqual([1n, 2n]);
 		expect(second).not.toBe(first);
 		expect(calls).toBe(2);
+	});
+});
+
+describe("Optional calls", () => {
+	it("preserves Never when evaluating the callee exits early", () => {
+		const span = new ParserState("(return 1)(2)");
+		const value = new ConstantNode(span, new Constant(1n));
+		const callee = new FinalNode(span, "return", value, Type.Integer);
+		const argument = new ConstantNode(span, new Constant(2n));
+		const node = new CallNode(span, callee, [argument], true).compile();
+		expect(node.type.isNever).toBe(true);
+	});
+
+	it("includes null in the initial type for enclosing overload resolution", () => {
+		const span = new ParserState("select(value, null?.Length())");
+		const select = new ConstantNode(span, new Constant((value: Value) => value, Type.functionType([
+			[Type.Integer, [Type.Integer, Type.Integer]],
+			[Type.String, [Type.String, Type.Null]],
+		])));
+		const length = new ConstantNode(span, funcLength);
+		const receiver = new ConstantNode(span, Constant.Null);
+		const optionalLength = new CallNode(span, length, [receiver], true);
+		expect(optionalLength.type.equals(Type.OptionalInteger)).toBe(true);
+
+		const value = new InputVariable();
+		const node = new CallNode(span, select, [new VariableNode(span, value), optionalLength]).compile();
+		const frame = new CallFrame();
+		frame.add(value, "text");
+		expect(node.type.equals(Type.String)).toBe(true);
+		expect(node.evaluate(frame)).toBe("text");
+	});
+
+	it("requires the receiver and rest to match the same variadic array type", () => {
+		const span = new ParserState("count()");
+		const itemsType = Type.union(Type.arrayType(Type.Integer), Type.arrayType(Type.String));
+		const count = new ConstantNode(span, new Constant((...items: Value[]) => BigInt(items.length),
+			Type.functionType([[Type.Integer, [itemsType], true]])));
+		const compile = (...items: Value[]) => new CallNode(span, count,
+			items.map((item) => new ConstantNode(span, new Constant(item))), true).compile();
+		const frame = new CallFrame();
+
+		expect(compile(1n, 2n).evaluate(frame)).toBe(2n);
+		expect(compile("a", "b").evaluate(frame)).toBe(2n);
+		expect(compile(undefined, 1n, 2n).evaluate(frame)).toBeUndefined();
+		expect(() => compile(1n, "b")).toThrow(/cannot be called/);
+		expect(() => compile("a", 2n)).toThrow(/cannot be called/);
 	});
 });

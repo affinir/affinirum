@@ -10,10 +10,10 @@ export abstract class Node extends ParserSpan {
 	}
 
 	get type(): Type {
-		return Type.Void;
+		return Type.Null;
 	}
 
-	compile(type = Type.Unknown): Node {
+	compile(type = Type.Any): Node {
 		if (!this.satisfies(type)) {
 			this._throwTypeError(type);
 		}

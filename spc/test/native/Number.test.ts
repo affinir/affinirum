@@ -296,7 +296,7 @@ describe("Number function test", () => {
 
 		it.each<[string, Type, number | undefined]>([
 			["9.0.Root(2.0)", Type.Float, 3],
-			["(-16).Root(2)", Type.Void, undefined],
+			["(-16).Root(2)", Type.Null, undefined],
 		])("folds %s to its concrete result type", (script, type, expected) => {
 			const expression = new Affinirum(script);
 			expect(expression.type.equals(type)).toBe(true);

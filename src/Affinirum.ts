@@ -583,7 +583,7 @@ export class Affinirum {
 		}
 		state.closeParentheses();
 		state.next();
-		const returnType = state.equals(":") ? this._type.parse(state.next(), scope) : Type.Unknown;
+		const returnType = state.equals(":") ? this._type.parse(state.next(), scope) : Type.Any;
 		span.end(state);
 		const args = Array.from(variables.values());
 		const subscope = scope.subscope(variables, returnType);

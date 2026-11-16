@@ -3,8 +3,8 @@ import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { equals } from "./Unknown.js";
 
-const typePredicate = Type.functionType([[Type.Boolean, [Type.Unknown, Type.Integer, Type.Array]]]);
-const typeItemFinder = Type.functionType([[Type.Unknown, [Type.Array, typePredicate]]]);
+const typePredicate = Type.functionType([[Type.Boolean, [Type.Any, Type.Integer, Type.Array]]]);
+const typeItemFinder = Type.functionType([[Type.Any, [Type.Array, typePredicate]]]);
 const typeIndexFinder = Type.functionType([[Type.OptionalInteger, [Type.Array, typePredicate]]]);
 const typeConditionSet = Type.functionType([[Type.Boolean, [Type.Array, typePredicate]]]);
 const typeArrayOperator = Type.functionType([[Type.Array, [Type.Array, Type.Array]]]);
@@ -85,7 +85,7 @@ export const funcDerive = new Constant(
 		value?.map((v, i, a) => transform(v, BigInt(i), a)),
 	Type.functionType([[Type.Array, [
 		Type.Array,
-		Type.functionType([[Type.Unknown, [Type.Unknown, Type.Integer, Type.Array]]]),
+		Type.functionType([[Type.Any, [Type.Any, Type.Integer, Type.Array]]]),
 	]]]),
 );
 
@@ -100,10 +100,10 @@ export const funcReduce = new Constant(
 		initial != null
 			? value?.reduce((p, v, i, a) => reducer(p, v, BigInt(i), a), initial)
 			: value?.reduce((p, v, i, a) => reducer(p, v, BigInt(i), a)),
-	Type.functionType([[Type.Unknown, [
+	Type.functionType([[Type.Any, [
 		Type.Array,
-		Type.functionType([[Type.Unknown, [Type.Unknown, Type.Unknown, Type.Integer, Type.Array]]]),
-		Type.Unknown,
+		Type.functionType([[Type.Any, [Type.Any, Type.Any, Type.Integer, Type.Array]]]),
+		Type.Any,
 	]]]),
 );
 
@@ -122,7 +122,7 @@ export const funcCompose = new Constant(
 	},
 	Type.functionType([[Type.Object, [
 		Type.Array,
-		Type.functionType([[Type.Unknown, [Type.Object, Type.String, Type.Integer, Type.Array]]]),
+		Type.functionType([[Type.Any, [Type.Object, Type.String, Type.Integer, Type.Array]]]),
 	]]]),
 );
 

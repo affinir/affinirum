@@ -27,8 +27,8 @@ describe("Object type inference test", () => {
 
 	it("leaves conflicting property constraints unknown when the object union is unresolved", () => {
 		const expression = new Affinirum("['a':x,'b':y]", { type: union });
-		expect(expression.variables().x.isUnknown).toBe(true);
-		expect(expression.variables().y.isUnknown).toBe(true);
+		expect(expression.variables().x.isAny).toBe(true);
+		expect(expression.variables().y.isAny).toBe(true);
 		expect(expression.evaluate({ x: 1n, y: "text" })).toEqual({ a: 1n, b: "text" });
 	});
 
@@ -50,7 +50,7 @@ describe("Object type inference test", () => {
 		const type = Type.objectType([["a", Type.Integer]]);
 		const expression = new Affinirum("['a':1,(key):value]", { type });
 		expect(expression.type.equals(type)).toBe(true);
-		expect(expression.variables().value.isUnknown).toBe(true);
+		expect(expression.variables().value.isAny).toBe(true);
 		expect(expression.evaluate({ key: "b", value: "text" })).toEqual({ a: 1n, b: "text" });
 		expect(() => expression.evaluate({ key: "a", value: "text" }))
 			.toThrow(/object value mismatch with expected type/);
@@ -77,7 +77,7 @@ describe("Object type inference test", () => {
 	});
 
 	it("requires a known named field in a loop result", () => {
-		const type = Type.union(Type.Void, Type.objectType([["a", Type.Integer]]));
+		const type = Type.union(Type.Null, Type.objectType([["a", Type.Integer]]));
 		expect(() => new Affinirum("var n=0;while n<1{n=1;[(key):1]}", { type }))
 			.toThrow(/mismatch with expected type/);
 	});

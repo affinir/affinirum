@@ -28,9 +28,9 @@ export class LoopNode extends Node {
 		return this.type.isNever || super.satisfies(type) && this._subnode.satisfies(type);
 	}
 
-	override compile(type = Type.Unknown): Node {
+	override compile(type = Type.Any): Node {
 		this._cnode = this._cnode.compile(Type.Boolean);
-		this._subnode = this._subnode.compile(this._cnode.type.isNever ? Type.Unknown : type);
+		this._subnode = this._subnode.compile(this._cnode.type.isNever ? Type.Any : type);
 		return super.compile(type);
 	}
 

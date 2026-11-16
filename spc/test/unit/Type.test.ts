@@ -41,7 +41,7 @@ describe("Type acceptance test", () => {
 		]).accepts(source)).toBe(true);
 		expect(Type.objectType([
 			["items", Type.arrayType(Type.Integer)],
-			["label", Type.Unknown],
+			["label", Type.Any],
 		]).accepts(source)).toBe(true);
 	});
 
@@ -72,13 +72,13 @@ describe("Type acceptance test", () => {
 
 describe("Type intersect test", () => {
 	it("treats Never as disjoint from Unknown in either order", () => {
-		expect(Type.Never.intersects(Type.Unknown)).toBe(false);
-		expect(Type.Unknown.intersects(Type.Never)).toBe(false);
+		expect(Type.Never.intersects(Type.Any)).toBe(false);
+		expect(Type.Any.intersects(Type.Never)).toBe(false);
 	});
 
 	it("recognizes overlapping primitive unions", () => {
 		expect(Type.Number.intersects(Type.Integer)).toBe(true);
-		expect(Type.Integer.intersects(Type.Void)).toBe(false);
+		expect(Type.Integer.intersects(Type.Null)).toBe(false);
 		expect(
 			Type.union(Type.Integer, Type.String).intersects(
 				Type.union(Type.String, Type.Boolean),
@@ -98,7 +98,7 @@ describe("Type intersect test", () => {
 		const [atom] = Type.objectType([["value", Type.Integer]]).objectAtoms();
 		expect(Type.objectType([["value", Type.Number]]).intersects(atom)).toBe(true);
 		expect(Type.objectType([["value", Type.String]]).intersects(atom)).toBe(false);
-		expect(Type.Unknown.intersects(atom)).toBe(true);
+		expect(Type.Any.intersects(atom)).toBe(true);
 		expect(Type.Never.intersects(atom)).toBe(false);
 	});
 
@@ -183,8 +183,8 @@ describe("Type atom lookup test", () => {
 		);
 		expect(type.arrayAtoms().map((atom) => atom.valType(0))).toEqual([Type.Integer, Type.String]);
 		expect(type.objectAtoms().map((atom) => atom.valType("value"))).toEqual([Type.Integer, Type.String]);
-		expect(Type.Unknown.arrayAtoms()).toEqual(Type.Array.arrayAtoms());
-		expect(Type.Unknown.objectAtoms()).toEqual(Type.Object.objectAtoms());
+		expect(Type.Any.arrayAtoms()).toEqual(Type.Array.arrayAtoms());
+		expect(Type.Any.objectAtoms()).toEqual(Type.Object.objectAtoms());
 	});
 });
 
@@ -199,7 +199,7 @@ describe("Type value acceptance test", () => {
 	it("checks tuple prefixes and permits additional values", () => {
 		const type = Type.arrayType([Type.Integer, Type.String]);
 		const optionalType = Type.arrayType([Type.Integer, Type.OptionalString]);
-		const unknownType = Type.arrayType([Type.Integer, Type.Unknown]);
+		const unknownType = Type.arrayType([Type.Integer, Type.Any]);
 		expect(type.acceptsValue([1n, "two", true])).toBe(true);
 		expect(type.acceptsValue([1n])).toBe(false);
 		expect(type.acceptsValue([1n, false])).toBe(false);
@@ -241,7 +241,7 @@ describe("Type value acceptance test", () => {
 	});
 
 	it("preserves unknown and broad structured types", () => {
-		expect(Type.Unknown.acceptsValue({ value: [1, "two"] })).toBe(true);
+		expect(Type.Any.acceptsValue({ value: [1, "two"] })).toBe(true);
 		expect(Type.Array.acceptsValue([1, "two", true])).toBe(true);
 		expect(Type.Object.acceptsValue({ value: 1 })).toBe(true);
 		expect(Type.Function.acceptsValue(() => undefined)).toBe(true);
@@ -280,7 +280,7 @@ describe("Uniform object type test", () => {
 		[Type.objectType([["a", Type.Integer]]), true],
 		[Type.objectType([["a", Type.String]]), false],
 		[Type.objectType([["a", Type.OptionalString]]), true],
-		[Type.objectType([["a", Type.Void]]), true],
+		[Type.objectType([["a", Type.Null]]), true],
 		[Type.objectType([["a", Type.union(Type.Integer, Type.String)]]), true],
 		[Type.objectType(Type.String), true],
 	])("compares intersections with %s symmetrically", (other, expected) => {
@@ -298,6 +298,19 @@ describe("Uniform object type test", () => {
 });
 
 describe("Function argument test", () => {
+	it("distinguishes missing function types from explicit any", () => {
+		const noArguments = Type.functionType([[Type.Boolean, []]]);
+		const typedArgument = Type.functionType([[Type.Integer, [Type.String]]]);
+		const anyArgument = Type.functionType([[Type.Any, [Type.Any]]]);
+
+		expect(Type.Integer.functionAtomRetType()).toBeUndefined();
+		expect(Type.Integer.functionAtomArgType(0)).toBeUndefined();
+		expect(noArguments.functionAtomArgType(0)).toBeUndefined();
+		expect(Type.union(noArguments, typedArgument).functionAtomArgType(0)?.equals(Type.String)).toBe(true);
+		expect(Type.union(noArguments, anyArgument).functionAtomArgType(0)).toBe(Type.Any);
+		expect(Type.union(typedArgument, anyArgument).functionAtomRetType()).toBe(Type.Any);
+	});
+
 	it("compares optional function argument types", () => {
 		const expected = Type.functionType([
 			[Type.Boolean, [Type.Integer, Type.OptionalString]],

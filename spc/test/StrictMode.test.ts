@@ -17,7 +17,7 @@ describe("Strict mode test", () => {
 			strict: true,
 			variables: { items: Type.arrayType(Type.Integer) },
 		});
-		expect(() => script.evaluate({ items: [1n, "two"] })).toThrow(/unexpected type array/);
+		expect(() => script.evaluate({ items: [1n, "two"] })).toThrow(/unexpected type \[\.\.\.\]/);
 	});
 
 	it.each([true, false])("checks configured input types with strict=%s", (strict) => {
@@ -26,8 +26,8 @@ describe("Strict mode test", () => {
 	});
 
 	it("keeps explicitly unknown inputs from acquiring inferred types", () => {
-		const script = new Affinirum("value-1", { strict: true, variables: { value: Type.Unknown } });
-		expect(script.variables().value.isUnknown).toBe(true);
+		const script = new Affinirum("value-1", { strict: true, variables: { value: Type.Any } });
+		expect(script.variables().value.isAny).toBe(true);
 		expect(script.evaluate({ value: 2n })).toBe(1n);
 	});
 });

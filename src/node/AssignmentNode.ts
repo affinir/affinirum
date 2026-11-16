@@ -28,8 +28,8 @@ export class AssignmentNode extends InvocationNode {
 	}
 
 	override get type(): Type {
-		const valueType = this._type ?? this._operator?.type.functionAtomRetType() ?? this._subnode.type;
-		return this._anode.reduceAssignmentType(valueType) ?? this._anode.type;
+		const valType = this._type ?? this._operator?.type.functionAtomRetType() ?? this._subnode.type;
+		return this._anode.reduceAssignmentType(valType) ?? this._anode.type;
 	}
 
 	override satisfies(type: Type): boolean {
@@ -37,10 +37,10 @@ export class AssignmentNode extends InvocationNode {
 			&& (this._operator !== undefined || !type.accepts(this._subnode.type) || this._subnode.satisfies(type));
 	}
 
-	override compile(type = Type.Unknown): Node {
+	override compile(type = Type.Any): Node {
 		if (this._operator) {
 			// Resolve the target type before checking it as the operator's first operand.
-			this._anode = this._anode.compileAssignment(Type.Unknown);
+			this._anode = this._anode.compileAssignment(Type.Any);
 			const args = [this._anode, this._subnode];
 			this._type = this.compileArguments(this._operator.type, args, 1);
 			this._subnode = args[1];
@@ -68,7 +68,7 @@ export class AssignmentNode extends InvocationNode {
 		}
 		const operation = this._operator.value as (left: Value, right: Value) => Value;
 		const result = operation(value, this._subnode.evaluate(frame));
-		return resolver.set(frame.define(result, this._type ?? Type.Unknown));
+		return resolver.set(frame.define(result, this._type ?? Type.Any));
 	}
 
 	override toString(ident: number = 0): string {

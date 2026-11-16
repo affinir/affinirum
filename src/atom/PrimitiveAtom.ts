@@ -1,13 +1,13 @@
 import { IAtom } from "./Atom.js";
 
-export type Primitive = "void" | "boolean" | "timestamp" | "float" | "integer" | "buffer" | "string";
+export type Primitive = "null" | "boolean" | "timestamp" | "float" | "integer" | "buffer" | "string";
 
 export class PrimitiveAtom implements IAtom {
 
 	protected readonly _primitive: Primitive;
 
 	constructor(
-		primitive: Primitive = "void",
+		primitive: Primitive = "null",
 	) {
 		this._primitive = primitive;
 	}
@@ -32,7 +32,7 @@ export class PrimitiveAtom implements IAtom {
 
 	weight(): number {
 		switch (this._primitive) {
-			case "void": return 0x1;
+			case "null": return 0x1;
 			case "boolean": return 0x2;
 			case "timestamp": return 0x4;
 			case "float": return 0x8;

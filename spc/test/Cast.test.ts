@@ -6,7 +6,7 @@ describe("Cast test", () => {
 		expect(() => expression.evaluate({ value: "[1,2]" }))
 			.not.toThrow();
 		expect(() => expression.evaluate({ value: "[1,\"two\"]" }))
-			.toThrow(/cannot cast value of type array to type \[\.\.\.float\]/);
+			.toThrow(/cannot cast value of type \[\.\.\.\] to type \[\.\.\.float\]/);
 	});
 
 	it("checks tuple prefixes and permits additional values", () => {
@@ -14,9 +14,9 @@ describe("Cast test", () => {
 		expect(() => expression.evaluate({ value: "[1,\"two\",true]" }))
 			.not.toThrow();
 		expect(() => expression.evaluate({ value: "[1]" }))
-			.toThrow(/cannot cast value of type array to type \[float,string\]/);
+			.toThrow(/cannot cast value of type \[\.\.\.\] to type \[float,string\]/);
 		expect(() => expression.evaluate({ value: "[1,false]" }))
-			.toThrow(/cannot cast value of type array to type \[float,string\]/);
+			.toThrow(/cannot cast value of type \[\.\.\.\] to type \[float,string\]/);
 		expect(() => new Affinirum("JSON.Parse(value)::[float,string?]").evaluate({ value: "[1]" }))
 			.not.toThrow();
 	});
@@ -26,8 +26,8 @@ describe("Cast test", () => {
 		expect(() => expression.evaluate({ value: "{\"items\":[1,2],\"extra\":true}" }))
 			.not.toThrow();
 		expect(() => expression.evaluate({ value: "{\"label\":\"missing items\"}" }))
-			.toThrow(/cannot cast value of type object/);
+			.toThrow(/cannot cast value of type \[\.\.\.:\]/);
 		expect(() => expression.evaluate({ value: "{\"items\":[1,\"two\"]}" }))
-			.toThrow(/cannot cast value of type object/);
+			.toThrow(/cannot cast value of type \[\.\.\.:\]/);
 	});
 });

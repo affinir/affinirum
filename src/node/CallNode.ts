@@ -25,24 +25,22 @@ export class CallNode extends InvocationNode {
 		this._subnodes = subnodes;
 		this._optional = optional;
 		const argc = subnodes.length;
-		const signatures = fnode.type.functionAtoms().flatMap((atom) =>
-			atom.signatures
-		).filter((signature) =>
-			signature.minArity <= argc && argc <= signature.maxArity
-		);
+		const signatures = fnode.type.functionAtoms().flatMap((atom) => atom.signatures(argc));
 		if (!signatures.length) {
 			this.throwError(`value of type ${fnode.type} cannot be called with ${argc} argument(s)`);
 		}
-		this._type = Type.union(...signatures.map((signature) => signature.retType));
+		const retType = Type.union(...signatures.map((signature) => signature.retType));
+		this._type = optional ? retType.toOptional() : retType;
 	}
 
 	override get type(): Type {
 		return this._type;
 	}
 
-	override compile(type = Type.Unknown): Node {
+	override compile(type = Type.Any): Node {
 		this._fnode = this._fnode.compile(Type.Function);
-		this._type = this.compileArguments(this._optional ? this._optionalType(this._fnode.type) : this._fnode.type, this._subnodes);
+		const functionType = this._fnode.type;
+		this._type = this.compileArguments(this._optional ? functionType.optionalFirstParameter() : functionType, this._subnodes);
 		super.compile(type);
 		if (this._fnode.constant && !this._fnode.type.isVolatileFunction
 			&& this._subnodes.every((node) => node.constant) && !this.type.intersects(Type.Reference)) {
@@ -64,22 +62,6 @@ export class CallNode extends InvocationNode {
 		const subnodes = this._subnodes.map((s) => s.toString(ident + 1)).join("\n");
 		return `${super.toString(ident)} call node fnode:\n${this._fnode.toString(ident + 1)}\n`
 			+ `${super.toString(ident)} call node subnodes:\n${subnodes}`;
-	}
-
-	protected _optionalType(type: Type): Type {
-		return Type.union(...type.functionAtoms().map((atom) => Type.functionType(
-			atom.signatures.map((signature) => {
-				const argTypes = [...signature.argTypes];
-				if (signature.isVariadic && signature.arity === 1) {
-					argTypes.unshift(argTypes[0].arrayAtomValType().toOptional());
-				}
-				else if (argTypes.length) {
-					argTypes[0] = argTypes[0].toOptional();
-				}
-				return [signature.retType.toOptional(), argTypes, signature.isVariadic];
-			}),
-			atom.isVolatile,
-		)));
 	}
 
 }

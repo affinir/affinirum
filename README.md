@@ -71,7 +71,7 @@ Scripts without external inputs can be evaluated with `evaluate()`.
 ### Statements and literals
 
 Separate statements with semicolons; a newline alone does not separate them. A script or `{ ... }` block returns the
-value of its last expression. An empty block has type `void` and evaluates to JavaScript `undefined`.
+value of its last expression. An empty block has type `null` and evaluates to JavaScript `undefined`.
 Use parentheses to group expressions and commas to separate arguments or collection items.
 
 ```text
@@ -88,7 +88,7 @@ base + extra // 16
 | String | `'hello'`, `"hello"` |
 | Timestamp | `@2025-05-11T19:09:21.320Z` |
 | Buffer | `` `10ab0901` `` (hexadecimal bytes) |
-| Void | `null` |
+| Null | `null` |
 | Array | `[1, 2, 3]`, `[]` |
 | Object | `["name": "Ada", "score": 10]`, `[:]` |
 
@@ -112,11 +112,11 @@ count // 3
 
 Variables follow these rules.
 
-- An explicit type annotation fixes the variable's type, including an explicit `??`.
-- A non-optional type requires an initial value in the declaration. A variable declared with an optional type or `??`
+- An explicit type annotation fixes the variable's type, including an explicit `any`.
+- A non-optional type requires an initial value in the declaration. A variable declared with an optional type or `any`
   can omit its initializer and starts at `null`.
 - A variable without an annotation takes its type from its initializer. Later assignments must be compatible with that type.
-- A variable with neither an annotation nor an initializer, or a parameter without an annotation, has type `??`.
+- A variable with neither an annotation nor an initializer, or a parameter without an annotation, has type `any`.
   Later reads and assignments leave that binding type unchanged.
 
 A read or assignment expression can have a more specific type than the binding. That type applies only to the expression.
@@ -190,7 +190,7 @@ absolute(-5) // 5
 ```
 
 Functions are values and can be passed as callbacks. A final variadic parameter collects the remaining arguments into
-an array. Use `...integer` for integer arguments and `...??` for arguments of any type.
+an array. Use `...integer` for integer arguments and `...any` for arguments of any type.
 
 ```text
 val sum = ~(values: ...integer): integer { Integer.Sum(values) };
@@ -261,19 +261,19 @@ Use brackets or a quoted key to read such a property, for example `record["Lengt
 
 | Type | Meaning |
 | --- | --- |
-| `void` | Absence of a value; the script literal is `null` |
+| `null` | The type whose only script value is `null` |
 | `boolean` / `bool` | `true` or `false` |
 | `timestamp` / `time` | Date and time |
 | `float` / `f64` | 64-bit floating-point number |
 | `integer` / `i64` | Signed 64-bit integer |
 | `buffer` | Sequence of bytes |
 | `string` | Text |
-| `array` | Sequence of values |
-| `object` | Named values |
+| `array` / `[...]` | A sequence whose items can have any type |
+| `object` / `[...:]` | Named properties whose values can have any type |
 | `function` | Built-in, host-provided, or script-defined function |
-| `??` | Unknown or variant type, compatible with every type |
+| `any` | A type compatible with every type |
 | `~(integer): string` | Function taking an integer and returning a string |
-| `integer?` | Optional integer: `void` or `integer` |
+| `integer?` | An integer or `null` |
 | `integer \| string` | Union of types |
 
 Parentheses group types, for example `(integer | string)?`. Type checking is intentionally permissive; see
@@ -301,14 +301,15 @@ An incompatible cast raises an error. Casts can be followed by property access, 
 | `["a": float, "b": string]` | Record with a float property named `a` and a string property named `b`. Extra properties may have any type. |
 
 The ellipsis marks a uniform type for zero or more entries. For example, `[...integer | string]` is a uniform
-array whose items may be integers or strings.
+array whose items may be integers or strings. Omitting the entry type defaults to `any`, so `[...]` is equivalent
+to `[...any]` and `[...:]` is equivalent to `[...:any]`.
 
 Tuples and records use plain brackets. They specify a minimum shape and allow additional entries. The empty shapes
 `[]` and `[:]` require no entries. Unannotated array literals infer tuples, and unannotated object literals with
 known keys infer records.
 
-A final variadic parameter collects zero or more arguments into an array. `~(...integer):void` is the function
-type, and `~(a: ...integer):void{}` is a function value of that type. Each collected argument must be an integer,
+A final variadic parameter collects zero or more arguments into an array. `~(...integer):null` is the function
+type, and `~(a: ...integer):null{}` is a function value of that type. Each collected argument must be an integer,
 and `a` has type `[...integer]` inside the function.
 
 ### Operators and precedence
@@ -348,7 +349,7 @@ script can only read the binding.
 
 - A type supplied in `config.variables` stays fixed in either mode.
 - Strict mode requires a configured type for every referenced input.
-- Non-strict mode allows implicit inputs. An implicit input starts at `??` and accumulates the union of the types expected
+- Non-strict mode allows implicit inputs. An implicit input starts at `any` and accumulates the union of the types expected
   at its uses. This includes uses in skipped branches, skipped loop bodies, and functions that are never called.
   An unconstrained use contributes no type information.
 
@@ -432,7 +433,7 @@ Pass `true` as the second argument to `Type.functionType` for a volatile functio
 
 | Affinirum type | JavaScript value |
 | --- | --- |
-| `void` | `undefined` on output; `null` or `undefined` accepted as input |
+| `null` | Returns `undefined` and accepts `null` or `undefined` as input |
 | `boolean` | `boolean` |
 | `float` | `number` |
 | `integer` | `bigint` |
@@ -490,8 +491,8 @@ Parsing that literal produces JavaScript `undefined`, preserving array lengths a
 ## Standard library
 
 Global functions use namespaces such as `Integer.Sum(...)`. Method functions use `value.Method(...)`.
-In the signatures below, `T?` means `T` or `void`, `...` marks variadic arguments, and `??` means any type.
-Parameters whose type includes `void` can be omitted. Parameter names are explanatory; arguments are positional.
+In the signatures below, `T?` means `T` or `null`, `...` marks variadic arguments, and `any` accepts any value.
+Parameters whose type includes `null` can be omitted. Parameter names are explanatory; arguments are positional.
 
 ### Global functions
 
@@ -583,12 +584,12 @@ Array.Join([[1,2]],[3])      // [[1,2],3]
 
 #### AN
 
-- **AN.Format(value: ??, whitespace: string?):string** — Format a value as AN notation, including `null` values in arrays and objects
+- **AN.Format(value: any, whitespace: string?):string** — Format a value as AN notation, including `null` values in arrays and objects
 
 #### JSON
 
-- **JSON.Format(value: (void | boolean | timestamp | float | integer | string | array | object), whitespace: string?):string** — Format a value as JSON
-- **JSON.Parse(value: string?):(void | boolean | timestamp | float | integer | string | array | object)** — Parse a JSON-formatted string; standard JSON values are not revived as timestamps or integers
+- **JSON.Format(value: (null | boolean | timestamp | float | integer | string | array | object), whitespace: string?):string** — Format a value as JSON
+- **JSON.Parse(value: string?):(null | boolean | timestamp | float | integer | string | array | object)** — Parse a JSON-formatted string; standard JSON values are not revived as timestamps or integers
 
 `JSON.Format` uses JavaScript `JSON.stringify`, with integers converted to decimal strings and JavaScript `null` or
 `undefined` values serialized as JSON `null` at every nesting level. Object keys and array positions are preserved.
@@ -611,13 +612,13 @@ JSON.Format(["missing": null, "count": 1])  // '{"missing":null,"count":"1"}'
 
 #### General Functions
 
-- **??.Coalesce(otherwise: ??):??** — Null coalescence
-- **??.Equals(value: ??):boolean** — Tests whether the values are equal
-- **??.NotEquals(value: ??):boolean** — Tests whether the values differ
+- **any.Coalesce(otherwise: any):any** — Null coalescence
+- **any.Equals(value: any):boolean** — Tests whether the values are equal
+- **any.NotEquals(value: any):boolean** — Tests whether the values differ
 - **(boolean | buffer | function).Encode():buffer** — Encode value to buffer
-- **(void | timestamp | float | integer | string | array | object).Encode(encoding: string?):buffer** — Encode a value; timestamps support `i32` and `i32le` minutes or `i64` and `i64le` milliseconds, while defaults are `i64` for timestamps and integers, `f64` for floats, and `utf8` for strings
+- **(null | timestamp | float | integer | string | array | object).Encode(encoding: string?):buffer** — Encode a value; timestamps support `i32` and `i32le` minutes or `i64` and `i64le` milliseconds, while defaults are `i64` for timestamps and integers, `f64` for floats, and `utf8` for strings
 - **(boolean | string | function).Format():string** — Format value to string
-- **(void | timestamp | float | integer | buffer | array | object).Format(formatting: string?):string** — Format a value; buffers use `hex` by default and also support `base64`
+- **(null | timestamp | float | integer | buffer | array | object).Format(formatting: string?):string** — Format a value; buffers use `hex` by default and also support `base64`
 
 #### Aggregable Functions
 
@@ -631,18 +632,18 @@ JSON.Format(["missing": null, "count": 1])  // '{"missing":null,"count":"1"}'
 
 #### Array Functions
 
-- **array.First(condition: ~(??, integer, array):boolean):??** — First item satisfying condition
-- **array.Last(condition: ~(??, integer, array):boolean):??** — Last item satisfying condition
-- **array.FirstIndex(condition: ~(??, integer, array):boolean):integer?** — First index satisfying condition, or `null` if none does
-- **array.LastIndex(condition: ~(??, integer, array):boolean):integer?** — Last index satisfying condition, or `null` if none does
-- **array.Every(condition: ~(??, integer, array):boolean):boolean** — All items satisfy condition
-- **array.Any(condition: ~(??, integer, array):boolean):boolean** — Any item satisfies condition
+- **array.First(condition: ~(any, integer, array):boolean):any** — First item satisfying condition
+- **array.Last(condition: ~(any, integer, array):boolean):any** — Last item satisfying condition
+- **array.FirstIndex(condition: ~(any, integer, array):boolean):integer?** — First index satisfying condition, or `null` if none does
+- **array.LastIndex(condition: ~(any, integer, array):boolean):integer?** — Last index satisfying condition, or `null` if none does
+- **array.Every(condition: ~(any, integer, array):boolean):boolean** — All items satisfy condition
+- **array.Any(condition: ~(any, integer, array):boolean):boolean** — Any item satisfies condition
 - **array.Reverse():array** — Reversed array
 - **array.Flatten(depth: integer = 1):array** — Flatten array
-- **array.Derive(transformation: ~(??, integer, array):??):array** — Derived array
-- **array.Filter(condition: ~(??, integer, array):boolean):array** — Filtered array
-- **array.Reduce(reducer: ~(??, ??, integer, array):??, initial: ?? = null):??** — Reduced value
-- **array.Compose(generator: ~(object, string, integer, array):??):object** — Compose object from array
+- **array.Derive(transformation: ~(any, integer, array):any):array** — Derived array
+- **array.Filter(condition: ~(any, integer, array):boolean):array** — Filtered array
+- **array.Reduce(reducer: ~(any, any, integer, array):any, initial: any = null):any** — Reduced value
+- **array.Compose(generator: ~(object, string, integer, array):any):object** — Compose object from array
 
 `Compose` builds a new object. Each callback receives an immutable snapshot of the properties produced by earlier callbacks.
 Retaining that snapshot preserves its contents as subsequent properties are added to the result.
@@ -665,13 +666,13 @@ Retaining that snapshot preserves its contents as subsequent properties are adde
 
 #### Iterable Functions
 
-- **(buffer | string | array | object | void).Length():integer** — Get length, or zero for `null`
+- **(buffer | string | array | object | null).Length():integer** — Get length, or zero for `null`
 - **buffer.Contains(search: buffer, startPos: integer?):boolean** — Check if buffer contains another buffer
 - **string.Contains(search: string, startPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Check if string contains another string
-- **array.Contains(search: ??, startPos: integer?):boolean** — Check if array contains value
-- **object.Contains(search: ??):boolean** — Check if object contains value
-- **array.At(index: integer):??** — Access item in array by index
-- **object.At(index: string):??** — Access item in object by key
+- **array.Contains(search: any, startPos: integer?):boolean** — Check if array contains value
+- **object.Contains(search: any):boolean** — Check if object contains value
+- **array.At(index: integer):any** — Access item in array by index
+- **object.At(index: string):any** — Access item in object by key
 - **array.Has(index: integer):boolean** — Identify if array has index
 - **object.Has(index: string):boolean** — Identify if object has key
 
@@ -756,13 +757,13 @@ Affinirum uses intentionally permissive type checking. Type information helps re
 select function overloads, and report compilation errors. It does not prove that every accepted expression is safe
 for every possible runtime value.
 
-- `??` is the unknown or variant type and is compatible with every type, including `void`.
-- An optional type such as `integer?` is the union `void | integer`. Optional parameters, including `??`, accept
-  `null` or JavaScript `undefined`. Only trailing optional parameters can be omitted.
+- `any` is compatible with every type, including `null`.
+- An optional type such as `integer?` is the union `null | integer`. Write `null` for a type that only accepts `null`.
+  Optional parameters, including `any`, accept `null` or JavaScript `undefined`. Only trailing optional parameters can be omitted.
 - A call to an overloaded function must match one complete signature. A call through a union of functions must match
   one complete signature for each possible function. For typed calls, the full argument types must fit the signature
   at compile time. The first matching overload determines the result type for each callable. Implicit arguments can
-  remain `??` when the overloads leave their types ambiguous. Evaluation uses the function directly.
+  remain `any` when the overloads leave their types ambiguous. Evaluation uses the function directly.
 - Object types are open structural constraints: required properties and their values are checked, while additional
   properties are allowed.
 - Tuple types are prefix constraints: declared item types are checked in order, optional trailing items may be
@@ -771,14 +772,14 @@ for every possible runtime value.
 - A callback may declare fewer parameters than the caller provides. Additional arguments are ignored at runtime,
   following JavaScript function-call behavior.
 - Function parameter types are checked contravariantly where both signatures declare a parameter. The receiving
-  function must accept the full expected parameter type, including `void` when present. Return types are checked covariantly. The returned type must fit
-  the expected result type. `??` remains compatible with any parameter type.
+  function must accept the full expected parameter type, including `null` when present. Return types are checked covariantly. The returned type must fit
+  the expected result type. `any` remains compatible with any parameter type.
 - Function-type compatibility distinguishes fixed and variadic signatures. Two non-generic variadic signatures must
   declare their variadic parameter in the same position to be compatible.
 
 For example, a callback declared as `~(value: float):boolean` is compatible with an expected callback type such as
-`~(??, integer, array):boolean`. The array method supplies all three arguments, and the callback can ignore
-the index and array. `??` keeps the item type flexible.
+`~(any, integer, array):boolean`. The array method supplies all three arguments, and the callback can ignore
+the index and array. `any` keeps the item type flexible.
 
 For a variadic host function, set the third entry of the signature to `true` and declare its last parameter as a uniform
 array type. Use `Type.Array` to accept arguments of any type. Affinirum passes the arguments

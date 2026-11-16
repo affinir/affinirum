@@ -31,7 +31,7 @@ export class ArrayNode extends Node {
 			&& this._subnodes.every((node, index) => node.satisfies(type.arrayAtomValType(index)));
 	}
 
-	override compile(type = Type.Unknown): Node {
+	override compile(type = Type.Any): Node {
 		const valTypes: Type[] = [];
 		let never = false;
 		for (let i = 0; i < this._subnodes.length; ++i) {

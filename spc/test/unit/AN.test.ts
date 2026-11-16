@@ -1,7 +1,7 @@
 import { Affinirum } from "../../../src/index.js";
 
 describe("AN function test", () => {
-	it("formats top-level void values as null", () => {
+	it("formats top-level null and undefined as null", () => {
 		for (const value of [undefined, null]) {
 			for (const whitespace of [undefined, " "]) {
 				const notation = Affinirum.format(value, whitespace);
@@ -11,7 +11,7 @@ describe("AN function test", () => {
 		}
 	});
 
-	it("preserves trailing void array elements when formatting and parsing AN", () => {
+	it("preserves trailing undefined array elements when formatting and parsing AN", () => {
 		for (const value of [[undefined], [1n, undefined], [undefined, undefined], [1n, undefined, undefined]]) {
 			for (const whitespace of [undefined, " "]) {
 				expect<unknown>(Affinirum.parse(Affinirum.format(value, whitespace))).toEqual(value);
@@ -25,7 +25,7 @@ describe("AN function test", () => {
 		expect<unknown>(Affinirum.parse(notation)).toEqual([undefined, undefined]);
 	});
 
-	it("preserves nested void values when formatting and parsing AN", () => {
+	it("preserves nested undefined values when formatting and parsing AN", () => {
 		const value = { a: undefined, b: [undefined, { c: undefined }] };
 		for (const whitespace of [undefined, " "]) {
 			expect<unknown>(Affinirum.parse(Affinirum.format(value, whitespace))).toEqual(value);

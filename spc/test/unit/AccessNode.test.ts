@@ -41,7 +41,7 @@ describe("Access node test", () => {
 
 	it("rejects a receiver union containing a non-collection type", () => {
 		expect(() => new Affinirum("x[0]", { variables: { x: Type.union(Type.Integer, Type.Array) } }))
-			.toThrow(/type integer\|array mismatch with expected type array\|object/);
+			.toThrow(/type integer\|\[\.\.\.\] mismatch with expected type \[\.\.\.\]\|\[\.\.\.:\]/);
 	});
 
 	it.each<[string, Type]>([
@@ -49,7 +49,7 @@ describe("Access node test", () => {
 		["x.key", Type.OptionalObject],
 	])("rejects a nullable receiver in %s", (script, x) => {
 		expect(() => new Affinirum(script, { variables: { x } }))
-			.toThrow(/mismatch with expected type array\|object/);
+			.toThrow(/mismatch with expected type \[\.\.\.\]\|\[\.\.\.:\]/);
 	});
 
 	it("returns undefined for optional access through a nullable receiver", () => {
@@ -66,7 +66,7 @@ describe("Access node test", () => {
 	});
 
 	it("accepts a string key when the container type is unknown", () => {
-		const subnode = new CallNode(span, constant(() => ({ a: 1n }), Type.functionType([[Type.Unknown, []]])), []);
+		const subnode = new CallNode(span, constant(() => ({ a: 1n }), Type.functionType([[Type.Any, []]])), []);
 		const node = new AccessNode(span, subnode, constant("a"), funcAt);
 		node.compile();
 		expect(node.evaluate(new CallFrame())).toBe(1n);

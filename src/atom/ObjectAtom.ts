@@ -59,7 +59,7 @@ export class ObjectAtom implements IAtom {
 		if (other instanceof Type) {
 			return types.every(([, type]) => type.isOptional && type.accepts(other));
 		}
-		return types.every(([key, type]) => type.accepts(atom.valType(key) ?? Type.Void));
+		return types.every(([key, type]) => type.accepts(atom.valType(key) ?? Type.Null));
 	}
 
 	intersects(atom: IAtom): boolean {
@@ -88,7 +88,7 @@ export class ObjectAtom implements IAtom {
 	toString(): string {
 		const types = this._valTypes;
 		if (types instanceof Type) {
-			return types.isUnknown ? "object" : `[...:${types}]`;
+			return `[...:${types.isAny ? "" : types}]`;
 		}
 		return types.length ? `[${types.map(([key, type]) => `"${key}":${type}`).join(",")}]` : "[:]";
 	}

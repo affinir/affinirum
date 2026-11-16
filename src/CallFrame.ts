@@ -51,7 +51,7 @@ export class CallFrame {
 	}
 
 	define(value: Value, type: Type): Value {
-		if (type.isUnknown || typeof value !== "object" || Type.isPrimitive(value) || Type.isFunction(value)) {
+		if (type.isAny || typeof value !== "object" || Type.isPrimitive(value) || Type.isFunction(value)) {
 			return value;
 		}
 		const types = this._types.get(value);

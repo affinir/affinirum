@@ -27,14 +27,14 @@ export class TernaryNode extends Node {
 		return this._cnode.type.isNever || this._subnodes.every((node) => node.satisfies(type));
 	}
 
-	override compile(type = Type.Unknown): Node {
+	override compile(type = Type.Any): Node {
 		this._cnode = this._cnode.compile(Type.Boolean);
 		if (this._cnode.constant) {
 			const index = this._cnode.evaluate(new CallFrame()) ? 0 : 1;
 			this._subnodes[1 - index] = this._subnodes[1 - index].compile();
 			return this._subnodes[index].compile(type);
 		}
-		const branchType = this._cnode.type.isNever ? Type.Unknown : type;
+		const branchType = this._cnode.type.isNever ? Type.Any : type;
 		for (let i = 0; i < this._subnodes.length; ++i) {
 			this._subnodes[i] = this._subnodes[i].compile(branchType);
 		}

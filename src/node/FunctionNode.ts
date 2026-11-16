@@ -32,9 +32,9 @@ export class FunctionNode extends Node {
 		return this._type;
 	}
 
-	override compile(type = Type.Unknown): Node {
-		const returnType = this._type.functionAtomRetType();
-		this._subnode = this._subnode.compile(returnType);
+	override compile(type = Type.Any): Node {
+		const retType = this._type.functionAtomRetType() ?? Type.Any;
+		this._subnode = this._subnode.compile(retType);
 		return super.compile(type);
 	}
 

@@ -68,7 +68,7 @@ describe("Prototype property test", () => {
 		const castPropertyExpression = new Affinirum("JSON.Parse(\"{}\")::object.constructor");
 		expect(castPropertyExpression.evaluate({})).toBeUndefined();
 		const constructorExpression = new Affinirum("JSON.Parse(\"{}\")::object.constructor(\"return 7\")()");
-		expect(() => constructorExpression.evaluate()).toThrow(/function expected not void/);
+		expect(() => constructorExpression.evaluate()).toThrow(/function expected not null/);
 	});
 
 	it("supports prototype property names as variables without altering record prototypes", () => {

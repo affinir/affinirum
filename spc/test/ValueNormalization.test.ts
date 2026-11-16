@@ -34,7 +34,7 @@ describe("Value normalization test", () => {
 	});
 
 	it.each(["f()", "=>f()"])("returns undefined for a null host result in %s", (script) => {
-		const expression = new Affinirum(script, { variables: { f: Type.functionType([[Type.Void, []]]) } });
+		const expression = new Affinirum(script, { variables: { f: Type.functionType([[Type.Null, []]]) } });
 		expect(expression.evaluate({ f: () => null })).toBeUndefined();
 	});
 
