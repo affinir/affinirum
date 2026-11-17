@@ -6,6 +6,7 @@ import { ConstantNode } from "./ConstantNode.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
+import { funcCoalesce } from "../native/Unknown.js";
 
 export class CallNode extends InvocationNode {
 
@@ -41,6 +42,7 @@ export class CallNode extends InvocationNode {
 		this._fnode = this._fnode.compile(Type.Function);
 		const functionType = this._fnode.type;
 		this._type = this.compileArguments(this._optional ? functionType.optionalFirstParameter() : functionType, this._subnodes);
+		this._subnodes.find((arg) => arg.type.isNever)?.throwError("call argument must be a value");
 		super.compile(type);
 		if (this._fnode.constant && !this._fnode.type.isVolatileFunction
 			&& this._subnodes.every((node) => node.constant) && !this.type.intersects(Type.Reference)) {
@@ -54,8 +56,20 @@ export class CallNode extends InvocationNode {
 		if (typeof func !== "function") {
 			this.throwError(`function expected not ${Type.of(func)}`);
 		}
-		const args = this._subnodes.map((node) => node.evaluate(frame));
-		return this._optional && args[0] == null ? undefined : frame.define(func(...args), this.type);
+		const args: Value[] = [];
+		for (let i = 0; i < this._subnodes.length; ++i) {
+			const arg = this._subnodes[i].evaluate(frame);
+			if (i === 0) {
+				if (this._optional && arg == null) {
+					return undefined;
+				}
+				if (func === funcCoalesce.value && arg != null) {
+					return arg;
+				}
+			}
+			args.push(arg);
+		}
+		return frame.define(func(...args), this.type);
 	}
 
 	override toString(ident: number = 0): string {

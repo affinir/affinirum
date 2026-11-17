@@ -58,6 +58,12 @@ describe("Access node test", () => {
 		expect(node.compile().evaluate(new CallFrame())).toBeUndefined();
 	});
 
+	it("infers the block result after reading a missing index from an array of never", () => {
+		const expression = new Affinirum("val items:[...never]=[]; items[0]; false");
+		expect(expression.type.equals(Type.Boolean)).toBe(true);
+		expect(expression.evaluate()).toBe(false);
+	});
+
 	it("checks indexed reads against the expected result type", () => {
 		const source = new CallNode(span, constant(() => [1n], Type.functionType([[Type.arrayType(Type.Integer), []]])), []);
 		const node = new AccessNode(span, source, constant(0n), funcAt);

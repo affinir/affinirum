@@ -21,17 +21,19 @@ export abstract class InvocationNode extends Node {
 			);
 		}
 		const compiledArgTypes = args.map((node) => node.type);
-		const never = functionType.isNever || compiledArgTypes.some((type) => type.isNever);
+		if (functionType.isNever || functionType.isFunction && compiledArgTypes.some((type) => type.isNever)) {
+			return Type.Never;
+		}
 		const groups = candidateGroups.map((group) => group.filter((signature) =>
 			args.every((node, i) => node.satisfies(signature.paramType(i) ?? Type.Any))
-			&& (never || signature.acceptsVariadic(compiledArgTypes))
+			&& signature.acceptsVariadic(compiledArgTypes)
 		));
-		if (!functionType.isNever && !functionType.isFunction || !never && groups.some((group) => !group.length)) {
+		if (!functionType.isFunction || groups.some((group) => !group.length)) {
 			this.throwError(`value of type ${functionType} cannot be called with ${argc} argument(s)`);
 		}
 		const dynamic = compiledArgTypes.some((type) => type.isAny);
 		const signatures = groups.flatMap((group) => dynamic ? group : group.slice(0, 1));
-		return never ? Type.Never : Type.union(...signatures.map((signature) => signature.retType));
+		return Type.union(...signatures.map((signature) => signature.retType));
 	}
 
 }

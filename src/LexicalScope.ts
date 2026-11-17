@@ -7,16 +7,21 @@ export class LexicalScope {
 	protected readonly _subscopes: LexicalScope[] = [];
 	protected readonly _variables: Map<string, LocalVariable>;
 	protected readonly _type: Type;
+	readonly inFunction: boolean;
+	inLoop: boolean;
 
 	constructor(
 		superscope?: LexicalScope,
 		variables?: Map<string, LocalVariable>,
 		type?: Type,
+		boundary = false,
 	) {
 		superscope?._subscopes.push(this);
 		this._superscope = superscope;
 		this._variables = variables ?? new Map();
 		this._type = type ?? superscope?.type ?? Type.Any;
+		this.inFunction = boundary || Boolean(superscope?.inFunction);
+		this.inLoop = !boundary && Boolean(superscope?.inLoop);
 	}
 
 	has(name: string): boolean {
@@ -31,8 +36,8 @@ export class LexicalScope {
 		this._variables.set(name, variable);
 	}
 
-	subscope(variables?: Map<string, LocalVariable>, type?: Type): LexicalScope {
-		return new LexicalScope(this, variables, type);
+	subscope(variables?: Map<string, LocalVariable>, type?: Type, functionBoundary = false): LexicalScope {
+		return new LexicalScope(this, variables, type, functionBoundary);
 	}
 
 	variables(): IterableIterator<LocalVariable> {

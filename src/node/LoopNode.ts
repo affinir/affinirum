@@ -41,15 +41,12 @@ export class LoopNode extends Node {
 				result = this._subnode.evaluate(frame);
 			}
 			catch (e) {
-				if (e instanceof JumpNode) {
-					if (e.action === "exit") {
-						break;
-					}
-					if (e.action === "next") {
-						continue;
-					}
+				if (!(e instanceof JumpNode)) {
+					throw e;
 				}
-				throw e;
+				if (e.action === "exit") {
+					break;
+				}
 			}
 		}
 		return result;

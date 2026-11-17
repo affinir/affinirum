@@ -5,7 +5,6 @@ import { Type } from "../Type.js";
 import { Value } from "../Value.js";
 import { CallFrame } from "../CallFrame.js";
 import { FinalNode } from "./FinalNode.js";
-import { JumpNode } from "./JumpNode.js";
 
 export class FunctionNode extends Node {
 
@@ -51,9 +50,6 @@ export class FunctionNode extends Node {
 			catch (e) {
 				if (e instanceof FinalNode && e.level === "return") {
 					return e.value;
-				}
-				if (e instanceof JumpNode) {
-					this._subnode.throwError(`unexpected ${e.action} jump`);
 				}
 				throw e;
 			}

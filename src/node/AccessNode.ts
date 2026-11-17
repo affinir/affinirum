@@ -6,6 +6,7 @@ import { ParserSpan } from "../ParserSpan.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
+import { funcOptionalAt } from "../native/Composite.js";
 
 export class AccessNode extends AssignableNode {
 
@@ -40,7 +41,7 @@ export class AccessNode extends AssignableNode {
 
 	override compile(type = Type.Any): Node {
 		this._compileAccess();
-		if (!this.type.isNever) {
+		if (!this._subnode.type.isNever) {
 			this._type = this.type.toOptional();
 		}
 		super.compile(type);
@@ -61,13 +62,16 @@ export class AccessNode extends AssignableNode {
 	}
 
 	override evaluate(frame: CallFrame): Value {
-		const receiver = this._subnode.evaluate(frame);
-		const receiverType = this._operator.type.functionAtomArgType(0) ?? Type.Any;
-		if (!receiverType.acceptsValue(receiver)) {
+		const func = this._operator.value as (composite: Value, index: Value) => Value;
+		const composite = this._subnode.evaluate(frame);
+		if (func === funcOptionalAt.value && composite == null) {
+			return undefined;
+		}
+		const compositeType = this._operator.type.functionAtomArgType(0) ?? Type.Any;
+		if (!compositeType.acceptsValue(composite)) {
 			this.throwError("indexed value must be an array or object");
 		}
-		const func = this._operator.value as (composite: Value, index: Value) => Value;
-		const value = func(receiver, this._inode.evaluate(frame));
+		const value = func(composite, this._inode.evaluate(frame));
 		if (value != null && !this.type.acceptsValue(value)) {
 			this.throwError(`indexed value mismatch with expected type ${this._type}`);
 		}
@@ -172,7 +176,7 @@ export class AccessNode extends AssignableNode {
 		const compositeType = this._subnode.type;
 		const mandatoryType = compositeType.toMandatory();
 		let indexType = this._operator.type.functionAtomArgType(1) ?? Type.Any;
-		if (!mandatoryType.isAny && !mandatoryType.isNever) {
+		if (!mandatoryType.isAny) {
 			if (mandatoryType.isArray) {
 				indexType = Type.Integer;
 			}
@@ -181,8 +185,11 @@ export class AccessNode extends AssignableNode {
 			}
 		}
 		this._inode = this._inode.compile(indexType);
+		if (this._inode.type.isNever) {
+			this._inode.throwError("index must produce a value");
+		}
 		const index = this._inode instanceof ConstantNode ? this._inode.value : undefined;
-		if (compositeType.isNever || this._inode.type.isNever) {
+		if (compositeType.isNever) {
 			this._type = Type.Never;
 		}
 		else if (this._inode.type.isInteger) {

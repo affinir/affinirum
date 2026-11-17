@@ -8,18 +8,18 @@ describe("Jump command test", () => {
 		const script = new Affinirum("[1,2,3].Derive(~(x:integer):integer{~>x*2})");
 		expect<unknown>(script.evaluate()).toEqual([2n, 4n, 6n]);
 	});
-	it("returns from the enclosing function while evaluating a call argument", () => {
-		const script = new Affinirum("val f=~():integer{Integer.Sum({~>7},1);9};f()");
-		expect(script.evaluate() as bigint).toBe(7n);
+	it("rejects a call argument that always returns from the enclosing function", () => {
+		expect(() => new Affinirum("val f=~():integer{Integer.Sum({~>7},1);9};f()"))
+			.toThrow(/call argument must be a value/);
 	});
 	it("restores function arguments across recursive early returns", () => {
 		const script = new Affinirum("val f=~(n:integer):integer{if n<=1{~>1};val result=f(n-1);~>result*n};f(5)");
 		expect(script.evaluate() as bigint).toBe(120n);
 	});
-	it("rejects loop jumps that escape a function called inside a loop", () => {
+	it("rejects loop jumps in a function with no loop of its own", () => {
 		for (const jump of ["exit", "next"]) {
-			const script = new Affinirum(`val f=~():null{${jump}};var i=0;while i<1{i+=1;f()};i`);
-			expect(() => script.evaluate()).toThrow(new RegExp(`unexpected ${jump} jump`));
+			expect(() => new Affinirum(`while true {val f=~():null{${jump}}; f(); exit}`))
+				.toThrow(new RegExp(`unexpected ${jump} jump`));
 		}
 	});
 	it("uses exit and next in nested loops and conditional branches", () => {
@@ -39,8 +39,11 @@ describe("Jump command test", () => {
 	});
 	it("rejects loop jumps outside a loop", () => {
 		for (const jump of ["exit", "next"]) {
-			expect(() => new Affinirum(jump).evaluate()).toThrow(new RegExp(`unexpected ${jump} jump`));
+			expect(() => new Affinirum(jump)).toThrow(new RegExp(`unexpected ${jump} jump`));
 		}
+	});
+	it("rejects function returns outside a function", () => {
+		expect(() => new Affinirum("~>42")).toThrow(/requires an enclosing function/);
 	});
 	it("rejects the removed symbolic loop jumps", () => {
 		for (const operator of [">>", ">|"]) {
@@ -55,10 +58,8 @@ describe("Jump command test", () => {
 		"Integer.Sum({=>'done'},1)",
 		"val f=~(a:[integer]):integer{0};f([=>'done'])",
 		"val g=~(a:integer):string{'fallback'};val f=~(n:integer):integer{n};f(g({=>'done'}))",
-	])("infers the global result when an argument exits before a call in %s", (source) => {
-		const script = new Affinirum(source, { type: Type.String });
-		expect(script.type.equals(Type.String)).toBe(true);
-		expect(script.evaluate()).toBe("done");
+	])("rejects a call argument that always exits the script in %s", (source) => {
+		expect(() => new Affinirum(source, { type: Type.String })).toThrow(/call argument must be a value/);
 	});
 	it("checks return types through nested blocks and function boundaries", () => {
 		const invalidReturns: [string, RegExp][] = [

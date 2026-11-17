@@ -119,7 +119,10 @@ export class Type {
 
 	accepts(type: Type | Atom): boolean {
 		if (type instanceof Type) {
-			if (this.isAny || type.isAny || type.isNever) {
+			if (this.isNever || type.isNever) {
+				return type.isNever;
+			}
+			if (this.isAny || type.isAny) {
 				return true;
 			}
 			return Boolean(type._atoms?.every((a) => this._atoms?.some((atom) => atom.accepts(a))));

@@ -135,9 +135,6 @@ export class Affinirum {
 					throw this._root.throwError(`unexpected ${e.level} return`);
 				}
 			}
-			if (e instanceof JumpNode) {
-				this._root.throwError(`unexpected ${e.action} jump`);
-			}
 			throw e;
 		}
 	}
@@ -403,6 +400,9 @@ export class Affinirum {
 			return this._loop(state, scope);
 		}
 		else if (state.equals("~>")) {
+			if (!scope.inFunction) {
+				state.throwError("~> requires an enclosing function");
+			}
 			return new FinalNode(state, "return", this._unit(state.next(), scope), scope.type);
 		}
 		else if (state.equals("=>")) {
@@ -410,13 +410,12 @@ export class Affinirum {
 			this._results.push(node);
 			return node;
 		}
-		else if (state.equals("exit")) {
-			const node = new JumpNode(state, "exit");
-			state.next();
-			return node;
-		}
-		else if (state.equals("next")) {
-			const node = new JumpNode(state, "next");
+		else if (state.equals("exit", "next")) {
+			const action = state.equals("exit") ? "exit" : "next";
+			if (!scope.inLoop) {
+				state.throwError(`unexpected ${action} jump`);
+			}
+			const node = new JumpNode(state, action);
 			state.next();
 			return node;
 		}
@@ -448,6 +447,9 @@ export class Affinirum {
 			const type = this._vartypes.get(state.identifier);
 			if (type == null && this._strict) {
 				state.throwError(`undefined variable ${state.identifier} in strict mode`);
+			}
+			if (type?.isNever) {
+				state.throwError(`input variable ${state.identifier} cannot have type never`);
 			}
 			variable = new InputVariable(type);
 			this._variables.set(state.identifier, variable);
@@ -586,8 +588,8 @@ export class Affinirum {
 		const returnType = state.equals(":") ? this._type.parse(state.next(), scope) : Type.Any;
 		span.end(state);
 		const args = Array.from(variables.values());
-		const subscope = scope.subscope(variables, returnType);
-		const subnode =  this._unit(state, subscope);
+		const subscope = scope.subscope(variables, returnType, true);
+		const subnode = this._unit(state, subscope);
 		const functionType = Type.functionType([[returnType, args.map((v) => v.type), variadic]]);
 		return new FunctionNode(span, subnode, [...subscope.variables()], args, functionType);
 	}
@@ -607,8 +609,14 @@ export class Affinirum {
 		const span = state.start();
 		const cnode = this._unit(state.next(), scope);
 		span.end(state);
-		const subnode = this._unit(state, scope);
-		return new LoopNode(span, cnode, subnode);
+		const inLoop = scope.inLoop;
+		scope.inLoop = true;
+		try {
+			return new LoopNode(span, cnode, this._unit(state, scope));
+		}
+		finally {
+			scope.inLoop = inLoop;
+		}
 	}
 
 }

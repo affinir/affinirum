@@ -237,6 +237,18 @@ val updated = Object.Merge(original, ["score": 20, "active": true]);
 `Object.Merge` creates a new object; later arguments take precedence for duplicate keys. Array concatenation and
 object merging are shallow: nested values are shared by reference, with their contents preserved at the script level.
 
+Use `?.` for optional dot access, as in `entry?.name` or `items?.0`, and `?[...]` for optional access with a
+computed key or index. Both return `null` when the receiver is `null` or the entry is missing. For a null
+receiver, `?[...]` skips evaluating the key or index at runtime.
+
+Use `?.?` for optional presence checks, as in `entry?.?name` or `items?.?0`. The result is `null` for a null
+receiver, `true` for an existing key or an in-range index, and `false` otherwise.
+
+```text
+val entry: object? = null;
+[entry?.name, entry?["name"], entry?.?name, [:]?.?name] // [null,null,null,false]
+```
+
 ### Method calls and chaining
 
 Built-in methods use `value.Method(arguments)`. Parentheses can be omitted when no explicit arguments are needed:
@@ -257,6 +269,10 @@ values.Derive(~(item: integer): integer { item * 2 })
 After a dot, a built-in method name takes precedence over an object property with the same name.
 Use brackets or a quoted key to read such a property, for example `record["Length"]` or `record."Length"`.
 
+Use `receiver?.Method(arguments)` for an optional built-in method call. If the receiver is `null`, the call
+returns `null` and skips its arguments during evaluation. A call without explicit arguments can use `receiver?.Method`.
+Each `?.` applies to one step, so use it at each step that can receive `null`, as in `text?.Trim?.UpperCase`.
+
 ### Types
 
 | Type | Meaning |
@@ -270,8 +286,8 @@ Use brackets or a quoted key to read such a property, for example `record["Lengt
 | `string` | Text |
 | `array` / `[...]` | A sequence whose items can have any type |
 | `object` / `[...:]` | Named properties whose values can have any type |
-| `function` | Built-in, host-provided, or script-defined function |
-| `any` | A type compatible with every type |
+| `function` / `~(...)` | Built-in, host-provided, or script-defined function |
+| `any` | A type that accepts any value |
 | `~(integer): string` | Function taking an integer and returning a string |
 | `integer?` | An integer or `null` |
 | `integer \| string` | Union of types |
@@ -318,24 +334,26 @@ Expression operators are listed from highest precedence to lowest. Parentheses o
 
 | Precedence | Operators | Meaning |
 | --- | --- | --- |
-| Highest | `.`, `[]`, `.?`, `()`, `::` | Access, presence, calls, and casts |
+| Highest | `.`, `[]`, `.?`, `?.`, `?[]`, `?.?`, `()`, `::` | Access, presence checks, calls, and casts |
 | | `**` | Exponentiation |
 | | Unary `+`, `-` | Arithmetic sign |
 | | `*`, `/`, `%` | Multiplication, division, remainder |
 | | `+`, `-` | Addition or concatenation; subtraction |
 | | `>`, `<`, `>=`, `<=`, `==`, `!=` | Comparison and equality |
-| | `!` | Boolean negation |
-| | `&` | Boolean AND |
-| | `\|` | Boolean OR |
+| | `!`, `not` | Boolean negation |
+| | `&`, `and` | Boolean AND |
+| | `\|`, `or` | Boolean OR |
 | Lowest | `?:` | Null coalescing |
 
 Binary operators at the same precedence group left to right, including exponentiation:
 `2 ** 3 ** 2` means `(2 ** 3) ** 2` and produces `64`. Exponentiation binds before arithmetic sign, so `-2 ** 2` is `-4`.
 Boolean negation binds after comparisons: `!a == b` means `!(a == b)`.
 
-`+` adds numbers or concatenates strings, buffers, and arrays. `value ?: fallback` returns `fallback` when `value` is
-`null`, otherwise `value`. Operators evaluate their operands eagerly, including `&`, `|`, and `?:`.
-Use `if` when only one branch should run.
+`+` adds numbers or concatenates strings, buffers, and arrays. `&` and `|` evaluate both operands.
+
+`value ?: fallback` evaluates `value` first and evaluates `fallback` only when `value` is `null`.
+`value.Coalesce(fallback)` follows the same rule. During compilation, constant folding can evaluate
+subexpressions in a fallback, optional call argument, or optional key or index expression.
 
 Assign with `=` or combine assignment with an operation: `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, and `|=`.
 Assigning to an external input variable with any of these operators causes a compilation error.
@@ -374,6 +392,7 @@ console.log(expression.evaluate({ price: 12.5, quantity: 3n })); // 37.5
 
 - `variables` declares input value types; structured types can be built with helpers such as `Type.arrayType(Type.Integer)`
   and `Type.objectType([["name", Type.String]])`.
+- A referenced input declared as `Type.Never` causes a compilation error.
 - `strict: true` rejects undeclared input names during compilation. It does not change the language's type compatibility rules.
 - `type` specifies the expected result type to be checked during compilation.
 
@@ -612,7 +631,7 @@ JSON.Format(["missing": null, "count": 1])  // '{"missing":null,"count":"1"}'
 
 #### General Functions
 
-- **any.Coalesce(otherwise: any):any** — Null coalescence
+- **any.Coalesce(otherwise: any):any** — Return the receiver, or evaluate and return `otherwise` when the receiver is `null`
 - **any.Equals(value: any):boolean** — Tests whether the values are equal
 - **any.NotEquals(value: any):boolean** — Tests whether the values differ
 - **(boolean | buffer | function).Encode():buffer** — Encode value to buffer
@@ -757,7 +776,10 @@ Affinirum uses intentionally permissive type checking. Type information helps re
 select function overloads, and report compilation errors. It does not prove that every accepted expression is safe
 for every possible runtime value.
 
-- `any` is compatible with every type, including `null`.
+- `any` accepts every type, including `null`. An expression of type `any` fits every expected type except `never`.
+- An expression of type `never` cannot complete with a value. The compiler rejects `never`-typed call arguments
+  and index expressions, including in optional calls and accesses. For example, `Integer.Sum({=>7}, 1)` and
+  `[10][(=>0)]` both cause compilation errors.
 - An optional type such as `integer?` is the union `null | integer`. Write `null` for a type that only accepts `null`.
   Optional parameters, including `any`, accept `null` or JavaScript `undefined`. Only trailing optional parameters can be omitted.
 - A call to an overloaded function must match one complete signature. A call through a union of functions must match
