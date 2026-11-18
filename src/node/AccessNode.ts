@@ -35,6 +35,11 @@ export class AccessNode extends AssignableNode {
 		return this._subnode instanceof AssignableNode ? this._subnode.assignable : !this._subnode.constant;
 	}
 
+	override get optionalAssignment(): boolean {
+		return this._operator === funcOptionalAt && this._subnode.type.isOptional
+			|| this._subnode instanceof AccessNode && this._subnode.optionalAssignment;
+	}
+
 	override get constant(): boolean {
 		return this._subnode.constant && this._inode.constant;
 	}
@@ -78,10 +83,17 @@ export class AccessNode extends AssignableNode {
 		return value;
 	}
 
-	override resolver(frame: CallFrame): AssignmentResolver {
-		const resolver = this._subnode instanceof AccessNode ? this._subnode.resolver(frame) : undefined;
+	override resolver(frame: CallFrame): AssignmentResolver | undefined {
+		const target = this._subnode instanceof AccessNode ? this._subnode : undefined;
+		const resolver = target?.resolver(frame);
+		if (target && !resolver) {
+			return undefined;
+		}
 		const composite = resolver ? resolver.get() : this._subnode.evaluate(frame);
 		if (composite == null) {
+			if (this._operator === funcOptionalAt) {
+				return undefined;
+			}
 			this.throwError("cannot assign through null");
 		}
 		const compositeType = resolver?.type ?? this._subnode.type;

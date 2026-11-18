@@ -16,9 +16,9 @@ describe("Access node test", () => {
 		const node = new AccessNode(span, constant(value), constant(key), funcAt);
 		node.compileAssignment(Type.Integer);
 		const resolver = node.resolver(new CallFrame());
-		expect(resolver.get()).toBeUndefined();
-		expect(resolver.set(2n)).toBe(2n);
-		expect(resolver.get()).toBe(2n);
+		expect(resolver?.get()).toBeUndefined();
+		expect(resolver?.set(2n)).toBe(2n);
+		expect(resolver?.get()).toBe(2n);
 		expect(Object.hasOwn(value, key)).toBe(true);
 		expect(Object.getPrototypeOf(value)).toBeNull();
 	});
@@ -26,7 +26,7 @@ describe("Access node test", () => {
 	it.each([2n, -3n])("rejects writing outside the array at index %s", (index) => {
 		const node = new AccessNode(span, constant([10n, 20n]), constant(index), funcAt);
 		node.compileAssignment(Type.Integer);
-		expect(() => node.resolver(new CallFrame()).set(30n)).toThrow(/array index is out of range/);
+		expect(() => node.resolver(new CallFrame())?.set(30n)).toThrow(/array index is out of range/);
 	});
 
 	it.each<[Value, Value]>([

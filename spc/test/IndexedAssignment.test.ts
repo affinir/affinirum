@@ -49,18 +49,51 @@ describe("Indexed assignment test", () => {
 		expect(replacement).toEqual([90n, 100n]);
 	});
 
-	it.each(["=", "+="])("rejects a null receiver before evaluating the index or right-hand side with %s", (operator) => {
+	it.each<[string, bigint]>([
+		["=", 2n],
+		["+=", 12n],
+	])("writes only when the optional receiver is present with %s", (operator, expected) => {
 		const signature = Type.functionType([[Type.Integer, []]]);
-		const expression = new Affinirum(`var items:array?=null;items?[index()]${operator}rhs()`, {
+		const expression = new Affinirum(`items()?[index()]${operator}rhs()`, {
 			strict: true,
-			variables: { index: signature, rhs: signature },
+			variables: {
+				items: Type.functionType([[Type.arrayType(Type.Integer).toOptional(), []]]),
+				index: signature,
+				rhs: signature,
+			},
 		});
+		let receiver: bigint[] | undefined = [10n];
 		const calls: string[] = [];
-		expect(() => expression.evaluate({
+		const values = {
+			items: () => { calls.push("items"); return receiver; },
 			index: () => { calls.push("index"); return 0n; },
 			rhs: () => { calls.push("rhs"); return 2n; },
-		})).toThrow("cannot assign through null");
-		expect(calls).toEqual([]);
+		};
+		expect(expression.type.equals(Type.OptionalInteger)).toBe(true);
+		expect(expression.evaluate(values)).toBe(expected);
+		expect(receiver).toEqual([expected]);
+		expect(calls).toEqual(["items", "index", "rhs"]);
+
+		calls.length = 0;
+		receiver = undefined;
+		expect(expression.evaluate(values)).toBeUndefined();
+		expect(calls).toEqual(["items"]);
+	});
+
+	it("propagates a skipped optional access through a nested target", () => {
+		const expression = new Affinirum("source()?.items[0]=2", {
+			variables: { source: Type.functionType([[Type.OptionalObject, []]]) },
+		});
+		let calls = 0;
+		expect(expression.evaluate({ source: () => { ++calls; return undefined; } })).toBeUndefined();
+		expect(calls).toBe(1);
+		const source = () => Object.create(null) as Record<string, Value>;
+		expect(() => expression.evaluate({ source })).toThrow("cannot assign through null");
+	});
+
+	it("rejects an out-of-range optional write when the receiver is present", () => {
+		const expression = new Affinirum("var items:array?=[];items?[0]=2");
+		expect(() => expression.evaluate()).toThrow("array index is out of range");
 	});
 
 	it("evaluates a computed object key once", () => {

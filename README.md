@@ -141,6 +141,10 @@ so other bindings holding the same collection observe the change. Direct writes 
 are rejected. Array writes require an existing index; object writes can create own properties. Negative array indexes
 count from the end. For compound assignment, the container, key, and current value are evaluated before the right-hand side.
 
+Optional targets such as `entry?.name` and `items?[index]` also support `=` and compound assignment. When the receiver
+is `null`, the assignment returns `null` and skips the key or index and the right-hand side at runtime. A successful
+assignment returns the assigned value.
+
 Array and object literals retain their compiled types as constraints on indexed writes. These constraints apply through
 wider bindings and casts that reference the same collection. After `var items: array = [1]`, assigning `'two'` to
 `items[0]` raises a runtime type error because the literal has type `[integer]`.
@@ -363,9 +367,14 @@ Assignments and returns consume the expression that follows them; separate them 
 
 ## Embedding API
 
-`new Affinirum(script, config?)` parses and compiles the script. `evaluate(inputs?)` executes it with the current inputs.
+`new Affinirum(script, config?)` parses and compiles the script. `evaluate(inputs?, timeout?)` executes it with the current inputs.
 An input variable is a name that resolves to neither a scope variable nor a built-in. The host supplies its value, and the
 script can only read the binding.
+
+Set `config.timeout` to a positive number of milliseconds to give each evaluation a default deadline. The default is `0`,
+which disables the deadline. A positive `timeout` passed to `evaluate` overrides the configured value for that call.
+Omitting the override or passing zero or a negative value uses the configured default. The evaluator checks the deadline
+before each loop condition and when entering a script function.
 
 - A type supplied in `config.variables` stays fixed in either mode.
 - Strict mode requires a configured type for every referenced input.
@@ -408,7 +417,7 @@ Before checking input values against their inferred or declared types, `evaluate
 | `type` | Inferred result `Type`; use `.toString()` for its readable form |
 | `variables()` | Record of referenced input names and their inferred or declared types |
 | `toString()` | Compiled tree representation |
-| `evaluate(inputs?)` | Script result as a JavaScript value |
+| `evaluate(inputs?, timeout?)` | Script result as a JavaScript value |
 
 ### Host functions
 

@@ -48,9 +48,10 @@ export class Affinirum {
 	/**
 		Creates compiled expression. Any parsed identifier not recognized as a constant or a function will be compiled as a variable.
 		@param script Math expression to compile.
-		@param config Optional expected type, strict mode, default timeout in milliseconds, variable types, constant values and functions to add for the compilation.
+		@param config Optional expected type, strict mode, default evaluation timeout in milliseconds, and variable types.
 			If expected type is provided then expression return type is matched against it.
 			If strict mode is set then undeclared variables will not be allowed in expression.
+			The default timeout is zero, which disables the timeout.
 	*/
 	constructor(script: string, config?: {
 		type?: Type,
@@ -111,7 +112,7 @@ export class Affinirum {
 	/**
 		Evaluates the compiled expression using the provided input values.
 		@param values Values for the expression's input variables. Omitted when there are no input variables.
-		@param timeout Optional timeout in milliseconds.
+		@param timeout Evaluation timeout in milliseconds. Omitted or non-positive values fallback to the configured default.
 		@returns The evaluated result.
 		@throws If an input value is missing or evaluation fails.
 	*/

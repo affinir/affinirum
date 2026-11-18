@@ -28,7 +28,8 @@ export class AssignmentNode extends InvocationNode {
 
 	override get type(): Type {
 		const valType = this._type ?? this._operator?.type.functionAtomRetType() ?? this._subnode.type;
-		return this._anode.reduceAssignmentType(valType) ?? this._anode.type;
+		const resultType = this._anode.reduceAssignmentType(valType) ?? this._anode.type;
+		return this._anode.optionalAssignment ? resultType.toOptional() : resultType;
 	}
 
 	override satisfies(type: Type): boolean {
@@ -53,6 +54,9 @@ export class AssignmentNode extends InvocationNode {
 
 	override evaluate(frame: CallFrame): Value {
 		const resolver = this._anode.resolver(frame);
+		if (!resolver) {
+			return undefined;
+		}
 		if (!this._operator) {
 			return resolver.set(this._subnode.evaluate(frame));
 		}

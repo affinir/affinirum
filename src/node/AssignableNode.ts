@@ -12,8 +12,13 @@ export interface AssignmentResolver {
 export abstract class AssignableNode extends Node {
 
 	abstract get assignable(): boolean;
+
+	get optionalAssignment(): boolean {
+		return false;
+	}
+
 	abstract compileAssignment(type: Type): AssignableNode;
-	abstract resolver(frame: CallFrame): AssignmentResolver;
+	abstract resolver(frame: CallFrame): AssignmentResolver | undefined;
 
 	reduceAssignmentType(type: Type): Type | undefined {
 		const targetType = this.type;
