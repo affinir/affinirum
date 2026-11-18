@@ -195,6 +195,9 @@ val absolute = ~(value: integer): integer {
 absolute(-5) // 5
 ```
 
+A return annotation takes one type. Enclose a union return type in parentheses, as in
+`~(value: integer): (integer | string) { value }`.
+
 Functions are values and can be passed as callbacks. A final variadic parameter collects the remaining arguments into
 an array. Use `...integer` for integer arguments and `...any` for arguments of any type.
 
@@ -298,8 +301,13 @@ Each `?.` applies to one step, so use it at each step that can receive `null`, a
 | `integer?` | An integer or `null` |
 | `integer \| string` | Union of types |
 
-Parentheses group types, for example `(integer | string)?`. Type checking is intentionally permissive; see
-[Detailed type rules](#detailed-type-rules) for structural types, callback compatibility, and variadic signatures.
+Parentheses group types, as in `(integer | string)`. A `|` after a function's return type forms a union of the
+whole function type and the next type. For example, `~(integer): string | null` is a function or `null`, while
+`~(integer): (string | null)` and `~(integer): string?` describe a function that can return `null`.
+In `~(): [...string | null]`, the brackets enclose the union of array item types.
+
+Type checking is intentionally permissive. See [Detailed type rules](#detailed-type-rules) for structural types,
+callback compatibility, and variadic signatures.
 
 A postfix cast, `expression::type`, checks an expected type without converting the value:
 

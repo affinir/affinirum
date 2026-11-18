@@ -41,14 +41,14 @@ describe("Closure test", () => {
 	});
 
 	it("includes input uses from an uncalled function", () => {
-		const expression = new Affinirum("val f=~():float|integer{value-1};value.Length");
+		const expression = new Affinirum("val f=~():(float|integer){value-1};value.Length");
 		expect(expression.variables().value.equals(Type.union(Type.Number, Type.OptionalIterable))).toBe(true);
 		expect(expression.type.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate({ value: "kept" })).toBe(4n);
 	});
 
 	it("keeps a captured parameter's declared type across nested functions", () => {
-		const expression = new Affinirum("~(value:integer|string):integer|string{value=1;val change=~():string{value='two'};value}");
+		const expression = new Affinirum("~(value:integer|string):(integer|string){value=1;val change=~():string{value='two'};value}");
 		const type = Type.union(Type.Integer, Type.String);
 		expect(expression.type.equals(Type.functionType([[type, [type]]]))).toBe(true);
 		const func = expression.evaluate() as (value: bigint | string) => bigint | string;

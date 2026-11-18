@@ -142,7 +142,10 @@ export class FunctionSignature {
 		const argTypes = this._argTypes.map((type, ix) =>
 			this._isVariadic && ix === this.arity - 1 ? `...${type.arrayAtomValType()}` : type.toString()
 		).join(",");
-		return `~(${argTypes}):${this._retType}`;
+		const retType = this._retType.isAtom || this._retType.isAny || this._retType.isNever
+			? this._retType.toString()
+			: `(${this._retType.toString()})`;
+		return `~(${argTypes}):${retType}`;
 	}
 
 }

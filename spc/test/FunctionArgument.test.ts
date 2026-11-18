@@ -39,7 +39,7 @@ vfunc(cfunc)
 		expect<unknown>(script.evaluate()).toEqual([1n, 3n]);
 	});
 	it("checks different uses of an untyped parameter", () => {
-		const expression = new Affinirum("~(x):float|integer{val first=x-1;x='two';first+x.Length}");
+		const expression = new Affinirum("~(x):(float|integer){val first=x-1;x='two';first+x.Length}");
 		expect(expression.type.equals(Type.functionType([[Type.Number, [Type.Any]]]))).toBe(true);
 		const func = expression.evaluate() as (value: bigint | number) => bigint | number;
 		expect(func(4n)).toBe(6n);

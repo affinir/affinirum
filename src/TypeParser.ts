@@ -4,15 +4,15 @@ import { LexicalScope } from "./LexicalScope.js";
 
 export class TypeParser {
 
-	parse(state: ParserState, scope: LexicalScope): Type {
-		let type = this._atom(state, scope);
+	union(state: ParserState, scope: LexicalScope): Type {
+		let type = this.group(state, scope);
 		while (state.equals("|")) { // type union
-			type = Type.union(type, this._atom(state.next(), scope));
+			type = Type.union(type, this.group(state.next(), scope));
 		}
 		return type;
 	}
 
-	protected _atom(state: ParserState, scope: LexicalScope): Type {
+	group(state: ParserState, scope: LexicalScope): Type {
 		if (state.isType) { // literal type
 			let type = state.type;
 			if (state.next().equals("?")) {
@@ -39,7 +39,7 @@ export class TypeParser {
 					state.next();
 					return object ? Type.Object : Type.Array;
 				}
-				const valType = this.parse(state, scope);
+				const valType = this.union(state, scope);
 				state.closeBrackets();
 				state.next();
 				return object ? Type.objectType(valType) : Type.arrayType(valType);
@@ -53,11 +53,11 @@ export class TypeParser {
 				if (state.isLiteral && typeof state.literal.value === "string") {
 					const key = state.literal.value;
 					state.next().separateByColon();
-					valTypes.push([key, this.parse(state.next(), scope)]);
+					valTypes.push([key, this.union(state.next(), scope)]);
 					colon = true;
 				}
 				else {
-					valTypes.push([String(index++), this.parse(state, scope)]);
+					valTypes.push([String(index++), this.union(state, scope)]);
 				}
 				if (!state.equals(",")) {
 					break;
@@ -79,7 +79,7 @@ export class TypeParser {
 				if (variadic) {
 					state.next();
 				}
-				const argType = this.parse(state, scope);
+				const argType = this.union(state, scope);
 				argTypes.push(variadic ? Type.arrayType(argType) : argType);
 				if (variadic) {
 					break;
@@ -90,12 +90,12 @@ export class TypeParser {
 			}
 			state.closeParentheses();
 			state.next();
-			const retType = state.equals(":") ? this.parse(state.next(), scope) : Type.Any;
+			const retType = state.equals(":") ? this.group(state.next(), scope) : Type.Any;
 			return Type.functionType([[retType, argTypes, variadic]]);
 		}
 		else if (state.equals("(")) { // type grouping
 			state.next();
-			const type = this.parse(state, scope);
+			const type = this.union(state, scope);
 			state.closeParentheses();
 			state.next();
 			return type;

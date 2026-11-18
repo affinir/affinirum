@@ -89,7 +89,7 @@ describe("Assignment test", () => {
 	});
 
 	it("preserves a declared function parameter union across assignments", () => {
-		const expression = new Affinirum("~(x:integer|string):integer|string{x=1;x='two';x}");
+		const expression = new Affinirum("~(x:integer|string):(integer|string){x=1;x='two';x}");
 		const type = Type.union(Type.Integer, Type.String);
 		expect(expression.type.equals(Type.functionType([[type, [type]]]))).toBe(true);
 		const func = expression.evaluate() as (value: bigint | string) => bigint | string;

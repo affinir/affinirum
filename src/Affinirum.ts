@@ -200,7 +200,7 @@ export class Affinirum {
 		const span = state.start();
 		let type: Type | undefined;
 		if (state.next().equals(":")) {
-			type = this._type.parse(state.next(), scope);
+			type = this._type.union(state.next(), scope);
 		}
 		const variable = new LocalVariable(type, assignable);
 		scope.set(identifier, variable);
@@ -390,7 +390,7 @@ export class Affinirum {
 				node = new CallNode(span.end(state), node, subnodes);
 			}
 			else if (state.equals("::")) { // type cast operator
-				const type = this._type.parse(state.next(), scope);
+				const type = this._type.union(state.next(), scope);
 				node = new CastNode(span.end(state), node, type);
 			}
 		}
@@ -586,7 +586,7 @@ export class Affinirum {
 				if (variadic) {
 					state.next();
 				}
-				argType = this._type.parse(state, scope);
+				argType = this._type.union(state, scope);
 				if (variadic) {
 					argType = Type.arrayType(argType);
 				}
@@ -602,7 +602,7 @@ export class Affinirum {
 		}
 		state.closeParentheses();
 		state.next();
-		const returnType = state.equals(":") ? this._type.parse(state.next(), scope) : Type.Any;
+		const returnType = state.equals(":") ? this._type.group(state.next(), scope) : Type.Any;
 		span.end(state);
 		const args = Array.from(variables.values());
 		const subscope = scope.subscope(variables, returnType, true);

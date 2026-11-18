@@ -48,6 +48,10 @@ describe("Compiled type test", () => {
 		["~(){25+45}", "~():any"],
 		["~(){null}", "~():any"],
 		["~ (i:float):boolean{i==0}", "~(float):boolean"],
+		["val f:~(integer):string|null;f", "null|~(integer):string"],
+		["~(f:~(integer):(string|null)){}", "~(~(integer):(null|string)):any"],
+		["~():string?{null}", "~():(null|string)"],
+		["~():[...string|null]{[null,'text']}", "~():[...null|string]"],
 		["~ (x:string, y:...string):[...string]{y+[x]}", "~(string,...string):[...string]"],
 		["~ (x:integer, y:...integer):integer{([x]+y).Length}", "~(integer,...integer):integer"],
 		["var a:[integer, integer] = [0,1];a", "[integer,integer]"],
@@ -62,13 +66,23 @@ describe("Compiled type test", () => {
 		});
 	});
 	it("parses unions after composite and grouped types", () => {
-		const script = new Affinirum("~(value:(float|string)|[...float|string]|['a':integer]|(~():integer)|boolean):(null|[...float|string])|float|string{null}");
+		const script = new Affinirum("~(value:(float|string)|[...float|string]|['a':integer]|~():integer|boolean):(null|[...float|string]|float|string){null}");
 		const valueType = Type.union(Type.Float, Type.String);
 		const arrayType = Type.arrayType(valueType);
 		const type = Type.functionType([
 			[Type.union(Type.Null, arrayType, valueType), [Type.union(valueType, arrayType, Type.objectType([["a", Type.Integer]]), Type.functionType([[Type.Integer, []]]), Type.Boolean)]],
 		]);
 		expect(script.type.equals(type)).toBe(true);
+	});
+	it("round-trips unions at each level of a nested function type", () => {
+		const inner = Type.functionType([[Type.OptionalString, [Type.Integer]]]);
+		const outer = Type.functionType([[Type.union(inner, Type.Boolean), []]]);
+		const type = outer.toOptional();
+		const reparsed = new Affinirum(`val f:${type.toString()};f`).type;
+		expect(reparsed.equals(type)).toBe(true);
+	});
+	it("requires parentheses around a union return annotation on a function literal", () => {
+		expect(() => new Affinirum("~():string|null{null}")).toThrow();
 	});
 	it("parses pure constant expression and tests return type", () => {
 		const script = new Affinirum("(\"ABC\" + Timestamp.Parse(\"2000-01-01\").Format('YY')).Length");
