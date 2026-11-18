@@ -49,6 +49,20 @@ describe("Indexed assignment test", () => {
 		expect(replacement).toEqual([90n, 100n]);
 	});
 
+	it.each(["=", "+="])("rejects a null receiver before evaluating the index or right-hand side with %s", (operator) => {
+		const signature = Type.functionType([[Type.Integer, []]]);
+		const expression = new Affinirum(`var items:array?=null;items?[index()]${operator}rhs()`, {
+			strict: true,
+			variables: { index: signature, rhs: signature },
+		});
+		const calls: string[] = [];
+		expect(() => expression.evaluate({
+			index: () => { calls.push("index"); return 0n; },
+			rhs: () => { calls.push("rhs"); return 2n; },
+		})).toThrow("cannot assign through null");
+		expect(calls).toEqual([]);
+	});
+
 	it("evaluates a computed object key once", () => {
 		let calls = 0;
 		const expression = new Affinirum("var entry=['a':1];entry[key()]+=2;entry.a", {
@@ -75,17 +89,17 @@ describe("Indexed assignment test", () => {
 		expect(calls).toBe(1);
 	});
 
-	it.each<[string, number, bigint]>([
-		["=", 0, 2n],
-		["+=", 1, 12n],
-	])("reads the target only when needed for %s", (operator, expectedReads, expected) => {
-		let reads = 0;
-		const record = { get a() { ++reads; return 10n; } };
+	it.each<[string, bigint]>([
+		["=", 2n],
+		["+=", 12n],
+	])("resolves the record receiver once for %s", (operator, expected) => {
+		let calls = 0;
+		const record = Object.assign(Object.create(null) as Record<string, Value>, { a: 10n });
 		const expression = new Affinirum(`getRecord().a${operator}2`, {
 			variables: { getRecord: Type.functionType([[Type.Object, []]]) },
 		});
-		expect(expression.evaluate({ getRecord: () => record })).toBe(expected);
-		expect(reads).toBe(expectedReads);
+		expect(expression.evaluate({ getRecord: () => { ++calls; return record; } })).toBe(expected);
+		expect(calls).toBe(1);
 		expect(record.a).toBe(expected);
 	});
 
@@ -121,8 +135,8 @@ describe("Indexed assignment test", () => {
 		});
 		expect(() => expression.evaluate({ values, replacement: "bad" })).toThrow(/indexed value mismatch with expected type/);
 		expect(values).toEqual([1n]);
-		expect(expression.evaluate({ values, replacement: 2n })).toBe(values);
-		expect(values).toEqual([2n]);
+		expect(expression.evaluate({ values, replacement: 2n })).toEqual([2n]);
+		expect(values).toEqual([1n]);
 	});
 
 	it("checks the whole array against the receiver type before an indexed write", () => {
@@ -138,25 +152,28 @@ describe("Indexed assignment test", () => {
 		expect(single).toEqual(["two"]);
 	});
 
-	it("checks own array getters against the proposed indexed write", () => {
+	it("copies array getters as data and keeps holes through indexed writes", () => {
+		let reads = 0;
 		const items = new Array<Value>(3);
 		items[0] = 1n;
 		Object.defineProperty(items, 1, {
-			get(this: Value[]) { return this[0] === 1n ? 2n : "bad"; },
+			get(this: Value[]) { ++reads; return this[0] === 1n ? 2n : "bad"; },
 		});
 		Object.setPrototypeOf(items, Object.assign(Object.create(Array.prototype), { 2: "inherited" }));
-		const expression = new Affinirum("items()[0]=replacement", {
-			variables: { items: Type.functionType([[Type.arrayType(Type.OptionalInteger), []]]) },
+		const expression = new Affinirum("var copy=items;copy[0]=2;copy", {
+			variables: { items: Type.arrayType(Type.OptionalInteger) },
 		});
-		expect(expression.evaluate({ items: () => items, replacement: 1n })).toBe(1n);
-		expect(() => expression.evaluate({ items: () => items, replacement: 2n }))
-			.toThrow(/indexed value mismatch with expected type/);
+		const result = expression.evaluate({ items }) as Value[];
+		expect(reads).toBe(1);
+		expect(result).toHaveLength(3);
+		expect(result.slice(0, 2)).toEqual([2n, 2n]);
+		expect(Object.hasOwn(result, 2)).toBe(false);
 		expect(items[0]).toBe(1n);
 		expect(Object.hasOwn(items, 2)).toBe(false);
 	});
 
 	it("preserves all recorded constraints on an object written through an alias", () => {
-		const record = Object.defineProperty({ b: "one" }, "a", { value: 1n, writable: true });
+		const record = { a: 1n, b: "one" };
 		const expression = new Affinirum("var alias:object=first;second;alias[key]=replacement;alias", {
 			variables: {
 				first: Type.objectType([["a", Type.Integer]]),
@@ -167,10 +184,9 @@ describe("Indexed assignment test", () => {
 			.toThrow(/indexed value mismatch with expected type/);
 		expect(() => expression.evaluate({ first: record, second: record, key: "b", replacement: 2n }))
 			.toThrow(/indexed value mismatch with expected type/);
-		expect(record).toHaveProperty("a", 1n);
-		expect(record.b).toBe("one");
-		expect(expression.evaluate({ first: record, second: record, key: "b", replacement: "two" })).toBe(record);
-		expect(record.b).toBe("two");
+		const result = expression.evaluate({ first: record, second: record, key: "b", replacement: "two" });
+		expect(result).toEqual({ a: 1n, b: "two" });
+		expect(record).toEqual({ a: 1n, b: "one" });
 	});
 
 	it.each<[string, Type, Value]>([
@@ -207,24 +223,18 @@ describe("Indexed assignment test", () => {
 		expect(expression.evaluate({ values: { a: [1n] }, key: "a" })).toEqual([2n]);
 	});
 
-	it.each<[string, boolean, string, bigint]>([
-		["sealed", true, "+=", 3n],
-		["non-enumerable", false, "=", 2n],
-	])("preserves the descriptor of a %s writable property", (name, enumerable, operator, expected) => {
-		const record = Object.defineProperty({}, "a", { value: 1n, writable: true, enumerable, configurable: true });
-		if (name === "sealed") {
-			Object.seal(record);
-		}
-		const descriptor = Object.getOwnPropertyDescriptor(record, "a");
-		const expression = new Affinirum(`getRecord().a${operator}2`, {
+	it("updates a writable field on a sealed host record", () => {
+		const record = Object.seal(Object.assign(Object.create(null) as Record<string, Value>, { a: 1n }));
+		const expression = new Affinirum("getRecord().a+=2", {
 			variables: { getRecord: Type.functionType([[Type.Object, []]]) },
 		});
-		expect(expression.evaluate({ getRecord: () => record })).toBe(expected);
-		expect(Object.getOwnPropertyDescriptor(record, "a")).toEqual({ ...descriptor, value: expected });
+		expect(expression.evaluate({ getRecord: () => record })).toBe(3n);
+		expect(record.a).toBe(3n);
+		expect(Object.isSealed(record)).toBe(true);
 	});
 
 	it("rejects writes to a frozen data property", () => {
-		const record = Object.freeze({ a: 1n });
+		const record = Object.freeze(Object.assign(Object.create(null) as Record<string, Value>, { a: 1n }));
 		const expression = new Affinirum("getRecord().a=2", {
 			variables: { getRecord: Type.functionType([[Type.Object, []]]) },
 		});

@@ -1,5 +1,5 @@
 import { Constant } from "../../Constant.js";
-import { Value } from "../../Value.js";
+import { normalize, Value } from "../../Value.js";
 import { Type } from "../../Type.js";
 
 const typeJson = Type.union(Type.Null, Type.Boolean, Type.Timestamp, Type.Float, Type.Integer, Type.String, Type.Array, Type.Object);
@@ -19,7 +19,7 @@ const funcFormatJSON = new Constant(
 
 const funcParseJSON = new Constant(
 	(value: string | undefined) =>
-		value == null ? undefined : JSON.parse(value) as Value,
+		value == null ? undefined : normalize(JSON.parse(value) as Value),
 	Type.functionType([[typeJson, [Type.OptionalString]]]),
 );
 

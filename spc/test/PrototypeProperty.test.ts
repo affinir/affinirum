@@ -4,6 +4,15 @@ import { constants } from "../../src/dictionary/Constants.js";
 type ObjectValue = Record<string, Value>;
 
 describe("Prototype property test", () => {
+	it("parses JSON records with null prototypes at every depth", () => {
+		const expression = new Affinirum("JSON.Parse(source)");
+		const result = expression.evaluate({ source: "{\"__proto__\":[{\"value\":1}]}" }) as ObjectValue;
+		const nested = (result["__proto__"] as ObjectValue[])[0];
+		expect(Object.getPrototypeOf(result)).toBeNull();
+		expect(Object.getPrototypeOf(nested)).toBeNull();
+		expect(nested.value).toBe(1);
+	});
+
 	it("creates object values with null prototypes and preserves special own keys", () => {
 		const expression = new Affinirum("[\"__proto__\":[\"polluted\":true], \"constructor\":2, \"prototype\":3]");
 		const result = expression.evaluate({}) as ObjectValue;

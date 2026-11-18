@@ -19,7 +19,7 @@ describe("Jump command test", () => {
 	it("rejects loop jumps in a function with no loop of its own", () => {
 		for (const jump of ["exit", "next"]) {
 			expect(() => new Affinirum(`while true {val f=~():null{${jump}}; f(); exit}`))
-				.toThrow(new RegExp(`unexpected ${jump} jump`));
+				.toThrow(`unexpected ${jump} outside of a loop`);
 		}
 	});
 	it("uses exit and next in nested loops and conditional branches", () => {
@@ -39,11 +39,11 @@ describe("Jump command test", () => {
 	});
 	it("rejects loop jumps outside a loop", () => {
 		for (const jump of ["exit", "next"]) {
-			expect(() => new Affinirum(jump)).toThrow(new RegExp(`unexpected ${jump} jump`));
+			expect(() => new Affinirum(jump)).toThrow(`unexpected ${jump} outside of a loop`);
 		}
 	});
 	it("rejects function returns outside a function", () => {
-		expect(() => new Affinirum("~>42")).toThrow(/requires an enclosing function/);
+		expect(() => new Affinirum("~>42")).toThrow("unexpected ~> outside of a function");
 	});
 	it("rejects the removed symbolic loop jumps", () => {
 		for (const operator of [">>", ">|"]) {

@@ -1,4 +1,5 @@
 import { Affinirum, Type } from "../../../src/index.js";
+import { functions } from "../../../src/dictionary/Functions.js";
 import { runAffinirumTests } from "../../util/AffinirumTest.js";
 
 describe("Composite function test", () => {
@@ -196,8 +197,9 @@ describe("Composite function test", () => {
 	});
 
 	it("checks for a key named after a built-in method with optional presence", () => {
-		const expression = new Affinirum("v?.?Length", { variables: { v: Type.OptionalObject } });
-		expect(expression.evaluate({ v: { Length: undefined } })).toBe(true);
+		const [[methodName]] = functions;
+		const expression = new Affinirum(`v?.?${methodName}`, { variables: { v: Type.OptionalObject } });
+		expect(expression.evaluate({ v: { [methodName]: undefined } })).toBe(true);
 		expect(expression.evaluate({ v: undefined })).toBeUndefined();
 	});
 

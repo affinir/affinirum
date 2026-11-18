@@ -1,6 +1,5 @@
 import { Node } from "./Node.js";
 import { InvocationNode } from "./InvocationNode.js";
-import { AccessNode } from "./AccessNode.js";
 import { AssignableNode } from "./AssignableNode.js";
 import { Constant } from "../Constant.js";
 import { ParserSpan } from "../ParserSpan.js";
@@ -58,13 +57,8 @@ export class AssignmentNode extends InvocationNode {
 			return resolver.set(this._subnode.evaluate(frame));
 		}
 		const value = resolver.get();
-		if (this._anode instanceof AccessNode) {
-			if (!resolver.type) {
-				this._anode.throwError("indexed value must be an array or object");
-			}
-			if (!resolver.type.acceptsValue(value)) {
-				this._anode.throwError(`indexed value mismatch with expected type ${resolver.type}`);
-			}
+		if (resolver.type && !resolver.type.acceptsValue(value)) {
+			this._anode.throwError(`indexed value mismatch with expected type ${resolver.type}`);
 		}
 		const operation = this._operator.value as (left: Value, right: Value) => Value;
 		const result = operation(value, this._subnode.evaluate(frame));

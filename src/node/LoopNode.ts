@@ -36,7 +36,11 @@ export class LoopNode extends Node {
 
 	override evaluate(frame: CallFrame): Value {
 		let result: Value = undefined;
-		while (this._cnode.evaluate(frame)) {
+		while (true) {
+			frame.timer();
+			if (!this._cnode.evaluate(frame)) {
+				break;
+			}
 			try {
 				result = this._subnode.evaluate(frame);
 			}

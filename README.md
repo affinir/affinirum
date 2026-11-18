@@ -149,6 +149,7 @@ wider bindings and casts that reference the same collection. After `var items: a
 
 `if condition { ... } else { ... }` is a conditional expression: it evaluates only the selected branch and returns
 that branch's value. The condition must be boolean. If `else` is omitted and the condition is false, the result is `null`.
+An unbraced first branch requires `then`, as in `if score >= 60 then "pass" else "fail"`.
 
 ```text
 val score = 82;
@@ -158,8 +159,9 @@ category // "pass"
 
 ### Loops
 
-`while condition { ... }` repeats while its boolean condition is true. Use `next` to skip the rest of the current
-iteration and check the condition again, or `exit` to leave the innermost loop:
+`while condition { ... }` repeats while its boolean condition is true. An unbraced body requires `do`, as in
+`while i < 10 do i += 1`. Use `next` to skip the rest of the current iteration and check the condition again, or `exit`
+to leave the innermost loop.
 
 ```text
 var i = 0;
@@ -398,7 +400,7 @@ console.log(expression.evaluate({ price: 12.5, quantity: 3n })); // 37.5
 
 Every referenced input must be supplied as an own property of the object passed to `evaluate`, even if its value is `undefined`.
 Before checking input values against their inferred or declared types, `evaluate()` wraps input `bigint` values to the signed
-64-bit range, including integers inside arrays and objects.
+64-bit range. Shared references are preserved within the copy.
 
 | Instance member | Result |
 | --- | --- |
@@ -434,8 +436,10 @@ const result = expression.evaluate({
 
 Affinirum checks that injected functions are callable and trusts their behavior and return values. Supply synchronous
 functions that return values matching their declared Affinirum types. Every returned `bigint` must be in the signed 64-bit
-range, including integers inside arrays and objects. `evaluate()` passes the final result through unchanged, with a top-level
-`null` returned as `undefined`.
+range, including integers inside arrays and objects. Supply ordinary arrays with data elements and records created with
+`Object.create(null)` and enumerable string data fields. The same requirements apply to arguments when JavaScript calls a
+script function directly. `evaluate()` passes the final result through unchanged, with a top-level `null` returned as
+`undefined`.
 
 List multiple signatures in one `Type.functionType` call when the implementation supports overloads:
 

@@ -8,7 +8,8 @@ import { FinalNode } from "../../../src/node/FinalNode.js";
 import { VariableNode } from "../../../src/node/VariableNode.js";
 import { CallFrame } from "../../../src/CallFrame.js";
 import { InputVariable } from "../../../src/Variable.js";
-import { funcLength } from "../../../src/native/Iterable.js";
+
+const span = new ParserState("call").next().start();
 
 describe("Constant folding test", () => {
 	const referenceFactories: [string, Type, () => Value][] = [
@@ -25,7 +26,6 @@ describe("Constant folding test", () => {
 	referenceFactories.forEach(([name, type, factory]) => {
 		it(`keeps a ${name} factory out of compile-time evaluation`, () => {
 			let calls = 0;
-			const span = new ParserState("factory()");
 			const functionNode = new ConstantNode(span, new Constant(() => {
 				++calls;
 				return factory();
@@ -42,7 +42,6 @@ describe("Constant folding test", () => {
 
 	it("still folds deterministic scalar calls", () => {
 		let calls = 0;
-		const span = new ParserState("scalar()");
 		const functionNode = new ConstantNode(span, new Constant(() => {
 			++calls;
 			return 6n;
@@ -60,7 +59,6 @@ describe("Constant folding test", () => {
 		[[1n, 2n, 3n]],
 	])("folds deterministic scalar calls with a constant array %s", (values) => {
 		let calls = 0;
-		const span = new ParserState("sum([1,2,3])");
 		const functionNode = new ConstantNode(span, new Constant((items: bigint[]) => {
 			++calls;
 			return items.reduce((sum, value) => sum + value, 0n);
@@ -77,7 +75,6 @@ describe("Constant folding test", () => {
 
 	it("does not fold arrays containing volatile calls", () => {
 		let calls = 0;
-		const span = new ParserState("sum([next()])");
 		const next = new ConstantNode(span, new Constant(() => BigInt(++calls),
 			Type.functionType([[Type.Integer, []]], true)));
 		const sum = new ConstantNode(span, new Constant((items: bigint[]) => items[0],
@@ -93,7 +90,6 @@ describe("Constant folding test", () => {
 
 	it("folds deterministic scalar calls with fixed and variadic constant arguments", () => {
 		let calls = 0;
-		const span = new ParserState("sum(1,2,3)");
 		const functionNode = new ConstantNode(span, new Constant((first: bigint, ...rest: bigint[]) => {
 			++calls;
 			return rest.reduce((sum, value) => sum + value, first);
@@ -109,7 +105,6 @@ describe("Constant folding test", () => {
 
 	it("creates fresh variadic argument arrays for reference-returning calls", () => {
 		let calls = 0;
-		const span = new ParserState("items(1,2)");
 		const functionNode = new ConstantNode(span, new Constant((...items: bigint[]) => {
 			++calls;
 			return items;
@@ -129,7 +124,6 @@ describe("Constant folding test", () => {
 
 describe("Optional calls", () => {
 	it("preserves Never when evaluating the callee exits early", () => {
-		const span = new ParserState("(return 1)(2)");
 		const value = new ConstantNode(span, new Constant(1n));
 		const callee = new FinalNode(span, "return", value, Type.Integer);
 		const argument = new ConstantNode(span, new Constant(2n));
@@ -138,18 +132,17 @@ describe("Optional calls", () => {
 	});
 
 	it("includes null in the initial type for enclosing overload resolution", () => {
-		const span = new ParserState("select(value, null?.Length())");
 		const select = new ConstantNode(span, new Constant((value: Value) => value, Type.functionType([
 			[Type.Integer, [Type.Integer, Type.Integer]],
 			[Type.String, [Type.String, Type.Null]],
 		])));
-		const length = new ConstantNode(span, funcLength);
+		const callee = new ConstantNode(span, new Constant(() => 1n, Type.functionType([[Type.Integer, [Type.String]]])));
 		const receiver = new ConstantNode(span, Constant.Null);
-		const optionalLength = new CallNode(span, length, [receiver], true);
-		expect(optionalLength.type.equals(Type.OptionalInteger)).toBe(true);
+		const optionalCall = new CallNode(span, callee, [receiver], true);
+		expect(optionalCall.type.equals(Type.OptionalInteger)).toBe(true);
 
 		const value = new InputVariable();
-		const node = new CallNode(span, select, [new VariableNode(span, value), optionalLength]).compile();
+		const node = new CallNode(span, select, [new VariableNode(span, value), optionalCall]).compile();
 		const frame = new CallFrame();
 		frame.add(value, "text");
 		expect(node.type.equals(Type.String)).toBe(true);
@@ -157,7 +150,6 @@ describe("Optional calls", () => {
 	});
 
 	it("requires the receiver and rest to match the same variadic array type", () => {
-		const span = new ParserState("count()");
 		const itemsType = Type.union(Type.arrayType(Type.Integer), Type.arrayType(Type.String));
 		const count = new ConstantNode(span, new Constant((...items: Value[]) => BigInt(items.length),
 			Type.functionType([[Type.Integer, [itemsType], true]])));

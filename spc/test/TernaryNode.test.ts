@@ -8,6 +8,17 @@ describe("Ternary node test", () => {
 			.toThrow(/mismatch with expected type boolean/);
 	});
 
+	it("separates a single-expression branch from its condition with then", () => {
+		const expression = new Affinirum("if condition then -1 else 2");
+		expect(expression.evaluate({ condition: true })).toBe(-1n);
+		expect(expression.evaluate({ condition: false })).toBe(2n);
+	});
+
+	it("requires then before an unbraced branch", () => {
+		expect(() => new Affinirum("if condition 1 else 2"))
+			.toThrow("missing 'then' or '{' after the if condition");
+	});
+
 	it.each<[string, string, bigint | string, bigint | string]>([
 		["x='two'", "x=(x::integer)-1", "two", 1n],
 		["x=(x::integer)-1", "x='two'", 1n, "two"],
@@ -85,10 +96,10 @@ describe("Ternary node test", () => {
 		const expression = new Affinirum("var x='kept';f(if condition{x}else{x})", {
 			variables: { f: type, condition: Type.Boolean },
 		});
-		const f = (value: string) => value;
+		const identity = (value: string) => value;
 		expect(expression.type.equals(Type.String)).toBe(true);
-		expect(expression.evaluate({ f, condition: true })).toBe("kept");
-		expect(expression.evaluate({ f, condition: false })).toBe("kept");
+		expect(expression.evaluate({ f: identity, condition: true })).toBe("kept");
+		expect(expression.evaluate({ f: identity, condition: false })).toBe("kept");
 	});
 
 

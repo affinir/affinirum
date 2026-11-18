@@ -1,16 +1,29 @@
 import { Affinirum, Type, Value } from "../../src/index.js";
 
 describe("Value normalization test", () => {
-	it("normalizes input integers recursively while preserving composite identity", () => {
+	it("normalizes input integers on a copy while preserving cycles", () => {
 		const integer = 1n << 100n;
 		const value: Value[] = [integer];
 		const object: Record<string, Value> = { integer, value };
 		value.push(object);
 		const result = new Affinirum("value").evaluate({ value }) as Value[];
-		expect(result === value).toBe(true);
+		expect(result).not.toBe(value);
 		expect(result[0] as bigint).toBe(0n);
 		expect((result[1] as Record<string, Value>).integer as bigint).toBe(0n);
 		expect((result[1] as Record<string, Value>).value === result).toBe(true);
+		expect(value[0]).toBe(integer);
+		expect(object.integer).toBe(integer);
+	});
+
+	it("copies frozen records as enumerable data in a null-prototype object", () => {
+		const value = { ["__proto__"]: 2n };
+		Object.setPrototypeOf(value, { inherited: 1n });
+		Object.defineProperty(value, "hidden", { value: 3n });
+		Object.freeze(value);
+		const result = new Affinirum("value").evaluate({ value }) as Record<string, Value>;
+		expect(Object.getPrototypeOf(result)).toBeNull();
+		expect(Object.keys(result)).toEqual(["__proto__"]);
+		expect(result["__proto__"]).toBe(2n);
 	});
 
 	it("normalizes inputs before numeric functions consume them", () => {
@@ -28,7 +41,7 @@ describe("Value normalization test", () => {
 			strict: true,
 			variables: { f: Type.functionType([[Type.Array, []]]) },
 		});
-		const result = [Object.freeze({ integer: 0x7FFFFFFFFFFFFFFFn })];
+		const result = [Object.freeze(Object.assign(Object.create(null) as Record<string, Value>, { integer: 0x7FFFFFFFFFFFFFFFn }))];
 		Object.freeze(result);
 		expect(expression.evaluate({ f: () => result })).toBe(result);
 	});

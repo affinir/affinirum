@@ -8,6 +8,16 @@ describe("Loop node test", () => {
 			.toThrow(/mismatch with expected type boolean/);
 	});
 
+	it("runs a single-expression loop body introduced by do", () => {
+		const expression = new Affinirum("var i=0;while i<3 do i+=1;i");
+		expect(expression.evaluate()).toBe(3n);
+	});
+
+	it("requires do before an unbraced loop body", () => {
+		expect(() => new Affinirum("while condition exit"))
+			.toThrow("missing 'do' or '{' after the while condition");
+	});
+
 	it("preserves incoming variable types when a constant false loop is skipped", () => {
 		const expression = new Affinirum("var x:integer|string=1;while false{x='two'};(x::integer)-1");
 		expect(expression.type.equals(Type.Integer)).toBe(true);

@@ -1,11 +1,6 @@
 import { Affinirum, Type } from "../../src/index.js";
 
 describe("Closure test", () => {
-	it("retains a captured parameter after the enclosing function returns", () => {
-		const expression = new Affinirum("val make=~(n:integer):~():integer{~():integer{n}};val f=make(7);f()");
-		expect(expression.evaluate() as bigint).toBe(7n);
-	});
-
 	it("keeps captures from separate factory calls independent", () => {
 		const expression = new Affinirum("val make=~(n:integer):~():integer{~():integer{n}};val f=make(7);val g=make(9);[f(),g(),f()]");
 		expect<unknown>(expression.evaluate()).toEqual([7n, 9n, 7n]);

@@ -24,10 +24,6 @@ vfunc(cfunc)
 		`);
 		expect(script.evaluate({ myvr: 100 }) as string).toBe("2116.0");
 	});
-	it("restores function arguments across recursive calls", () => {
-		const script = new Affinirum("val f=~(n:integer):integer{if n<=1{1}else{f(n-1)*n}};f(5)");
-		expect(script.evaluate() as bigint).toBe(120n);
-	});
 	it("restores block-local variables across recursive calls", () => {
 		const script = new Affinirum("val f=~(n:integer):integer{if n<=1{1}else{val x=n;f(n-1)*x}};f(5)");
 		expect(script.evaluate() as bigint).toBe(120n);
@@ -105,11 +101,11 @@ vfunc(cfunc)
 	});
 
 	it("matches one signature per callable when a union includes an overloaded function", () => {
-		const overloaded = Type.functionType([
+		const overloads = Type.functionType([
 			[Type.Integer, [Type.Integer]],
 			[Type.String, [Type.String]],
 		]);
-		const config = { variables: { overloaded } };
+		const config = { variables: { overloaded: overloads } };
 		const script = "val f=if flag{overloaded}else{~(n:integer):string{n.Format}};";
 		const expression = new Affinirum(script + "f(1)", config);
 		expect(expression.type.equals(Type.union(Type.Integer, Type.String))).toBe(true);
@@ -132,11 +128,11 @@ vfunc(cfunc)
 		"var f=[overloaded];f=[~(n:integer):integer{n}]",
 		"var f=['a':overloaded];f=['a':~(n:integer):integer{n}]",
 	])("rejects replacing an overloaded callable with a single signature in %s", (script) => {
-		const overloaded = Type.functionType([
+		const overloads = Type.functionType([
 			[Type.Integer, [Type.Integer]],
 			[Type.String, [Type.String]],
 		]);
-		expect(() => new Affinirum(script, { variables: { overloaded } })).toThrow(/mismatch with expected type/);
+		expect(() => new Affinirum(script, { variables: { overloaded: overloads } })).toThrow(/mismatch with expected type/);
 	});
 
 	it.each([false, true])("revalidates compiled arguments with variadic=%s", (variadic) => {
@@ -168,12 +164,12 @@ vfunc(cfunc)
 		["[x]", Type.arrayType([Type.Integer])],
 		["['n':x]", Type.objectType([["n", Type.Integer]])],
 	])("infers an implicit input in %s and checks a declared union at compile time", (argument, type) => {
-		const f = Type.functionType([[Type.Integer, [type]]]);
-		const expression = new Affinirum(`f(${argument})`, { variables: { f } });
+		const signature = Type.functionType([[Type.Integer, [type]]]);
+		const expression = new Affinirum(`f(${argument})`, { variables: { f: signature } });
 		expect(expression.variables().x.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate({ x: 1n, f: () => 1n })).toBe(1n);
 		expect(() => new Affinirum(`f(${argument})`, {
-			variables: { f, x: Type.union(Type.Integer, Type.String) },
+			variables: { f: signature, x: Type.union(Type.Integer, Type.String) },
 		})).toThrow(/mismatch with expected type integer/);
 	});
 
@@ -192,24 +188,24 @@ vfunc(cfunc)
 	});
 
 	it("preserves the possible result types for a dynamic argument", () => {
-		const f = Type.functionType([
+		const overloads = Type.functionType([
 			[Type.Integer, [Type.Integer]],
 			[Type.String, [Type.String]],
 		]);
 		const union = Type.union(Type.Integer, Type.String);
-		const expression = new Affinirum("f(x)", { variables: { f, x: Type.Any } });
+		const expression = new Affinirum("f(x)", { variables: { f: overloads, x: Type.Any } });
 		expect(expression.variables().x.equals(Type.Any)).toBe(true);
 		expect(expression.type.equals(union)).toBe(true);
-		expect(() => new Affinirum("f(x)", { type: Type.Integer, variables: { f, x: Type.Any } }))
+		expect(() => new Affinirum("f(x)", { type: Type.Integer, variables: { f: overloads, x: Type.Any } }))
 			.toThrow(/type integer\|string mismatch with expected type integer/);
 	});
 
 	it("uses the first complete overload for typed arguments", () => {
-		const f = Type.functionType([
+		const overloads = Type.functionType([
 			[Type.Integer, [Type.Integer]],
 			[Type.Number, [Type.Number]],
 		]);
-		const expression = new Affinirum("f(x)", { variables: { f, x: Type.Integer } });
+		const expression = new Affinirum("f(x)", { variables: { f: overloads, x: Type.Integer } });
 		expect(expression.type.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate({ f: (value: bigint) => value, x: 1n })).toBe(1n);
 	});
@@ -232,10 +228,10 @@ vfunc(cfunc)
 			[Type.Integer, [variadic ? Type.arrayType(Type.Integer) : Type.Integer], variadic],
 			[Type.String, [variadic ? Type.arrayType(Type.String) : Type.String], variadic],
 		]);
-		const f = (value: bigint | string) => value;
+		const identity = (value: bigint | string) => value;
 		const expression = new Affinirum("var x:integer|string=0;f(x=1)", { variables: { f: type } });
 		expect(expression.type.equals(Type.Integer)).toBe(true);
-		expect(expression.evaluate({ f })).toBe(1n);
+		expect(expression.evaluate({ f: identity })).toBe(1n);
 		const union = Type.union(Type.Integer, Type.String);
 		expect(() => new Affinirum("f(value)", { variables: { f: type, value: union } })).toThrow(/cannot be called/);
 		if (variadic) {

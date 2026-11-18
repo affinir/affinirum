@@ -4,20 +4,40 @@ import type { Variable } from "./Variable.js";
 
 export class CallFrame {
 
+	protected readonly _stop?: { deadline?: Date };
 	protected readonly _superframe?: CallFrame;
 	protected readonly _values: Map<Variable, Value>;
 	protected readonly _types: WeakMap<object, Type[]>;
 
 	constructor(
-		superframe?: CallFrame,
+		superframe?: CallFrame | Date,
 		variables: Iterable<Variable> = [],
 	) {
-		this._superframe = superframe;
+		if (superframe instanceof CallFrame) {
+			this._superframe = superframe;
+			this._stop = superframe._stop;
+		}
+		else if (superframe instanceof Date) {
+			this._stop = { deadline: superframe };
+		}
 		this._values = new Map();
 		for (const variable of variables) {
 			this._values.set(variable, undefined);
 		}
-		this._types = superframe?._types ?? new WeakMap();
+		this._types = this._superframe?._types ?? new WeakMap();
+	}
+
+	timer(): void {
+		const deadline = this._stop?.deadline;
+		if (deadline && new Date() > deadline) {
+			throw new Error("execution timeout");
+		}
+	}
+
+	clearTimer(): void {
+		if (this._stop) {
+			this._stop.deadline = undefined;
+		}
 	}
 
 	subframe(variables: Iterable<Variable>): CallFrame {
@@ -34,7 +54,7 @@ export class CallFrame {
 		if (this._values.has(variable)) {
 			return this.add(variable, value);
 		}
-		if (this._superframe) {
+		if (this._superframe instanceof CallFrame) {
 			return this._superframe.set(variable, value);
 		}
 		throw new Error("variable is not declared in call frame");
@@ -44,7 +64,7 @@ export class CallFrame {
 		if (this._values.has(variable)) {
 			return this._values.get(variable);
 		}
-		if (this._superframe) {
+		if (this._superframe instanceof CallFrame) {
 			return this._superframe.get(variable);
 		}
 		throw new Error("variable is not declared in call frame");

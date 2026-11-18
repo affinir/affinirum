@@ -36,8 +36,8 @@ export class LexicalScope {
 		this._variables.set(name, variable);
 	}
 
-	subscope(variables?: Map<string, LocalVariable>, type?: Type, functionBoundary = false): LexicalScope {
-		return new LexicalScope(this, variables, type, functionBoundary);
+	subscope(variables?: Map<string, LocalVariable>, type?: Type, boundary = false): LexicalScope {
+		return new LexicalScope(this, variables, type, boundary);
 	}
 
 	variables(): IterableIterator<LocalVariable> {

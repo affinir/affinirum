@@ -53,15 +53,15 @@ describe("Variadic function argument test", () => {
 		})).toBe(2);
 	});
 	it.each(["var items:[...string]=['two'];f(items[0]::string)", "f(g('two'))"])("uses a variadic overload after compiling the argument in %s", (script) => {
-		const f = Type.functionType([
+		const variadicOverloads = Type.functionType([
 			[Type.Integer, [Type.Integer]],
 			[Type.String, [Type.arrayType(Type.String)], true],
 		]);
-		const g = Type.functionType([
+		const fixedOverloads = Type.functionType([
 			[Type.Integer, [Type.Integer]],
 			[Type.String, [Type.String]],
 		]);
-		const expression = new Affinirum(script, { variables: { f, g } });
+		const expression = new Affinirum(script, { variables: { f: variadicOverloads, g: fixedOverloads } });
 		expect(expression.type.equals(Type.String)).toBe(true);
 		expect(expression.evaluate({
 			f: (...values: string[]) => values.join(" "),
@@ -69,12 +69,12 @@ describe("Variadic function argument test", () => {
 		})).toBe("two");
 	});
 	it("uses a variadic overload when compiled arguments match no complete fixed signature", () => {
-		const f = Type.functionType([
+		const overloads = Type.functionType([
 			[Type.Integer, [Type.Integer, Type.String]],
 			[Type.Integer, [Type.String, Type.Integer]],
 			[Type.Integer, [Type.arrayType(Type.Integer)], true],
 		]);
-		const expression = new Affinirum("var items:[...integer]=[1,2];f(items[0]::integer,items[1]::integer)", { variables: { f } });
+		const expression = new Affinirum("var items:[...integer]=[1,2];f(items[0]::integer,items[1]::integer)", { variables: { f: overloads } });
 		expect(expression.evaluate({ f: (...values: bigint[]) => values.reduce((sum, value) => sum + value, 0n) })).toBe(3n);
 	});
 	it("collects zero or more arguments of the declared element type", () => {
@@ -92,11 +92,11 @@ describe("Variadic function argument test", () => {
 			Type.arrayType(Type.Integer),
 			Type.arrayType(Type.String),
 		);
-		const f = Type.functionType([[Type.Integer, [tail], true]]);
-		expect(() => new Affinirum("f(1,2)", { variables: { f } })).not.toThrow();
-		expect(() => new Affinirum("f(1,'two')", { variables: { f } })).toThrow(/cannot be called with 2 argument/);
+		const signature = Type.functionType([[Type.Integer, [tail], true]]);
+		expect(() => new Affinirum("f(1,2)", { variables: { f: signature } })).not.toThrow();
+		expect(() => new Affinirum("f(1,'two')", { variables: { f: signature } })).toThrow(/cannot be called with 2 argument/);
 		const item = Type.union(Type.Integer, Type.String);
-		expect(() => new Affinirum("f(x,y)", { variables: { f, x: item, y: item } }))
+		expect(() => new Affinirum("f(x,y)", { variables: { f: signature, x: item, y: item } }))
 			.toThrow(/cannot be called with 2 argument/);
 	});
 	it("uses a matching variadic overload when fixed overloads are incompatible", () => {

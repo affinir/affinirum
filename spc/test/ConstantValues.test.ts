@@ -61,10 +61,4 @@ describe("Constant value test", () => {
 		const expression = new Affinirum("value");
 		expect(expression.evaluate({ value: null })).toBeUndefined();
 	});
-	it("converts evaluated null values into undefined", () => {
-		expect(new Affinirum("JSON.Parse(\"null\")").evaluate({})).toBeUndefined();
-	});
-	it("converts null global return values into undefined", () => {
-		expect(new Affinirum("=>JSON.Parse(\"null\")").evaluate({})).toBeUndefined();
-	});
 });

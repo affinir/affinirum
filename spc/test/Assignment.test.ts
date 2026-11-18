@@ -130,6 +130,17 @@ describe("Assignment test", () => {
 			.toThrow(/variable x of type integer requires initial value/);
 	});
 
+	it.each([
+		"if false then val x:integer=1; x",
+		"while false do var x:integer=1; x",
+		"1 ?: (var x:integer=1); x",
+		"val items:array?=null; items?[(var x:integer=1)]; x",
+		"val text:string?=null; text?.Char((var x:integer=1)); x",
+		"['entry':val x=1]",
+	])("rejects a declaration in an expression in %s", (script) => {
+		expect(() => new Affinirum(script)).toThrow(/unexpected variable declaration/);
+	});
+
 	it("rejects assignment of an incompatible type to a typed variable", () => {
 		expect(() => new Affinirum("var x:integer=0;x='text'"))
 			.toThrow(/type integer mismatch with expected type string/);

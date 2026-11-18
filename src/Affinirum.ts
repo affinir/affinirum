@@ -34,6 +34,7 @@ export class Affinirum {
 	static readonly keywords = [...keywords, ...constants.map((c) => c[0])];
 	protected readonly _script: string;
 	protected readonly _strict: boolean;
+	protected readonly _timeout: number;
 	protected readonly _scope: LexicalScope;
 	protected readonly _root: Node;
 	protected readonly _type = new TypeParser();
@@ -47,18 +48,20 @@ export class Affinirum {
 	/**
 		Creates compiled expression. Any parsed identifier not recognized as a constant or a function will be compiled as a variable.
 		@param script Math expression to compile.
-		@param config Optional expected type, strict mode, variable types, constant values and functions to add for the compilation.
+		@param config Optional expected type, strict mode, default timeout in milliseconds, variable types, constant values and functions to add for the compilation.
 			If expected type is provided then expression return type is matched against it.
 			If strict mode is set then undeclared variables will not be allowed in expression.
 	*/
 	constructor(script: string, config?: {
 		type?: Type,
 		strict?: boolean,
+		timeout?: number,
 		variables?: Record<string, Type>,
 	}) {
 		this._script = script;
 		this._scope = new LexicalScope(undefined, undefined, config?.type);
 		this._strict = config?.strict ?? false;
+		this._timeout = !config?.timeout || config.timeout < 0 ? 0 : config.timeout;
 		if (config?.variables) {
 			for (const [vname, vtype] of Object.entries(config.variables)) {
 				this._vartypes.set(vname, vtype);
@@ -108,17 +111,23 @@ export class Affinirum {
 	/**
 		Evaluates the compiled expression using the provided input values.
 		@param values Values for the expression's input variables. Omitted when there are no input variables.
+		@param timeout Optional timeout in milliseconds.
 		@returns The evaluated result.
 		@throws If an input value is missing or evaluation fails.
 	*/
-	evaluate(values?: Record<string, Value>): Value {
-		const frame = new CallFrame(undefined, this._scope.variables());
+	evaluate(values?: Record<string, Value>, timeout?: number): Value {
+		const timer = timeout && timeout >= 0
+			? timeout
+			: this._timeout;
+		const stop = timer ? new Date(new Date().getTime() + timer) : undefined;
+		const frame = new CallFrame(stop, this._scope.variables());
 		try {
+			const composites = new WeakMap<object, Value>();
 			for (const [name, variable] of this._variables) {
 				if (!values || !Object.hasOwn(values, name)) {
 					this._varspans.get(name)?.throwError(`undefined variable ${name}:\n`);
 				}
-				const value = normalize(values?.[name] ?? undefined);
+				const value = normalize(values?.[name] ?? undefined, composites);
 				if (!variable.type.acceptsValue(value)) {
 					this._varspans.get(name)?.throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
 				}
@@ -136,6 +145,9 @@ export class Affinirum {
 				}
 			}
 			throw e;
+		}
+		finally {
+			frame.clearTimer();
 		}
 	}
 
@@ -161,7 +173,7 @@ export class Affinirum {
 		const span = state.start();
 		const subnodes: Node[] = [];
 		while (!state.isEnded) {
-			subnodes.push(this._unit(state, scope));
+			subnodes.push(this._declaration(state, scope));
 			if (!state.equals(";")) {
 				break;
 			}
@@ -170,6 +182,42 @@ export class Affinirum {
 			}
 		}
 		return new BlockNode(span.end(state), subnodes);
+	}
+
+	protected _declaration(state: ParserState, scope: LexicalScope): Node {
+		if (!state.equals("var", "val")) {
+			return this._unit(state, scope);
+		}
+		const assignable = state.equals("var");
+		if (!state.next().isIdentifier) {
+			state.throwError("missing variable name");
+		}
+		const identifier = state.identifier;
+		if (scope.has(identifier)) {
+			state.throwError(`illegal redefinition of variable ${identifier}`);
+		}
+		const span = state.start();
+		let type: Type | undefined;
+		if (state.next().equals(":")) {
+			type = this._type.parse(state.next(), scope);
+		}
+		const variable = new LocalVariable(type, assignable);
+		scope.set(identifier, variable);
+		if (state.isAssignment) {
+			if (state.isConstant) {
+				state.throwError(`illegal assignment operator with variable ${identifier}`);
+			}
+			const subnode = this._unit(state.next(), scope);
+			if (subnode instanceof FunctionNode) {
+				variable.declare(subnode.type);
+			}
+			const node = new VariableNode(span, variable, true);
+			return new AssignmentNode(span, node, subnode);
+		}
+		else if (type && !type.isOptional) {
+			state.throwError(`variable ${identifier} of type ${type} requires initial value`);
+		}
+		return new VariableNode(span, variable);
 	}
 
 	protected _unit(state: ParserState, scope: LexicalScope): Node {
@@ -387,8 +435,8 @@ export class Affinirum {
 		else if (state.equals("]")) {
 			state.throwError("unexpected closing brackets");
 		}
-		else if (state.equals("var", "val")) { // variable declaration
-			return this._declaration(state, scope);
+		else if (state.equals("var", "val")) {
+			state.throwError("unexpected variable declaration");
 		}
 		else if (state.equals("~")) {
 			return this._function(state, scope);
@@ -401,7 +449,7 @@ export class Affinirum {
 		}
 		else if (state.equals("~>")) {
 			if (!scope.inFunction) {
-				state.throwError("~> requires an enclosing function");
+				state.throwError("unexpected ~> outside of a function");
 			}
 			return new FinalNode(state, "return", this._unit(state.next(), scope), scope.type);
 		}
@@ -413,7 +461,7 @@ export class Affinirum {
 		else if (state.equals("exit", "next")) {
 			const action = state.equals("exit") ? "exit" : "next";
 			if (!scope.inLoop) {
-				state.throwError(`unexpected ${action} jump`);
+				state.throwError(`unexpected ${action} outside of a loop`);
 			}
 			const node = new JumpNode(state, action);
 			state.next();
@@ -459,44 +507,12 @@ export class Affinirum {
 		return new VariableNode(span, variable);
 	}
 
-	protected _declaration(state: ParserState, scope: LexicalScope): Node {
-		const assignable = state.equals("var");
-		if (!state.next().isIdentifier) {
-			state.throwError("missing variable name");
-		}
-		const identifier = state.identifier;
-		if (scope.has(identifier)) {
-			state.throwError(`illegal redefinition of variable ${identifier}`);
-		}
-		const span = state.start();
-		let type: Type | undefined;
-		if (state.next().equals(":")) {
-			type = this._type.parse(state.next(), scope);
-		}
-		const variable = new LocalVariable(type, assignable);
-		scope.set(identifier, variable);
-		if (state.isAssignment) {
-			if (state.isConstant) {
-				state.throwError(`illegal assignment operator with variable ${identifier}`);
-			}
-			const subnode = this._unit(state.next(), scope);
-			if (subnode instanceof FunctionNode) {
-				variable.declare(subnode.type);
-			}
-			return new AssignmentNode(span, new VariableNode(span, variable, true), subnode);
-		}
-		else if (type && !type.isOptional) {
-			state.throwError(`variable ${identifier} of type ${type} requires initial value`);
-		}
-		return new VariableNode(span, variable);
-	}
-
 	protected _block(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
 		const subscope = scope.subscope();
 		const subnodes: Node[] = [];
 		while (!state.next().equals("}")) {
-			subnodes.push(this._unit(state, subscope));
+			subnodes.push(this._declaration(state, subscope));
 			if (!state.equals(";")) {
 				break;
 			}
@@ -598,6 +614,12 @@ export class Affinirum {
 		const span = state.start();
 		const cnode = this._unit(state.next(), scope);
 		span.end(state);
+		if (state.equals("then")) {
+			state.next();
+		}
+		else if (!state.equals("{")) {
+			state.throwError("missing 'then' or '{' after the if condition");
+		}
 		const tnode = this._unit(state, scope);
 		const enode = state.equals("else")
 			? this._unit(state.next(), scope)
@@ -609,14 +631,17 @@ export class Affinirum {
 		const span = state.start();
 		const cnode = this._unit(state.next(), scope);
 		span.end(state);
+		if (state.equals("do")) {
+			state.next();
+		}
+		else if (!state.equals("{")) {
+			state.throwError("missing 'do' or '{' after the while condition")
+		}
 		const inLoop = scope.inLoop;
 		scope.inLoop = true;
-		try {
-			return new LoopNode(span, cnode, this._unit(state, scope));
-		}
-		finally {
-			scope.inLoop = inLoop;
-		}
+		const node = new LoopNode(span, cnode, this._unit(state, scope));
+		scope.inLoop = inLoop;
+		return node;
 	}
 
 }

@@ -40,6 +40,7 @@ export class FunctionNode extends Node {
 	override evaluate(frame: CallFrame): Value {
 		const index = this._type.isVariadicFunction ? this._arguments.length - 1 : -1;
 		return (...values: Value[]): Value => {
+			frame.timer();
 			const subframe = frame.subframe(this._variables);
 			try {
 				this._arguments.forEach((arg, ix) => {

@@ -32,10 +32,10 @@ describe("Object type inference test", () => {
 		expect(expression.evaluate({ x: 1n, y: "text" })).toEqual({ a: 1n, b: "text" });
 	});
 
-	it("checks later object keys using types established by earlier initializers", () => {
-		expect(() => new Affinirum("['init':val f=~():integer{1},f():0]"))
+	it("checks computed object keys using earlier declarations", () => {
+		expect(() => new Affinirum("val f=~():integer{1}; ['init':f,f():0]"))
 			.toThrow(/type integer mismatch with expected type string/);
-		const expression = new Affinirum("['init':val f=~():string{'a'},f():0]");
+		const expression = new Affinirum("val f=~():string{'a'}; ['init':f,f():0]");
 		expect(expression.evaluate()).toHaveProperty("a", 0n);
 	});
 
@@ -89,9 +89,9 @@ describe("Object type inference test", () => {
 
 	it("checks named properties in an overloaded call", () => {
 		const type = Type.objectType([["a", Type.Integer]]);
-		const f = Type.functionType([[Type.Integer, [type]], [Type.String, [Type.Integer]]]);
-		expect(() => new Affinirum("f([(key):1])", { variables: { f } })).toThrow(/mismatch with expected type/);
-		const expression = new Affinirum("f(['a':1,(key):'text'])", { variables: { f } });
+		const overloads = Type.functionType([[Type.Integer, [type]], [Type.String, [Type.Integer]]]);
+		expect(() => new Affinirum("f([(key):1])", { variables: { f: overloads } })).toThrow(/mismatch with expected type/);
+		const expression = new Affinirum("f(['a':1,(key):'text'])", { variables: { f: overloads } });
 		expect(expression.evaluate({ key: "b", f: () => 1n })).toBe(1n);
 	});
 

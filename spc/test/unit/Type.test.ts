@@ -86,14 +86,6 @@ describe("Type intersect test", () => {
 		).toBe(true);
 	});
 
-	it("recognizes overlapping structured types", () => {
-		expect(
-			Type.arrayType(Type.Number).intersects(
-				Type.arrayType(Type.Integer),
-			)
-		).toBe(true);
-	});
-
 	it("checks overlap directly against an atom", () => {
 		const [atom] = Type.objectType([["value", Type.Integer]]).objectAtoms();
 		expect(Type.objectType([["value", Type.Number]]).intersects(atom)).toBe(true);

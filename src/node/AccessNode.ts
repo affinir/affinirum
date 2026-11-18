@@ -82,10 +82,7 @@ export class AccessNode extends AssignableNode {
 		const resolver = this._subnode instanceof AccessNode ? this._subnode.resolver(frame) : undefined;
 		const composite = resolver ? resolver.get() : this._subnode.evaluate(frame);
 		if (composite == null) {
-			return {
-				get: () => undefined,
-				set: () => this.throwError("indexed value must be an array or object"),
-			};
+			this.throwError("cannot assign through null");
 		}
 		const compositeType = resolver?.type ?? this._subnode.type;
 		const key = this._inode.evaluate(frame);
@@ -111,10 +108,10 @@ export class AccessNode extends AssignableNode {
 						if (constraint.isAny || constraint.equals(Type.Array)) {
 							continue;
 						}
-						arr ??= Object.defineProperties([], {
-							...Object.getOwnPropertyDescriptors<object>(composite),
-							[index]: { value },
-						});
+						if (!arr) {
+							arr = composite.slice();
+							arr[index] = value;
+						}
 						if (!constraint.acceptsValue(arr)) {
 							this.throwError(`indexed value mismatch with expected type ${constraint}`);
 						}
@@ -139,24 +136,20 @@ export class AccessNode extends AssignableNode {
 				if (!type.acceptsValue(value)) {
 					this.throwError(`indexed value mismatch with expected type ${type}`);
 				}
-				const current = Object.getOwnPropertyDescriptor(object, key);
-				const descriptor = current && "value" in current
-					? { ...current, value }
-					: { value, writable: true, enumerable: true, configurable: true };
 				let obj: Record<string, Value> | undefined;
 				for (const constraint of new Set([compositeType, ...frame.definitions(object)])) {
 					if (constraint.isAny || constraint.equals(Type.Object)) {
 						continue;
 					}
-					obj ??= Object.create(Object.getPrototypeOf(object), {
-						...Object.getOwnPropertyDescriptors(object),
-						[key]: descriptor,
-					}) as Record<string, Value>;
+					if (!obj) {
+						obj = Object.assign(Object.create(null) as Record<string, Value>, object);
+						obj[key] = value;
+					}
 					if (!constraint.acceptsValue(obj)) {
 						this.throwError(`indexed value mismatch with expected type ${constraint}`);
 					}
 				}
-				Object.defineProperty(object, key, descriptor);
+				object[key] = value;
 				return value;
 			},
 		};

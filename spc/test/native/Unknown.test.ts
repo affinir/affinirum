@@ -286,10 +286,10 @@ describe("Cyclic structural equality", () => {
 		const a = create(1n);
 		const b = create(1n);
 		const c = create(2n);
-		const expression = new Affinirum("Array.Unique(values)");
-		const result = expression.evaluate({ values: [a, b, c] }) as Value[];
+		const expression = new Affinirum("[values,Array.Unique(values)]");
+		const [copies, result] = expression.evaluate({ values: [a, b, c] }) as Value[][];
 		expect(result).toHaveLength(2);
-		expect(result[0]).toBe(a);
-		expect(result[1]).toBe(c);
+		expect(result[0]).toBe(copies[0]);
+		expect(result[1]).toBe(copies[2]);
 	});
 });

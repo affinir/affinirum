@@ -11,9 +11,8 @@ const span = new ParserState("value").next().start();
 const constant = (value: Value, type?: Type) => new ConstantNode(span, new Constant(value, type));
 
 describe("Access node test", () => {
-	it.each(["inherited", "__proto__"])("reads and writes only the own object property %s", (key) => {
-		const prototype = { inherited: 1n };
-		const value = Object.create(prototype) as Record<string, Value>;
+	it.each(["constructor", "__proto__"])("reads and writes the record field %s", (key) => {
+		const value = Object.create(null) as Record<string, Value>;
 		const node = new AccessNode(span, constant(value), constant(key), funcAt);
 		node.compileAssignment(Type.Integer);
 		const resolver = node.resolver(new CallFrame());
@@ -21,7 +20,7 @@ describe("Access node test", () => {
 		expect(resolver.set(2n)).toBe(2n);
 		expect(resolver.get()).toBe(2n);
 		expect(Object.hasOwn(value, key)).toBe(true);
-		expect(Object.getPrototypeOf(value)).toBe(prototype);
+		expect(Object.getPrototypeOf(value)).toBeNull();
 	});
 
 	it.each([2n, -3n])("rejects writing outside the array at index %s", (index) => {
