@@ -71,7 +71,7 @@ describe("Ternary node test", () => {
 	});
 
 	it("preserves declared parameter types across branch assignments", () => {
-		const expression = new Affinirum("~(x:integer|string,condition:boolean):(integer|string){x=2;if condition{x='two'}else{x=(x::integer)-1};x}");
+		const expression = new Affinirum("{=(x:integer|string,condition:boolean):(integer|string) -> x=2;if condition{x='two'}else{x=(x::integer)-1};x}");
 		const type = Type.union(Type.Integer, Type.String);
 		expect(expression.type.equals(Type.functionType([[type, [type, Type.Boolean]]]))).toBe(true);
 		const func = expression.evaluate() as (value: bigint | string, condition: boolean) => bigint | string;

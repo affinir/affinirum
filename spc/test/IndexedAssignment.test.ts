@@ -1,6 +1,14 @@
 import { Affinirum, Type, Value } from "../../src/index.js";
 
 describe("Indexed assignment test", () => {
+	it.each([
+		"var value:object=[:never];value.key=1",
+		"val make={=():object -> [:never]};var value=make();value.key=1",
+	])("preserves an exact-empty object literal through a broader alias in %s", (source) => {
+		const expression = new Affinirum(source);
+		expect(() => expression.evaluate()).toThrow(/indexed value mismatch with expected type/);
+	});
+
 	it.each<[string, Value]>([
 		["var items=[1,2];items.1=7;items", [1n, 7n]],
 		["var items=[1,2];items[-1]+=3;items", [1n, 5n]],
@@ -8,7 +16,7 @@ describe("Indexed assignment test", () => {
 		["var entry=['a':1];entry.\"a\"+=2;entry", { a: 3n }],
 		["var value=['items':[['count':1]]];((value.items::array)[0]::['count':integer]).count+=2;value", { items: [{ count: 3n }] }],
 		["var items=[1,2];items[0]=items[1]=7;items", [7n, 7n]],
-		["var items=[[1],[2]];items[0]+=[3];items", [[1n, 3n], [2n]]],
+		["var items:[...[...integer]]=[[1],[2]];items[0]+=[3];items", [[1n, 3n], [2n]]],
 		["var items=[1,2];val original=items;items[0]=7;original", [7n, 2n]],
 	])("evaluates %s", (script, expected) => {
 		const expression = new Affinirum(script);

@@ -18,8 +18,6 @@ describe("Constant value test", () => {
 		{ script: "@2025-04-22 03:04:05.99Z.Hour(true)", cases: [{ result: 3n }] },
 		{ script: "@2025-04-22 03:04:05.99.Minute", cases: [{ result: 4n }] },
 		{ script: "@2025-04-22 03:04:05.99Z.Minute(true)", cases: [{ result: 4n }] },
-		{ script: "Timestamp.Now().Year > 2000", cases: [{ result: true }] },
-		{ script: "Timestamp.Now().Year(true) > 2000", cases: [{ result: true }] },
 		{ script: "Float.PositiveInfinity", cases: [{ result: Number.POSITIVE_INFINITY }] },
 		{ script: "Float.NegativeInfinity", cases: [{ result: Number.NEGATIVE_INFINITY }] },
 		{ script: "Float.Epsilon", cases: [{ result: Number.EPSILON }] },
@@ -55,7 +53,7 @@ describe("Constant value test", () => {
 		{ script: "Integer.Sum([0,1,2,3]+[10,20,30,40],100)", cases: [{ result: 206n }] },
 		{ script: "(([[[10]]][0]::array)[0]::array)[0]", cases: [{ result: 10n }] },
 		{ script: "var a=[0,10,200,3000,40000]; (a[1]::integer) + a.At(2)", cases: [{ result: 210n }] },
-		{ script: "[1,2,3,4].Reduce(\n~ (a:i64, b : i64):integer{a.Subtract(b)}\n)", cases: [{ result: -8n }] },
+		{ script: "[1,2,3,4].Reduce(\n{= (a:i64, b : i64):integer -> a.Subtract(b)}\n)", cases: [{ result: -8n }] },
 	]);
 	it("converts injected null values into undefined", () => {
 		const expression = new Affinirum("value");

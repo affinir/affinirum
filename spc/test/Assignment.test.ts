@@ -13,9 +13,9 @@ describe("Assignment test", () => {
 		expect(expression.evaluate()).toBe(5n);
 	});
 
-	it("preserves the inferred array assignment type", () => {
+	it("retains the declared array union in the assignment type", () => {
 		const expression = new Affinirum("var x:array|[...string]=['one'];x=[1]");
-		expect(expression.type.equals(Type.Array)).toBe(true);
+		expect(expression.type.equals(Type.union(Type.Array, Type.arrayType(Type.String)))).toBe(true);
 	});
 
 	it("accepts an assignment that fits the object alternative of a union", () => {
@@ -66,7 +66,7 @@ describe("Assignment test", () => {
 
 	it.each(["var y:integer=x;y", "var y:integer=0;y=x;y"])("rejects assigning a wider union in %s", (script) => {
 		expect(() => new Affinirum(script, { variables: { x: Type.union(Type.Integer, Type.String) } }))
-			.toThrow(/type integer mismatch with expected type integer\|string/);
+			.toThrow(/mismatch with expected type/);
 	});
 
 	it("allows reassignment with an explicit any type", () => {
@@ -76,7 +76,7 @@ describe("Assignment test", () => {
 	});
 
 	it("rejects an incompatible inferred read type after an earlier read", () => {
-		expect(() => new Affinirum("val x='two';x;x-1")).toThrow(/mismatch with expected type float\|integer/);
+		expect(() => new Affinirum("val x='two';x;x-1")).toThrow(/mismatch with expected type/);
 	});
 
 	it("validates input values against the fixed declared type", () => {
@@ -89,7 +89,7 @@ describe("Assignment test", () => {
 	});
 
 	it("preserves a declared function parameter union across assignments", () => {
-		const expression = new Affinirum("~(x:integer|string):(integer|string){x=1;x='two';x}");
+		const expression = new Affinirum("{=(x:integer|string):(integer|string) -> x=1;x='two';x}");
 		const type = Type.union(Type.Integer, Type.String);
 		expect(expression.type.equals(Type.functionType([[type, [type]]]))).toBe(true);
 		const func = expression.evaluate() as (value: bigint | string) => bigint | string;

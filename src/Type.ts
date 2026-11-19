@@ -136,7 +136,12 @@ export class Type {
 		}
 		const valueAtom = Type.of(value)._atoms?.[0];
 		return Boolean(valueAtom && this._atoms?.some((atom) => {
-			if (atom instanceof ObjectAtom ? !(valueAtom instanceof ObjectAtom) : !atom.accepts(valueAtom)) {
+			const matches = atom instanceof ArrayAtom
+				? valueAtom instanceof ArrayAtom
+				: atom instanceof ObjectAtom
+					? valueAtom instanceof ObjectAtom
+					: atom.accepts(valueAtom);
+			if (!matches) {
 				return false;
 			}
 			if ((atom instanceof ArrayAtom || atom instanceof ObjectAtom) && atom.valType(undefined)?.isAny) {
@@ -261,6 +266,10 @@ export class Type {
 		return this._atoms?.filter((a): a is FunctionAtom => a instanceof FunctionAtom) ?? [];
 	}
 
+	functionSignatures(): [retType: Type, argTypes: readonly Type[], variadic?: boolean][] {
+		return this.functionAtoms().flatMap((i) => i.signatures()).map((i) => [i.retType, i.argTypes, i.isVariadic]);
+	}
+
 	optionalFirstParameter(): Type {
 		return this.isNever
 			? this
@@ -357,7 +366,7 @@ export class Type {
 		return new Type([new ObjectAtom(types)]);
 	}
 
-	static functionType(signatures: [retType: Type, argTypes: Type[], variadic?: boolean][] = [[Type.Any, [], true]], volatile?: boolean) {
+	static functionType(signatures: [retType: Type, argTypes: readonly Type[], variadic?: boolean][] = [[Type.Any, [], true]], volatile?: boolean) {
 		return new Type([new FunctionAtom(signatures, volatile)]);
 	}
 
@@ -378,12 +387,8 @@ export class Type {
 	static readonly OptionalString = Type.union(Type.Null, Type.String);
 	static readonly Array = Type.arrayType();
 	static readonly OptionalArray = Type.union(Type.Null, Type.Array);
-	static readonly Tuple = Type.arrayType([]);
-	static readonly OptionalTuple = Type.union(Type.Null, Type.Tuple);
 	static readonly Object = Type.objectType();
 	static readonly OptionalObject = Type.union(Type.Null, Type.Object);
-	static readonly Record = Type.objectType([]);
-	static readonly OptionalRecord = Type.union(Type.Null, Type.Record);
 	static readonly Function = Type.functionType();
 	static readonly OptionalFunction = Type.union(Type.Null, Type.Function);
 	static readonly Reference = Type.union(Type.Array, Type.Object, Type.Function);

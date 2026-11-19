@@ -1,24 +1,24 @@
 import { Affinirum, Type } from "../../src/index.js";
 
 describe("Jump command test", () => {
-	it("rejects the removed block return operator", () => {
+	it("rejects a function return in a block outside a function", () => {
 		expect(() => new Affinirum("{->1;2}")).toThrow();
 	});
 	it("returns from each callback without terminating the array operation", () => {
-		const script = new Affinirum("[1,2,3].Derive(~(x:integer):integer{~>x*2})");
+		const script = new Affinirum("[1,2,3].Derive({=(x:integer):integer -> ->x*2})");
 		expect<unknown>(script.evaluate()).toEqual([2n, 4n, 6n]);
 	});
 	it("rejects a call argument that always returns from the enclosing function", () => {
-		expect(() => new Affinirum("val f=~():integer{Integer.Sum({~>7},1);9};f()"))
+		expect(() => new Affinirum("val f={=():integer -> Integer.Sum({->7},1);9};f()"))
 			.toThrow(/call argument must be a value/);
 	});
 	it("restores function arguments across recursive early returns", () => {
-		const script = new Affinirum("val f=~(n:integer):integer{if n<=1{~>1};val result=f(n-1);~>result*n};f(5)");
+		const script = new Affinirum("val f={=(n:integer):integer -> if n<=1{->1};val result=f(n-1);->result*n};f(5)");
 		expect(script.evaluate() as bigint).toBe(120n);
 	});
 	it("rejects loop jumps in a function with no loop of its own", () => {
 		for (const jump of ["exit", "next"]) {
-			expect(() => new Affinirum(`while true {val f=~():null{${jump}}; f(); exit}`))
+			expect(() => new Affinirum(`while true {val f={=():null -> ${jump}}; f(); exit}`))
 				.toThrow(`unexpected ${jump} outside of a loop`);
 		}
 	});
@@ -30,7 +30,7 @@ describe("Jump command test", () => {
 		for (const keyword of ["exit", "next"]) {
 			expect(Affinirum.keywords).toContain(keyword);
 			expect(() => new Affinirum(`var ${keyword}=0`)).toThrow(/missing variable name/);
-			expect(() => new Affinirum(`val f=~(${keyword}:integer):integer{1};f(0)`)).toThrow(/missing function argument name/);
+			expect(() => new Affinirum(`val f={=(${keyword}:integer):integer -> 1};f(0)`)).toThrow(/missing function argument name/);
 		}
 	});
 	it("allows identifiers that contain loop keywords", () => {
@@ -43,7 +43,7 @@ describe("Jump command test", () => {
 		}
 	});
 	it("rejects function returns outside a function", () => {
-		expect(() => new Affinirum("~>42")).toThrow("unexpected ~> outside of a function");
+		expect(() => new Affinirum("->42")).toThrow("unexpected -> outside of a function");
 	});
 	it("rejects the removed symbolic loop jumps", () => {
 		for (const operator of [">>", ">|"]) {
@@ -51,27 +51,27 @@ describe("Jump command test", () => {
 		}
 	});
 	it("propagates a global return from a callback to the script boundary", () => {
-		const script = new Affinirum("[1,2,3].Derive(~(x:integer):integer{=>x*2});99");
+		const script = new Affinirum("[1,2,3].Derive({=(x:integer):integer -> =>x*2});99");
 		expect(script.evaluate() as bigint).toBe(2n);
 	});
 	it.each([
 		"Integer.Sum({=>'done'},1)",
-		"val f=~(a:[integer]):integer{0};f([=>'done'])",
-		"val g=~(a:integer):string{'fallback'};val f=~(n:integer):integer{n};f(g({=>'done'}))",
+		"val f={=(a:[integer]):integer -> 0};f([=>'done'])",
+		"val g={=(a:integer):string -> 'fallback'};val f={=(n:integer):integer -> n};f(g({=>'done'}))",
 	])("rejects a call argument that always exits the script in %s", (source) => {
 		expect(() => new Affinirum(source, { type: Type.String })).toThrow(/call argument must be a value/);
 	});
 	it("checks return types through nested blocks and function boundaries", () => {
 		const invalidReturns: [string, RegExp][] = [
-			["val f=~():integer{{if true{while true{{~>'bad'}}}};1};f()", /type string mismatch with expected type integer/],
-			["val outer=~():integer{val inner=~():string{{~>1};'fallback'};1};outer()", /type integer mismatch with expected type string/],
+			["val f={=():integer -> {if true{while true{{->'bad'}}}};1};f()", /type string mismatch with expected type integer/],
+			["val outer={=():integer -> val inner={=():string -> {->1};'fallback'};1};outer()", /type integer mismatch with expected type string/],
 		];
 		for (const [script, error] of invalidReturns) {
 			expect(() => new Affinirum(script)).toThrow(error);
 		}
 		for (const script of [
-			"val outer=~():integer{val inner=~():string{{~>'inner'};'fallback'};inner();{{~>7}};0};outer()",
-			"val outer=~():integer{val inner=~(){{~>'inner'};0};inner();~>7};outer()",
+			"val outer={=():integer -> val inner={=():string -> {->'inner'};'fallback'};inner();{{->7}};0};outer()",
+			"val outer={=():integer -> val inner={=() -> {->'inner'};0};inner();->7};outer()",
 		]) {
 			expect(new Affinirum(script).evaluate()).toBe(7n);
 		}
@@ -79,14 +79,14 @@ describe("Jump command test", () => {
 	it("checks global returns against the script type through nested blocks and callbacks", () => {
 		for (const script of [
 			"{{if true{while true{{=>'bad'}}}}};1",
-			"[1,2,3].Derive(~(x:integer):string{{{=>'bad'}}});99",
+			"[1,2,3].Derive({=(x:integer):string -> {{=>'bad'}}});99",
 		]) {
 			expect(() => new Affinirum(script, { type: Type.Integer }))
 				.toThrow(/type string mismatch with expected type integer/);
 		}
-		expect(new Affinirum("[1,2,3].Derive(~(x:integer):string{{{=>x*2}}});99", { type: Type.Integer }).evaluate())
+		expect(new Affinirum("[1,2,3].Derive({=(x:integer):string -> {{=>x*2}}});99", { type: Type.Integer }).evaluate())
 			.toBe(2n);
-		expect(new Affinirum("val f=~():integer{{{=>'done'}}};f();'fallback'", { type: Type.String }).evaluate())
+		expect(new Affinirum("val f={=():integer -> {{=>'done'}}};f();'fallback'", { type: Type.String }).evaluate())
 			.toBe("done");
 	});
 	it("parses and evaluates a global return inside a loop", () => {
@@ -110,16 +110,16 @@ r;
 	it("parses and evaluates a function return inside a loop", () => {
 		const script = new Affinirum(`
 var i = a::integer;
-val f = ~():integer? while i<100 {
+val f = {=():integer? -> while i<100 {
   if i>50 {
 		800;
-		~>i*1000;
+		->i*1000;
 	}
 	else {
 		i+=1
 	};
 	i*100;
-};
+}};
 f();
 		`);
 		expect(script.evaluate({ a: 1n }) as bigint).toBe(51000n);

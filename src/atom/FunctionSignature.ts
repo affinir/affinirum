@@ -137,15 +137,13 @@ export class FunctionSignature {
 
 	toString(): string {
 		if (this.isGeneric) {
-			return "~(...)";
+			return "{=}";
 		}
 		const argTypes = this._argTypes.map((type, ix) =>
 			this._isVariadic && ix === this.arity - 1 ? `...${type.arrayAtomValType()}` : type.toString()
 		).join(",");
-		const retType = this._retType.isAtom || this._retType.isAny || this._retType.isNever
-			? this._retType.toString()
-			: `(${this._retType.toString()})`;
-		return `~(${argTypes}):${retType}`;
+		const retType = this._retType.toString();
+		return `{=(${argTypes}):${retType}}`;
 	}
 
 }

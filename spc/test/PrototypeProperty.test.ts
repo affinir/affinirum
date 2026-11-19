@@ -24,7 +24,11 @@ describe("Prototype property test", () => {
 		expect(result.polluted).toBeUndefined();
 		expect(result["constructor"] as bigint).toBe(2n);
 		expect(result["prototype"] as bigint).toBe(3n);
-		expect(expression.type.toString()).toBe("[\"__proto__\":[\"polluted\":boolean],\"constructor\":integer,\"prototype\":integer]");
+		expect(expression.type.equals(Type.objectType([
+			["__proto__", Type.objectType([["polluted", Type.Boolean]])],
+			["constructor", Type.Integer],
+			["prototype", Type.Integer],
+		]))).toBe(true);
 	});
 
 	it("safely creates a dynamically named prototype property", () => {
@@ -48,7 +52,7 @@ describe("Prototype property test", () => {
 	});
 
 	it("safely composes objects containing prototype property names", () => {
-		const expression = new Affinirum("keys.Compose(~(acc:object, key:string):string{key})");
+		const expression = new Affinirum("keys.Compose({=(acc:object, key:string):string -> key})");
 		const result = expression.evaluate({ keys: ["__proto__", "constructor", "prototype"] }) as ObjectValue;
 		expect(Object.getPrototypeOf(result)).toBeNull();
 		expect(result["__proto__"] as string).toBe("__proto__");

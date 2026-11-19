@@ -8,7 +8,26 @@ export class ObjectAtom implements IAtom {
 	constructor(
 		valTypes: Type | readonly (readonly [key: string, valType: Type])[] = [],
 	) {
-		this._valTypes = Array.isArray(valTypes) ? [...new Map<string, Type>(valTypes)] : valTypes;
+		if (Array.isArray(valTypes)) {
+			if (valTypes.length === 0) {
+				this._valTypes = Type.Any;
+			}
+			else {
+				const keys: string[] = [];
+				const types: [key: string, valType: Type][] = [];
+				for (const [key, type] of valTypes) {
+					if (keys.includes(key)) {
+						throw Error(`duplicate object key ${key}`);
+					}
+					keys.push(key);
+					types.push([key, type]);
+				}
+				this._valTypes = types;
+			}
+		}
+		else {
+			this._valTypes = valTypes;
+		}
 	}
 
 	get isUniform(): boolean {
@@ -88,9 +107,12 @@ export class ObjectAtom implements IAtom {
 	toString(): string {
 		const types = this._valTypes;
 		if (types instanceof Type) {
-			return `[...:${types.isAny ? "" : types}]`;
+			return types.isAny ? "[:]" : `[:${types}]`;
 		}
-		return types.length ? `[${types.map(([key, type]) => `"${key}":${type}`).join(",")}]` : "[:]";
+		return `[${types.map(([key, type]) => {
+			const normalized = key.replace(/[\\"]/g, "\\$&");
+			return `"${normalized}":${type}`;
+		}).join(",")}]`;
 	}
 
 }

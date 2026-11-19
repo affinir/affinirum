@@ -131,6 +131,10 @@ describe("Number function test", () => {
 				{ values: { a: -1n, b: 2n }, result: undefined },
 				{ values: { a: -9223372036854775808n, b: 3n }, result: -2097152n },
 				{ values: { a: -9223372036854775808n, b: 1n }, result: -9223372036854775808n },
+				{ values: { a: -8, b: 3n }, result: -2 },
+				{ values: { a: -32, b: 5n }, result: -2 },
+				{ values: { a: -8n, b: 3 }, result: -2 },
+				{ values: { a: Number.NEGATIVE_INFINITY, b: 3n }, result: Number.NEGATIVE_INFINITY },
 			],
 		},
 		{
@@ -304,7 +308,7 @@ describe("Number function test", () => {
 		});
 
 		it("accepts Root in a function with an optional return type", () => {
-			const expression = new Affinirum("val f=~(a:integer,b:integer):integer?{a.Root(b)};f(a,b)", {
+			const expression = new Affinirum("val f={=(a:integer,b:integer):integer? -> a.Root(b)};f(a,b)", {
 				strict: true,
 				variables: { a: Type.Integer, b: Type.Integer },
 			});
@@ -329,15 +333,6 @@ describe("Number function test", () => {
 			{
 				script: "(-1.0).Root(9007199254740993)",
 				cases: [{ result: -1 }],
-			},
-			{
-				script: "a.Root(b)",
-				cases: [
-					{ values: { a: -8, b: 3n }, result: -2 },
-					{ values: { a: -32, b: 5n }, result: -2 },
-					{ values: { a: -8n, b: 3 }, result: -2 },
-					{ values: { a: Number.NEGATIVE_INFINITY, b: 3n }, result: Number.NEGATIVE_INFINITY },
-				],
 			},
 			{
 				script: "a.Root(0)",

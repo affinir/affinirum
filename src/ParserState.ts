@@ -115,18 +115,10 @@ export class ParserState extends ParserSpan {
 		}
 	}
 
-	separateByColon() {
+	assertColon() {
 		if (!this.equals(":")) {
 			this.throwError("missing colon separator")
 		}
-	}
-
-	clone() {
-		const state = new ParserState(this._script);
-		state._start = this._start;
-		state._end = this._end;
-		state._value = this._value;
-		return state;
 	}
 
 	next(): ParserState {
@@ -285,8 +277,7 @@ const tokens: [string, Type | Constant | Literal | false][] = [
 	[":", false],
 	["::", false],
 	[",", false],
-	["~", false],
-	["~>", false],
+	["->", false],
 	["?", false],
 	["=>", false],
 	["..", false],
@@ -321,8 +312,7 @@ const punctuators: string[] = [
 	":",
 	"::",
 	",",
-	"~",
-	"~>",
+	"->",
 	"?",
 	"=>",
 	".",

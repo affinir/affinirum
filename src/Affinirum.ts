@@ -200,7 +200,7 @@ export class Affinirum {
 		const span = state.start();
 		let type: Type | undefined;
 		if (state.next().equals(":")) {
-			type = this._type.union(state.next(), scope);
+			type = this._type.parse(state.next(), scope);
 		}
 		const variable = new LocalVariable(type, assignable);
 		scope.set(identifier, variable);
@@ -390,7 +390,7 @@ export class Affinirum {
 				node = new CallNode(span.end(state), node, subnodes);
 			}
 			else if (state.equals("::")) { // type cast operator
-				const type = this._type.union(state.next(), scope);
+				const type = this._type.parse(state.next(), scope);
 				node = new CastNode(span.end(state), node, type);
 			}
 		}
@@ -415,8 +415,8 @@ export class Affinirum {
 		else if (state.isIdentifier) { // constant or variable identifier
 			return this._identifier(state, scope);
 		}
-		else if (state.equals("{")) { // code block
-			return this._block(state, scope);
+		else if (state.equals("{")) { // subscope
+			return this._subscope(state, scope);
 		}
 		else if (state.equals("}")) {
 			state.throwError("unexpected closing braces");
@@ -439,18 +439,15 @@ export class Affinirum {
 		else if (state.equals("var", "val")) {
 			state.throwError("unexpected variable declaration");
 		}
-		else if (state.equals("~")) {
-			return this._function(state, scope);
-		}
 		else if (state.equals("if")) {
 			return this._ternary(state, scope);
 		}
 		else if (state.equals("while")) {
 			return this._loop(state, scope);
 		}
-		else if (state.equals("~>")) {
+		else if (state.equals("->")) {
 			if (!scope.inFunction) {
-				state.throwError("unexpected ~> outside of a function");
+				state.throwError("unexpected -> outside of a function");
 			}
 			return new FinalNode(state, "return", this._unit(state.next(), scope), scope.type);
 		}
@@ -508,15 +505,76 @@ export class Affinirum {
 		return new VariableNode(span, variable);
 	}
 
-	protected _block(state: ParserState, scope: LexicalScope): Node {
+	protected _subscope(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
+		if (state.next().equals("=")) { // function
+			state.next().openParentheses();
+			let variadic = false;
+			const variables = new Map<string, LocalVariable>();
+			while (!state.next().equals(")")) {
+				if (!state.isIdentifier) {
+					state.throwError("missing function argument name");
+				}
+				const identifier = state.identifier;
+				if (variables.has(identifier)) {
+					state.throwError(`duplicate function argument name ${identifier}`);
+				}
+				if (scope.has(identifier)) {
+					state.throwError(`variable ${identifier} redefinition`);
+				}
+				let argType: Type | undefined;
+				if (state.next().equals(":")) {
+					variadic = state.next().equals("...");
+					if (variadic) {
+						state.next();
+					}
+					if (!variadic || !state.equals(")")) {
+						argType = this._type.parse(state, scope);
+					}
+					if (variadic) {
+						argType = Type.arrayType(argType);
+					}
+				}
+				const variable = new LocalVariable(argType, true);
+				variables.set(identifier, variable);
+				if (variadic) {
+					break;
+				}
+				if (!state.equals(",")) {
+					break;
+				}
+			}
+			state.closeParentheses();
+			const returnType = state.next().equals(":") ? this._type.parse(state.next(), scope) : Type.Any;
+			if (!state.equals("->")) {
+				state.throwError("missing function body separator");
+			}
+			state.next();
+			const args = Array.from(variables.values());
+			const subscope = scope.subscope(variables, returnType, true);
+			const subnodes: Node[] = [];
+			while (!state.equals("}")) {
+				subnodes.push(this._declaration(state, subscope));
+				if (!state.equals(";")) {
+					break;
+				}
+				state.next();
+			}
+			state.closeBraces();
+			span.end(state);
+			state.next();
+			const subnode = new BlockNode(span, subnodes);
+			const functionType = Type.functionType([[returnType, args.map((v) => v.type), variadic]]);
+			return new FunctionNode(span, subnode, [...subscope.variables()], args, functionType);
+		}
 		const subscope = scope.subscope();
 		const subnodes: Node[] = [];
-		while (!state.next().equals("}")) {
+		while (!state.equals("}")) {
 			subnodes.push(this._declaration(state, subscope));
 			if (!state.equals(";")) {
 				break;
 			}
+			state.next();
 		}
 		span.end(state);
 		state.closeBraces();
@@ -539,7 +597,17 @@ export class Affinirum {
 			else if (state.equals(":")) {
 				colon = true;
 				state.next();
-				break;
+				if (!state.equals("never")) {
+					break;
+				}
+			}
+			if (subnodes.length === 0 && (ellipsis || colon) && state.equals("never")) {
+				state.next().closeBrackets();
+				span.end(state);
+				state.next();
+				return new ConstantNode(span, colon
+					? new Constant(Object.create(null), Type.objectType(Type.Never))
+					: new Constant([], Type.arrayType(Type.Never)));
 			}
 			const node = this._unit(state, scope);
 			if (state.equals(":")) {
@@ -562,53 +630,6 @@ export class Affinirum {
 			), ellipsis);
 		}
 		return new ArrayNode(span, subnodes.map(([, v]) => v), ellipsis);
-	}
-
-	protected _function(state: ParserState, scope: LexicalScope): Node {
-		const span = state.start();
-		state.next().openParentheses();
-		let variadic = false;
-		const variables = new Map<string, LocalVariable>();
-		while (!state.next().equals(")")) {
-			if (!state.isIdentifier) {
-				state.throwError("missing function argument name");
-			}
-			const identifier = state.identifier;
-			if (variables.has(identifier)) {
-				state.throwError(`duplicate function argument name ${identifier}`);
-			}
-			if (scope.has(identifier)) {
-				state.throwError(`variable ${identifier} redefinition`);
-			}
-			let argType: Type | undefined;
-			if (state.next().equals(":")) {
-				variadic = state.next().equals("...");
-				if (variadic) {
-					state.next();
-				}
-				argType = this._type.union(state, scope);
-				if (variadic) {
-					argType = Type.arrayType(argType);
-				}
-			}
-			const variable = new LocalVariable(argType, true);
-			variables.set(identifier, variable);
-			if (variadic) {
-				break;
-			}
-			if (!state.equals(",")) {
-				break;
-			}
-		}
-		state.closeParentheses();
-		state.next();
-		const returnType = state.equals(":") ? this._type.group(state.next(), scope) : Type.Any;
-		span.end(state);
-		const args = Array.from(variables.values());
-		const subscope = scope.subscope(variables, returnType, true);
-		const subnode = this._unit(state, subscope);
-		const functionType = Type.functionType([[returnType, args.map((v) => v.type), variadic]]);
-		return new FunctionNode(span, subnode, [...subscope.variables()], args, functionType);
 	}
 
 	protected _ternary(state: ParserState, scope: LexicalScope): Node {

@@ -17,11 +17,11 @@ describe("Strict mode test", () => {
 			strict: true,
 			variables: { items: Type.arrayType(Type.Integer) },
 		});
-		expect(() => script.evaluate({ items: [1n, "two"] })).toThrow(/unexpected type \[\.\.\.\]/);
+		expect(() => script.evaluate({ items: [1n, "two"] })).toThrow(/unexpected type .* for variable items/);
 	});
 
 	it.each([true, false])("checks configured input types with strict=%s", (strict) => {
-		expect(() => new Affinirum("(~(text:string):string{text})(value)", { strict, variables: { value: Type.Integer } }))
+		expect(() => new Affinirum("({=(text:string):string -> text})(value)", { strict, variables: { value: Type.Integer } }))
 			.toThrow(/mismatch with expected type string/);
 	});
 

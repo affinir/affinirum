@@ -184,32 +184,34 @@ by `next` or `exit` does not replace that result. Neither keyword can jump from 
 
 ### Functions and returns
 
-Define a function with `~(name: type, ...): return-type { ... }`. Its last expression is its result; use `~>value`
-to return from the current function early:
+Define a function with `{=(name: type, ...): return-type -> ... }`. The arrow separates the signature from the body.
+Omit the colon and return type to use `any`, as in `{=(value) -> value }`.
+The `=` after `{` identifies a function. Braces containing a parenthesized expression, such as `{(value)}`, are
+ordinary code blocks.
+The last expression is the result. Use `->value` to return from the current function early.
 
 ```text
-val absolute = ~(value: integer): integer {
-    if value < 0 { ~> -value };
+val absolute = {=(value: integer): integer ->
+    if value < 0 { -> -value };
     value
 };
 absolute(-5) // 5
 ```
 
-A return annotation takes one type. Enclose a union return type in parentheses, as in
-`~(value: integer): (integer | string) { value }`.
+A return annotation can be a union, as in `{=(value: integer): integer | string -> value }`.
 
 Functions are values and can be passed as callbacks. A final variadic parameter collects the remaining arguments into
 an array. Use `...integer` for integer arguments and `...any` for arguments of any type.
 
 ```text
-val sum = ~(values: ...integer): integer { Integer.Sum(values) };
+val sum = {=(values: ...integer): integer -> Integer.Sum(values) };
 sum(1, 2, 3) // 6
 ```
 
 Use the global return operator `=>value` to finish the entire script evaluation, including from inside a function or callback:
 
 ```text
-val stop = ~(): integer { =>42 };
+val stop = {=(): integer -> =>42 };
 stop();
 0 // The script returns 42 before reaching this expression.
 ```
@@ -217,7 +219,7 @@ stop();
 ### Arrays and objects
 
 Arrays hold ordered values of any type and use zero-based indexes. Access an item with brackets or a dot followed by
-an integer. Use `.?` to check whether an index exists.
+an integer. Use `.?` to check whether an index exists. Write an empty array as `[]`.
 
 ```text
 val items = [10, 20, 30];
@@ -232,7 +234,7 @@ Use `+` to concatenate arrays. Wrap an individual item in an array when adding i
 [1] + [[2, 3]]  // [1,[2,3]]
 ```
 
-Objects hold named values. Define them with string keys and colons inside brackets; `[:]` is an empty object.
+Objects hold named values. Define them with string keys and colons inside brackets. Write an empty object as `[:]`.
 Object literals reject duplicate keys that are known at compile time.
 Access properties with `entry.key`, `entry."key"`, or `entry["key"]`. Use `entry.?key` to check for a literal key,
 or `entry.Has(keyVariable)` for a computed key.
@@ -271,8 +273,8 @@ Callbacks make collection transformations composable:
 
 ```text
 val values = [1, 2, 3];
-values.Derive(~(item: integer): integer { item * 2 })
-      .Filter(~(item: integer): boolean { item > 3 }) // [4,6]
+values.Derive({=(item: integer): integer -> item * 2 })
+      .Filter({=(item: integer): boolean -> item > 3 }) // [4,6]
 ```
 
 After a dot, a built-in method name takes precedence over an object property with the same name.
@@ -293,18 +295,29 @@ Each `?.` applies to one step, so use it at each step that can receive `null`, a
 | `integer` / `i64` | Signed 64-bit integer |
 | `buffer` | Sequence of bytes |
 | `string` | Text |
-| `array` / `[...]` | A sequence whose items can have any type |
-| `object` / `[...:]` | Named properties whose values can have any type |
-| `function` / `~(...)` | Built-in, host-provided, or script-defined function |
+| `array` / `[]` | A sequence whose items can have any type |
+| `object` / `[:]` | Named properties whose values can have any type |
+| `function` / `{=}` | Function with an unspecified signature |
 | `any` | A type that accepts any value |
-| `~(integer): string` | Function taking an integer and returning a string |
+| `{=(integer): string}` | Function taking an integer and returning a string |
 | `integer?` | An integer or `null` |
 | `integer \| string` | Union of types |
 
-Parentheses group types, as in `(integer | string)`. A `|` after a function's return type forms a union of the
-whole function type and the next type. For example, `~(integer): string | null` is a function or `null`, while
-`~(integer): (string | null)` and `~(integer): string?` describe a function that can return `null`.
-In `~(): [...string | null]`, the brackets enclose the union of array item types.
+Append `?` to a named, collection, function, or parenthesized type to include `null`. For example, `[]?`, `[:]?`,
+`{=}?`, and `(integer | string)?` are optional types. The suffix is invalid on `null` and `never`, including when
+parenthesized. `{=(): integer}?` is a nullable function, and `{=(): integer?}` is a function with a nullable result.
+
+Parentheses group types, as in `(integer | string)`. The closing `}` marks the end of a function type.
+`{=(integer): string | null}` describes a function that can return `null`, and `{=(integer): string} | null`
+describes a function or `null`. The generic type `{=}` describes functions of any signature, and `{=():}` describes
+a zero-argument function with return type `any`. Function types also start with `{=`, keep the colon after the
+parameter list, and have no body arrow. In `{=(): [...string | null]}`, the brackets enclose the union of array item
+types. Formatted generic types use `{=}`.
+
+Combine function types with `&` to declare overloads, as in `{=(integer):string}&{=(string):integer}`.
+A call must match one of the signatures. In type expressions, `?` binds more tightly than `&`, and `&` binds
+more tightly than `|`. Group an overloaded type before `?` to make the whole function nullable, as in
+`({=(integer):string}&{=(string):integer})?`. Overload operands must be function types.
 
 Type checking is intentionally permissive. See [Detailed type rules](#detailed-type-rules) for structural types,
 callback compatibility, and variadic signatures.
@@ -326,20 +339,23 @@ An incompatible cast raises an error. Casts can be followed by property access, 
 | `[...float]` | Uniform array. Every item is a float. |
 | `[float]` | Tuple with a float at index 0. Extra items may have any type. |
 | `[float, string]` | Tuple with a float at index 0 and a string at index 1. Extra items may have any type. |
-| `[...:float]` | Uniform object. Every property value is a float. |
+| `[:float]` | Uniform object. Every property value is a float. |
 | `["a": float]` | Record with a float property named `a`. Extra properties may have any type. |
 | `["a": float, "b": string]` | Record with a float property named `a` and a string property named `b`. Extra properties may have any type. |
 
-The ellipsis marks a uniform type for zero or more entries. For example, `[...integer | string]` is a uniform
-array whose items may be integers or strings. Omitting the entry type defaults to `any`, so `[...]` is equivalent
-to `[...any]` and `[...:]` is equivalent to `[...:any]`.
+The ellipsis marks a uniform array type. For example, `[...integer | string]` is an array whose items may be
+integers or strings. A leading colon marks a uniform object type, as in `[:string]` for string-valued properties.
+Both uniform types allow zero or more entries. For uniform `any` arrays, `[]` and `[...any]` are aliases.
+For uniform `any` objects, `[:]` and `[:any]` are aliases. Formatted types use `[]` and `[:]`.
 
-Tuples and records use plain brackets. They specify a minimum shape and allow additional entries. The empty shapes
-`[]` and `[:]` require no entries. Unannotated array literals infer tuples, and unannotated object literals with
-known keys infer records.
+Tuples and records specify a minimum shape and allow additional entries. Nonempty array literals infer tuples,
+and object literals with known keys infer records. In expressions, `[]` and `[:]` create empty collections.
+The literals `[...never]` and `[:never]` have the same types and empty values as `[]::[...never]` and `[:]::[:never]`,
+respectively. An exact-empty literal may share its value across function calls and evaluations. Writes through
+broader array or object aliases still enforce the literal's empty type.
 
-A final variadic parameter collects zero or more arguments into an array. `~(...integer):null` is the function
-type, and `~(a: ...integer):null{}` is a function value of that type. Each collected argument must be an integer,
+A final variadic parameter collects zero or more arguments into an array. `{=(...integer):null}` is the function
+type, and `{=(a: ...integer):null ->}` is a function value of that type. Each collected argument must be an integer,
 and `a` has type `[...integer]` inside the function.
 
 ### Operators and precedence
@@ -466,6 +482,8 @@ const identityType = Type.functionType([
     [Type.String, [Type.String]],
 ]);
 ```
+
+The equivalent script type is `{=(integer):integer}&{=(string):string}`.
 
 Pass `true` as the second argument to `Type.functionType` for a volatile function.
 
@@ -672,18 +690,18 @@ JSON.Format(["missing": null, "count": 1])  // '{"missing":null,"count":"1"}'
 
 #### Array Functions
 
-- **array.First(condition: ~(any, integer, array):boolean):any** — First item satisfying condition
-- **array.Last(condition: ~(any, integer, array):boolean):any** — Last item satisfying condition
-- **array.FirstIndex(condition: ~(any, integer, array):boolean):integer?** — First index satisfying condition, or `null` if none does
-- **array.LastIndex(condition: ~(any, integer, array):boolean):integer?** — Last index satisfying condition, or `null` if none does
-- **array.Every(condition: ~(any, integer, array):boolean):boolean** — All items satisfy condition
-- **array.Any(condition: ~(any, integer, array):boolean):boolean** — Any item satisfies condition
+- **array.First(condition: {=(any, integer, array):boolean}):any** — First item satisfying condition
+- **array.Last(condition: {=(any, integer, array):boolean}):any** — Last item satisfying condition
+- **array.FirstIndex(condition: {=(any, integer, array):boolean}):integer?** — First index satisfying condition, or `null` if none does
+- **array.LastIndex(condition: {=(any, integer, array):boolean}):integer?** — Last index satisfying condition, or `null` if none does
+- **array.Every(condition: {=(any, integer, array):boolean}):boolean** — All items satisfy condition
+- **array.Any(condition: {=(any, integer, array):boolean}):boolean** — Any item satisfies condition
 - **array.Reverse():array** — Reversed array
 - **array.Flatten(depth: integer = 1):array** — Flatten array
-- **array.Derive(transformation: ~(any, integer, array):any):array** — Derived array
-- **array.Filter(condition: ~(any, integer, array):boolean):array** — Filtered array
-- **array.Reduce(reducer: ~(any, any, integer, array):any, initial: any = null):any** — Reduced value
-- **array.Compose(generator: ~(object, string, integer, array):any):object** — Compose object from array
+- **array.Derive(transformation: {=(any, integer, array):any}):array** — Derived array
+- **array.Filter(condition: {=(any, integer, array):boolean}):array** — Filtered array
+- **array.Reduce(reducer: {=(any, any, integer, array):any}, initial: any = null):any** — Reduced value
+- **array.Compose(generator: {=(object, string, integer, array):any}):object** — Compose object from array
 
 `Compose` builds a new object. Each callback receives an immutable snapshot of the properties produced by earlier callbacks.
 Retaining that snapshot preserves its contents as subsequent properties are added to the result.
@@ -820,8 +838,8 @@ for every possible runtime value.
 - Function-type compatibility distinguishes fixed and variadic signatures. Two non-generic variadic signatures must
   declare their variadic parameter in the same position to be compatible.
 
-For example, a callback declared as `~(value: float):boolean` is compatible with an expected callback type such as
-`~(any, integer, array):boolean`. The array method supplies all three arguments, and the callback can ignore
+For example, a callback `{=(value: float):boolean -> value > 0}` is compatible with an expected callback type such as
+`{=(any, integer, array):boolean}`. The array method supplies all three arguments, and the callback can ignore
 the index and array. `any` keeps the item type flexible.
 
 For a variadic host function, set the third entry of the signature to `true` and declare its last parameter as a uniform

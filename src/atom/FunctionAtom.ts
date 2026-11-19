@@ -10,7 +10,7 @@ export class FunctionAtom implements IAtom {
 	protected readonly _isVolatile: boolean;
 
 	constructor(
-		signatures: readonly [retType: Type, argTypes: Type[], variadic?: boolean][],
+		signatures: readonly [retType: Type, argTypes: readonly Type[], variadic?: boolean][],
 		volatile = false,
 	) {
 		if (!signatures.length) {
@@ -35,8 +35,10 @@ export class FunctionAtom implements IAtom {
 		return this._isVolatile;
 	}
 
-	signatures(argc: number) {
-		return this._signatures.filter((signature) => signature.minArity <= argc && argc <= signature.maxArity);
+	signatures(argc?: number) {
+		return this._signatures.filter((signature) =>
+			argc === undefined || signature.minArity <= argc && argc <= signature.maxArity
+		);
 	}
 
 	retType(): Type {
@@ -88,9 +90,7 @@ export class FunctionAtom implements IAtom {
 	}
 
 	toString(): string {
-		return this._signatures.length === 1
-			? this._signatures[0].toString()
-			: this._signatures.map((signature) => `(${signature})`).join("&");
+		return this._signatures.map((signature) => signature.toString()).join("&");
 	}
 
 }

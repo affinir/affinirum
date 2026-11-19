@@ -173,10 +173,18 @@ describe("Type atom lookup test", () => {
 			Type.objectType([["value", Type.Integer]]),
 			Type.objectType([["value", Type.String]]),
 		);
-		expect(type.arrayAtoms().map((atom) => atom.valType(0))).toEqual([Type.Integer, Type.String]);
-		expect(type.objectAtoms().map((atom) => atom.valType("value"))).toEqual([Type.Integer, Type.String]);
-		expect(Type.Any.arrayAtoms()).toEqual(Type.Array.arrayAtoms());
-		expect(Type.Any.objectAtoms()).toEqual(Type.Object.objectAtoms());
+		const arrays = type.arrayAtoms();
+		const objects = type.objectAtoms();
+		expect(arrays).toHaveLength(2);
+		expect(objects).toHaveLength(2);
+		for (const expected of [Type.Integer, Type.String]) {
+			expect(arrays.some((atom) => atom.valType(0)?.equals(expected))).toBe(true);
+			expect(objects.some((atom) => atom.valType("value")?.equals(expected))).toBe(true);
+		}
+		expect(Type.Any.arrayAtoms()).toHaveLength(1);
+		expect(Type.Any.arrayAtoms()[0].equals(Type.Array.arrayAtoms()[0])).toBe(true);
+		expect(Type.Any.objectAtoms()).toHaveLength(1);
+		expect(Type.Any.objectAtoms()[0].equals(Type.Object.objectAtoms()[0])).toBe(true);
 	});
 });
 
@@ -299,8 +307,8 @@ describe("Function argument test", () => {
 		expect(Type.Integer.functionAtomArgType(0)).toBeUndefined();
 		expect(noArguments.functionAtomArgType(0)).toBeUndefined();
 		expect(Type.union(noArguments, typedArgument).functionAtomArgType(0)?.equals(Type.String)).toBe(true);
-		expect(Type.union(noArguments, anyArgument).functionAtomArgType(0)).toBe(Type.Any);
-		expect(Type.union(typedArgument, anyArgument).functionAtomRetType()).toBe(Type.Any);
+		expect(Type.union(noArguments, anyArgument).functionAtomArgType(0)?.isAny).toBe(true);
+		expect(Type.union(typedArgument, anyArgument).functionAtomRetType()?.isAny).toBe(true);
 	});
 
 	it("compares optional function argument types", () => {

@@ -1,20 +1,34 @@
 import { Affinirum, Type, Value } from "../../src/index.js";
 
 describe("Constant folding test", () => {
-	it("creates fresh array literals for each function call and evaluation", () => {
-		const expression = new Affinirum("val f=~():array{[]};[f(),f()]");
+	it.each<[string, Value]>([
+		["[...never]", []],
+		["[:never]", {}],
+	])("keeps the %s literal empty across function calls and evaluations", (literal, expected) => {
+		const expression = new Affinirum(`val f={=():${literal} -> ${literal}};[f(),f()]`);
+		const first = expression.evaluate() as Value[];
+		expect(first).toEqual([expected, expected]);
+		const second = expression.evaluate() as Value[];
+		expect(second).toEqual([expected, expected]);
+	});
+
+	it.each<[string, Value[]]>([
+		["[]", []],
+		["Array.Range(0,2)", [0n, 1n]],
+	])("creates fresh arrays from %s for each function call and evaluation", (source, expected) => {
+		const expression = new Affinirum(`val f={=():array -> ${source}};[f(),f()]`);
 		const first = expression.evaluate() as Value[][];
-		expect(first).toEqual([[], []]);
+		expect(first).toEqual([expected, expected]);
 		expect(first[0]).not.toBe(first[1]);
-		first[0].push(1n);
-		expect(first[1]).toEqual([]);
+		first[0].push(9n);
+		expect(first[1]).toEqual(expected);
 		const second = expression.evaluate() as Value[][];
-		expect(second).toEqual([[], []]);
+		expect(second).toEqual([expected, expected]);
 		expect(second[0]).not.toBe(first[0]);
 	});
 
 	it.each([true, false])("creates fresh nested arrays in the selected branch when the condition is %s", (condition) => {
-		const expression = new Affinirum(`val f=~():array{if ${condition}{[1,[2]]}else{[3,[4]]}};[f(),f()]`);
+		const expression = new Affinirum(`val f={=():array -> if ${condition}{[1,[2]]}else{[3,[4]]}};[f(),f()]`);
 		const expected = condition ? [1n, [2n]] : [3n, [4n]];
 		const first = expression.evaluate() as Value[][];
 		expect(first).toEqual([expected, expected]);
@@ -59,17 +73,6 @@ describe("Constant folding test", () => {
 		expect(second.child).not.toBe(first.child);
 	});
 
-	it("creates fresh array results for each function call and evaluation", () => {
-		const expression = new Affinirum("val f=~():array{Array.Range(0,2)};[f(),f()]");
-		const first = expression.evaluate() as Value[][];
-		expect(first).toEqual([[0n, 1n], [0n, 1n]]);
-		expect(first[0]).not.toBe(first[1]);
-		first[0].push(9n);
-		const second = expression.evaluate() as Value[][];
-		expect(second).toEqual([[0n, 1n], [0n, 1n]]);
-		expect(second[0]).not.toBe(first[0]);
-	});
-
 	it("creates fresh object results for functions with union return types", () => {
 		const expression = new Affinirum("JSON.Parse('{\"items\":[1]}')");
 		const first = expression.evaluate() as { items: number[] };
@@ -81,7 +84,7 @@ describe("Constant folding test", () => {
 	});
 
 	it("preserves an existing array value when another binding is reassigned", () => {
-		const expression = new Affinirum("var a=[1];val b=a;a+=[2];[a,b]");
+		const expression = new Affinirum("var a:[...integer]=[1];val b=a;a+=[2];[a,b]");
 		expect(expression.evaluate()).toEqual([[1n, 2n], [1n]]);
 	});
 });

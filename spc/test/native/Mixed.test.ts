@@ -32,13 +32,13 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "Float.Sum(arr0.Derive( ~ (a:array):array{ a.Derive(~(b:float):float{b+12.0})} ).Flatten())",
+			script: "Float.Sum(arr0.Derive( {= (a:array):array ->  a.Derive({=(b:float):float -> b+12.0})} ).Flatten())",
 			cases: [
 				{ values: { arr0: [[1], [1, 2], [2, 3, 4]] }, result: 85 },
 			],
 		},
 		{
-			script: "val x=arr0.Any(~(a:float):boolean{a<0});var b:boolean=c;x&b",
+			script: "val x=arr0.Any({=(a:float):boolean -> a<0});var b:boolean=c;x&b",
 			cases: [
 				{ values: { arr0: [0, -1], c: true }, result: true },
 			],
@@ -78,26 +78,26 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "var f=~(a:float):boolean{a=a*100; a>0};Float.Sum(a.Filter(f))",
+			script: "var f={=(a:float):boolean -> a=a*100; a>0};Float.Sum(a.Filter(f))",
 			cases: [
 				{ values: { a: [-10, -20, 1, 2] }, result: 3 },
 			],
 		},
 		{
-			script: "var x=b;val f=~():any{x = x + 1000; true}; Float.Sum(a.Filter(f)) + x",
+			script: "var x=b;val f={=():any -> x = x + 1000; true}; Float.Sum(a.Filter(f)) + x",
 			cases: [
 				{ values: { a: [10, 20, 1, 2], b: 0 }, result: 4033 },
 			],
 		},
 		{
-			script: "var x=b;var a=~(){x = x + 10}; a(); x",
+			script: "var x=b;var a={=() -> x = x + 10}; a(); x",
 			cases: [
 				{ values: { b: 0n }, result: 10n },
 				{ values: { b: -10n }, result: 0n },
 			],
 		},
 		{
-			script: "var x=b;(~(){~():any{x = x + 10}})()()",
+			script: "var x=b;({=() -> {=():any -> x = x + 10}})()()",
 			cases: [
 				{ values: { b: 0n }, result: 10n },
 			],

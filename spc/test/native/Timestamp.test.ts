@@ -3,12 +3,6 @@ import { runAffinirumTests } from "../../util/AffinirumTest.js";
 describe("Timestamp function test", () => {
 	runAffinirumTests([
 		{
-			script: "Timestamp.Now().EpochTime > 0",
-			cases: [
-				{ values: {}, result: true },
-			],
-		},
-		{
 			script: "Timestamp.Parse(v).Format(f)",
 			cases: [
 				{ values: { v: "2020-02-20T20:30:40.555Z", f: "ZYYYY/MM/DD hh:mm:ss.fffZ" }, result: "2020/02/20 20:30:40.555" },

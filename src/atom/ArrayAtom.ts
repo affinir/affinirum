@@ -8,7 +8,12 @@ export class ArrayAtom implements IAtom {
 	constructor(
 		valTypes: Type | readonly Type[] = [],
 	) {
-		this._valTypes = Array.isArray(valTypes) ? [...valTypes] : valTypes;
+		if (Array.isArray(valTypes)) {
+			this._valTypes = valTypes.length === 0 ? Type.Any : [...valTypes];
+		}
+		else {
+			this._valTypes = valTypes;
+		}
 	}
 
 	get isUniform(): boolean {
@@ -56,9 +61,6 @@ export class ArrayAtom implements IAtom {
 		}
 		const types = this._valTypes;
 		const other = atom._valTypes;
-		if (other instanceof Type && other.isAny) {
-			return true;
-		}
 		if (types instanceof Type) {
 			return atom.valTypes().every((type) => types.accepts(type));
 		}
@@ -98,9 +100,9 @@ export class ArrayAtom implements IAtom {
 	toString(): string {
 		const types = this._valTypes;
 		if (types instanceof Type) {
-			return `[...${types.isAny ? "" : types}]`;
+			return types.isAny ? "[]" : `[...${types}]`;
 		}
-		return types.length ? `[${types.join(",")}]` : "[]";
+		return `[${types.join(",")}]`;
 	}
 
 }
