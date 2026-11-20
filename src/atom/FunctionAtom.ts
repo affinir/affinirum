@@ -69,20 +69,20 @@ export class FunctionAtom implements IAtom {
 	}
 
 	equals(atom: IAtom): boolean {
-		return atom instanceof FunctionAtom
-			&& this._isVolatile === atom._isVolatile
-			&& this._signatures.length === atom._signatures.length
-			&& this._signatures.every((signature) => atom._signatures.some((i) => signature.equate(i)));
+		return atom instanceof FunctionAtom &&
+			this._isVolatile === atom._isVolatile &&
+			this._signatures.length === atom._signatures.length &&
+			this._signatures.every((signature) => atom._signatures.some((i) => signature.equate(i)));
 	}
 
 	accepts(atom: IAtom): boolean {
-		return atom instanceof FunctionAtom
-			&& this._signatures.every((signature) => atom._signatures.some((i) => signature.accept(i)));
+		return atom instanceof FunctionAtom &&
+			this._signatures.every((signature) => atom._signatures.some((i) => signature.accept(i)));
 	}
 
 	intersects(atom: IAtom): boolean {
-		return atom instanceof FunctionAtom
-			&& this._signatures.some((signature) => atom._signatures.some((i) => signature.intersect(i)));
+		return atom instanceof FunctionAtom &&
+			this._signatures.some((signature) => atom._signatures.some((i) => signature.intersect(i)));
 	}
 
 	weight(): number {

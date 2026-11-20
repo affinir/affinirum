@@ -25,28 +25,28 @@ describe("Float function test", () => {
 			],
 		},
 		{
-			script: "Float.Sum(values)",
+			script: "Float.Sum(a, b, c)",
 			cases: [
-				{ values: { values: [1, 2, 3] }, result: 6 },
-				{ values: { values: [-1, 2.5, 3] }, result: 4.5 },
+				{ values: { a: 1, b: 2, c: 3 }, result: 6 },
+				{ values: { a: -1, b: 2.5, c: 3 }, result: 4.5 },
 			],
 		},
 		{
-			script: "Float.Sum(a, b, values)",
+			script: "Float.Sum(a, b, c, d)",
 			cases: [
-				{ values: { a: 1, b: 2, values: [3, 4] }, result: 10 },
+				{ values: { a: 1n, b: 2, c: 3n, d: 4 }, result: 10 },
 			],
 		},
 		{
-			script: "Float.Min(values) + Float.Max(values)",
+			script: "Float.Min(a, b, c) + Float.Max(a, b, c)",
 			cases: [
-				{ values: { values: [1, -2, 3.5] }, result: 1.5 },
+				{ values: { a: 1, b: -2, c: 3.5 }, result: 1.5 },
 			],
 		},
 		{
-			script: "Float.Min(a, b, values) + Float.Max(a, b, values)",
+			script: "Float.Min(a, b, c, d) + Float.Max(a, b, c, d)",
 			cases: [
-				{ values: { a: 10, b: -4, values: [3, 7] }, result: 6 },
+				{ values: { a: 10n, b: -4, c: 3n, d: 7 }, result: 6 },
 			],
 		},
 		{

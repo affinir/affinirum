@@ -74,25 +74,24 @@ export const formatLiteralFloat = (value: number) => {
 		: str;
 };
 
-const typeNumberOrArray = Type.union(Type.Number, Type.arrayType(Type.Number));
-const typeAggregator = Type.functionType([[Type.Float, [Type.arrayType(typeNumberOrArray)], true]]);
+const typeAggregator = Type.functionType([[Type.Float, [Type.arrayType(Type.Number)], true]]);
 const typeTransform = Type.functionType([[Type.Float, [Type.Number]]]);
 
 const funcSum = new Constant(
-	(...values: (number | number[] | bigint | bigint[])[]) =>
-		values.flat().reduce((acc: number, val) => acc + Number(val), 0),
+	(...values: (number | bigint)[]) =>
+		values.reduce((acc: number, val) => acc + Number(val), 0),
 	typeAggregator,
 );
 
 const funcMin = new Constant(
-	(...values: (number | number[] | bigint | bigint[])[]) =>
-		Math.min(Number.POSITIVE_INFINITY, ...values.flat().map((i) => Number(i))),
+	(...values: (number | bigint)[]) =>
+		Math.min(Number.POSITIVE_INFINITY, ...values.map((i) => Number(i))),
 	typeAggregator,
 );
 
 const funcMax = new Constant(
-	(...values: (number | number[] | bigint | bigint[])[]) =>
-		Math.max(Number.NEGATIVE_INFINITY, ...values.flat().map((i) => Number(i))),
+	(...values: (number | bigint)[]) =>
+		Math.max(Number.NEGATIVE_INFINITY, ...values.map((i) => Number(i))),
 	typeAggregator,
 );
 

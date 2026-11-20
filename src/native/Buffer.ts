@@ -1,12 +1,14 @@
 import { Constant } from "../Constant.js";
 import { Type } from "../Type.js";
+import { isWhiteSpaceSymbol } from "./String.js";
 
 export type BufferFormatting = "hex" | "base64";
 export const EmptyBuffer = new ArrayBuffer(0);
 
-const ZERO = "0".charCodeAt(0), NINE = "9".charCodeAt(0);
-const UPPER_A = "A".charCodeAt(0), UPPER_F = "F".charCodeAt(0);
-const LOWER_A = "a".charCodeAt(0), LOWER_F = "f".charCodeAt(0);
+const codeZero = "0".charCodeAt(0), codeNine = "9".charCodeAt(0);
+const codeUpperA = "A".charCodeAt(0), codeUpperF = "F".charCodeAt(0);
+const coderLowerA = "a".charCodeAt(0), codeLowerF = "f".charCodeAt(0);
+const codeComment = "/".charCodeAt(0), codeNewLine = "\n".charCodeAt(0);
 
 export const parseBoundedInteger = (input: string, base: 10 | 16, min: number, max: number): number => {
 	if (input.length === 0) {
@@ -16,14 +18,14 @@ export const parseBoundedInteger = (input: string, base: 10 | 16, min: number, m
 	for (let i = 0; i < input.length; i++) {
 		const code = input.charCodeAt(i);
 		let digit: number;
-		if (code >= ZERO && code <= NINE) {
-			digit = code - ZERO;
+		if (code >= codeZero && code <= codeNine) {
+			digit = code - codeZero;
 		}
-		else if (base === 16 && code >= UPPER_A && code <= UPPER_F) {
-			digit = code - UPPER_A + 10;
+		else if (base === 16 && code >= codeUpperA && code <= codeUpperF) {
+			digit = code - codeUpperA + 10;
 		}
-		else if (base === 16 && code >= LOWER_A && code <= LOWER_F) {
-			digit = code - LOWER_A + 10;
+		else if (base === 16 && code >= coderLowerA && code <= codeLowerF) {
+			digit = code - coderLowerA + 10;
 		}
 		else {
 			throw new Error(`Invalid character: ${input.charAt(i)}`);
@@ -150,14 +152,36 @@ export const parseLiteralBuffer = (value: string, offset = 0) => {
 			}
 			return [new Uint8Array(bytes).buffer, i + 1] as const;
 		}
-		if (code >= ZERO && code <= NINE) {
-			digits[ix++] = code - ZERO;
+		if (code >= codeZero && code <= codeNine) {
+			digits[ix++] = code - codeZero;
 		}
-		else if (code >= UPPER_A && code <= UPPER_F) {
-			digits[ix++] = code - UPPER_A + 10;
+		else if (code >= codeUpperA && code <= codeUpperF) {
+			digits[ix++] = code - codeUpperA + 10;
 		}
-		else if (code >= LOWER_A && code <= LOWER_F) {
-			digits[ix++] = code - LOWER_A + 10;
+		else if (code >= coderLowerA && code <= codeLowerF) {
+			digits[ix++] = code - coderLowerA + 10;
+		}
+		else if (code === codeComment) {
+			if (i === value.indexOf("///", i)) {
+				i = value.indexOf("///", i + 3);
+				if (i < 0) {
+					throw new Error("missing closing comment mark");
+				}
+				i += 2;
+			}
+			else if (i === value.indexOf("//", i)) {
+				let c = value.charCodeAt(i += 2);
+				while (c !== codeNewLine && c !== q && !Number.isNaN(c)) {
+					c = value.charCodeAt(++i);
+				}
+				--i;
+			}
+			else {
+				throw new Error("unexpected symbol '/'");
+			}
+		}
+		else if (!isWhiteSpaceSymbol(value.charAt(i))) {
+			throw new Error(`unexpected symbol '${value.charAt(i)}'`);
 		}
 		if (ix > 1) {
 			bytes.push(digits[0] << 4 | digits[1]);
@@ -167,7 +191,7 @@ export const parseLiteralBuffer = (value: string, offset = 0) => {
 	throw new Error(`missing closing buffer quotation mark ${String.fromCharCode(q)}`);
 };
 
-export const funcByte = new Constant(
+export const funcByteAt = new Constant(
 	(value: ArrayBuffer, pos: bigint) =>
 		value == null
 			? undefined

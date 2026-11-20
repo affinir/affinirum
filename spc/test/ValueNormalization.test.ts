@@ -27,7 +27,7 @@ describe("Value normalization test", () => {
 	});
 
 	it("normalizes inputs before numeric functions consume them", () => {
-		const expression = new Affinirum("Float.Sum(values)");
+		const expression = new Affinirum("Float.Sum(values[0],values[1])");
 		expect(expression.evaluate({ values: [1n << 64n, 2n] })).toBe(2);
 	});
 
@@ -59,7 +59,7 @@ describe("Value normalization test", () => {
 	});
 
 	it("accepts valid immutable composite arguments without rewriting them", () => {
-		const func = new Affinirum("{=(values:array):float -> Float.Sum(values)}").evaluate() as (values: Value[]) => number;
+		const func = new Affinirum("{=(values:array):float -> values.Reduce({=(total:float,item:integer):float -> total+item},0.0)}").evaluate() as (values: Value[]) => number;
 		const values = [1n, 2n];
 		Object.freeze(values);
 		expect(func(values)).toBe(3);

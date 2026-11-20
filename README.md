@@ -72,7 +72,10 @@ Scripts without external inputs can be evaluated with `evaluate()`.
 
 Separate statements with semicolons; a newline alone does not separate them. A script or `{ ... }` block returns the
 value of its last expression. An empty block has type `null` and evaluates to JavaScript `undefined`.
-Use parentheses to group expressions and commas to separate arguments or collection items.
+Use parentheses to group expressions and commas to separate arguments or array or object entries.
+Lists of arguments, fixed parameters, array or object entries, and tuple or record type entries allow a trailing comma.
+A variadic parameter must be last, without a trailing comma. Uniform array and object types close immediately after
+their item or value type.
 
 ```text
 val base = 10;
@@ -97,7 +100,12 @@ Integer division truncates toward zero: `7 / 2` is `3`, while `7.0 / 2` is `3.5`
 Arithmetic involving a float produces a float.
 
 Whitespace outside literals and comments is ignored. Names are case-sensitive. Line comments start with `//`;
-block comments are enclosed in `/// ... ///`. Strings support escapes such as `\n`, `\r`, `\t`, `\\`, and escaped quotes.
+block comments are enclosed in `/// ... ///` and do not nest. Strings decode `\n`, `\r`, and `\t`;
+use `\\` for a backslash and `\'` or `\"` for quotes. Unicode and hexadecimal escape sequences are not supported.
+
+Buffer literals also allow whitespace and both comment forms between hexadecimal digits. Inside a buffer, a line
+comment ends at a newline or the closing backtick. A final unpaired hexadecimal digit becomes a byte with a leading
+zero: `` `abc` `` contains the bytes `ab 0c`.
 
 ### Variables and values
 
@@ -123,14 +131,14 @@ A read or assignment expression can have a more specific type than the binding. 
 
 Bindings declared inside a block are local to that block. Names must start with an ASCII letter, `#`, `$`, or `_`,
 followed by any combination of those characters and digits, such as `x`, `_a1$`, or `abc25`.
-Language keywords, including `var`, `val`, `if`, `else`, `while`, `next`, and `exit`, as well as type names and their
+Language keywords, including `var`, `val`, `if`, `else`, `while`, `do`, `until`, `next`, and `exit`, as well as type names and their
 aliases, are reserved.
 
 Collection methods and concatenation produce replacement values while preserving their inputs.
 Reassigning a `var` preserves the value held by other bindings:
 
 ```text
-var items = [1];
+var items: [...integer] = [1];
 val original = items;
 items += [2];
 [items, original] // [[1,2],[1]]
@@ -139,7 +147,8 @@ items += [2];
 Array items and object properties support `=` and compound assignment. Indexed writes update the existing collection,
 so other bindings holding the same collection observe the change. Direct writes through `val` or external input bindings
 are rejected. Array writes require an existing index; object writes can create own properties. Negative array indexes
-count from the end. For compound assignment, the container, key, and current value are evaluated before the right-hand side.
+count from the end. Compound assignment resolves the container and key and reads the current value once, before
+evaluating the right-hand side.
 
 Optional targets such as `entry?.name` and `items?[index]` also support `=` and compound assignment. When the receiver
 is `null`, the assignment returns `null` and skips the key or index and the right-hand side at runtime. A successful
@@ -164,8 +173,7 @@ category // "pass"
 ### Loops
 
 `while condition { ... }` repeats while its boolean condition is true. An unbraced body requires `do`, as in
-`while i < 10 do i += 1`. Use `next` to skip the rest of the current iteration and check the condition again, or `exit`
-to leave the innermost loop.
+`while i < 10 do i += 1`. Use `next` to skip the rest of the current iteration, or `exit` to leave the innermost loop.
 
 ```text
 var i = 0;
@@ -179,8 +187,28 @@ while i < 10 {
 total // 12
 ```
 
+`do { ... } until condition` runs the body before testing a boolean stop condition. It repeats until the condition
+is true. An unbraced body is also allowed, as in `do i += 1 until i == 3`.
+
+```text
+var i = 0;
+do {
+    i += 1;
+    i * 10
+} until i == 3 // 30
+```
+
+A `while` loop can also end with `until`, as in `while i < 10 { i += 1 } until i == 3`.
+The `while` condition runs before each iteration; `until` runs afterward. A false `while` condition skips both the body
+and `until`. `next` still checks `until` before starting another iteration, while `exit` skips it.
+Without either condition, `do { ... }` repeats until an explicit jump stops it.
+
+Declare variables needed by `until` outside the body block; body-local bindings are not visible in the condition.
+Use braces around a body containing a nested loop so a trailing `until` belongs to the intended loop.
+
 A loop returns its last completed iteration's value, or `null` if no iteration completes. An iteration interrupted
-by `next` or `exit` does not replace that result. Neither keyword can jump from a called function into its caller's loop.
+by `next` or `exit` does not replace that result. The inferred result type includes `null`, including for `do` loops.
+Neither keyword can jump from a called function into its caller's loop.
 
 ### Functions and returns
 
@@ -202,11 +230,17 @@ A return annotation can be a union, as in `{=(value: integer): integer | string 
 
 Functions are values and can be passed as callbacks. A final variadic parameter collects the remaining arguments into
 an array. Use `...integer` for integer arguments and `...any` for arguments of any type.
+In a function literal, `values: ...` is shorthand for `values: ...any`; function types require the explicit `...any`.
 
 ```text
-val sum = {=(values: ...integer): integer -> Integer.Sum(values) };
+val sum = {=(values: ...integer): integer ->
+    values.Reduce({=(total: integer, item: integer): integer -> total + item}, 0)
+};
 sum(1, 2, 3) // 6
 ```
+
+Built-in variadic functions accept individual arguments of their declared type. For example, use
+`Integer.Sum(1, 2, 3)`; `Integer.Sum([1, 2, 3])` is invalid. Use `Reduce` to aggregate an existing array, as above.
 
 Use the global return operator `=>value` to finish the entire script evaluation, including from inside a function or callback:
 
@@ -226,6 +260,10 @@ val items = [10, 20, 30];
 [items[0], items.1, items.?2, items.?3] // [10,20,true,false]
 ```
 
+Missing indexes and properties read as `null`. A typed indexed read includes `null` in its result type, even for a
+declared tuple item or record property. Use optional access for subsequent steps, as in `matrix[0]?[1]`.
+Prefer brackets for consecutive numeric indexes: `matrix.0.1` reads `0.1` as one decimal token.
+
 Use `+` to concatenate arrays. Wrap an individual item in an array when adding it:
 
 ```text
@@ -237,7 +275,7 @@ Use `+` to concatenate arrays. Wrap an individual item in an array when adding i
 Objects hold named values. Define them with string keys and colons inside brackets. Write an empty object as `[:]`.
 Object literals reject duplicate keys that are known at compile time.
 Access properties with `entry.key`, `entry."key"`, or `entry["key"]`. Use `entry.?key` to check for a literal key,
-or `entry.Has(keyVariable)` for a computed key.
+or `entry.Has(keyVariable)` for a computed key. Quote keys that are reserved words, as in `entry."until"`.
 
 ```text
 val original = ["name": "Ada", "score": 10];
@@ -278,7 +316,7 @@ values.Derive({=(item: integer): integer -> item * 2 })
 ```
 
 After a dot, a built-in method name takes precedence over an object property with the same name.
-Use brackets or a quoted key to read such a property, for example `record["Length"]` or `record."Length"`.
+Use brackets or a quoted key to read such a property, for example `entry["Length"]` or `entry."Length"`.
 
 Use `receiver?.Method(arguments)` for an optional built-in method call. If the receiver is `null`, the call
 returns `null` and skips its arguments during evaluation. A call without explicit arguments can use `receiver?.Method`.
@@ -289,19 +327,24 @@ Each `?.` applies to one step, so use it at each step that can receive `null`, a
 | Type | Meaning |
 | --- | --- |
 | `null` | The type whose only script value is `null` |
+| `never` | A type with no values, used for expressions that cannot complete normally |
 | `boolean` / `bool` | `true` or `false` |
 | `timestamp` / `time` | Date and time |
 | `float` / `f64` | 64-bit floating-point number |
 | `integer` / `i64` | Signed 64-bit integer |
 | `buffer` | Sequence of bytes |
 | `string` | Text |
-| `array` / `[]` | A sequence whose items can have any type |
-| `object` / `[:]` | Named properties whose values can have any type |
+| `array` / `tuple` / `[]` | A sequence whose items can have any type |
+| `object` / `record` / `[:]` | Named properties whose values can have any type |
 | `function` / `{=}` | Function with an unspecified signature |
 | `any` | A type that accepts any value |
 | `{=(integer): string}` | Function taking an integer and returning a string |
 | `integer?` | An integer or `null` |
 | `integer \| string` | Union of types |
+
+The aliases `tuple` and `record` do not impose a minimum shape; use the bracketed types below for that.
+The names and aliases for booleans, timestamps, floats, integers, buffers, and strings also accept a trailing `#`,
+such as `integer#` or `f64#`, with no change in meaning.
 
 Append `?` to a named, collection, function, or parenthesized type to include `null`. For example, `[]?`, `[:]?`,
 `{=}?`, and `(integer | string)?` are optional types. The suffix is invalid on `null` and `never`, including when
@@ -309,10 +352,10 @@ parenthesized. `{=(): integer}?` is a nullable function, and `{=(): integer?}` i
 
 Parentheses group types, as in `(integer | string)`. The closing `}` marks the end of a function type.
 `{=(integer): string | null}` describes a function that can return `null`, and `{=(integer): string} | null`
-describes a function or `null`. The generic type `{=}` describes functions of any signature, and `{=():}` describes
-a zero-argument function with return type `any`. Function types also start with `{=`, keep the colon after the
-parameter list, and have no body arrow. In `{=(): [...string | null]}`, the brackets enclose the union of array item
-types. Formatted generic types use `{=}`.
+describes a function or `null`. The generic type `{=}` describes functions of any signature, and `{=()}` describes
+a zero-argument function with return type `any`. Function types also start with `{=` and have no body arrow.
+Omit the colon and return type together to use `any`. In `{=(): [...string | null]}`, the brackets enclose the union
+of array item types. Formatted generic types use `{=}`.
 
 Combine function types with `&` to declare overloads, as in `{=(integer):string}&{=(string):integer}`.
 A call must match one of the signatures. In type expressions, `?` binds more tightly than `&`, and `&` binds
@@ -331,6 +374,8 @@ parsed::object.answer // 42.0
 
 Standard JSON numbers are floats. Use conversion methods such as `.Integer()` or `.Float()` to convert numeric types.
 An incompatible cast raises an error. Casts can be followed by property access, indexing, calls, or another cast.
+Before a Boolean `|`, parenthesize the whole cast, as in `(value::boolean) | other`, or use `or`.
+Without grouping, `|` continues the cast's type union.
 
 #### Collection and variadic types
 
@@ -339,20 +384,23 @@ An incompatible cast raises an error. Casts can be followed by property access, 
 | `[...float]` | Uniform array. Every item is a float. |
 | `[float]` | Tuple with a float at index 0. Extra items may have any type. |
 | `[float, string]` | Tuple with a float at index 0 and a string at index 1. Extra items may have any type. |
-| `[:float]` | Uniform object. Every property value is a float. |
+| `[...:float]` | Uniform object. Every property value is a float. |
 | `["a": float]` | Record with a float property named `a`. Extra properties may have any type. |
 | `["a": float, "b": string]` | Record with a float property named `a` and a string property named `b`. Extra properties may have any type. |
 
-The ellipsis marks a uniform array type. For example, `[...integer | string]` is an array whose items may be
-integers or strings. A leading colon marks a uniform object type, as in `[:string]` for string-valued properties.
+The ellipsis marks a uniform array or object type. For example, `[...integer | string]` is an array whose items may be
+integers or strings. Add a colon after the ellipsis for objects, as in `[...:string]` for string-valued properties.
 Both uniform types allow zero or more entries. For uniform `any` arrays, `[]` and `[...any]` are aliases.
-For uniform `any` objects, `[:]` and `[:any]` are aliases. Formatted types use `[]` and `[:]`.
+For uniform `any` objects, `[:]` and `[...:any]` are aliases. Formatted types use `[]` and `[:]`.
+The forms `[:type]`, `[...]`, and `[...:]` are invalid. Uniform array or object literals require a leading ellipsis,
+before all entries, as in `[...1,2]` and `[..."a":1,"b":2]`. Forms such as `[1,...2]` and `["a":1,..."b":2]` are invalid.
+The leading ellipsis marks uniformity; it does not spread or flatten an array or object value.
 
-Tuples and records specify a minimum shape and allow additional entries. Nonempty array literals infer tuples,
-and object literals with known keys infer records. In expressions, `[]` and `[:]` create empty collections.
-The literals `[...never]` and `[:never]` have the same types and empty values as `[]::[...never]` and `[:]::[:never]`,
-respectively. An exact-empty literal may share its value across function calls and evaluations. Writes through
-broader array or object aliases still enforce the literal's empty type.
+Tuples and records specify a minimum shape and allow additional entries. Without an ellipsis, nonempty array literals
+infer tuples, and object literals with known keys infer records. In expressions, `[]` and `[:]` create empty arrays and objects.
+The literals `[...never]` and `[...:never]` have the same types and empty values as `[]::[...never]` and
+`[:]::[...:never]`, respectively. An exact-empty literal may share its value across function calls and evaluations.
+Writes through broader array or object aliases still enforce the literal's empty type.
 
 A final variadic parameter collects zero or more arguments into an array. `{=(...integer):null}` is the function
 type, and `{=(a: ...integer):null ->}` is a function value of that type. Each collected argument must be an integer,
@@ -369,25 +417,47 @@ Expression operators are listed from highest precedence to lowest. Parentheses o
 | | Unary `+`, `-` | Arithmetic sign |
 | | `*`, `/`, `%` | Multiplication, division, remainder |
 | | `+`, `-` | Addition or concatenation; subtraction |
+| | `..` | Inclusive ascending integer range |
 | | `>`, `<`, `>=`, `<=`, `==`, `!=` | Comparison and equality |
 | | `!`, `not` | Boolean negation |
 | | `&`, `and` | Boolean AND |
 | | `\|`, `or` | Boolean OR |
 | Lowest | `?:` | Null coalescing |
 
-Binary operators at the same precedence group left to right, including exponentiation:
+Binary operators other than `..` at the same precedence group left to right, including exponentiation:
 `2 ** 3 ** 2` means `(2 ** 3) ** 2` and produces `64`. Exponentiation binds before arithmetic sign, so `-2 ** 2` is `-4`.
 Boolean negation binds after comparisons: `!a == b` means `!(a == b)`.
 
-`+` adds numbers or concatenates strings, buffers, and arrays. `&` and `|` evaluate both operands.
+`a..b` is equivalent to `Array.Range(a,b)` and produces an array of type `[...integer]`. Both bounds must be integers
+and are included. Values are always ascending, even when the bounds are reversed. Arithmetic binds more tightly
+than `..`, so `1..2+2` means `1..(2+2)`. Ranges cannot be chained: `1..2..3` is invalid.
+
+```text
+1..3;         // [1,2,3]
+3..1;         // [1,2,3]
+3..3;         // [3]
+1..2+2;       // [1,2,3,4]
+(1..3).Length // 3
+```
+
+A range is already an array, so `[1..3]` contains one nested array: `[[1,2,3]]`.
+
+`+` adds numbers or concatenates strings, buffers, and arrays. `&` and `and` skip the right operand when the left
+operand is `false`; `|` and `or` skip it when the left operand is `true`.
 
 `value ?: fallback` evaluates `value` first and evaluates `fallback` only when `value` is `null`.
 `value.Coalesce(fallback)` follows the same rule. During compilation, constant folding can evaluate
-subexpressions in a fallback, optional call argument, or optional key or index expression.
+subexpressions in a fallback, optional call argument, optional key or index expression, or short-circuited Boolean
+expression or assignment.
 
 Assign with `=` or combine assignment with an operation: `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, and `|=`.
+`&=` skips the right-hand side and the write when the current value is `false`; `|=` skips them when it is `true`.
+The short-circuited expression returns the current Boolean value. Otherwise, the right-hand side is evaluated once
+and the Boolean result is assigned.
 Assigning to an external input variable with any of these operators causes a compilation error.
 Assignments and returns consume the expression that follows them; separate them into statements for clarity.
+Assignment can also appear inside another expression: `a + b = 3` means `a + (b = 3)`, and
+`1..b = 3` means `1..(b = 3)`. Use parentheses to make such assignments explicit.
 
 ## Embedding API
 
@@ -550,7 +620,7 @@ Parsing that literal produces JavaScript `undefined`, preserving array lengths a
 
 Global functions use namespaces such as `Integer.Sum(...)`. Method functions use `value.Method(...)`.
 In the signatures below, `T?` means `T` or `null`, `...` marks variadic arguments, and `any` accepts any value.
-Parameters whose type includes `null` can be omitted. Parameter names are explanatory; arguments are positional.
+Trailing parameters whose type includes `null` can be omitted. Parameter names are explanatory; arguments are positional.
 
 ### Global functions
 
@@ -567,8 +637,8 @@ Invalid inputs other than `null` may raise an evaluation error, depending on the
 
 #### Boolean
 
-- **Boolean.Or(values: ...(boolean | [boolean])):boolean** — Boolean disjunction of booleans and arrays of booleans
-- **Boolean.And(values: ...(boolean | [boolean])):boolean** — Boolean conjunction of booleans and arrays of booleans
+- **Boolean.Or(values: ...boolean):boolean** — Boolean disjunction; stop evaluating arguments at the first `true`
+- **Boolean.And(values: ...boolean):boolean** — Boolean conjunction; stop evaluating arguments at the first `false`
 - **Boolean.Not(value: boolean):boolean** — Boolean negation
 - **Boolean.Decode(value: buffer?, offset: integer?):boolean?** — Decode a byte at the optional offset; missing or out-of-range input returns `null`
 - **Boolean.Parse(value: string?):boolean?** — Parse case-insensitive `true` or `false`; other values return `null`
@@ -586,9 +656,9 @@ Invalid inputs other than `null` may raise an evaluation error, depending on the
 - **Float.PositiveInfinity** — Positive infinity
 - **Float.NegativeInfinity** — Negative infinity
 - **Float.Epsilon** — Difference between `1` and the next larger representable float (`2.220446049250313e-16`)
-- **Float.Sum(values: ...(float | integer | [float | integer])):float** — Numeric sum
-- **Float.Min(values: ...(float | integer | [float | integer])):float** — Numeric minimum
-- **Float.Max(values: ...(float | integer | [float | integer])):float** — Numeric maximum
+- **Float.Sum(values: ...(float | integer)):float** — Numeric sum
+- **Float.Min(values: ...(float | integer)):float** — Numeric minimum
+- **Float.Max(values: ...(float | integer)):float** — Numeric maximum
 - **Float.Exponent(value: float | integer):float** — Natural exponential
 - **Float.Logarithm(value: float | integer):float** — Natural logarithm
 - **Float.Abs(value: float | integer):float** — Absolute value
@@ -602,16 +672,16 @@ Invalid inputs other than `null` may raise an evaluation error, depending on the
 
 #### Integer
 
-- **Integer.Sum(values: ...(integer | [integer])):integer** — Numeric sum
-- **Integer.Min(values: ...(integer | [integer])):integer** — Numeric minimum
-- **Integer.Max(values: ...(integer | [integer])):integer** — Numeric maximum
+- **Integer.Sum(values: ...integer):integer** — Numeric sum
+- **Integer.Min(values: ...integer):integer** — Numeric minimum
+- **Integer.Max(values: ...integer):integer** — Numeric maximum
 - **Integer.Random(exclusiveTo: integer):integer** — Random integer up to value
 - **Integer.Decode(value: buffer?, encoding: string?, offset: integer?):integer?** — Decode using signed `i8`, `i16`, `i16le`, `i32`, `i32le`, `i64` (default), or `i64le`, or unsigned `n8`, `n16`, `n16le`, `n32`, `n32le`
 - **Integer.Parse(value: string?):integer?** — Parse a string as an integer
 
 #### String
 
-- **String.Alphanumeric(value: string):string** — Keep only ASCII letters and digits
+- **String.Alphanumeric(value: string):string** — Keep ASCII letters and digits, converting letters to lowercase. An empty input returns `""`.
 - **String.Random(length: integer):string** — Random alphanumeric string
 - **String.Decode(value: buffer?, encoding: string?, offset: integer?, length: integer?):string?** — Decode using `utf8` (default), `sbcs`, `ucs2`, or `ucs2le`
 
@@ -623,7 +693,7 @@ Invalid inputs other than `null` may raise an evaluation error, depending on the
 #### Array
 
 - **Array.Join(values: ...array):array** — Concatenate arrays in argument order into a new array, preserving nested arrays
-- **Array.Range(a: integer, b: integer):array** — Integers from the lower endpoint (inclusive) to the higher endpoint (exclusive)
+- **Array.Range(a: integer, b: integer):[...integer]** — Ascending integers including both endpoints, regardless of argument order; equivalent to `a..b`
 - **Array.Unique(value: array):array** — Array of unique values
 - **Array.Intersection(a1: array, a2: array):array** — Common values from two arrays
 - **Array.Difference(a1: array, a2: array):array** — Symmetric difference between arrays
@@ -638,11 +708,12 @@ Array.Join([[1,2]],[3])      // [[1,2],3]
 
 #### Object
 
-- **Object.Merge(values: ...(object | [object])):object** — Shallow merge into a new object; later arguments take precedence
+- **Object.Merge(values: ...object):object** — Shallow merge into a new object; later arguments take precedence
 
 #### AN
 
 - **AN.Format(value: any, whitespace: string?):string** — Format a value as AN notation, including `null` values in arrays and objects
+- **AN.Parse(value: string?):(null | boolean | timestamp | float | integer | buffer | string | array | object)** — Parse an AN-formatted string; empty or `null` input returns `null`
 
 #### JSON
 
@@ -662,7 +733,7 @@ JSON.Format(["missing": null, "count": 1])  // '{"missing":null,"count":"1"}'
 
 #### IP
 
-- **IP.Match(values: [string], search: ...(string | [string])):boolean** — Check whether any searched IPv4 or IPv6 address belongs to the supplied addresses or CIDR ranges
+- **IP.Match(values: [...string], search: ...string):boolean** — Check whether any searched IPv4 or IPv6 address belongs to the supplied addresses or CIDR ranges
 - **IP.Encode(value: string?):buffer** — Encode an IPv4, IPv6, or CIDR string as a network-byte-order buffer; malformed or `null` input returns a zero-length buffer
 - **IP.Decode(value: buffer?):string?** — Decode a 4-, 5-, 16-, or 17-byte buffer as canonical IPv4, IPv6, or CIDR notation; malformed or `null` input returns `null`
 
@@ -703,12 +774,12 @@ JSON.Format(["missing": null, "count": 1])  // '{"missing":null,"count":"1"}'
 - **array.Reduce(reducer: {=(any, any, integer, array):any}, initial: any = null):any** — Reduced value
 - **array.Compose(generator: {=(object, string, integer, array):any}):object** — Compose object from array
 
-`Compose` builds a new object. Each callback receives an immutable snapshot of the properties produced by earlier callbacks.
-Retaining that snapshot preserves its contents as subsequent properties are added to the result.
+`Compose` builds a new object. Each callback receives a writable snapshot of the properties produced by earlier callbacks.
+After the callback, the snapshot's properties and the generated property are shallow-copied into a new object.
 
 #### Buffer Functions
 
-- **buffer.Byte(pos: integer):buffer?** — Byte at position, or `null` when unavailable
+- **buffer.ByteAt(pos: integer):buffer?** — One-byte slice at position; an empty slice returns a zero-length buffer
 
 #### Enumerable Functions
 
@@ -731,8 +802,12 @@ Retaining that snapshot preserves its contents as subsequent properties are adde
 - **object.Contains(search: any):boolean** — Check if object contains value
 - **array.At(index: integer):any** — Access item in array by index
 - **object.At(index: string):any** — Access item in object by key
+- **(array | null).OptionalAt(index: integer):any** — Access item by index; a `null` receiver or missing index returns `null`
+- **(object | null).OptionalAt(index: string):any** — Access item by key; a `null` receiver or missing key returns `null`
 - **array.Has(index: integer):boolean** — Identify if array has index
 - **object.Has(index: string):boolean** — Identify if object has key
+- **(array | null).OptionalHas(index: integer):boolean?** — Check whether an index exists; a `null` receiver returns `null`
+- **(object | null).OptionalHas(index: string):boolean?** — Check whether a key exists; a `null` receiver returns `null`
 
 #### Number Functions
 
@@ -763,9 +838,15 @@ Retaining that snapshot preserves its contents as subsequent properties are adde
 - **float.Root(index: float | integer):float?** — Take a root with the specified index
 - **integer.Root(index: float):float?** — Take a float root
 - **integer.Root(index: integer):integer?** — Take an integer root
-- **(boolean | timestamp | integer).Float():float** — Convert to a float; timestamps use milliseconds since the Unix epoch
-- **(boolean | timestamp | float).Integer():integer** — Convert to an integer; timestamps use milliseconds since the Unix epoch
-- **(timestamp | float | integer).Boolean():boolean** — Convert to a boolean by testing whether the numeric or epoch value is non-zero
+- **boolean.Float():float** — Convert to a float
+- **timestamp.Float():float** — Convert to milliseconds since the Unix epoch
+- **integer.Float():float** — Convert to a float
+- **boolean.Integer():integer** — Convert to an integer
+- **timestamp.Integer():integer** — Convert to milliseconds since the Unix epoch
+- **float.Integer():integer** — Convert to an integer
+- **timestamp.Boolean():boolean** — Test whether the epoch value is non-zero
+- **float.Boolean():boolean** — Test whether the numeric value is non-zero
+- **integer.Boolean():boolean** — Test whether the numeric value is non-zero
 
 `Root` returns `null` for a nonpositive index. With integer operands, even roots of negative values also return `null`.
 Floating-point root calculations can return `NaN`, which is a float.
@@ -773,7 +854,7 @@ Floating-point root calculations can return `NaN`, which is a float.
 #### Object Functions
 
 - **object.Entries():array** — Key-value pairs
-- **object.Keys():[string]** — Object keys
+- **object.Keys():[...string]** — Object keys
 - **object.Values():array** — Object values
 
 #### String Functions
@@ -782,15 +863,15 @@ Floating-point root calculations can return `NaN`, which is a float.
 - **string.NotLike(value: string):boolean** — Alphanumeric inequality
 - **string.StartsWith(search: string, startPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Prefix check
 - **string.EndsWith(search: string, endPos: integer?, ignoreCaseSpaceEtc: boolean?):boolean** — Suffix check
-- **string.Char(pos: integer):string?** — Character at position, or `null` when unavailable
-- **string.CharCode(pos: integer):integer?** — Character code, or `null` when unavailable
+- **string.CharAt(pos: integer):string?** — Character at position, or `""` when out of range
+- **string.CharCodeAt(pos: integer):integer?** — Character code, or `null` when unavailable
 - **string.Trim():string** — Trim whitespace
 - **string.TrimStart():string** — Trim leading whitespace
 - **string.TrimEnd():string** — Trim trailing whitespace
 - **string.LowerCase():string** — To lowercase
 - **string.UpperCase():string** — To uppercase
-- **string.Split(separator: string = ' '):[string]** — Split into an array of strings
-- **string.ReplaceWith(replacement: string, search: ...(string | [string])):string** — Replace all instances of the searched strings
+- **string.Split(separator: string = ' '):[...string]** — Split into an array of strings
+- **string.ReplaceWith(replacement: string, search: ...string):string** — Replace all instances of the searched strings
 
 #### Timestamp Functions
 

@@ -76,3 +76,101 @@ describe("Loop node test", () => {
 		expect(expression.evaluate()).toBe("");
 	});
 });
+
+describe("Until loops", () => {
+	it.each<[string, bigint]>([
+		["do {i+=1;i*10}", 30n],
+		["do i+=1", 3n],
+		["while i<5 {i+=1;i*10}", 30n],
+		["while i<5 do i+=1", 3n],
+	])("returns the final body value from %s until i==3", (loop, expected) => {
+		const expression = new Affinirum(`var i=0;${loop} until i==3`, { timeout: 1000 });
+		expect(expression.evaluate()).toBe(expected);
+	});
+
+	it("runs a do body once before testing an initially true condition", () => {
+		const expression = new Affinirum("var visits=0;val result=do {visits+=1;7} until true;[visits,result]", { timeout: 1000 });
+		expect(expression.evaluate()).toEqual([1n, 7n]);
+	});
+
+	it("infers a boolean postcondition and rejects non-boolean or nullable conditions", () => {
+		const source = "do {1} until condition";
+		expect(new Affinirum(source).variables().condition.equals(Type.Boolean)).toBe(true);
+		expect(() => new Affinirum(source, { variables: { condition: Type.OptionalBoolean } }))
+			.toThrow(/mismatch with expected type boolean/);
+		expect(() => new Affinirum("do {1} until 1"))
+			.toThrow(/mismatch with expected type boolean/);
+	});
+
+	it("evaluates the postcondition exactly once after each completed body", () => {
+		const calls: string[] = [];
+		let iterations = 0;
+		const expression = new Affinirum("do body() until done()", {
+			variables: {
+				body: Type.functionType([[Type.Integer, []]], true),
+				done: Type.functionType([[Type.Boolean, []]], true),
+			},
+		});
+		const result = expression.evaluate({
+			body: () => {
+				calls.push("body");
+				if (++iterations > 2) {
+					throw new Error("unexpected extra iteration");
+				}
+				return BigInt(iterations) * 10n;
+			},
+			done: () => {
+				calls.push("until");
+				return iterations === 2;
+			},
+		});
+		expect(result).toBe(20n);
+		expect(calls).toEqual(["body", "until", "body", "until"]);
+	});
+
+	it("skips both the body and postcondition when the while condition is false", () => {
+		const expression = new Affinirum("while false {body()} until done()", {
+			variables: {
+				body: Type.functionType([[Type.Integer, []]], true),
+				done: Type.functionType([[Type.Boolean, []]], true),
+			},
+		});
+		expect(expression.evaluate({
+			body: () => { throw new Error("unexpected body evaluation"); },
+			done: () => { throw new Error("unexpected postcondition evaluation"); },
+		})).toBeUndefined();
+	});
+
+	it("checks until after next without replacing the previous completed result", () => {
+		const expression = new Affinirum("var i=0;var checks=0;val result=while i<5 {i+=1;if i==2{next};i*10} until {checks+=1;i==2};[result,i,checks]");
+		expect(expression.evaluate()).toEqual([10n, 2n, 2n]);
+	});
+
+	it("skips until after exit and retains the previous completed result", () => {
+		const expression = new Affinirum("var i=0;var checks=0;val result=while i<5 {i+=1;if i==2{exit};i*10} until {checks+=1;false};[result,i,checks]");
+		expect(expression.evaluate()).toEqual([10n, 2n, 1n]);
+	});
+
+	it("keeps nested postconditions attached to their own loops", () => {
+		const expression = new Affinirum("var outer=0;var inner=0;val result=do {outer+=1;while inner<4 {inner+=1;inner} until true;outer*10} until outer==2;[result,outer,inner]", { timeout: 1000 });
+		expect(expression.evaluate()).toEqual([20n, 2n, 2n]);
+	});
+
+	it.each(["while false {1}", "while true {exit}"])("does not infer never from a skipped postcondition in %s", (loop) => {
+		const expression = new Affinirum(`val f={=():integer? -> ${loop} until (->7)};f()`);
+		expect(expression.type.equals(Type.OptionalInteger)).toBe(true);
+		expect(expression.evaluate()).toBeUndefined();
+		expect(() => new Affinirum(`val f={=():integer -> ${loop} until (->7)};f()`))
+			.toThrow(/mismatch with expected type integer/);
+	});
+
+	it.each(["exit", "next"])("rejects %s in a postcondition with no enclosing loop", (jump) => {
+		expect(() => new Affinirum(`do {1} until ${jump}`))
+			.toThrow(`unexpected ${jump} outside of a loop`);
+	});
+
+	it("does not inherit the caller's loop context in a function postcondition", () => {
+		expect(() => new Affinirum("while true {val f={=():null -> do {1} until exit};exit}"))
+			.toThrow(/unexpected exit outside of a loop/);
+	});
+});

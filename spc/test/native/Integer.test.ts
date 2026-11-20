@@ -27,27 +27,21 @@ describe("Integer function test", () => {
 			],
 		},
 		{
-			script: "Integer.Sum(values)",
+			script: "Integer.Sum(a, b, c)",
 			cases: [
-				{ values: { values: [1n, 2n, 3n] }, result: 6n },
-				{ values: { values: [-1n, 2n, 3n] }, result: 4n },
+				{ values: { a: 1n, b: 2n, c: 3n }, result: 6n },
+				{ values: { a: -1n, b: 2n, c: 3n }, result: 4n },
 			],
 		},
 		{
-			script: "Integer.Sum(a, b, values)",
-			cases: [
-				{ values: { a: 1n, b: 2n, values: [3n, 4n] }, result: 10n },
-			],
-		},
-		{
-			script: "Integer.Min([x, 2]) + Integer.Max([y, 3])",
+			script: "Integer.Min(x, 2) + Integer.Max(y, 3)",
 			cases: [
 				{ values: { x: 10n, y: 20n }, result: 22n }],
 		},
 		{
-			script: "Integer.Min(a, b, values) + Integer.Max(a, b, values)",
+			script: "Integer.Min(a, b, c, d) + Integer.Max(a, b, c, d)",
 			cases: [
-				{ values: { a: 10n, b: -4n, values: [3n, 7n] }, result: 6n },
+				{ values: { a: 10n, b: -4n, c: 3n, d: 7n }, result: 6n },
 			],
 		},
 		{

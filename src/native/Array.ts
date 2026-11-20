@@ -132,12 +132,12 @@ const funcJoin = new Constant(
 	Type.functionType([[Type.Array, [Type.arrayType(Type.Array)], true]]),
 );
 
-const funcRange = new Constant(
+export const funcRange = new Constant(
 	(value1: bigint, value2: bigint) => {
 		const [min, max] = value1 < value2 ? [value1, value2] : [value2, value1];
-		return [...Array(Number(max - min)).keys()].map((i) => BigInt(i) + min);
+		return [...Array(Number(max - min) + 1).keys()].map((i) => BigInt(i) + min);
 	},
-	Type.functionType([[Type.Array, [Type.Integer, Type.Integer]]]),
+	Type.functionType([[Type.arrayType(Type.Integer), [Type.Integer, Type.Integer]]]),
 );
 
 const funcUnique = new Constant(

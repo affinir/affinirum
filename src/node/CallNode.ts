@@ -7,6 +7,7 @@ import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
 import { funcCoalesce } from "../native/Unknown.js";
+import { funcAnd, funcOr } from "../native/Boolean.js";
 
 export class CallNode extends InvocationNode {
 
@@ -44,8 +45,8 @@ export class CallNode extends InvocationNode {
 		this._type = this.compileArguments(this._optional ? functionType.optionalFirstParameter() : functionType, this._subnodes);
 		this._subnodes.find((arg) => arg.type.isNever)?.throwError("call argument must be a value");
 		super.compile(type);
-		if (this._fnode.constant && !this._fnode.type.isVolatileFunction
-			&& this._subnodes.every((node) => node.constant) && !this.type.intersects(Type.Reference)) {
+		if (this._fnode.constant && !this._fnode.type.isVolatileFunction &&
+			this._subnodes.every((node) => node.constant) && !this.type.intersects(Type.Reference)) {
 			return new ConstantNode(this, new Constant(this.evaluate(new CallFrame()), this.type));
 		}
 		return this;
@@ -66,6 +67,9 @@ export class CallNode extends InvocationNode {
 				if (func === funcCoalesce.value && arg != null) {
 					return arg;
 				}
+			}
+			if (func === funcAnd.value && arg === false || func === funcOr.value && arg === true) {
+				return arg;
 			}
 			args.push(arg);
 		}

@@ -1,4 +1,4 @@
-import { Affinirum, Value } from "../../../src/index.js";
+import { Affinirum, Type, Value } from "../../../src/index.js";
 import { runAffinirumTests } from "../../util/AffinirumTest.js";
 
 describe("Array function test", () => {
@@ -62,7 +62,7 @@ describe("Array function test", () => {
 			],
 		},
 		{
-			script: "Array.Range(start, end)[0] + Array.Range(start, end)[1]",
+			script: "(Array.Range(start, end)[0]::integer) + (Array.Range(start, end)[1]::integer)",
 			cases: [
 				{ values: { start: 5n, end: 10n }, result: 11n },
 				{ values: { start: -5n, end: -10n }, result: -19n },
@@ -71,8 +71,8 @@ describe("Array function test", () => {
 		{
 			script: "var s:float=0.0;Array.Range(start, end).Derive({=(x:integer):null -> s=s+x;null});s",
 			cases: [
-				{ values: { start: 1n, end: 11n }, result: 55 },
-				{ values: { start: -1n, end: -11n }, result: -65 },
+				{ values: { start: 1n, end: 11n }, result: 66 },
+				{ values: { start: -1n, end: -11n }, result: -66 },
 			],
 		},
 		{
@@ -146,7 +146,7 @@ describe("Array function test", () => {
 			],
 		},
 		{
-			script: "keys.Compose({=(acc:object, key:string):string? -> key.Char(0)}).\"a\"",
+			script: "keys.Compose({=(acc:object, key:string):string? -> key.CharAt(0)}).\"a\"",
 			cases: [
 				{ values: { keys: ["a", "b", "c"] }, result: "a" },
 				{ values: { keys: ["b", "a"] }, result: "a" },
@@ -186,4 +186,44 @@ describe("Array function test", () => {
 			],
 		},
 	]);
+});
+
+describe("Range operator", () => {
+	it.each<[string, bigint[]]>([
+		["1..3", [1n, 2n, 3n]],
+		["3 .. 1", [1n, 2n, 3n]],
+		["3..3", [3n]],
+		["-2..1", [-2n, -1n, 0n, 1n]],
+	])("evaluates %s as an inclusive ascending integer array", (source, expected) => {
+		const expression = new Affinirum(source);
+		expect(expression.type.equals(Type.arrayType(Type.Integer))).toBe(true);
+		expect(expression.evaluate()).toEqual(expected);
+	});
+
+	it.each<[string, Value]>([
+		["1+1..2*2", [2n, 3n, 4n]],
+		["1..2+1==[1,2,3]", true],
+		["[1,2,3]==1..2+1", true],
+		["(1..3).Length", 3n],
+		["[1..3]", [[1n, 2n, 3n]]],
+	])("respects precedence and grouping in %s", (source, expected) => {
+		expect(new Affinirum(source).evaluate()).toEqual(expected);
+	});
+
+	it("infers integer bounds and reevaluates them with the current inputs", () => {
+		const expression = new Affinirum("start..end");
+		const variables = expression.variables();
+		expect(variables.start.equals(Type.Integer)).toBe(true);
+		expect(variables.end.equals(Type.Integer)).toBe(true);
+		expect(expression.evaluate({ start: 1n, end: 3n })).toEqual([1n, 2n, 3n]);
+		expect(expression.evaluate({ start: 4n, end: 2n })).toEqual([2n, 3n, 4n]);
+	});
+
+	it.each(["1.0..3", "1..3.0"])("rejects non-integer bounds in %s", (source) => {
+		expect(() => new Affinirum(source)).toThrow(/mismatch with expected type integer/);
+	});
+
+	it("rejects chained ranges", () => {
+		expect(() => new Affinirum("1..2..3")).toThrow(/unexpected expression token/);
+	});
 });

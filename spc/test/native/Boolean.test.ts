@@ -1,3 +1,4 @@
+import { Affinirum, Type } from "../../../src/index.js";
 import { runAffinirumTests } from "../../util/AffinirumTest.js";
 
 describe("Boolean function test", () => {
@@ -29,10 +30,10 @@ describe("Boolean function test", () => {
 			],
 		},
 		{
-			script: "Boolean.And(values)",
+			script: "Boolean.And(a, b, c)",
 			cases: [
-				{ values: { values: [true, true, true] }, result: true },
-				{ values: { values: [true, false, true] }, result: false },
+				{ values: { a: true, b: true, c: true }, result: true },
+				{ values: { a: true, b: false, c: true }, result: false },
 			],
 		},
 		{
@@ -44,10 +45,10 @@ describe("Boolean function test", () => {
 			],
 		},
 		{
-			script: "Boolean.Or(values)",
+			script: "Boolean.Or(a, b, c)",
 			cases: [
-				{ values: { values: [false, false, false] }, result: false },
-				{ values: { values: [false, true, false] }, result: true },
+				{ values: { a: false, b: false, c: false }, result: false },
+				{ values: { a: false, b: true, c: false }, result: true },
 			],
 		},
 		{
@@ -103,4 +104,44 @@ describe("Boolean function test", () => {
 			],
 		},
 	]);
+	it.each<[string, boolean, boolean, number]>([
+		["&=", false, false, 0],
+		["|=", true, true, 0],
+		["&=", true, false, 1],
+		["|=", false, true, 1],
+	])("evaluates the RHS only when needed for %s with initial value %s", (operator, initial, expected, expectedCalls) => {
+		let calls = 0;
+		const expression = new Affinirum(`var value=${initial};[value${operator}produce(),value]`, {
+			variables: { produce: Type.functionType([[Type.Boolean, []]], true) },
+		});
+		expect(expression.evaluate({
+			produce: () => {
+				++calls;
+				if (expectedCalls === 0) {
+					throw new Error("RHS must be skipped");
+				}
+				return !initial;
+			},
+		})).toEqual([expected, expected]);
+		expect(calls).toBe(expectedCalls);
+	});
+	it.each([
+		"Boolean.And([true,false])",
+		"Boolean.Or(false,[true])",
+		"[false] and true",
+		"[false] & true",
+		"[true] or false",
+		"[true] | false",
+	])("rejects Boolean array arguments in %s", (source) => {
+		expect(() => new Affinirum(source)).toThrow(/mismatch with expected type boolean/);
+	});
+	it.each<[string, boolean]>([
+		["Boolean.And(true,false,check())", false],
+		["Boolean.Or(false,true,check())", true],
+	])("short-circuits after a later decisive argument in %s", (source, expected) => {
+		const expression = new Affinirum(source, {
+			variables: { check: Type.functionType([[Type.Boolean, []]], true) },
+		});
+		expect(expression.evaluate({ check: () => { throw new Error("unexpected RHS evaluation"); } })).toBe(expected);
+	});
 });

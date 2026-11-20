@@ -22,7 +22,7 @@ export class ObjectNode extends Node {
 		const types = subnodes.flatMap<[string, Type]>(([key, value]) =>
 			key instanceof ConstantNode && key.constant && key.type.isString ? [[key.value as string, value.type]] : []
 		);
-		this._type = Type.objectType(uniform ? Type.union(...types.map((i) => i[1])) : types);
+		this._type = Type.objectType(uniform ? Type.union(...subnodes.map(([, value]) => value.type)) : types);
 	}
 
 	override get type(): Type {
@@ -60,7 +60,7 @@ export class ObjectNode extends Node {
 		}
 		this._type = never
 			? Type.Never
-			: Type.objectType(this._uniform ? Type.union(...valTypes.values()) : [...valTypes]);
+			: Type.objectType(this._uniform ? Type.union(...this._subnodes.map(([, value]) => value.type)) : [...valTypes]);
 		return super.compile(type);
 	}
 

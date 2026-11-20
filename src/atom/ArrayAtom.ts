@@ -50,9 +50,9 @@ export class ArrayAtom implements IAtom {
 		if (types instanceof Type) {
 			return other instanceof Type && types.equals(other);
 		}
-		return !(other instanceof Type)
-			&& types.length === other.length
-			&& types.every((type, index) => type.equals(other[index]));
+		return !(other instanceof Type) &&
+			types.length === other.length &&
+			types.every((type, index) => type.equals(other[index]));
 	}
 
 	accepts(atom: IAtom): boolean {
@@ -86,8 +86,8 @@ export class ArrayAtom implements IAtom {
 				break;
 			}
 			if (!types[index].intersects(otherType)) {
-				return types.slice(index).every((type) => type.isOptional)
-					&& (other instanceof Type || other.slice(index).every((type) => type.isOptional));
+				return types.slice(index).every((type) => type.isOptional) &&
+					(other instanceof Type || other.slice(index).every((type) => type.isOptional));
 			}
 		}
 		return true;

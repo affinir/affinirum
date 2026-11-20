@@ -82,20 +82,20 @@ export class FunctionSignature {
 	}
 
 	equate(signature: FunctionSignature): boolean {
-		return this._isVariadic === signature._isVariadic
-			&& this._argTypes.length === signature._argTypes.length
-			&& this._retType.equals(signature._retType)
-			&& this._argTypes.every((type, index) => type.equals(signature._argTypes[index]));
+		return this._isVariadic === signature._isVariadic &&
+			this._argTypes.length === signature._argTypes.length &&
+			this._retType.equals(signature._retType) &&
+			this._argTypes.every((type, index) => type.equals(signature._argTypes[index]));
 	}
 
 	accept(signature: FunctionSignature): boolean {
 		if (this.isGeneric || signature.isGeneric) {
 			return true;
 		}
-		if (this._isVariadic !== signature._isVariadic
-			|| this._isVariadic && this.arity !== signature.arity
-			|| !this._retType.accepts(signature._retType)
-			|| signature.minArity > this.minArity) {
+		if (this._isVariadic !== signature._isVariadic ||
+			this._isVariadic && this.arity !== signature.arity ||
+			!this._retType.accepts(signature._retType) ||
+			signature.minArity > this.minArity) {
 			return false;
 		}
 		const argc = Math.min(this.arity, signature.arity);
@@ -113,11 +113,11 @@ export class FunctionSignature {
 		if (this.isGeneric || signature.isGeneric) {
 			return true;
 		}
-		if (this._isVariadic !== signature._isVariadic
-			|| this._isVariadic && this.arity !== signature.arity
-			|| !this._retType.intersects(signature._retType)
-			|| this.minArity > signature.maxArity
-			|| this.maxArity < signature.minArity) {
+		if (this._isVariadic !== signature._isVariadic ||
+			this._isVariadic && this.arity !== signature.arity ||
+			!this._retType.intersects(signature._retType) ||
+			this.minArity > signature.maxArity ||
+			this.maxArity < signature.minArity) {
 			return false;
 		}
 		const argc = Math.max(this.minArity, signature.minArity);

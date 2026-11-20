@@ -2,6 +2,7 @@ import { Type } from "./Type.js";
 import { Value } from "./Value.js";
 import { Constant } from "./Constant.js";
 import { ParserSpan } from "./ParserSpan.js";
+import { funcRange } from "./native/Array.js";
 import { funcOr, funcAnd, funcNot } from "./native/Boolean.js";
 import { parseLiteralBuffer } from "./native/Buffer.js";
 import { funcAt, funcOptionalAt, funcHas, funcOptionalHas } from "./native/Composite.js";
@@ -143,24 +144,18 @@ export class ParserState extends ParserSpan {
 				if (token) {
 					this._end = this._start + token.length;
 					if (token === "//") {
-						while (this._script.charAt(this._end) !== ""
-							&& this._script.charAt(this._end) !== "\n") {
+						while (this._script.charAt(this._end) !== "" &&
+							this._script.charAt(this._end) !== "\n") {
 							++this._end;
 						}
 					}
 					else if (token === "///") {
-						++this._end;
-						while (this._script.charAt(this._end) !== ""
-							&& (this._script.charAt(this._end) !== "/"
-							|| this._script.charAt(this._end - 1) !== "/"
-							|| this._script.charAt(this._end - 2) !== "/")) {
-							++this._end;
-						}
-						if (this._end >= this._script.length) {
-							this._start = this._script.length;
+						this._end = this._script.indexOf("///", this._end);
+						if (this._end < 0) {
+							this._start = this._end = this._script.length;
 							throw new Error("missing closing comment mark");
 						}
-						++this._end;
+						this._end += 3;
 					}
 					else if (token === "@") {
 						const [ts, tsEnd] = parseLiteralTimestamp(this._script, this._start);
@@ -280,7 +275,7 @@ const tokens: [string, Type | Constant | Literal | false][] = [
 	["->", false],
 	["?", false],
 	["=>", false],
-	["..", false],
+	["..", funcRange],
 	["...", false],
 	["//", false],
 	["///", false],
@@ -317,7 +312,6 @@ const punctuators: string[] = [
 	"=>",
 	".",
 	".?",
-	"..",
 	"...",
 	"//",
 	"///",
@@ -328,6 +322,7 @@ const punctuators: string[] = [
 ];
 
 const operators: string[] = [
+	"..",
 	"?:",
 	"|",
 	"or",

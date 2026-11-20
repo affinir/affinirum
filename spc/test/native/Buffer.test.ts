@@ -3,7 +3,7 @@ import { runAffinirumTests } from "../../util/AffinirumTest.js";
 describe("Buffer function test", () => {
 	runAffinirumTests([
 		{
-			script: "a.Byte(b).Format()",
+			script: "a.ByteAt(b).Format()",
 			cases: [
 				{ values: { a: new Uint8Array([0xff, 0xff, 0x00, 0x01]).buffer, b: 3n }, result: "01" },
 				{ values: { a: new Uint8Array([0x10, 0x00]).buffer, b: 0n }, result: "10" },

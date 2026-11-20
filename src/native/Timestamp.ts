@@ -117,15 +117,14 @@ export const parseLiteralTimestamp = (value: string, offset = 0) => {
 		while (isTimeSymbol(value.charAt(i))) {
 			++i;
 		}
-		if (value.charAt(i) === "."
-			&& isNumericSymbol(value.charAt(i + 1))) {
+		if (value.charAt(i) === "." && isNumericSymbol(value.charAt(i + 1))) {
 			++i;
 			while (isNumericSymbol(value.charAt(i))) {
 				++i;
 			}
-			if (value.charAt(i) === "Z") {
-				++i;
-			}
+		}
+		if (value.charAt(i) === "Z") {
+			++i;
 		}
 	}
 	return [new Date(value.slice(offset + 1, i)), i] as const;

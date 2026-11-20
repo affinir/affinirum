@@ -36,8 +36,8 @@ export class AccessNode extends AssignableNode {
 	}
 
 	override get optionalAssignment(): boolean {
-		return this._operator === funcOptionalAt && this._subnode.type.isOptional
-			|| this._subnode instanceof AccessNode && this._subnode.optionalAssignment;
+		return this._operator === funcOptionalAt && this._subnode.type.isOptional ||
+			this._subnode instanceof AccessNode && this._subnode.optionalAssignment;
 	}
 
 	override get constant(): boolean {

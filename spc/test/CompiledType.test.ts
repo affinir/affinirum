@@ -40,14 +40,15 @@ describe("Compiled type test", () => {
 		["val y=['a':5];y", "[\"a\":integer]"],
 		["val a:[...float]=[];a", "[...float]"],
 		["val a:[float]=[1.0,'extra'];a", "[float]"],
-		["val o:[:float]=[:];o", "[:float]"],
-		["val o:[:string]=['a':'text'];o", "[:string]"],
+		["val o:[...:float]=[:];o", "[...:float]"],
+		["val o:[...:string]=['a':'text'];o", "[...:string]"],
+		["[...'a':1,'b':2]", "[...:integer]"],
 		["[0,1,2,3]", "[integer,integer,integer,integer]"],
 		["[\"0\",1,2,\"3\"]", "[string,integer,integer,string]"],
 		["[\"a\":100,\"b\":\"100\"]", "[\"a\":integer,\"b\":string]"],
 		["{=  ():null -> null}", "{=():null}"],
 		["{=() -> null}", "{=():any}"],
-		["val f:{=():}={=() -> 7};f", "{=():any}"],
+		["val f:{=()}={=() -> 7};f", "{=():any}"],
 		["{= (i:float):boolean -> i==0}", "{=(float):boolean}"],
 		["val f:{=(integer):string}|null;f", "null|{=(integer):string}"],
 		["{=(f:{=(integer):string|null}) -> }", "{=({=(integer):null|string}):any}"],
@@ -68,20 +69,29 @@ describe("Compiled type test", () => {
 	});
 	it.each<[string, Type, string]>([
 		["val x:[]|[...any]=[1];x", Type.Array, "[]"],
-		["val x:[:]|[:any]=['a':1];x", Type.Object, "[:]"],
+		["val x:[:]|[...:any]=['a':1];x", Type.Object, "[:]"],
 	])("normalizes collection type aliases in %s", (source, expected, formatted) => {
 		const { type } = new Affinirum(source);
 		expect(type.equals(expected)).toBe(true);
 		expect(type.toString()).toBe(formatted);
 	});
+	it("round-trips nested uniform object types with nullable values", () => {
+		const type = Type.objectType(Type.objectType(Type.OptionalString)).toOptional();
+		const expression = new Affinirum(`value::${type}`, { variables: { value: Type.Any } });
+		expect(expression.type.equals(type)).toBe(true);
+	});
 	it.each([
 		"[...]",
 		"[...:]",
-		"val x:[...]=[];x",
-		"val x:[...:]=[:];x",
-		"val x:[...:string]=[:];x",
-	])("rejects removed collection syntax in %s", (source) => {
-		expect(() => new Affinirum(source)).toThrow();
+		"[:string]",
+	])("requires complete uniform type syntax in %s", (annotation) => {
+		expect(() => new Affinirum(`value::${annotation}`, { variables: { value: Type.Any } })).toThrow();
+	});
+	it.each([
+		"[1,...2]",
+		"['a':1,...'b':2]",
+	])("rejects a misplaced ellipsis in %s", (source) => {
+		expect(() => new Affinirum(source)).toThrow(/ellipsis.*beginning/);
 	});
 	it.each(["function", "{=}"])("uses the generic function type for %s", (annotation) => {
 		const script = new Affinirum(`val f:${annotation}={=() -> 1};f`);
@@ -121,8 +131,8 @@ describe("Compiled type test", () => {
 		["val f:{=(array,...):}|null;f", /missing type name/],
 		["val f:{=(...):integer}|null;f", /missing type name/],
 		["{=(value:) -> value}", /missing type name/],
-		["val f:{=()}|null;f", /missing colon separator/],
-		["val f:{=(integer)}|null;f", /missing colon separator/],
+		["val f:{=():}|null;f", /missing type name/],
+		["val f:{=(integer):}|null;f", /missing type name/],
 	])("rejects a malformed type annotation in %s", (source, error) => {
 		expect(() => new Affinirum(source)).toThrow(error);
 	});
@@ -141,17 +151,17 @@ describe("Compiled type test", () => {
 		expect(empty()).toBeUndefined();
 	});
 	it.each<[string, RegExp]>([
-		["{=():integer}{1}", /missing function body separator/],
+		["{=():integer 1}", /missing function body separator/],
 		["{=(): -> 1}", /missing type name/],
 	])("rejects an invalid function header in %s", (source, error) => {
 		expect(() => new Affinirum(source)).toThrow(error);
 	});
-	it.each(["{:}", "{(integer):integer}"])("rejects the removed function type %s", (annotation) => {
-		expect(() => new Affinirum(`value::${annotation}`, { variables: { value: Type.Any } }))
+	it("requires the function marker in a function type", () => {
+		expect(() => new Affinirum("value::{(integer):integer}", { variables: { value: Type.Any } }))
 			.toThrow(/missing function marker/);
 	});
-	it.each(["{() -> 1}", "{(a:integer):integer -> a}"])("requires the function marker in %s", (source) => {
-		expect(() => new Affinirum(source)).toThrow();
+	it("requires the function marker in a function literal", () => {
+		expect(() => new Affinirum("{(a:integer):integer -> a}")).toThrow();
 	});
 	it("rejects a generic function type in expression position", () => {
 		expect(() => new Affinirum("{=}")).toThrow();
@@ -179,7 +189,7 @@ describe("Compiled type test", () => {
 		["{=}?", Type.OptionalFunction],
 		["(integer|string)?", Type.union(Type.Integer, Type.String, Type.Null)],
 		["[...integer]?", Type.arrayType(Type.Integer).toOptional()],
-		["[:string]?", Type.objectType(Type.String).toOptional()],
+		["[...:string]?", Type.objectType(Type.String).toOptional()],
 		["[integer,string]?", Type.arrayType([Type.Integer, Type.String]).toOptional()],
 		["[\"a\":string]?", Type.objectType([["a", Type.String]]).toOptional()],
 		["{=():integer}?", Type.functionType([[Type.Integer, []]]).toOptional()],

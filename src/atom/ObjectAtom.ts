@@ -61,9 +61,9 @@ export class ObjectAtom implements IAtom {
 		if (types instanceof Type) {
 			return other instanceof Type && types.equals(other);
 		}
-		return !(other instanceof Type)
-			&& types.length === other.length
-			&& types.every(([key, type]) => type.equals(atom.valType(key)));
+		return !(other instanceof Type) &&
+			types.length === other.length &&
+			types.every(([key, type]) => type.equals(atom.valType(key)));
 	}
 
 	accepts(atom: IAtom): boolean {
@@ -107,7 +107,7 @@ export class ObjectAtom implements IAtom {
 	toString(): string {
 		const types = this._valTypes;
 		if (types instanceof Type) {
-			return types.isAny ? "[:]" : `[:${types}]`;
+			return types.isAny ? "[:]" : `[...:${types}]`;
 		}
 		return `[${types.map(([key, type]) => {
 			const normalized = key.replace(/[\\"]/g, "\\$&");

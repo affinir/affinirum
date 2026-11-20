@@ -97,29 +97,38 @@ describe("Object type inference test", () => {
 
 	it("preserves variadic calls used as object property values", () => {
 		const expression = new Affinirum(
-			"val sum={=(first:integer,rest:...integer):integer -> first+Integer.Sum(rest)};['a':sum(1,value,3)]",
-			{ type: Type.objectType([["a", Type.Integer]]) },
+			"val collect={=(items:...integer):[...integer] -> items};['a':collect(1,value,3)]",
+			{ type: Type.objectType([["a", Type.arrayType(Type.Integer)]]) },
 		);
 		expect(expression.variables().value.equals(Type.Integer)).toBe(true);
-		expect(expression.evaluate({ value: 2n })).toEqual({ a: 6n });
+		expect(expression.evaluate({ value: 2n })).toEqual({ a: [1n, 2n, 3n] });
 	});
 });
 
 describe("Uniform object compilation test", () => {
 	const type = Type.objectType(Type.Integer);
 
+	it.each<[string, Type, Record<string, bigint | string>]>([
+		["[...key:1]", Type.Integer, { a: 1n }],
+		["[...'fixed':'text',key:1]", Type.union(Type.String, Type.Integer), { fixed: "text", a: 1n }],
+	])("infers all uniform value types in %s", (source, valueType, expected) => {
+		const expression = new Affinirum(source);
+		expect(expression.type.equals(Type.objectType(valueType))).toBe(true);
+		expect(expression.evaluate({ key: "a" })).toEqual(expected);
+	});
+
 	it.each<[string, Record<string, bigint>]>([
 		["[:]", {}],
 		["['a':1,'b':2]", { a: 1n, b: 2n }],
 		["['':3]", { "": 3n }],
 	])("accepts uniform object arguments in %s", (script, expected) => {
-		const expression = new Affinirum(`({=(a:[:integer]):[:integer] -> a})(${script})`);
+		const expression = new Affinirum(`({=(a:[...:integer]):[...:integer] -> a})(${script})`);
 		expect(expression.evaluate()).toEqual(expected);
 	});
 
 	it.each([
-		"({=(a:[:integer]):float -> 1.0})(['a':1,'b':2.0])",
-		"({=(a:[:integer?]):float -> 1.0})(['a':'bad'])",
+		"({=(a:[...:integer]):float -> 1.0})(['a':1,'b':2.0])",
+		"({=(a:[...:integer?]):float -> 1.0})(['a':'bad'])",
 	])("rejects incompatible uniform object arguments in %s", (script) => {
 		expect(() => new Affinirum(script)).toThrow(/mismatch with expected type/);
 	});
@@ -134,7 +143,7 @@ describe("Uniform object compilation test", () => {
 
 	it("checks computed entries against a uniform parameter", () => {
 		const script = "[(key):'bad']";
-		expect(() => new Affinirum(`({=(a:[:integer]):[:integer] -> a})(${script})`))
+		expect(() => new Affinirum(`({=(a:[...:integer]):[...:integer] -> a})(${script})`))
 			.toThrow(/mismatch with expected type integer/);
 	});
 
@@ -175,8 +184,8 @@ describe("Uniform object compilation test", () => {
 	});
 
 	it("uses uniform constraints when compiling casts", () => {
-		expect(() => new Affinirum("['a':'bad']::[:integer]")).toThrow(/cannot cast type/);
-		const expression = new Affinirum("value::[:string]", { variables: { value: type } });
+		expect(() => new Affinirum("['a':'bad']::[...:integer]")).toThrow(/cannot cast type/);
+		const expression = new Affinirum("value::[...:string]", { variables: { value: type } });
 		expect(expression.evaluate({ value: {} })).toEqual({});
 		expect(() => expression.evaluate({ value: { a: 1n } })).toThrow(/cannot cast value/);
 	});

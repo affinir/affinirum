@@ -46,8 +46,8 @@ function encodeIP(value: string): ArrayBuffer {
 	const lastPart = zeroCompressionFlag ? endParts[endParts.length - 1] : beginParts[beginParts.length - 1];
 	const ipv4TailFlag = lastPart?.includes(".");
 	if (ipv4TailFlag) {
-		if (zeroCompressionFlag && beginParts.length + endParts.length > 6
-			|| !zeroCompressionFlag && beginParts.length + endParts.length !== 7) {
+		if (zeroCompressionFlag && beginParts.length + endParts.length > 6 ||
+			!zeroCompressionFlag && beginParts.length + endParts.length !== 7) {
 			throw new Error(`Invalid IP address: ${value}`);
 		}
 		const ipv4Parts = lastPart.split(".");
@@ -60,8 +60,8 @@ function encodeIP(value: string): ArrayBuffer {
 		}
 	}
 	else {
-		if (zeroCompressionFlag && beginParts.length + endParts.length > 7
-			|| !zeroCompressionFlag && beginParts.length + endParts.length !== 8) {
+		if (zeroCompressionFlag && beginParts.length + endParts.length > 7 ||
+			!zeroCompressionFlag && beginParts.length + endParts.length !== 8) {
 			throw new Error(`Invalid IP address: ${value}`);
 		}
 	}
@@ -202,13 +202,11 @@ class IPSet {
 
 }
 
-const typeStringOrArray = Type.union(Type.String, Type.arrayType(Type.String));
-
 const funcMatchIP = new Constant(
-	(values: string[], ...search: (string | string[])[]) => {
+	(values: string[], ...search: string[]) => {
 		try {
 			const ipset = new IPSet().add(values);
-			for (const ip of search.flat()) {
+			for (const ip of search) {
 				try {
 					if (ipset.has(ip)) {
 						return true;
@@ -220,7 +218,7 @@ const funcMatchIP = new Constant(
 		catch {}
 		return false;
 	},
-	Type.functionType([[Type.Boolean, [Type.arrayType(Type.String), Type.arrayType(typeStringOrArray)], true]]),
+	Type.functionType([[Type.Boolean, [Type.arrayType(Type.String), Type.arrayType(Type.String)], true]]),
 );
 
 const funcEncodeIP = new Constant(

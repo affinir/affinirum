@@ -2,8 +2,8 @@ import { Affinirum, Type, Value } from "../../src/index.js";
 
 describe("Indexed assignment test", () => {
 	it.each([
-		"var value:object=[:never];value.key=1",
-		"val make={=():object -> [:never]};var value=make();value.key=1",
+		"var value:object=[...:never];value.key=1",
+		"val make={=():object -> [...:never]};var value=make();value.key=1",
 	])("preserves an exact-empty object literal through a broader alias in %s", (source) => {
 		const expression = new Affinirum(source);
 		expect(() => expression.evaluate()).toThrow(/indexed value mismatch with expected type/);
@@ -118,16 +118,56 @@ describe("Indexed assignment test", () => {
 		expect(() => expression.evaluate()).toThrow(/indexed value mismatch with expected type integer/);
 	});
 
-	it.each<[string, boolean]>([
-		["|=", true],
-		["&=", false],
-	])("resolves a Boolean compound target once for %s", (operator, expected) => {
-		let calls = 0;
-		const expression = new Affinirum(`var items=[${expected}];items[index()]${operator}{items[0]=${!expected};${!expected}};items[0]`, {
-			variables: { index: Type.functionType([[Type.Integer, []]]) },
+	it.each<[string, boolean, boolean]>([
+		["&=", false, false],
+		["|=", true, false],
+		["&=", true, true],
+		["|=", false, true],
+	])("resolves a Boolean compound target once for %s with initial value %s", (operator, initial, needsRhs) => {
+		const original = [initial];
+		const replacement = [!initial];
+		let receiver = original;
+		const events: string[] = [];
+		const expression = new Affinirum(`items()[index()]${operator}rhs()`, {
+			variables: {
+				items: Type.functionType([[Type.Array, []]]),
+				index: Type.functionType([[Type.Integer, []]]),
+				rhs: Type.functionType([[Type.Boolean, []]], true),
+			},
 		});
-		expect(expression.evaluate({ index: () => { ++calls; return 0n; } })).toBe(expected);
-		expect(calls).toBe(1);
+		expect(expression.evaluate({
+			items: () => { events.push("items"); return receiver; },
+			index: () => { events.push("index"); return 0n; },
+			rhs: () => {
+				events.push("rhs");
+				if (!needsRhs) {
+					throw new Error("RHS must be skipped");
+				}
+				receiver = replacement;
+				original[0] = !initial;
+				return initial;
+			},
+		})).toBe(initial);
+		expect(events).toEqual(needsRhs ? ["items", "index", "rhs"] : ["items", "index"]);
+		expect(original).toEqual([initial]);
+		expect(replacement).toEqual([!initial]);
+	});
+
+	it.each<[string, boolean]>([
+		["&=", false],
+		["|=", true],
+	])("skips writing a frozen property when %s short-circuits", (operator, initial) => {
+		const record = Object.freeze(Object.assign(Object.create(null) as Record<string, Value>, { enabled: initial }));
+		const expression = new Affinirum(`getRecord().enabled${operator}fail()`, {
+			variables: {
+				getRecord: Type.functionType([[Type.Object, []]]),
+				fail: Type.functionType([[Type.Boolean, []]], true),
+			},
+		});
+		expect(expression.evaluate({
+			getRecord: () => record,
+			fail: () => { throw new Error("RHS must be skipped"); },
+		})).toBe(initial);
 	});
 
 	it.each<[string, bigint]>([

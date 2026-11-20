@@ -54,16 +54,21 @@ export class TypeParser {
 		}
 		else if (state.equals("[")) { // composite type
 			state.next();
-			if (state.equals("...", ":")) {
-				const object = state.equals(":");
-				state.next();
-				const valType = object && state.equals("]") ? Type.Any : this.parse(state, scope);
+			if (state.equals("...")) {
+				const object = state.next().equals(":");
+				if (object) {
+					state.next();
+				}
+				const valType = this.parse(state, scope);
 				state.closeBrackets();
 				state.next();
 				return object ? Type.objectType(valType) : Type.arrayType(valType);
 			}
 			const valTypes: [string, Type][] = [];
-			let index = 0, colon = false;
+			let index = 0, colon = state.equals(":");
+			if (colon) {
+				state.next().closeBrackets();
+			}
 			while (!state.equals("]")) {
 				if (state.isLiteral && typeof state.literal.value === "string") {
 					const key = state.literal.value;
@@ -111,8 +116,7 @@ export class TypeParser {
 				}
 			}
 			state.closeParentheses();
-			state.next().assertColon();
-			const retType = state.next().equals("}") ? Type.Any : this.parse(state, scope);
+			const retType = state.next().equals(":") ? this.parse(state.next(), scope) : Type.Any;
 			state.closeBraces();
 			state.next();
 			return Type.functionType([[retType, argTypes, variadic]]);

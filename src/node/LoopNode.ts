@@ -7,21 +7,24 @@ import { CallFrame } from "../CallFrame.js";
 
 export class LoopNode extends Node {
 
-	protected _cnode: Node;
 	protected _subnode: Node;
+	protected _wnode: Node | undefined;
+	protected _unode: Node | undefined;
 
 	constructor(
 		span: ParserSpan,
-		cnode: Node,
 		subnode: Node,
+		wnode: Node | undefined,
+		unode: Node | undefined,
 	) {
 		super(span);
-		this._cnode = cnode;
 		this._subnode = subnode;
+		this._wnode = wnode;
+		this._unode = unode;
 	}
 
 	override get type(): Type {
-		return this._cnode.type.isNever ? Type.Never : this._subnode.type.toOptional();
+		return this._wnode?.type.isNever ? Type.Never : this._subnode.type.toOptional();
 	}
 
 	override satisfies(type: Type): boolean {
@@ -29,8 +32,9 @@ export class LoopNode extends Node {
 	}
 
 	override compile(type = Type.Any): Node {
-		this._cnode = this._cnode.compile(Type.Boolean);
-		this._subnode = this._subnode.compile(this._cnode.type.isNever ? Type.Any : type);
+		this._wnode = this._wnode?.compile(Type.Boolean);
+		this._unode = this._unode?.compile(Type.Boolean);
+		this._subnode = this._subnode.compile(this._wnode?.type.isNever ? Type.Any : type);
 		return super.compile(type);
 	}
 
@@ -38,7 +42,7 @@ export class LoopNode extends Node {
 		let result: Value = undefined;
 		while (true) {
 			frame.timer();
-			if (!this._cnode.evaluate(frame)) {
+			if (this._wnode && !this._wnode.evaluate(frame)) {
 				break;
 			}
 			try {
@@ -52,13 +56,17 @@ export class LoopNode extends Node {
 					break;
 				}
 			}
+			if (this._unode && this._unode.evaluate(frame)) {
+				break;
+			}
 		}
 		return result;
 	}
 
 	override toString(ident: number = 0): string {
-		return `${super.toString(ident)} loop node cnode:\n${this._cnode.toString(ident + 1)}\n`
-			+ `${super.toString(ident)} loop node subnode:\n${this._subnode.toString(ident + 1)}`;
+		return `${super.toString(ident)} loop node subnode:\n${this._subnode.toString(ident + 1)}` +
+			(this._wnode ? `\n${super.toString(ident)} loop node while node:\n${this._wnode.toString(ident + 1)}` : "") +
+			(this._unode ? `\n${super.toString(ident)} loop node until node:\n${this._unode.toString(ident + 1)}` : "");
 	}
 
 }

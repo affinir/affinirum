@@ -4,7 +4,7 @@ import { createInteger } from "./Integer.js";
 
 export type StringEncoding = "utf8" | "sbcs" | "ucs2" | "ucs2le";
 
-export const isAlphanumericSymbol = (c: string) => c >= "a" && c <= "z" || c >= "0" && c <= "9";
+export const isAlphanumericSymbol = (c: string) => c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c >= "0" && c <= "9";
 export const isIdentifierStartSymbol = (c: string) =>  c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_" || c === "#" || c === "$";
 export const isIdentifierSymbol = (c: string) => isIdentifierStartSymbol(c) || c >= "0" && c <= "9";
 export const isHexadecimalSymbol = (c: string) => c >= "0" && c <= "9" || c >= "a" && c <= "f" || c >= "A" && c <= "F";
@@ -312,7 +312,6 @@ const decodeString = (value?: ArrayBuffer, encoding: StringEncoding = "utf8", by
 const typeStringEquator = Type.functionType([[Type.Boolean, [Type.String, Type.String]]]);
 const typeStringComparator = Type.functionType([[Type.Boolean, [Type.String, Type.String, Type.OptionalInteger, Type.OptionalBoolean]]]);
 const typeStringMutator = Type.functionType([[Type.String, [Type.String]]]);
-const typeStringOrArray = Type.union(Type.String, Type.arrayType(Type.String));
 
 export const funcLike = new Constant(
 	(value1: string, value2: string) =>
@@ -338,7 +337,7 @@ export const funcEndsWith = new Constant(
 	typeStringComparator,
 );
 
-export const funcChar = new Constant(
+export const funcCharAt = new Constant(
 	(value: string, pos: bigint) =>
 		value == null
 			? undefined
@@ -346,7 +345,7 @@ export const funcChar = new Constant(
 	Type.functionType([[Type.OptionalString, [Type.String, Type.Integer]]]),
 );
 
-export const funcCharCode = new Constant(
+export const funcCharCodeAt = new Constant(
 	(value: string, pos: bigint) =>
 		value == null
 			? undefined
@@ -391,21 +390,21 @@ export const funcSplit = new Constant(
 );
 
 export const funcReplaceWith = new Constant(
-	(value: string, replacement: string, ...search: (string | string[])[]) =>
-		replaceWith(value, replacement, ...search.flat()),
-	Type.functionType([[Type.String, [Type.String, Type.String, Type.arrayType(typeStringOrArray)], true]]),
+	(value: string, replacement: string, ...search: string[]) =>
+		replaceWith(value, replacement, ...search),
+	Type.functionType([[Type.String, [Type.String, Type.String, Type.arrayType(Type.String)], true]]),
 );
 
 const funcAlphanumeric = new Constant(
 	(value: string) => {
-		if (!value) {
+		if (value == null) {
 			return undefined;
 		}
-		const str = value.toLowerCase();
 		let result = "";
-		for (let i = 0; i < str.length; ++i) {
-			if (isAlphanumericSymbol(str[i])) {
-				result += value[i];
+		for (let i = 0; i < value.length; ++i) {
+			const c = value[i];
+			if (isAlphanumericSymbol(c)) {
+				result += c.toLowerCase();
 			}
 		}
 		return result;

@@ -176,9 +176,9 @@ export class Type {
 	}
 
 	hasFunction(): boolean {
-		return Boolean(this._atoms?.some((atom) => atom instanceof FunctionAtom
-			|| atom instanceof ArrayAtom && atom.valTypes().some((type) => type.hasFunction())
-			|| atom instanceof ObjectAtom && atom.valTypes().some(([, type]) => type.hasFunction())));
+		return Boolean(this._atoms?.some((atom) => atom instanceof FunctionAtom ||
+			atom instanceof ArrayAtom && atom.valTypes().some((type) => type.hasFunction()) ||
+			atom instanceof ObjectAtom && atom.valTypes().some(([, type]) => type.hasFunction())));
 	}
 
 	reduce(type: Type): Type | undefined {
@@ -341,13 +341,13 @@ export class Type {
 	}
 
 	static isPrimitive(value: Value) {
-		return value == null
-			|| typeof value === "boolean"
-			|| value instanceof Date
-			|| typeof value === "number"
-			|| typeof value === "bigint"
-			|| value instanceof ArrayBuffer
-			|| typeof value === "string";
+		return value == null ||
+			typeof value === "boolean" ||
+			value instanceof Date ||
+			typeof value === "number" ||
+			typeof value === "bigint" ||
+			value instanceof ArrayBuffer ||
+			typeof value === "string";
 	}
 
 	static isFunction(value: Value) {

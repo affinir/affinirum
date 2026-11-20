@@ -27,8 +27,8 @@ export class ArrayNode extends Node {
 	}
 
 	override satisfies(type: Type): boolean {
-		return this.type.isNever || super.satisfies(type)
-			&& this._subnodes.every((node, index) => node.satisfies(type.arrayAtomValType(index)));
+		return this.type.isNever || super.satisfies(type) &&
+			this._subnodes.every((node, index) => node.satisfies(type.arrayAtomValType(index)));
 	}
 
 	override compile(type = Type.Any): Node {

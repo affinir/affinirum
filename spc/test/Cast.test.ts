@@ -10,7 +10,7 @@ describe("Cast test", () => {
 
 	it.each<[string, string]>([
 		["[...never]", "[]::[...never]"],
-		["[:never]", "[:]::[:never]"],
+		["[...:never]", "[:]::[...:never]"],
 	])("gives %s the same type and empty value as its cast", (literal, cast) => {
 		const expression = new Affinirum(literal);
 		const equivalent = new Affinirum(cast);
@@ -22,18 +22,19 @@ describe("Cast test", () => {
 	it.each([
 		"[never]",
 		"[...never,1]",
-		"[:never,1]",
+		"[...:never,1]",
 		"[1,...never]",
-		"[:never|string]",
-		"[...:never]",
+		"[...:never|string]",
+		"[:never]",
+		"[...:1]",
 	])("rejects malformed exact-empty literal %s", (source) => {
 		expect(() => new Affinirum(source)).toThrow();
 	});
 
 	it.each<[string, string, string, Value]>([
 		["[...never]", "[]", "[1]", []],
-		["[:never]", "{}", "{\"a\":1}", {}],
-		["[:string]", "{\"a\":\"text\"}", "{\"a\":1}", { a: "text" }],
+		["[...:never]", "{}", "{\"a\":1}", {}],
+		["[...:string]", "{\"a\":\"text\"}", "{\"a\":1}", { a: "text" }],
 		["[...float]", "[1,2]", "[1,\"two\"]", [1, 2]],
 	])("checks runtime collection values against %s", (type, valid, invalid, expected) => {
 		const expression = new Affinirum(`JSON.Parse(value)::${type}`);

@@ -269,8 +269,17 @@ export class Affinirum {
 	}
 
 	protected _comparison(state: ParserState, scope: LexicalScope): Node {
-		let node = this._aggregate(state, scope);
+		let node = this._range(state, scope);
 		while (state.equals(">", "<", ">=", "<=", "==", "!=")) {
+			const fnode = new ConstantNode(state, state.constant);
+			node = new CallNode(state, fnode, [node, this._range(state.next(), scope)]);
+		}
+		return node;
+	}
+
+	protected _range(state: ParserState, scope: LexicalScope): Node {
+		let node = this._aggregate(state, scope);
+		if (state.equals("..")) {
 			const fnode = new ConstantNode(state, state.constant);
 			node = new CallNode(state, fnode, [node, this._aggregate(state.next(), scope)]);
 		}
@@ -442,7 +451,7 @@ export class Affinirum {
 		else if (state.equals("if")) {
 			return this._ternary(state, scope);
 		}
-		else if (state.equals("while")) {
+		else if (state.equals("while", "do")) {
 			return this._loop(state, scope);
 		}
 		else if (state.equals("->")) {
@@ -591,14 +600,20 @@ export class Affinirum {
 				if (ellipsis) {
 					state.throwError("repeated ellipsis");
 				}
+				if (subnodes.length > 0) {
+					state.throwError("ellipsis must appear at the beginning of an array or object literal");
+				}
 				ellipsis = true;
 				state.next();
 			}
-			else if (state.equals(":")) {
+			if (state.equals(":")) {
 				colon = true;
 				state.next();
-				if (!state.equals("never")) {
+				if (!ellipsis) {
 					break;
+				}
+				if (!state.equals("never")) {
+					state.throwError("missing never literal");
 				}
 			}
 			if (subnodes.length === 0 && (ellipsis || colon) && state.equals("never")) {
@@ -651,19 +666,28 @@ export class Affinirum {
 
 	protected _loop(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
-		const cnode = this._unit(state.next(), scope);
-		span.end(state);
-		if (state.equals("do")) {
-			state.next();
+		const wnode = state.equals("while")
+			? this._unit(state.next(), scope)
+			: undefined;
+		if (wnode) {
+			if (state.equals("do")) {
+				state.next();
+			}
+			else if (!state.equals("{")) {
+				state.throwError("missing 'do' or '{' after the while condition")
+			}
 		}
-		else if (!state.equals("{")) {
-			state.throwError("missing 'do' or '{' after the while condition")
+		else {
+			state.next();
 		}
 		const inLoop = scope.inLoop;
 		scope.inLoop = true;
-		const node = new LoopNode(span, cnode, this._unit(state, scope));
+		const subnode = this._unit(state, scope);
 		scope.inLoop = inLoop;
-		return node;
+		const unode = state.equals("until")
+			? this._unit(state.next(), scope)
+			: undefined;
+		return new LoopNode(span, subnode, wnode, unode);
 	}
 
 }

@@ -135,7 +135,7 @@ describe("Assignment test", () => {
 		"while false do var x:integer=1; x",
 		"1 ?: (var x:integer=1); x",
 		"val items:array?=null; items?[(var x:integer=1)]; x",
-		"val text:string?=null; text?.Char((var x:integer=1)); x",
+		"val text:string?=null; text?.CharAt((var x:integer=1)); x",
 		"['entry':val x=1]",
 	])("rejects a declaration in an expression in %s", (script) => {
 		expect(() => new Affinirum(script)).toThrow(/unexpected variable declaration/);

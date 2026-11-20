@@ -17,23 +17,16 @@ describe("Object function test", () => {
 			],
 		},
 		{
-			script: "Object.Merge(a, b,c).i == 0",
+			script: "Object.Merge(a, b).prop",
 			cases: [
-				{ values: { a: { f: 0, d: 0 }, b: { i: 0 }, c: {} }, result: true },
-				{ values: { a: { i: 50, d: 0 }, b: { i: 0 }, c: { prop: 1 } }, result: true },
+				{ values: { a: { a: 1 }, b: { prop: "merged" } }, result: "merged" },
+				{ values: { a: { prop: 1 }, b: { prop: 2 } }, result: 2 },
 			],
 		},
 		{
-			script: "Object.Merge(items).prop",
+			script: "Object.Merge(a, b, c).prop + Object.Merge(a, b, c).extra",
 			cases: [
-				{ values: { items: [{ a: 1 }, { prop: "merged" }] }, result: "merged" },
-				{ values: { items: [{ prop: 1 }, { prop: 2 }] }, result: 2 },
-			],
-		},
-		{
-			script: "Object.Merge(a, items).prop + Object.Merge(a, items).extra",
-			cases: [
-				{ values: { a: { prop: 1 }, items: [{ prop: 2 }, { extra: 3 }] }, result: 5 },
+				{ values: { a: { prop: 1 }, b: { prop: 2 }, c: { extra: 3 } }, result: 5 },
 			],
 		},
 		{

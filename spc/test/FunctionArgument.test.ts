@@ -47,9 +47,9 @@ vfunc(cfunc)
 	});
 
 	it("uses the declared variadic signature after a later assignment", () => {
-		const expression = new Affinirum("var f:{=(...integer):integer}={=(items:...integer):integer -> 0};f={=(items:...integer):integer -> Integer.Sum(items)};f(1,2)");
-		expect(expression.type.equals(Type.Integer)).toBe(true);
-		expect(expression.evaluate()).toBe(3n);
+		const expression = new Affinirum("var f:{=(...integer):[...integer]}={=(items:...integer):[...integer] -> []};f={=(items:...integer):[...integer] -> items};f(1,2)");
+		expect(expression.type.equals(Type.arrayType(Type.Integer))).toBe(true);
+		expect(expression.evaluate()).toEqual([1n, 2n]);
 	});
 
 	it("does not combine arguments from separate overloads", () => {
@@ -267,13 +267,13 @@ use({=(x:integer):integer ->  x })
 	});
 	it.each<[string, RegExp]>([
 		["[1].Derive({=(value:integer):integer -> 'bad'})", /type string mismatch with expected type integer/],
-		["['a'].Compose({=(acc:object,key:string):string -> key.Char(0)})", /mismatch with expected type string/],
+		["['a'].Compose({=(acc:object,key:string):string -> key.CharAt(0)})", /mismatch with expected type string/],
 		["[1,2].Reduce({=(a:integer,b:integer):float -> a.Subtract(b)})", /type integer mismatch with expected type float/],
 	])("rejects a callback whose body does not match its declared return type in %s", (script, error) => {
 		expect(() => new Affinirum(script)).toThrow(error);
 	});
 	it("accepts optional callback results", () => {
-		const script = new Affinirum("['','a'].Derive({=(key:string):string? -> if key.Length>0 {key.Char(0)} else {null}})");
+		const script = new Affinirum("['','a'].Derive({=(key:string):string? -> if key.Length>0 {key.CharAt(0)} else {null}})");
 		expect(script.evaluate()).toEqual([undefined, "a"]);
 	});
 });

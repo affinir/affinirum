@@ -25,8 +25,8 @@ export abstract class InvocationNode extends Node {
 			return Type.Never;
 		}
 		const groups = candidateGroups.map((group) => group.filter((signature) =>
-			args.every((node, i) => node.satisfies(signature.paramType(i) ?? Type.Any))
-			&& signature.acceptsVariadic(compiledArgTypes)
+			args.every((node, i) => node.satisfies(signature.paramType(i) ?? Type.Any)) &&
+			signature.acceptsVariadic(compiledArgTypes)
 		));
 		if (!functionType.isFunction || groups.some((group) => !group.length)) {
 			this.throwError(`value of type ${functionType} cannot be called with ${argc} argument(s)`);

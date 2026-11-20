@@ -6,6 +6,7 @@ import { ParserSpan } from "../ParserSpan.js";
 import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { CallFrame } from "../CallFrame.js";
+import { funcAnd, funcOr } from "../native/Boolean.js";
 
 export class AssignmentNode extends InvocationNode {
 
@@ -33,8 +34,8 @@ export class AssignmentNode extends InvocationNode {
 	}
 
 	override satisfies(type: Type): boolean {
-		return super.satisfies(type)
-			&& (this._operator !== undefined || !type.accepts(this._subnode.type) || this._subnode.satisfies(type));
+		return super.satisfies(type) &&
+			(this._operator !== undefined || !type.accepts(this._subnode.type) || this._subnode.satisfies(type));
 	}
 
 	override compile(type = Type.Any): Node {
@@ -65,6 +66,10 @@ export class AssignmentNode extends InvocationNode {
 			this._anode.throwError(`indexed value mismatch with expected type ${resolver.type}`);
 		}
 		const operation = this._operator.value as (left: Value, right: Value) => Value;
+		if (operation === funcAnd.value && value === false ||
+			operation === funcOr.value && value === true) {
+			return value;
+		}
 		const result = operation(value, this._subnode.evaluate(frame));
 		return resolver.set(frame.define(result, this._type ?? Type.Any));
 	}

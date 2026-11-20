@@ -3,7 +3,7 @@ import { Affinirum, Type, Value } from "../../src/index.js";
 describe("Constant folding test", () => {
 	it.each<[string, Value]>([
 		["[...never]", []],
-		["[:never]", {}],
+		["[...:never]", {}],
 	])("keeps the %s literal empty across function calls and evaluations", (literal, expected) => {
 		const expression = new Affinirum(`val f={=():${literal} -> ${literal}};[f(),f()]`);
 		const first = expression.evaluate() as Value[];
@@ -14,7 +14,7 @@ describe("Constant folding test", () => {
 
 	it.each<[string, Value[]]>([
 		["[]", []],
-		["Array.Range(0,2)", [0n, 1n]],
+		["Array.Range(0,2)", [0n, 1n, 2n]],
 	])("creates fresh arrays from %s for each function call and evaluation", (source, expected) => {
 		const expression = new Affinirum(`val f={=():array -> ${source}};[f(),f()]`);
 		const first = expression.evaluate() as Value[][];

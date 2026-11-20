@@ -1,5 +1,14 @@
 const rules = {
 	"@stylistic/arrow-spacing": ["error", { "before": true, "after": true }],
+	// Require trailing && and || without constraining other operators.
+	"@stylistic/operator-linebreak": [ "error", "after", {
+		"overrides": Object.fromEntries([
+			"+", "-", "*", "/", "%", "**", "==", "!=", "===", "!==",
+			"<", "<=", ">", ">=", "<<", ">>", ">>>", "&", "|", "^", "in", "instanceof", "??",
+			"=", "+=", "-=", "*=", "/=", "%=", "**=", "<<=", ">>=", ">>>=",
+			"&=", "|=", "^=", "&&=", "||=", "??=", "?", ":",
+		].map((operator) => [operator, "ignore"])),
+	} ],
 	"@typescript-eslint/ban-types": "off",
 	"@typescript-eslint/consistent-type-assertions": [ "error", { "assertionStyle": "as" } ],
 	"@typescript-eslint/consistent-type-definitions": "error",

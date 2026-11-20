@@ -236,16 +236,7 @@ describe("IP matching test", () => {
 			]
 		},
 		{
-			script: "IP.Match([\"192.0.2.1\", \"198.51.100.2\", \"2001:db8::3\"], [ip])",
-			cases: [
-				{ values: { ip: "192.0.2.1" }, result: true },
-				{ values: { ip: "198.51.100.2" }, result: true },
-				{ values: { ip: "2001:db8::3" }, result: true },
-				{ values: { ip: "2001:db8::4" }, result: false },
-			]
-		},
-		{
-			script: "IP.Match([\"192.0.2.1\", \"198.51.100.2\", \"2001:db8::3\"], [ip1], ip2)",
+			script: "IP.Match([\"192.0.2.1\", \"198.51.100.2\", \"2001:db8::3\"], ip1, ip2)",
 			cases: [
 				{ values: { ip1: "192.0.2.1", ip2: "2001:db8::4" }, result: true },
 				{ values: { ip1: "198.51.100.2", ip2: "2001:db8::4" }, result: true },
@@ -253,7 +244,7 @@ describe("IP matching test", () => {
 			]
 		},
 		{
-			script: "IP.Match([\"192.0.2.1\", \"192.0.2.1\", \"192.0.2.1\"], ip1, [ip2])",
+			script: "IP.Match([\"192.0.2.1\", \"192.0.2.1\", \"192.0.2.1\"], ip1, ip2)",
 			cases: [
 				{ values: { ip1: "192.0.2.1", ip2: "2001:db8::4" }, result: true },
 				{ values: { ip1: "198.51.100.2", ip2: "2001:db8::4" }, result: false },

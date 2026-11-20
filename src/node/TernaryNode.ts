@@ -49,8 +49,8 @@ export class TernaryNode extends Node {
 
 	override toString(ident: number = 0): string {
 		const subnodes = this._subnodes.map((s) => s.toString(ident + 1)).join("\n");
-		return `${super.toString(ident)} switch node cnode:\n${this._cnode.toString(ident + 1)}\n`
-			+ `${super.toString(ident)} switch node subnodes:\n${subnodes}`;
+		return `${super.toString(ident)} ternary node condition node:\n${this._cnode.toString(ident + 1)}\n`
+			+ `${super.toString(ident)} ternary node subnodes:\n${subnodes}`;
 	}
 
 }

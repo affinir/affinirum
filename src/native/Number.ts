@@ -35,8 +35,8 @@ export const parseLiteralNumber = (value: string, offset = 0) => {
 	}
 	if (value.charAt(i) === "e") {
 		++i;
-		if (isNumericSymbol(value.charAt(i))
-			|| isSignSymbol(value.charAt(i))) {
+		if (isNumericSymbol(value.charAt(i)) ||
+			isSignSymbol(value.charAt(i))) {
 			++i;
 			while (isNumericSymbol(value.charAt(i))) {
 				++i;

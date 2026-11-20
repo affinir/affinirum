@@ -3,7 +3,7 @@ import { funcAdd } from "../native/Aggregable.js";
 import { funcFirst, funcLast, funcFirstIndex, funcLastIndex, funcEvery, funcAny,
 	funcFlatten, funcReverse, funcDerive, funcFilter, funcReduce, funcCompose } from "../native/Array.js";
 import { funcBoolean } from "../native/Boolean.js";
-import { funcByte } from "../native/Buffer.js";
+import { funcByteAt } from "../native/Buffer.js";
 import { funcAt, funcOptionalAt, funcHas, funcOptionalHas } from "../native/Composite.js";
 import { funcSlice, funcSplice, funcInject } from "../native/Enumerable.js";
 import { funcFloat } from "../native/Float.js";
@@ -13,7 +13,7 @@ import { funcGreaterThan, funcLessThan, funcGreaterOrEqual, funcLessOrEqual, fun
 	funcPower, funcRoot, funcNegate } from "../native/Number.js";
 import { funcEntries, funcKeys, funcValues } from "../native/Object.js";
 import { funcLike, funcNotLike, funcStartsWith, funcEndsWith,
-	funcChar, funcCharCode, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit, funcReplaceWith } from "../native/String.js";
+	funcCharAt, funcCharCodeAt, funcTrim, funcTrimStart, funcTrimEnd, funcLowerCase, funcUpperCase, funcSplit, funcReplaceWith } from "../native/String.js";
 import { funcYear, funcMonth, funcMonthIndex, funcWeekdayIndex, funcDay, funcHour, funcMinute, funcSecond, funcMillisecond, funcEpochTime,
 	funcDaysSince, funcHoursSince, funcMinutesSince, funcSecondsSince } from "../native/Timestamp.js";
 import { funcCoalesce, funcEquals, funcNotEquals, funcEncode, funcFormat } from "../native/Unknown.js";
@@ -35,7 +35,7 @@ export const functions: [string, Constant][] = [
 	["Reduce", funcReduce],
 	["Compose", funcCompose],
 	// Buffer
-	["Byte", funcByte],
+	["ByteAt", funcByteAt],
 	// Composite
 	["At", funcAt],
 	["OptionalAt", funcOptionalAt],
@@ -73,8 +73,8 @@ export const functions: [string, Constant][] = [
 	["NotLike", funcNotLike],
 	["StartsWith", funcStartsWith],
 	["EndsWith", funcEndsWith],
-	["Char", funcChar],
-	["CharCode", funcCharCode],
+	["CharAt", funcCharAt],
+	["CharCodeAt", funcCharCodeAt],
 	["Trim", funcTrim],
 	["TrimStart", funcTrimStart],
 	["TrimEnd", funcTrimEnd],

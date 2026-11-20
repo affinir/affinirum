@@ -118,24 +118,23 @@ export const formatLiteralInteger = (value: bigint) => {
 	return int64(value).toString();
 };
 
-const typeIntegerOrArray = Type.union(Type.Integer, Type.arrayType(Type.Integer));
-const typeAggregator = Type.functionType([[Type.Integer, [Type.arrayType(typeIntegerOrArray)], true]]);
+const typeAggregator = Type.functionType([[Type.Integer, [Type.arrayType(Type.Integer)], true]]);
 
 const funcSum = new Constant(
-	(...values: (bigint | bigint[])[]) =>
-		int64(values.flat().reduce((acc, val) => acc + val, 0n)),
+	(...values: bigint[]) =>
+		int64(values.reduce((acc, val) => acc + val, 0n)),
 	typeAggregator,
 );
 
 const funcMin = new Constant(
-	(...values: (bigint | bigint[])[]) =>
-		values.flat().reduce((min, val) => val < min ? val : min),
+	(...values: bigint[]) =>
+		values.reduce((min, val) => val < min ? val : min),
 	typeAggregator,
 );
 
 const funcMax = new Constant(
-	(...values: (bigint | bigint[])[]) =>
-		values.flat().reduce((max, val) => val > max ? val : max),
+	(...values: bigint[]) =>
+		values.reduce((max, val) => val > max ? val : max),
 	typeAggregator,
 );
 

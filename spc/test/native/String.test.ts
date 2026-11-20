@@ -99,7 +99,10 @@ describe("String function test", () => {
 			cases: [
 				{ values: { a: "---abcd===" }, result: "abcd" },
 				{ values: { a: "+abc-def!" }, result: "abcdef" },
-				{ values: { a: "" }, result: undefined },
+				{ values: { a: "+AbC-DeF 0123!" }, result: "abcdef0123" },
+				{ values: { a: "Kİé😀Az9" }, result: "az9" },
+				{ values: { a: "!_-Kİé😀" }, result: "" },
+				{ values: { a: "" }, result: "" },
 			],
 		},
 		{
@@ -123,7 +126,7 @@ describe("String function test", () => {
 			],
 		},
 		{
-			script: "s.Char(p)",
+			script: "s.CharAt(p)",
 			cases: [
 				{ values: { s: "my long string", p: 1n }, result: "y" },
 				{ values: { s: "my+", p: 0n }, result: "m" },
@@ -132,14 +135,14 @@ describe("String function test", () => {
 			],
 		},
 		{
-			script: "s.CharCode(p) == c",
+			script: "s.CharCodeAt(p) == c",
 			cases: [
 				{ values: { s: "abc", p: 1n, c: 98 }, result: true },
 				{ values: { s: "abc", p: -1n, c: 99 }, result: true },
 			],
 		},
 		{
-			script: "str0.Char(2) == \"a\"",
+			script: "str0.CharAt(2) == \"a\"",
 			cases: [
 				{ values: { str0: "bca" }, result: true },
 				{ values: { str0: "bce" }, result: false },
@@ -173,7 +176,7 @@ describe("String function test", () => {
 			],
 		},
 		{
-			script: "v.ReplaceWith('', [s], '!')",
+			script: "v.ReplaceWith('', s, '!')",
 			cases: [
 				{ values: { v: "The quick brown fox", s: " " }, result: "Thequickbrownfox" },
 				{ values: { v: "The~quick~brown~fox", s: "~" }, result: "Thequickbrownfox" },

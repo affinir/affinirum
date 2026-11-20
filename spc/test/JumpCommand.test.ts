@@ -45,11 +45,6 @@ describe("Jump command test", () => {
 	it("rejects function returns outside a function", () => {
 		expect(() => new Affinirum("->42")).toThrow("unexpected -> outside of a function");
 	});
-	it("rejects the removed symbolic loop jumps", () => {
-		for (const operator of [">>", ">|"]) {
-			expect(() => new Affinirum(`while true{${operator}}`)).toThrow();
-		}
-	});
 	it("propagates a global return from a callback to the script boundary", () => {
 		const script = new Affinirum("[1,2,3].Derive({=(x:integer):integer -> =>x*2});99");
 		expect(script.evaluate() as bigint).toBe(2n);
