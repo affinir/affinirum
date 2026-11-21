@@ -84,14 +84,22 @@ const funcSum = new Constant(
 );
 
 const funcMin = new Constant(
-	(...values: (number | bigint)[]) =>
-		Math.min(Number.POSITIVE_INFINITY, ...values.map((i) => Number(i))),
+	(...values: (number | bigint)[]) => {
+		if (values.length === 0) {
+			throw new Error("function requires at least one argument");
+		}
+		return Math.min(Number.POSITIVE_INFINITY, ...values.map((i) => Number(i)));
+	},
 	typeAggregator,
 );
 
 const funcMax = new Constant(
-	(...values: (number | bigint)[]) =>
-		Math.max(Number.NEGATIVE_INFINITY, ...values.map((i) => Number(i))),
+	(...values: (number | bigint)[]) => {
+		if (values.length === 0) {
+			throw new Error("function requires at least one argument");
+		}
+		return Math.max(Number.NEGATIVE_INFINITY, ...values.map((i) => Number(i)));
+	},
 	typeAggregator,
 );
 

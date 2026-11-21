@@ -5,7 +5,7 @@ describe("Constant folding test", () => {
 		["[...never]", []],
 		["[...:never]", {}],
 	])("keeps the %s literal empty across function calls and evaluations", (literal, expected) => {
-		const expression = new Affinirum(`val f={=():${literal} -> ${literal}};[f(),f()]`);
+		const expression = new Affinirum(`val f=~():${literal} { ${literal}};[f(),f()]`);
 		const first = expression.evaluate() as Value[];
 		expect(first).toEqual([expected, expected]);
 		const second = expression.evaluate() as Value[];
@@ -16,7 +16,7 @@ describe("Constant folding test", () => {
 		["[]", []],
 		["Array.Range(0,2)", [0n, 1n, 2n]],
 	])("creates fresh arrays from %s for each function call and evaluation", (source, expected) => {
-		const expression = new Affinirum(`val f={=():array -> ${source}};[f(),f()]`);
+		const expression = new Affinirum(`val f=~():array { ${source}};[f(),f()]`);
 		const first = expression.evaluate() as Value[][];
 		expect(first).toEqual([expected, expected]);
 		expect(first[0]).not.toBe(first[1]);
@@ -28,7 +28,7 @@ describe("Constant folding test", () => {
 	});
 
 	it.each([true, false])("creates fresh nested arrays in the selected branch when the condition is %s", (condition) => {
-		const expression = new Affinirum(`val f={=():array -> if ${condition}{[1,[2]]}else{[3,[4]]}};[f(),f()]`);
+		const expression = new Affinirum(`val f=~():array { if ${condition}{[1,[2]]}else{[3,[4]]}};[f(),f()]`);
 		const expected = condition ? [1n, [2n]] : [3n, [4n]];
 		const first = expression.evaluate() as Value[][];
 		expect(first).toEqual([expected, expected]);

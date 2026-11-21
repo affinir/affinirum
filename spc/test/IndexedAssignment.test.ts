@@ -3,7 +3,7 @@ import { Affinirum, Type, Value } from "../../src/index.js";
 describe("Indexed assignment test", () => {
 	it.each([
 		"var value:object=[...:never];value.key=1",
-		"val make={=():object -> [...:never]};var value=make();value.key=1",
+		"val make=~():object { [...:never]};var value=make();value.key=1",
 	])("preserves an exact-empty object literal through a broader alias in %s", (source) => {
 		const expression = new Affinirum(source);
 		expect(() => expression.evaluate()).toThrow(/indexed value mismatch with expected type/);
@@ -14,7 +14,7 @@ describe("Indexed assignment test", () => {
 		["var items=[1,2];items[-1]+=3;items", [1n, 5n]],
 		["var entry=['a':1];entry['b']=2;entry", { a: 1n, b: 2n }],
 		["var entry=['a':1];entry.\"a\"+=2;entry", { a: 3n }],
-		["var value=['items':[['count':1]]];((value.items::array)[0]::['count':integer]).count+=2;value", { items: [{ count: 3n }] }],
+		["var value=['items':[['count':1]]];((value.items:array)[0]:['count':integer]).count+=2;value", { items: [{ count: 3n }] }],
 		["var items=[1,2];items[0]=items[1]=7;items", [7n, 7n]],
 		["var items:[...[...integer]]=[[1],[2]];items[0]+=[3];items", [[1n, 3n], [2n]]],
 		["var items=[1,2];val original=items;items[0]=7;original", [7n, 2n]],
@@ -272,7 +272,7 @@ describe("Indexed assignment test", () => {
 
 	it.each<[string, Type, Value]>([
 		["var value:['items':[...integer]]=['items':[1]];value.items", Type.arrayType(Type.Integer), [1n]],
-		["var value:['child':['count':integer]]=['child':['count':1]];(value.child::['count':integer]).count", Type.Integer, 1n],
+		["var value:['child':['count':integer]]=['child':['count':1]];(value.child:['count':integer]).count", Type.Integer, 1n],
 		["var value:[...[...integer]]=[[1]];value[0]", Type.arrayType(Type.Integer), [1n]],
 	])("reports the indexed member type as optional in %s", (script, type, expected) => {
 		const expression = new Affinirum(script);
@@ -297,7 +297,7 @@ describe("Indexed assignment test", () => {
 
 	it("preserves uniform object member types through a computed key", () => {
 		const type = Type.arrayType(Type.Integer);
-		const expression = new Affinirum("var value=values;(value[key]::[...integer])[0]=2;value[key]", {
+		const expression = new Affinirum("var value=values;(value[key]:[...integer])[0]=2;value[key]", {
 			variables: { values: Type.objectType(type), key: Type.String },
 		});
 		expect(expression.type.equals(type.toOptional())).toBe(true);

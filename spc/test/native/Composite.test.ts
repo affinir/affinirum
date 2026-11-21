@@ -116,7 +116,7 @@ describe("Composite function test", () => {
 			],
 		},
 		{
-			script: "val entity=[\"entity\":[d.id:[\"a1\", \"a2\"]]].entity::object;if entity.?abc{(entity.abc::array)[0]}",
+			script: "val entity=([\"entity\":[d.id:[\"a1\", \"a2\"]]].entity:object);if entity.?abc{(entity.abc:array)[0]}",
 			cases: [
 				{ values: { d: { id: "abc" } }, result: "a1" },
 				{ values: { d: { id: "a" } }, result: undefined },
@@ -137,7 +137,7 @@ describe("Composite function test", () => {
 			],
 		},
 		{
-			script: "v.Has(\"prop\") & v::object.?z",
+			script: "v.Has(\"prop\") & (v:object).?z",
 			cases: [
 				{ values: { v: { prop: "abc", z: 10n } }, result: true },
 				{ values: { v: { prop: "abc" } }, result: false },

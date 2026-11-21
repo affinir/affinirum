@@ -1,6 +1,20 @@
+import { Affinirum } from "../../../src/index.js";
 import { runAffinirumTests } from "../../util/AffinirumTest.js";
 
 describe("Mixed function test", () => {
+	it.each<[string, bigint | number]>([
+		["Integer.Min", 2n],
+		["Integer.Max", 2n],
+		["Float.Min", 2],
+		["Float.Max", 2],
+	])("requires at least one argument for %s", (name, expected) => {
+		const error = /^function requires at least one argument$/;
+		expect(() => new Affinirum(`${name}()`)).toThrow(error);
+		const expression = new Affinirum(`val f=${name};f()`);
+		expect(() => expression.evaluate()).toThrow(error);
+		expect(new Affinirum(`${name}(2)`).evaluate()).toBe(expected);
+	});
+
 	runAffinirumTests([
 		{
 			script: "_var",
@@ -19,26 +33,26 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "(a::string).Slice(3, 4).UpperCase()",
+			script: "(a:string).Slice(3, 4).UpperCase()",
 			cases: [
 				{ values: { a: "abcdef" }, result: "D" },
 				{ values: { a: "abcDef---" }, result: "D" },
 			],
 		},
 		{
-			script: "(a[(n+1)::integer] + 2)**2",
+			script: "(a[(n+1:integer)] + 2)**2",
 			cases: [
 				{ values: { a: [0, 1, 2], n: 1n }, result: 16 },
 			],
 		},
 		{
-			script: "arr0.Derive( {= (a:array):array ->  a.Derive({=(b:float):float -> b+12.0})} ).Flatten().Reduce({=(total:float,item:float):float -> total+item},0.0)",
+			script: "arr0.Derive( ~ (a:array):array {  a.Derive(~(b:float):float { b+12.0})} ).Flatten().Reduce(~(total:float,item:float):float { total+item},0.0)",
 			cases: [
 				{ values: { arr0: [[1], [1, 2], [2, 3, 4]] }, result: 85 },
 			],
 		},
 		{
-			script: "val x=arr0.Any({=(a:float):boolean -> a<0});var b:boolean=c;x&b",
+			script: "val x=arr0.Any(~(a:float):boolean { a<0});var b:boolean=c;x&b",
 			cases: [
 				{ values: { arr0: [0, -1], c: true }, result: true },
 			],
@@ -59,13 +73,13 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "Array.Intersection(a, b).Reduce({=(total:float,item:float):float -> total+item},0.0)",
+			script: "Array.Intersection(a, b).Reduce(~(total:float,item:float):float { total+item},0.0)",
 			cases: [
 				{ values: { a: [-1, 2, 1, -2], b: [1, 2] }, result: 3 },
 			],
 		},
 		{
-			script: "Array.Difference(a, b).Reduce({=(total:float,item:float):float -> total+item},0.0)",
+			script: "Array.Difference(a, b).Reduce(~(total:float,item:float):float { total+item},0.0)",
 			cases: [
 				{ values: { a: [-1, -2, 1, 2], b: [1, 2] }, result: -3 },
 			],
@@ -78,26 +92,26 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "var f={=(a:float):boolean -> a=a*100; a>0};a.Filter(f).Reduce({=(total:float,item:float):float -> total+item},0.0)",
+			script: "var f=~(a:float):boolean { a=a*100; a>0};a.Filter(f).Reduce(~(total:float,item:float):float { total+item},0.0)",
 			cases: [
 				{ values: { a: [-10, -20, 1, 2] }, result: 3 },
 			],
 		},
 		{
-			script: "var x=b;val f={=():any -> x = x + 1000; true}; a.Filter(f).Reduce({=(total:float,item:float):float -> total+item},0.0) + x",
+			script: "var x=b;val f=~():any { x = x + 1000; true}; a.Filter(f).Reduce(~(total:float,item:float):float { total+item},0.0) + x",
 			cases: [
 				{ values: { a: [10, 20, 1, 2], b: 0 }, result: 4033 },
 			],
 		},
 		{
-			script: "var x=b;var a={=() -> x = x + 10}; a(); x",
+			script: "var x=b;var a=~() { x = x + 10}; a(); x",
 			cases: [
 				{ values: { b: 0n }, result: 10n },
 				{ values: { b: -10n }, result: 0n },
 			],
 		},
 		{
-			script: "var x=b;({=() -> {=():any -> x = x + 10}})()()",
+			script: "var x=b;(~() { ~():any { x = x + 10}})()()",
 			cases: [
 				{ values: { b: 0n }, result: 10n },
 			],

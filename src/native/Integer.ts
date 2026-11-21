@@ -127,14 +127,22 @@ const funcSum = new Constant(
 );
 
 const funcMin = new Constant(
-	(...values: bigint[]) =>
-		values.reduce((min, val) => val < min ? val : min),
+	(...values: bigint[]) => {
+		if (values.length === 0) {
+			throw new Error("function requires at least one argument");
+		}
+		return values.reduce((min, val) => val < min ? val : min);
+	},
 	typeAggregator,
 );
 
 const funcMax = new Constant(
-	(...values: bigint[]) =>
-		values.reduce((max, val) => val > max ? val : max),
+	(...values: bigint[]) => {
+		if (values.length === 0) {
+			throw new Error("function requires at least one argument");
+		}
+		return values.reduce((max, val) => val > max ? val : max);
+	},
 	typeAggregator,
 );
 

@@ -52,7 +52,7 @@ describe("Prototype property test", () => {
 	});
 
 	it("safely composes objects containing prototype property names", () => {
-		const expression = new Affinirum("keys.Compose({=(acc:object, key:string):string -> key})");
+		const expression = new Affinirum("keys.Compose(~(acc:object, key:string):string { key})");
 		const result = expression.evaluate({ keys: ["__proto__", "constructor", "prototype"] }) as ObjectValue;
 		expect(Object.getPrototypeOf(result)).toBeNull();
 		expect(result["__proto__"] as string).toBe("__proto__");
@@ -78,9 +78,9 @@ describe("Prototype property test", () => {
 	it("does not expose the JavaScript Function constructor through parsed objects", () => {
 		expect(() => new Affinirum("val a = JSON.Parse(\"{}\"); a.constructor"))
 			.toThrow(/mismatch with expected type/);
-		const castPropertyExpression = new Affinirum("JSON.Parse(\"{}\")::object.constructor");
+		const castPropertyExpression = new Affinirum("(JSON.Parse(\"{}\"):object).constructor");
 		expect(castPropertyExpression.evaluate({})).toBeUndefined();
-		const constructorExpression = new Affinirum("JSON.Parse(\"{}\")::object.constructor(\"return 7\")()");
+		const constructorExpression = new Affinirum("(JSON.Parse(\"{}\"):object).constructor(\"return 7\")()");
 		expect(() => constructorExpression.evaluate()).toThrow(/function expected not null/);
 	});
 

@@ -25,7 +25,10 @@ export class CastNode extends Node {
 
 	override compile(type = Type.Any): Node {
 		this._subnode = this._subnode.compile(Type.Any);
-		if (!this._subnode.type.isNever && !this._subnode.type.intersects(this._type)) {
+		if (this._subnode.type.isNever) {
+			this._subnode.throwError("cast operand must produce a value");
+		}
+		if (!this._subnode.type.intersects(this._type)) {
 			this.throwError(`cannot cast type ${this._subnode.type} to type ${this._type}`);
 		}
 		return super.compile(type);

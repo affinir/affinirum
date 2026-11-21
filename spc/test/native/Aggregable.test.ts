@@ -11,7 +11,7 @@ describe("Aggregable function test", () => {
 			],
 		},
 		{
-			script: "(a::string) + b + ((c::string) + d)",
+			script: "(a:string) + b + ((c:string) + d)",
 			cases: [
 				{ values: { a: "1", b: "b", c: "c", d: "3" }, result: "1bc3" },
 			],
@@ -23,7 +23,7 @@ describe("Aggregable function test", () => {
 			],
 		},
 		{
-			script: "(a.Add(b)::array)[i]",
+			script: "(a.Add(b):array)[i]",
 			cases: [
 				{ values: { a: [1, 2], b: [3, 4], i: 2n }, result: 3 },
 				{ values: { a: ["a"], b: ["b", "c"], i: 1n }, result: "b" },

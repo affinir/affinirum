@@ -69,7 +69,7 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "((a::float) + b) * ((c::float) + d) - (e - f) / ((g::float) + h)",
+			script: "((a:float) + b) * ((c:float) + d) - (e - f) / ((g:float) + h)",
 			cases: [
 				{ values: { a: 1, b: 2, c: 3, d: 4, e: 1, f: 0, g: 0.5, h: 0.5 }, result: 20 },
 			],
@@ -82,7 +82,7 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "((a::float) + b + c + d) * (a - b - c + 1) / b + 1 * (if (a < 23) { 10 } else { 20 })",
+			script: "((a:float) + b + c + d) * (a - b - c + 1) / b + 1 * (if (a < 23) { 10 } else { 20 })",
 			cases: [
 				{ values: { a: 20, b: 10, c: 1, d: 2 }, result: 43 },
 			],
@@ -115,7 +115,7 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "longvariablename.Root(2)::(float|integer) - 10",
+			script: "(longvariablename.Root(2):float|integer) - 10",
 			cases: [
 				{ values: { longvariablename: 100 }, result: 0 },
 			],
@@ -157,7 +157,7 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "val a:float=(myvar::float)/3;var b=mv*2;a/b",
+			script: "val a:float=(myvar:float)/3;var b=mv*2;a/b",
 			cases: [
 				{ values: { myvar: 6, mv: 1 }, result: 1 },
 				{ values: { myvar: 30, mv: 5 }, result: 1 },
@@ -308,7 +308,7 @@ describe("Number function test", () => {
 		});
 
 		it("accepts Root in a function with an optional return type", () => {
-			const expression = new Affinirum("val f={=(a:integer,b:integer):integer? -> a.Root(b)};f(a,b)", {
+			const expression = new Affinirum("val f=~(a:integer,b:integer):integer? { a.Root(b)};f(a,b)", {
 				strict: true,
 				variables: { a: Type.Integer, b: Type.Integer },
 			});

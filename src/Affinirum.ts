@@ -334,7 +334,7 @@ export class Affinirum {
 	protected _postfix(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
 		let node = this._term(state, scope);
-		while (state.equals(".", ".?", "?.", "?.?", "(", "[", "?[", "::")) {
+		while (state.equals(".", ".?", "?.", "?.?", "(", "[", "?[")) {
 			if (state.equals(".", ".?", "?.", "?.?")) { // index access or existence check operator
 				const access = state.equals(".", "?.");
 				const optional = state.equals("?.");
@@ -398,10 +398,6 @@ export class Affinirum {
 				state.next();
 				node = new CallNode(span.end(state), node, subnodes);
 			}
-			else if (state.equals("::")) { // type cast operator
-				const type = this._type.parse(state.next(), scope);
-				node = new CastNode(span.end(state), node, type);
-			}
 		}
 		if (state.isAssignment) {
 			if (!(node instanceof AssignableNode) || !node.assignable) {
@@ -424,14 +420,19 @@ export class Affinirum {
 		else if (state.isIdentifier) { // constant or variable identifier
 			return this._identifier(state, scope);
 		}
-		else if (state.equals("{")) { // subscope
+		else if (state.equals("{", "~")) { // subscope
 			return this._subscope(state, scope);
 		}
 		else if (state.equals("}")) {
 			state.throwError("unexpected closing braces");
 		}
-		else if (state.equals("(")) { // unit grouping
-			const node = this._unit(state.next(), scope);
+		else if (state.equals("(")) { // grouping or type cast
+			const span = state.start();
+			let node = this._unit(state.next(), scope);
+			if (state.equals(":")) {
+				const type = this._type.parse(state.next(), scope);
+				node = new CastNode(span.end(state), node, type);
+			}
 			state.closeParentheses();
 			state.next();
 			return node;
@@ -454,9 +455,9 @@ export class Affinirum {
 		else if (state.equals("while", "do")) {
 			return this._loop(state, scope);
 		}
-		else if (state.equals("->")) {
+		else if (state.equals("~>")) {
 			if (!scope.inFunction) {
-				state.throwError("unexpected -> outside of a function");
+				state.throwError("unexpected ~> outside of a function");
 			}
 			return new FinalNode(state, "return", this._unit(state.next(), scope), scope.type);
 		}
@@ -516,7 +517,7 @@ export class Affinirum {
 
 	protected _subscope(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
-		if (state.next().equals("=")) { // function
+		if (state.equals("~")) { // function
 			state.next().openParentheses();
 			let variadic = false;
 			const variables = new Map<string, LocalVariable>();
@@ -555,9 +556,7 @@ export class Affinirum {
 			}
 			state.closeParentheses();
 			const returnType = state.next().equals(":") ? this._type.parse(state.next(), scope) : Type.Any;
-			if (!state.equals("->")) {
-				state.throwError("missing function body separator");
-			}
+			state.openBraces();
 			state.next();
 			const args = Array.from(variables.values());
 			const subscope = scope.subscope(variables, returnType, true);
@@ -576,6 +575,7 @@ export class Affinirum {
 			const functionType = Type.functionType([[returnType, args.map((v) => v.type), variadic]]);
 			return new FunctionNode(span, subnode, [...subscope.variables()], args, functionType);
 		}
+		state.next();
 		const subscope = scope.subscope();
 		const subnodes: Node[] = [];
 		while (!state.equals("}")) {

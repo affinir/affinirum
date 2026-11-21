@@ -19,7 +19,7 @@ describe("Loop node test", () => {
 	});
 
 	it("preserves incoming variable types when a constant false loop is skipped", () => {
-		const expression = new Affinirum("var x:integer|string=1;while false{x='two'};(x::integer)-1");
+		const expression = new Affinirum("var x:integer|string=1;while false{x='two'};(x:integer)-1");
 		expect(expression.type.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate()).toBe(0n);
 	});
@@ -41,7 +41,7 @@ describe("Loop node test", () => {
 	});
 
 	it("compiles reads of types assigned on earlier iterations", () => {
-		const expression = new Affinirum("var x:integer|string=1;var i=0;while i<2{if i==0{x='two'}else{x=(x::string).Length};i+=1};x");
+		const expression = new Affinirum("var x:integer|string=1;var i=0;while i<2{if i==0{x='two'}else{x=(x:string).Length};i+=1};x");
 		expect(expression.type.equals(Type.union(Type.Integer, Type.String))).toBe(true);
 		expect(expression.evaluate()).toBe(3n);
 	});
@@ -71,7 +71,7 @@ describe("Loop node test", () => {
 	});
 
 	it("checks a repeated condition against the fixed declared type", () => {
-		const expression = new Affinirum("var x:integer|string=1;while if x==1{true}else{(x::string).Length>0}{x=''};x");
+		const expression = new Affinirum("var x:integer|string=1;while if x==1{true}else{(x:string).Length>0}{x=''};x");
 		expect(expression.type.equals(Type.union(Type.Integer, Type.String))).toBe(true);
 		expect(expression.evaluate()).toBe("");
 	});
@@ -157,10 +157,10 @@ describe("Until loops", () => {
 	});
 
 	it.each(["while false {1}", "while true {exit}"])("does not infer never from a skipped postcondition in %s", (loop) => {
-		const expression = new Affinirum(`val f={=():integer? -> ${loop} until (->7)};f()`);
+		const expression = new Affinirum(`val f=~():integer? { ${loop} until (~>7)};f()`);
 		expect(expression.type.equals(Type.OptionalInteger)).toBe(true);
 		expect(expression.evaluate()).toBeUndefined();
-		expect(() => new Affinirum(`val f={=():integer -> ${loop} until (->7)};f()`))
+		expect(() => new Affinirum(`val f=~():integer { ${loop} until (~>7)};f()`))
 			.toThrow(/mismatch with expected type integer/);
 	});
 
@@ -170,7 +170,7 @@ describe("Until loops", () => {
 	});
 
 	it("does not inherit the caller's loop context in a function postcondition", () => {
-		expect(() => new Affinirum("while true {val f={=():null -> do {1} until exit};exit}"))
+		expect(() => new Affinirum("while true {val f=~():null { do {1} until exit};exit}"))
 			.toThrow(/unexpected exit outside of a loop/);
 	});
 });

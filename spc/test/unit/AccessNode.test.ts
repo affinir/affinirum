@@ -58,7 +58,7 @@ describe("Access node test", () => {
 	});
 
 	it("infers the block result after reading a missing index from an array of never", () => {
-		const expression = new Affinirum("val items=[]::[...never]; items[0]; false");
+		const expression = new Affinirum("val items=([]:[...never]); items[0]; false");
 		expect(expression.type.equals(Type.Boolean)).toBe(true);
 		expect(expression.evaluate()).toBe(false);
 	});

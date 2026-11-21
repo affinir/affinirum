@@ -4,13 +4,13 @@ import { runAffinirumTests } from "../../../util/AffinirumTest.js";
 describe("JSON function test", () => {
 	runAffinirumTests([
 		{
-			script: "JSON.Parse(str1)::object.prop1+JSON.Parse(str2)::object.prop2",
+			script: "(JSON.Parse(str1):object).prop1+(JSON.Parse(str2):object).prop2",
 			cases: [
 				{ values: { str1: "{\"prop1\":1}", str2: "{\"prop2\":20}" }, result: 21 },
 			],
 		},
 		{
-			script: "JSON.Parse(str1)::string+JSON.Parse(str2)::string",
+			script: "(JSON.Parse(str1):string)+(JSON.Parse(str2):string)",
 			cases: [
 				{ values: { str1: "\"p1\"", str2: "\"p2\"" }, result: "p1p2" },
 			],
@@ -61,7 +61,7 @@ describe("JSON function test", () => {
 	]);
 
 	it("preserves object keys when formatting and parsing JSON", () => {
-		const expression = new Affinirum("val original = [\"missing\": null]; val restored = JSON.Parse(JSON.Format(original))::object; [original, restored]");
+		const expression = new Affinirum("val original = [\"missing\": null]; val restored = (JSON.Parse(JSON.Format(original)):object); [original, restored]");
 		const [original, restored] = expression.evaluate() as Record<string, Value>[];
 		expect(Object.hasOwn(original, "missing")).toBe(true);
 		expect(original.missing).toBeUndefined();
