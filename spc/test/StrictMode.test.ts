@@ -21,7 +21,7 @@ describe("Strict mode test", () => {
 	});
 
 	it.each([true, false])("checks configured input types with strict=%s", (strict) => {
-		expect(() => new Affinirum("(~(text:string):string { text})(value)", { strict, variables: { value: Type.Integer } }))
+		expect(() => new Affinirum("(func(text:string):string { text})(value)", { strict, variables: { value: Type.Integer } }))
 			.toThrow(/mismatch with expected type string/);
 	});
 

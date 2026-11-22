@@ -32,7 +32,7 @@ describe("Cast test", () => {
 	});
 
 	it("calls a cast function with a cast argument", () => {
-		const expression = new Affinirum("(callback:~(integer):integer{})((value:integer))", {
+		const expression = new Affinirum("(callback:{(integer):integer})((value:integer))", {
 			variables: { callback: Type.Any, value: Type.Any },
 		});
 		expect(expression.evaluate({ callback: (value: bigint) => value + 1n, value: 2n })).toBe(3n);
@@ -40,7 +40,7 @@ describe("Cast test", () => {
 
 	it.each([
 		"(=>1:integer)",
-		"val f=~() { (~>1:integer)};f()",
+		"val f=func() { (->1:integer)};f()",
 		"while true {(exit:integer)}",
 		"({=>1;2}:integer)",
 		"(if true {=>1}else{2}:integer)",
@@ -58,7 +58,7 @@ describe("Cast test", () => {
 	});
 
 	it("checks a cast before an early function return", () => {
-		const expression = new Affinirum("val f=~(item:any):integer { ~>(item:integer)};f(value)");
+		const expression = new Affinirum("val f=func(item:any):integer { ->(item:integer)};f(value)");
 		expect(expression.evaluate({ value: 2n })).toBe(2n);
 		expect(() => expression.evaluate({ value: "two" })).toThrow(/cannot cast value/);
 	});
@@ -84,7 +84,6 @@ describe("Cast test", () => {
 		"[...:never,1]",
 		"[1,...never]",
 		"[...:never|string]",
-		"[:never]",
 		"[...:1]",
 	])("rejects malformed exact-empty literal %s", (source) => {
 		expect(() => new Affinirum(source)).toThrow();

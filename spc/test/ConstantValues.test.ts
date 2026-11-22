@@ -49,11 +49,11 @@ describe("Constant value test", () => {
 		{ script: "([100,200,300][1]:integer)+([1,2,3][0]:integer)", cases: [{ result: 201n }] },
 		{ script: "[0,1,2,3].Add([10,20,30,40])[5]", cases: [{ result: 20n }] },
 		{ script: "Array.Join([[10]], [4], [12])[0][0]", cases: [{ result: 10n }] },
-		{ script: "[1, 2, 3, 4].Add([5]).Reduce(~(total:integer,item:integer):integer { total+item},0)", cases: [{ result: 15n }] },
-		{ script: "([0,1,2,3]+[10,20,30,40]).Reduce(~(total:integer,item:integer):integer { total+item},100)", cases: [{ result: 206n }] },
-		{ script: "(([[[10]]][0]:array)[0]:array)[0]", cases: [{ result: 10n }] },
+		{ script: "[1, 2, 3, 4].Add([5]).Reduce(func(total:integer,item:integer):integer { total+item},0)", cases: [{ result: 15n }] },
+		{ script: "([0,1,2,3]+[10,20,30,40]).Reduce(func(total:integer,item:integer):integer { total+item},100)", cases: [{ result: 206n }] },
+		{ script: "(([[[10]]][0]:[])[0]:[])[0]", cases: [{ result: 10n }] },
 		{ script: "var a=[0,10,200,3000,40000]; (a[1]:integer) + a.At(2)", cases: [{ result: 210n }] },
-		{ script: "[1,2,3,4].Reduce(\n~ (a:i64, b : i64):integer { a.Subtract(b)}\n)", cases: [{ result: -8n }] },
+		{ script: "[1,2,3,4].Reduce(\nfunc (a:i64, b : i64):integer { a.Subtract(b)}\n)", cases: [{ result: -8n }] },
 	]);
 	it("converts injected null values into undefined", () => {
 		const expression = new Affinirum("value");

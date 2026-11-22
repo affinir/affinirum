@@ -2,7 +2,7 @@ import { Affinirum, Type } from "../../src/index.js";
 
 describe("Variadic function test", () => {
 	it("binds fixed and rest arguments from script calls", () => {
-		const expression = new Affinirum("val f=~(first:integer,rest:...integer):array { [first,rest]};f(value,1,2,3,4)");
+		const expression = new Affinirum("val f=func(first:integer,rest:...integer):[] { [first,rest]};f(value,1,2,3,4)");
 		expect(expression.evaluate({ value: 10n })).toEqual([10n, [1n, 2n, 3n, 4n]]);
 	});
 });
@@ -27,21 +27,21 @@ describe("Variadic function argument test", () => {
 		expect(expression.evaluate({ x: 5n }) as bigint).toBe(7n);
 	});
 	it("preserves variadic parameters when producing concatenated results", () => {
-		const expression = new Affinirum("val f=~(a:...integer):[...integer] { val extended=a+[9];[a.Length,extended.Length]};val g=~():[...integer] { f(1,2)};[g(),g()]");
+		const expression = new Affinirum("val f=func(a:...integer):[...integer] { val extended=a+[9];[a.Length,extended.Length]};val g=func():[...integer] { f(1,2)};[g(),g()]");
 		expect(expression.evaluate()).toEqual([[2n, 3n], [2n, 3n]]);
 		expect(expression.evaluate()).toEqual([[2n, 3n], [2n, 3n]]);
 	});
 	it("binds rest arguments when JavaScript calls a script function", () => {
-		const expression = new Affinirum("~(first:integer,rest:...integer):array { [first,rest]}");
+		const expression = new Affinirum("func(first:integer,rest:...integer):[] { [first,rest]}");
 		const func = expression.evaluate() as (first: bigint, ...values: bigint[]) => [bigint, bigint[]];
 		expect(func(2n, 3n, 4n)).toEqual([2n, [3n, 4n]]);
 	});
 	it("binds rest arguments when a variable has no declared function signature", () => {
-		const expression = new Affinirum("var f;f=~(items:...integer):[...integer] { items};f(1,2)");
+		const expression = new Affinirum("var f;f=func(items:...integer):[...integer] { items};f(1,2)");
 		expect(expression.evaluate()).toEqual([1n, 2n]);
 	});
 	it("binds an untyped variadic parameter as an array", () => {
-		const expression = new Affinirum("~(items:...) { items}");
+		const expression = new Affinirum("func(items:...) { items}");
 		expect(expression.type.equals(Type.functionType([[Type.Any, [Type.Array], true]]))).toBe(true);
 		const collect = expression.evaluate() as (...items: (bigint | string)[]) => unknown;
 		expect(collect(1n, "two")).toEqual([1n, "two"]);
@@ -85,12 +85,12 @@ describe("Variadic function argument test", () => {
 		expect(expression.evaluate({ f: (...values: bigint[]) => values.reduce((sum, value) => sum + value, 0n) })).toBe(3n);
 	});
 	it("collects zero or more arguments of the declared element type", () => {
-		const script = "val f:~(...integer):[...integer]{}=~(items:...integer):[...integer] { items};";
+		const script = "val f:{(...integer):[...integer]}=func(items:...integer):[...integer] { items};";
 		expect(new Affinirum(script + "[f(),f(1,2)]").evaluate()).toEqual([[], [1n, 2n]]);
 		expect(() => new Affinirum(script + "f('bad')")).toThrow(/mismatch with expected type integer/);
 	});
 	it("treats a tuple rest element type as one argument", () => {
-		const script = "val f=~(items:...[integer,integer]):integer { items.Length};";
+		const script = "val f=func(items:...[integer,integer]):integer { items.Length};";
 		expect(new Affinirum(script + "f([1,2],[3,4,5])").evaluate()).toBe(2n);
 		expect(() => new Affinirum(script + "f([1])")).toThrow(/mismatch with expected type/);
 	});

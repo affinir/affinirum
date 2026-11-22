@@ -13,11 +13,6 @@ describe("Loop node test", () => {
 		expect(expression.evaluate()).toBe(3n);
 	});
 
-	it("requires do before an unbraced loop body", () => {
-		expect(() => new Affinirum("while condition exit"))
-			.toThrow("missing 'do' or '{' after the while condition");
-	});
-
 	it("preserves incoming variable types when a constant false loop is skipped", () => {
 		const expression = new Affinirum("var x:integer|string=1;while false{x='two'};(x:integer)-1");
 		expect(expression.type.equals(Type.Integer)).toBe(true);
@@ -157,10 +152,10 @@ describe("Until loops", () => {
 	});
 
 	it.each(["while false {1}", "while true {exit}"])("does not infer never from a skipped postcondition in %s", (loop) => {
-		const expression = new Affinirum(`val f=~():integer? { ${loop} until (~>7)};f()`);
+		const expression = new Affinirum(`val f=func():integer? { ${loop} until (->7)};f()`);
 		expect(expression.type.equals(Type.OptionalInteger)).toBe(true);
 		expect(expression.evaluate()).toBeUndefined();
-		expect(() => new Affinirum(`val f=~():integer { ${loop} until (~>7)};f()`))
+		expect(() => new Affinirum(`val f=func():integer { ${loop} until (->7)};f()`))
 			.toThrow(/mismatch with expected type integer/);
 	});
 
@@ -170,7 +165,7 @@ describe("Until loops", () => {
 	});
 
 	it("does not inherit the caller's loop context in a function postcondition", () => {
-		expect(() => new Affinirum("while true {val f=~():null { do {1} until exit};exit}"))
+		expect(() => new Affinirum("while true {val f=func():null { do {1} until exit};exit}"))
 			.toThrow(/unexpected exit outside of a loop/);
 	});
 });

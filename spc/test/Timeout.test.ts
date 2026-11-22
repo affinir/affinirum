@@ -7,7 +7,7 @@ describe("Execution timeout", () => {
 		jest.setSystemTime(11);
 		return 7n;
 	};
-	const factory = "val make=~():~():integer{} { ~():integer { 7}};";
+	const factory = "val make=func():{():integer} { func():integer { 7}};";
 
 	beforeEach(() => {
 		jest.useFakeTimers({ now: 0 });

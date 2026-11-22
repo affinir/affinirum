@@ -90,8 +90,8 @@ export class TypeParser {
 				? Type.objectType(valTypes)
 				: Type.arrayType(valTypes.map(([, v]) => v));
 		}
-		else if (state.equals("~")) { // function type
-			if (state.next().equals("{")) {
+		else if (state.equals("{")) { // function type
+			if (state.next().equals(":")) {
 				state.next().closeBraces();
 				state.next();
 				return Type.Function;
@@ -114,9 +114,9 @@ export class TypeParser {
 				}
 			}
 			state.closeParentheses();
-			const retType = state.next().equals(":") ? this.parse(state.next(), scope) : Type.Any;
-			state.openBraces();
-			state.next().closeBraces();
+			state.next().assertColon();
+			const retType = this.parse(state.next(), scope);
+			state.closeBraces();
 			state.next();
 			return Type.functionType([[retType, argTypes, variadic]]);
 		}

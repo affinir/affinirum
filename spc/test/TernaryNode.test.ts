@@ -14,11 +14,6 @@ describe("Ternary node test", () => {
 		expect(expression.evaluate({ condition: false })).toBe(2n);
 	});
 
-	it("requires then before an unbraced branch", () => {
-		expect(() => new Affinirum("if condition 1 else 2"))
-			.toThrow("missing 'then' or '{' after the if condition");
-	});
-
 	it.each<[string, string, bigint | string, bigint | string]>([
 		["x='two'", "x=(x:integer)-1", "two", 1n],
 		["x=(x:integer)-1", "x='two'", 1n, "two"],
@@ -71,7 +66,7 @@ describe("Ternary node test", () => {
 	});
 
 	it("preserves declared parameter types across branch assignments", () => {
-		const expression = new Affinirum("~(x:integer|string,condition:boolean):(integer|string) { x=2;if condition{x='two'}else{x=(x:integer)-1};x}");
+		const expression = new Affinirum("func(x:integer|string,condition:boolean):(integer|string) { x=2;if condition{x='two'}else{x=(x:integer)-1};x}");
 		const type = Type.union(Type.Integer, Type.String);
 		expect(expression.type.equals(Type.functionType([[type, [type, Type.Boolean]]]))).toBe(true);
 		const func = expression.evaluate() as (value: bigint | string, condition: boolean) => bigint | string;

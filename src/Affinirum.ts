@@ -18,6 +18,7 @@ import { CastNode } from "./node/CastNode.js";
 import { ConstantNode } from "./node/ConstantNode.js";
 import { FunctionNode } from "./node/FunctionNode.js";
 import { TernaryNode } from "./node/TernaryNode.js";
+import { MatchNode } from "./node/MatchNode.js";
 import { LoopNode } from "./node/LoopNode.js";
 import { JumpNode } from "./node/JumpNode.js";
 import { FinalNode } from "./node/FinalNode.js";
@@ -420,8 +421,8 @@ export class Affinirum {
 		else if (state.isIdentifier) { // constant or variable identifier
 			return this._identifier(state, scope);
 		}
-		else if (state.equals("{", "~")) { // subscope
-			return this._subscope(state, scope);
+		else if (state.equals("{")) {
+			return this._block(state, scope);
 		}
 		else if (state.equals("}")) {
 			state.throwError("unexpected closing braces");
@@ -446,18 +447,12 @@ export class Affinirum {
 		else if (state.equals("]")) {
 			state.throwError("unexpected closing brackets");
 		}
-		else if (state.equals("var", "val")) {
-			state.throwError("unexpected variable declaration");
+		else if (state.equals("func", "function")) {
+			return this._function(state, scope);
 		}
-		else if (state.equals("if")) {
-			return this._ternary(state, scope);
-		}
-		else if (state.equals("while", "do")) {
-			return this._loop(state, scope);
-		}
-		else if (state.equals("~>")) {
+		else if (state.equals("->")) {
 			if (!scope.inFunction) {
-				state.throwError("unexpected ~> outside of a function");
+				state.throwError("unexpected -> outside of a function");
 			}
 			return new FinalNode(state, "return", this._unit(state.next(), scope), scope.type);
 		}
@@ -465,6 +460,18 @@ export class Affinirum {
 			const node = new FinalNode(state, "result", this._unit(state.next(), scope), this._scope.type);
 			this._results.push(node);
 			return node;
+		}
+		else if (state.equals("var", "val")) {
+			state.throwError("unexpected variable declaration");
+		}
+		else if (state.equals("if")) {
+			return this._ternary(state, scope);
+		}
+		else if (state.equals("match")) {
+			return this._match(state, scope);
+		}
+		else if (state.equals("while", "do")) {
+			return this._loop(state, scope);
 		}
 		else if (state.equals("exit", "next")) {
 			const action = state.equals("exit") ? "exit" : "next";
@@ -515,66 +522,68 @@ export class Affinirum {
 		return new VariableNode(span, variable);
 	}
 
-	protected _subscope(state: ParserState, scope: LexicalScope): Node {
+	protected _function(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
-		if (state.equals("~")) { // function
-			state.next().openParentheses();
-			let variadic = false;
-			const variables = new Map<string, LocalVariable>();
-			while (!state.next().equals(")")) {
-				if (!state.isIdentifier) {
-					state.throwError("missing function argument name");
-				}
-				const identifier = state.identifier;
-				if (variables.has(identifier)) {
-					state.throwError(`duplicate function argument name ${identifier}`);
-				}
-				if (scope.has(identifier)) {
-					state.throwError(`variable ${identifier} redefinition`);
-				}
-				let argType: Type | undefined;
-				if (state.next().equals(":")) {
-					variadic = state.next().equals("...");
-					if (variadic) {
-						state.next();
-					}
-					if (!variadic || !state.equals(")")) {
-						argType = this._type.parse(state, scope);
-					}
-					if (variadic) {
-						argType = Type.arrayType(argType);
-					}
-				}
-				const variable = new LocalVariable(argType, true);
-				variables.set(identifier, variable);
+		state.next().openParentheses();
+		let variadic = false;
+		const variables = new Map<string, LocalVariable>();
+		while (!state.next().equals(")")) {
+			if (!state.isIdentifier) {
+				state.throwError("missing function argument name");
+			}
+			const identifier = state.identifier;
+			if (variables.has(identifier)) {
+				state.throwError(`duplicate function argument name ${identifier}`);
+			}
+			if (scope.has(identifier)) {
+				state.throwError(`variable ${identifier} redefinition`);
+			}
+			let argType: Type | undefined;
+			if (state.next().equals(":")) {
+				variadic = state.next().equals("...");
 				if (variadic) {
-					break;
+					state.next();
 				}
-				if (!state.equals(",")) {
-					break;
+				if (!variadic || !state.equals(")")) {
+					argType = this._type.parse(state, scope);
+				}
+				if (variadic) {
+					argType = Type.arrayType(argType);
 				}
 			}
-			state.closeParentheses();
-			const returnType = state.next().equals(":") ? this._type.parse(state.next(), scope) : Type.Any;
-			state.openBraces();
-			state.next();
-			const args = Array.from(variables.values());
-			const subscope = scope.subscope(variables, returnType, true);
-			const subnodes: Node[] = [];
-			while (!state.equals("}")) {
-				subnodes.push(this._declaration(state, subscope));
-				if (!state.equals(";")) {
-					break;
-				}
-				state.next();
+			const variable = new LocalVariable(argType, true);
+			variables.set(identifier, variable);
+			if (variadic) {
+				break;
 			}
-			state.closeBraces();
-			span.end(state);
-			state.next();
-			const subnode = new BlockNode(span, subnodes);
-			const functionType = Type.functionType([[returnType, args.map((v) => v.type), variadic]]);
-			return new FunctionNode(span, subnode, [...subscope.variables()], args, functionType);
+			if (!state.equals(",")) {
+				break;
+			}
 		}
+		state.closeParentheses();
+		const returnType = state.next().equals(":") ? this._type.parse(state.next(), scope) : Type.Any;
+		state.openBraces();
+		state.next();
+		const args = Array.from(variables.values());
+		const subscope = scope.subscope(variables, returnType, true);
+		const subnodes: Node[] = [];
+		while (!state.equals("}")) {
+			subnodes.push(this._declaration(state, subscope));
+			if (!state.equals(";")) {
+				break;
+			}
+			state.next();
+		}
+		state.closeBraces();
+		span.end(state);
+		state.next();
+		const subnode = new BlockNode(span, subnodes);
+		const functionType = Type.functionType([[returnType, args.map((v) => v.type), variadic]]);
+		return new FunctionNode(span, subnode, [...subscope.variables()], args, functionType);
+	}
+
+	protected _block(state: ParserState, scope: LexicalScope): Node {
+		const span = state.start();
 		state.next();
 		const subscope = scope.subscope();
 		const subnodes: Node[] = [];
@@ -662,6 +671,38 @@ export class Affinirum {
 			? this._unit(state.next(), scope)
 			: new ConstantNode(state.start(), Constant.Null);
 		return new TernaryNode(span, cnode, [tnode, enode]);
+	}
+
+	protected _match(state: ParserState, scope: LexicalScope): Node {
+		const span = state.start();
+		const vnode = this._unit(state.next(), scope);
+		state.openBraces();
+		const subnode: [Node, Node][] = [];
+		let enode: Node | undefined;
+		while (!state.next().equals("}")) {
+			if (enode) {
+				state.throwError("else must be the last match arm");
+			}
+			if (state.equals("else")) {
+				state.next().assertColon();
+				enode = this._unit(state.next(), scope);
+			}
+			else {
+				const key = this._unit(state, scope);
+				state.assertColon();
+				subnode.push([key, this._unit(state.next(), scope)]);
+			}
+			if (state.equals("}") || state.isEnded) {
+				break;
+			}
+			if (!state.equals(",")) {
+				state.throwError("expected ',' or '}' after match arm");
+			}
+		}
+		state.closeBraces();
+		span.end(state);
+		state.next();
+		return new MatchNode(span, vnode, subnode, enode);
 	}
 
 	protected _loop(state: ParserState, scope: LexicalScope): Node {

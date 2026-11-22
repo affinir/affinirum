@@ -46,13 +46,13 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "arr0.Derive( ~ (a:array):array {  a.Derive(~(b:float):float { b+12.0})} ).Flatten().Reduce(~(total:float,item:float):float { total+item},0.0)",
+			script: "arr0.Derive( func (a:[]):[] {  a.Derive(func(b:float):float { b+12.0})} ).Flatten().Reduce(func(total:float,item:float):float { total+item},0.0)",
 			cases: [
 				{ values: { arr0: [[1], [1, 2], [2, 3, 4]] }, result: 85 },
 			],
 		},
 		{
-			script: "val x=arr0.Any(~(a:float):boolean { a<0});var b:boolean=c;x&b",
+			script: "val x=arr0.Any(func(a:float):boolean { a<0});var b:boolean=c;x&b",
 			cases: [
 				{ values: { arr0: [0, -1], c: true }, result: true },
 			],
@@ -73,13 +73,13 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "Array.Intersection(a, b).Reduce(~(total:float,item:float):float { total+item},0.0)",
+			script: "Array.Intersection(a, b).Reduce(func(total:float,item:float):float { total+item},0.0)",
 			cases: [
 				{ values: { a: [-1, 2, 1, -2], b: [1, 2] }, result: 3 },
 			],
 		},
 		{
-			script: "Array.Difference(a, b).Reduce(~(total:float,item:float):float { total+item},0.0)",
+			script: "Array.Difference(a, b).Reduce(func(total:float,item:float):float { total+item},0.0)",
 			cases: [
 				{ values: { a: [-1, -2, 1, 2], b: [1, 2] }, result: -3 },
 			],
@@ -92,26 +92,26 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "var f=~(a:float):boolean { a=a*100; a>0};a.Filter(f).Reduce(~(total:float,item:float):float { total+item},0.0)",
+			script: "var f=func(a:float):boolean { a=a*100; a>0};a.Filter(f).Reduce(func(total:float,item:float):float { total+item},0.0)",
 			cases: [
 				{ values: { a: [-10, -20, 1, 2] }, result: 3 },
 			],
 		},
 		{
-			script: "var x=b;val f=~():any { x = x + 1000; true}; a.Filter(f).Reduce(~(total:float,item:float):float { total+item},0.0) + x",
+			script: "var x=b;val f=func():any { x = x + 1000; true}; a.Filter(f).Reduce(func(total:float,item:float):float { total+item},0.0) + x",
 			cases: [
 				{ values: { a: [10, 20, 1, 2], b: 0 }, result: 4033 },
 			],
 		},
 		{
-			script: "var x=b;var a=~() { x = x + 10}; a(); x",
+			script: "var x=b;var a=func() { x = x + 10}; a(); x",
 			cases: [
 				{ values: { b: 0n }, result: 10n },
 				{ values: { b: -10n }, result: 0n },
 			],
 		},
 		{
-			script: "var x=b;(~() { ~():any { x = x + 10}})()()",
+			script: "var x=b;(func() { func():any { x = x + 10}})()()",
 			cases: [
 				{ values: { b: 0n }, result: 10n },
 			],

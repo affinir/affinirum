@@ -14,12 +14,12 @@ describe("Assignment test", () => {
 	});
 
 	it("retains the declared array union in the assignment type", () => {
-		const expression = new Affinirum("var x:array|[...string]=['one'];x=[1]");
+		const expression = new Affinirum("var x:[]|[...string]=['one'];x=[1]");
 		expect(expression.type.equals(Type.union(Type.Array, Type.arrayType(Type.String)))).toBe(true);
 	});
 
 	it("accepts an assignment that fits the object alternative of a union", () => {
-		const expression = new Affinirum("var x:object|['a':string]=['a':'one'];x=['a':1]");
+		const expression = new Affinirum("var x:[:]|['a':string]=['a':'one'];x=['a':1]");
 		expect(expression.evaluate()).toEqual({ a: 1n });
 	});
 
@@ -89,7 +89,7 @@ describe("Assignment test", () => {
 	});
 
 	it("preserves a declared function parameter union across assignments", () => {
-		const expression = new Affinirum("~(x:integer|string):(integer|string) { x=1;x='two';x}");
+		const expression = new Affinirum("func(x:integer|string):(integer|string) { x=1;x='two';x}");
 		const type = Type.union(Type.Integer, Type.String);
 		expect(expression.type.equals(Type.functionType([[type, [type]]]))).toBe(true);
 		const func = expression.evaluate() as (value: bigint | string) => bigint | string;
@@ -134,7 +134,7 @@ describe("Assignment test", () => {
 		"if false then val x:integer=1; x",
 		"while false do var x:integer=1; x",
 		"1 ?: (var x:integer=1); x",
-		"val items:array?=null; items?[(var x:integer=1)]; x",
+		"val items:[]?=null; items?[(var x:integer=1)]; x",
 		"val text:string?=null; text?.CharAt((var x:integer=1)); x",
 		"['entry':val x=1]",
 	])("rejects a declaration in an expression in %s", (script) => {

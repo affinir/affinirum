@@ -2,8 +2,8 @@ import { Affinirum, Type, Value } from "../../src/index.js";
 
 describe("Indexed assignment test", () => {
 	it.each([
-		"var value:object=[...:never];value.key=1",
-		"val make=~():object { [...:never]};var value=make();value.key=1",
+		"var value:[:]=[...:never];value.key=1",
+		"val make=func():[:] { [...:never]};var value=make();value.key=1",
 	])("preserves an exact-empty object literal through a broader alias in %s", (source) => {
 		const expression = new Affinirum(source);
 		expect(() => expression.evaluate()).toThrow(/indexed value mismatch with expected type/);
@@ -14,7 +14,7 @@ describe("Indexed assignment test", () => {
 		["var items=[1,2];items[-1]+=3;items", [1n, 5n]],
 		["var entry=['a':1];entry['b']=2;entry", { a: 1n, b: 2n }],
 		["var entry=['a':1];entry.\"a\"+=2;entry", { a: 3n }],
-		["var value=['items':[['count':1]]];((value.items:array)[0]:['count':integer]).count+=2;value", { items: [{ count: 3n }] }],
+		["var value=['items':[['count':1]]];((value.items:[])[0]:['count':integer]).count+=2;value", { items: [{ count: 3n }] }],
 		["var items=[1,2];items[0]=items[1]=7;items", [7n, 7n]],
 		["var items:[...[...integer]]=[[1],[2]];items[0]+=[3];items", [[1n, 3n], [2n]]],
 		["var items=[1,2];val original=items;items[0]=7;original", [7n, 2n]],
@@ -100,7 +100,7 @@ describe("Indexed assignment test", () => {
 	});
 
 	it("rejects an out-of-range optional write when the receiver is present", () => {
-		const expression = new Affinirum("var items:array?=[];items?[0]=2");
+		const expression = new Affinirum("var items:[]?=[];items?[0]=2");
 		expect(() => expression.evaluate()).toThrow("array index is out of range");
 	});
 
@@ -211,7 +211,7 @@ describe("Indexed assignment test", () => {
 
 	it("preserves the type of an array written through a broader alias", () => {
 		const values = [1n];
-		const expression = new Affinirum("var typed:[...integer]=values;var alias:array=typed;alias[0]=replacement;typed", {
+		const expression = new Affinirum("var typed:[...integer]=values;var alias:[]=typed;alias[0]=replacement;typed", {
 			variables: { values: Type.Array },
 		});
 		expect(() => expression.evaluate({ values, replacement: "bad" })).toThrow(/indexed value mismatch with expected type/);
@@ -255,7 +255,7 @@ describe("Indexed assignment test", () => {
 
 	it("preserves all recorded constraints on an object written through an alias", () => {
 		const record = { a: 1n, b: "one" };
-		const expression = new Affinirum("var alias:object=first;second;alias[key]=replacement;alias", {
+		const expression = new Affinirum("var alias:[:]=first;second;alias[key]=replacement;alias", {
 			variables: {
 				first: Type.objectType([["a", Type.Integer]]),
 				second: Type.objectType([["b", Type.String]]),

@@ -308,7 +308,7 @@ describe("Number function test", () => {
 		});
 
 		it("accepts Root in a function with an optional return type", () => {
-			const expression = new Affinirum("val f=~(a:integer,b:integer):integer? { a.Root(b)};f(a,b)", {
+			const expression = new Affinirum("val f=func(a:integer,b:integer):integer? { a.Root(b)};f(a,b)", {
 				strict: true,
 				variables: { a: Type.Integer, b: Type.Integer },
 			});
