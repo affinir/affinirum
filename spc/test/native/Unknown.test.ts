@@ -1,6 +1,23 @@
 import { Affinirum, Value } from "../../../src/index.js";
 import { runAffinirumTests } from "../../util/AffinirumTest.js";
 
+const comparison = new Affinirum(`[
+	"==": [a == b, b == a],
+	"!=": [a != b, b != a],
+	"Equals": [a.Equals(b), b.Equals(a)],
+	"NotEquals": [a.NotEquals(b), b.NotEquals(a)]
+]`);
+const uniqueValues = new Affinirum("Array.Unique(values)");
+
+const expectEqualityInBothOrders = (a: Value, b: Value, equal: boolean) => {
+	expect(comparison.evaluate({ a, b })).toEqual({
+		"==": [equal, equal],
+		"!=": [!equal, !equal],
+		Equals: [equal, equal],
+		NotEquals: [!equal, !equal],
+	});
+};
+
 describe("Unknown function test", () => {
 	runAffinirumTests([
 		{
@@ -151,9 +168,7 @@ describe("Mixed numeric equality", () => {
 		[Infinity, 0n, false],
 		[-Infinity, 0n, false],
 	])("compares float %s and integer %s in both operand orders", (float, integer, equal) => {
-		const expression = new Affinirum("[a==b,b==a,a!=b,b!=a,a.Equals(b),b.Equals(a),a.NotEquals(b),b.NotEquals(a)]");
-		expect(expression.evaluate({ a: float, b: integer }))
-			.toEqual([equal, equal, !equal, !equal, equal, equal, !equal, !equal]);
+		expectEqualityInBothOrders(float, integer, equal);
 	});
 
 	it.each([
@@ -164,9 +179,8 @@ describe("Mixed numeric equality", () => {
 	});
 
 	it("preserves distinct large values in Array.Unique regardless of their order", () => {
-		const expression = new Affinirum("Array.Unique(values)");
 		for (const values of [[9007199254740992, 9007199254740993n], [9007199254740993n, 9007199254740992]]) {
-			expect(expression.evaluate({ values })).toEqual(values);
+			expect(uniqueValues.evaluate({ values })).toEqual(values);
 		}
 	});
 });
@@ -182,33 +196,20 @@ describe("Object category equality", () => {
 		{ categories: "empty array and object with matching properties", a: [], b: { length: 0n } },
 		{ categories: "array and object with matching properties", a: [1n], b: { "0": 1n, length: 1n } },
 	];
-	const comparisonScript = "[a==b,b==a,a.Equals(b),b.Equals(a),a!=b,b!=a,a.NotEquals(b),b.NotEquals(a)]";
 
-	it.each(pairs)("distinguishes $categories in both operand orders", ({ a, b }) => {
-		const expression = new Affinirum(comparisonScript);
-		expect(expression.evaluate({ a, b }))
-			.toEqual([false, false, false, false, true, true, true, true]);
-	});
-
-	it.each(pairs)("distinguishes nested $categories in both operand orders", ({ a, b }) => {
-		const expression = new Affinirum(comparisonScript);
-		for (const values of [
-			{ a: [a], b: [b] },
-			{ a: { item: [a] }, b: { item: [b] } },
-		]) {
-			expect(expression.evaluate(values))
-				.toEqual([false, false, false, false, true, true, true, true]);
-		}
+	it.each(pairs)("distinguishes $categories directly and inside arrays and objects", ({ a, b }) => {
+		expectEqualityInBothOrders(a, b, false);
+		expectEqualityInBothOrders([a], [b], false);
+		expectEqualityInBothOrders({ item: [a] }, { item: [b] }, false);
 	});
 
 	it.each(pairs)("keeps $categories distinct in Array.Unique", ({ a, b }) => {
-		const expression = new Affinirum("Array.Unique(values)");
 		for (const values of [
 			[a, b], [b, a],
 			[[a], [b]], [[b], [a]],
 			[{ item: a }, { item: b }], [{ item: b }, { item: a }],
 		]) {
-			expect(expression.evaluate({ values })).toEqual(values);
+			expect(uniqueValues.evaluate({ values })).toEqual(values);
 		}
 	});
 
@@ -219,13 +220,12 @@ describe("Object category equality", () => {
 			[], [],
 			{}, {},
 		];
-		expect(new Affinirum("Array.Unique(values)").evaluate({ values }))
+		expect(uniqueValues.evaluate({ values }))
 			.toEqual([new Date(0), new Uint8Array([1]).buffer, [], {}]);
 	});
 });
 
 describe("Cyclic structural equality", () => {
-	const comparisonScript = "[a==b,b==a,a.Equals(b),b.Equals(a),a!=b,b!=a,a.NotEquals(b),b.NotEquals(a)]";
 	const createObject = (value: bigint): Record<string, Value> => {
 		const object: Record<string, Value> = {};
 		object.self = object;
@@ -247,18 +247,13 @@ describe("Cyclic structural equality", () => {
 	];
 
 	it.each(factories)("compares cyclic %s values with themselves and matching copies", (_category, create) => {
-		const expression = new Affinirum(comparisonScript);
 		const a = create(1n);
-		for (const b of [a, create(1n)]) {
-			expect(expression.evaluate({ a, b }))
-				.toEqual([true, true, true, true, false, false, false, false]);
-		}
+		expectEqualityInBothOrders(a, a, true);
+		expectEqualityInBothOrders(a, create(1n), true);
 	});
 
 	it.each(factories)("detects differences after a back-reference in cyclic %s values", (_category, create) => {
-		const expression = new Affinirum(comparisonScript);
-		expect(expression.evaluate({ a: create(1n), b: create(2n) }))
-			.toEqual([false, false, false, false, true, true, true, true]);
+		expectEqualityInBothOrders(create(1n), create(2n), false);
 	});
 
 	it.each<[bigint, boolean]>([
@@ -268,9 +263,7 @@ describe("Cyclic structural equality", () => {
 		const shared = { value: 1n };
 		const a = { first: shared, second: shared };
 		const b = { first: { value: 1n }, second: { value } };
-		const expression = new Affinirum(comparisonScript);
-		expect(expression.evaluate({ a, b }))
-			.toEqual([equal, equal, equal, equal, !equal, !equal, !equal, !equal]);
+		expectEqualityInBothOrders(a, b, equal);
 	});
 
 	it("does not reuse compared pairs across evaluations", () => {

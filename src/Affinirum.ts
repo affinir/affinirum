@@ -191,7 +191,7 @@ export class Affinirum {
 			return this._unit(state, scope);
 		}
 		const assignable = state.equals("var");
-		if (!state.next().isIdentifier) {
+		if (!state.next().isIdentifier || this._constants.has(state.identifier)) {
 			state.throwError("missing variable name");
 		}
 		const identifier = state.identifier;
@@ -201,7 +201,7 @@ export class Affinirum {
 		const span = state.start();
 		let type: Type | undefined;
 		if (state.next().equals(":")) {
-			type = this._type.parse(state.next(), scope);
+			type = this._type.parse(state.next());
 		}
 		const variable = new LocalVariable(type, assignable);
 		scope.set(identifier, variable);
@@ -230,7 +230,7 @@ export class Affinirum {
 		let node = this._disjunction(state, scope);
 		while (state.equals("?:")) {
 			const fnode = new ConstantNode(state, state.constant);
-			node = new CallNode(state, fnode, [node, this._disjunction(state.next(), scope)]);
+			node = new CallNode(fnode, fnode, [node, this._disjunction(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -239,7 +239,7 @@ export class Affinirum {
 		let node = this._conjunction(state, scope);
 		while (state.equals("|", "or")) {
 			const fnode = new ConstantNode(state, state.constant);
-			node = new CallNode(state, fnode, [node, this._conjunction(state.next(), scope)]);
+			node = new CallNode(fnode, fnode, [node, this._conjunction(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -248,7 +248,7 @@ export class Affinirum {
 		let node = this._negation(state, scope);
 		while (state.equals("&", "and")) {
 			const fnode = new ConstantNode(state, state.constant);
-			node = new CallNode(state, fnode, [node, this._negation(state.next(), scope)]);
+			node = new CallNode(fnode, fnode, [node, this._negation(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -273,7 +273,7 @@ export class Affinirum {
 		let node = this._range(state, scope);
 		while (state.equals(">", "<", ">=", "<=", "==", "!=")) {
 			const fnode = new ConstantNode(state, state.constant);
-			node = new CallNode(state, fnode, [node, this._range(state.next(), scope)]);
+			node = new CallNode(fnode, fnode, [node, this._range(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -282,7 +282,7 @@ export class Affinirum {
 		let node = this._aggregate(state, scope);
 		if (state.equals("..")) {
 			const fnode = new ConstantNode(state, state.constant);
-			node = new CallNode(state, fnode, [node, this._aggregate(state.next(), scope)]);
+			node = new CallNode(fnode, fnode, [node, this._aggregate(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -291,7 +291,7 @@ export class Affinirum {
 		let node = this._product(state, scope);
 		while (state.equals("+", "-")) {
 			const fnode = new ConstantNode(state, state.constant);
-			node = new CallNode(state, fnode, [node, this._product(state.next(), scope)]);
+			node = new CallNode(fnode, fnode, [node, this._product(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -300,7 +300,7 @@ export class Affinirum {
 		let node = this._signum(state, scope);
 		while (state.equals("*", "/", "%")) {
 			const fnode = new ConstantNode(state, state.constant);
-			node = new CallNode(state, fnode, [node, this._signum(state.next(), scope)]);
+			node = new CallNode(fnode, fnode, [node, this._signum(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -327,7 +327,7 @@ export class Affinirum {
 		let node = this._postfix(state, scope);
 		while (state.equals("**")) {
 			const fnode = new ConstantNode(state, state.constant);
-			node = new CallNode(state, fnode, [node, this._postfix(state.next(), scope)]);
+			node = new CallNode(fnode, fnode, [node, this._postfix(state.next(), scope)]);
 		}
 		return node;
 	}
@@ -350,6 +350,7 @@ export class Affinirum {
 				else if (state.isIdentifier) {
 					const func = access ? this._functions.get(state.identifier) : undefined;
 					if (func) {
+						span.end(state);
 						if (state.next().equals("(")) {
 							const subnodes: Node[] = [node];
 							while (!state.next().equals(")")) {
@@ -364,7 +365,7 @@ export class Affinirum {
 							state.next();
 						}
 						else {
-							const fnode = new ConstantNode(span.end(state), func);
+							const fnode = new ConstantNode(span, func);
 							node = new CallNode(span, fnode, [node], optional);
 						}
 					}
@@ -384,8 +385,9 @@ export class Affinirum {
 				const operator = state.constant;
 				const inode = this._unit(state.next(), scope);
 				state.closeBrackets();
+				span.end(state);
 				state.next();
-				node = new AccessNode(span.end(state), node, inode, operator);
+				node = new AccessNode(span, node, inode, operator);
 			}
 			else if (state.equals("(")) { // function call
 				const subnodes: Node[] = [];
@@ -396,8 +398,9 @@ export class Affinirum {
 					}
 				}
 				state.closeParentheses();
+				span.end(state);
 				state.next();
-				node = new CallNode(span.end(state), node, subnodes);
+				node = new CallNode(span, node, subnodes);
 			}
 		}
 		if (state.isAssignment) {
@@ -431,7 +434,7 @@ export class Affinirum {
 			const span = state.start();
 			let node = this._unit(state.next(), scope);
 			if (state.equals(":")) {
-				const type = this._type.parse(state.next(), scope);
+				const type = this._type.parse(state.next());
 				node = new CastNode(span.end(state), node, type);
 			}
 			state.closeParentheses();
@@ -454,10 +457,10 @@ export class Affinirum {
 			if (!scope.inFunction) {
 				state.throwError("unexpected -> outside of a function");
 			}
-			return new FinalNode(state, "return", this._unit(state.next(), scope), scope.type);
+			return new FinalNode(state.start(), "return", this._unit(state.next(), scope), scope.type);
 		}
 		else if (state.equals("=>")) {
-			const node = new FinalNode(state, "result", this._unit(state.next(), scope), this._scope.type);
+			const node = new FinalNode(state.start(), "result", this._unit(state.next(), scope), this._scope.type);
 			this._results.push(node);
 			return node;
 		}
@@ -470,7 +473,7 @@ export class Affinirum {
 		else if (state.equals("match")) {
 			return this._match(state, scope);
 		}
-		else if (state.equals("while", "do")) {
+		else if (state.equals("while", "loop")) {
 			return this._loop(state, scope);
 		}
 		else if (state.equals("exit", "next")) {
@@ -485,7 +488,7 @@ export class Affinirum {
 		else if (state.isEnded) {
 			state.throwError("unexpected end of expression");
 		}
-		state.throwError("unexpected expression token");
+		state.throwError(`unexpected expression token '${state.text()}'`);
 	}
 
 	protected _identifier(state: ParserState, scope: LexicalScope): Node {
@@ -502,8 +505,9 @@ export class Affinirum {
 			if (!constant) {
 				state.throwError(`unknown constant ${state.identifier}`);
 			}
+			span.end(state);
 			state.next();
-			return new ConstantNode(span.end(state), constant);
+			return new ConstantNode(span, constant);
 		}
 		let variable = scope.get(state.identifier) ?? this._variables.get(state.identifier);
 		if (variable == null) {
@@ -528,7 +532,7 @@ export class Affinirum {
 		let variadic = false;
 		const variables = new Map<string, LocalVariable>();
 		while (!state.next().equals(")")) {
-			if (!state.isIdentifier) {
+			if (!state.isIdentifier || this._constants.has(state.identifier)) {
 				state.throwError("missing function argument name");
 			}
 			const identifier = state.identifier;
@@ -545,7 +549,7 @@ export class Affinirum {
 					state.next();
 				}
 				if (!variadic || !state.equals(")")) {
-					argType = this._type.parse(state, scope);
+					argType = this._type.parse(state);
 				}
 				if (variadic) {
 					argType = Type.arrayType(argType);
@@ -561,7 +565,7 @@ export class Affinirum {
 			}
 		}
 		state.closeParentheses();
-		const returnType = state.next().equals(":") ? this._type.parse(state.next(), scope) : Type.Any;
+		const returnType = state.next().equals(":") ? this._type.parse(state.next()) : Type.Any;
 		state.openBraces();
 		state.next();
 		const args = Array.from(variables.values());
@@ -660,70 +664,49 @@ export class Affinirum {
 		const span = state.start();
 		const cnode = this._unit(state.next(), scope);
 		span.end(state);
-		if (state.equals("then")) {
-			state.next();
+		if (!state.equals("then")) {
+			state.throwError("expected 'then' after if condition");
 		}
-		else if (!state.equals("{")) {
-			state.throwError("missing 'then' or '{' after the if condition");
-		}
-		const tnode = this._unit(state, scope);
+		const tnode = this._unit(state.next(), scope);
 		const enode = state.equals("else")
 			? this._unit(state.next(), scope)
-			: new ConstantNode(state.start(), Constant.Null);
-		return new TernaryNode(span, cnode, [tnode, enode]);
+			: undefined;
+		return new TernaryNode(span, cnode, tnode, enode);
 	}
 
 	protected _match(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
-		const vnode = this._unit(state.next(), scope);
-		state.openBraces();
-		const subnode: [Node, Node][] = [];
-		let enode: Node | undefined;
-		while (!state.next().equals("}")) {
-			if (enode) {
-				state.throwError("else must be the last match arm");
-			}
-			if (state.equals("else")) {
-				state.next().assertColon();
-				enode = this._unit(state.next(), scope);
-			}
-			else {
-				const key = this._unit(state, scope);
-				state.assertColon();
-				subnode.push([key, this._unit(state.next(), scope)]);
-			}
-			if (state.equals("}") || state.isEnded) {
-				break;
-			}
-			if (!state.equals(",")) {
-				state.throwError("expected ',' or '}' after match arm");
-			}
+		const mnode = this._unit(state.next(), scope);
+		if (!state.equals("when", "else")) {
+			state.throwError("expected 'when' or 'else' after match subject");
 		}
-		state.closeBraces();
-		span.end(state);
-		state.next();
-		return new MatchNode(span, vnode, subnode, enode);
+		const cases: [Node, Node][] = [];
+		while (state.equals("when")) {
+			const key = this._unit(state.next(), scope);
+			if (!state.equals("then")) {
+				state.throwError("expected 'then' after when key");
+			}
+			const body = this._unit(state.next(), scope);
+			cases.push([key, body]);
+			span.end(body);
+		}
+		let enode: Node | undefined;
+		if (state.equals("else")) {
+			enode = this._unit(state.next(), scope);
+			span.end(enode);
+		}
+		return new MatchNode(span, mnode, cases, enode);
 	}
 
 	protected _loop(state: ParserState, scope: LexicalScope): Node {
 		const span = state.start();
-		const wnode = state.equals("while")
-			? this._unit(state.next(), scope)
-			: undefined;
-		if (wnode) {
-			if (state.equals("do")) {
-				state.next();
-			}
-			else if (!state.equals("{")) {
-				state.throwError("missing 'do' or '{' after the while condition")
-			}
-		}
-		else {
-			state.next();
+		const wnode = state.equals("while") ? this._unit(state.next(), scope) : undefined;
+		if (wnode && !state.equals("loop")) {
+			state.throwError("expected 'loop' after while condition");
 		}
 		const inLoop = scope.inLoop;
 		scope.inLoop = true;
-		const subnode = this._unit(state, scope);
+		const subnode = this._unit(state.next(), scope);
 		scope.inLoop = inLoop;
 		const unode = state.equals("until")
 			? this._unit(state.next(), scope)

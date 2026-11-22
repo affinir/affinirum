@@ -25,7 +25,7 @@ export const funcSplice = new Constant(
 			? undefined
 			: aggregate(
 				inject.reduce((acc, val) => aggregate(acc, val), value.slice(0, Number(start))),
-				value.slice(Number(start + remove)),
+				value.slice(Number(start)).slice(Math.max(0, Number(remove))),
 			),
 	Type.functionType([
 		[Type.Buffer, [Type.Buffer, Type.Integer, Type.Integer, typeBufferArray], true],

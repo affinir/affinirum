@@ -26,7 +26,7 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "if v {a}else{b}",
+			script: "if v then {a}else{b}",
 			cases: [
 				{ values: { v: true, a: 1, b: 2 }, result: 1 },
 				{ values: { v: false, a: "f", b: undefined }, result: undefined },
@@ -85,7 +85,7 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "var x=a;1000 + {while x < b { x = x + 1 }; {b; x+100}}",
+			script: "var x=a;1000 + {while x < b loop { x = x + 1 }; {b; x+100}}",
 			cases: [
 				{ values: { a: 1, b: 10 }, result: 1110 },
 				{ values: { a: -5, b: -1 }, result: 1099 },
@@ -117,26 +117,27 @@ describe("Mixed function test", () => {
 			],
 		},
 		{
-			script: "if a {b}else{if c{d}else{e}}",
+			script: "if a then {b}else{if c then {d}else{e}}",
 			cases: [
 				{ values: { a: true, b: false, c: false, d: 10, e: 20 }, result: false },
 				{ values: { a: false, b: true, c: false, d: 10, e: 20 }, result: 20 },
 			],
 		},
 		{
-			script: "var x=a;while x<10{x= while x+1<20{x=x+1}}",
+			script: "var x=a;while x<10 loop {x= while x+1<20 loop {x=x+1}}",
 			cases: [
 				{ values: { a: 1n }, result: 19n },
 			],
 		},
 		{
-			script: "var x=a;while (while x<10{x=x+1}<20)==true{x=x+1}",
+			script: "var x=a;while (while x<10 loop {x=x+1;x<20})==true loop {x=x+1}",
 			cases: [
 				{ values: { a: 1n }, result: 11n },
+				{ values: { a: 10n }, result: undefined },
 			],
 		},
 		{
-			script: "if x > 0 { x }",
+			script: "if x > 0 then { x }",
 			cases: [
 				{ values: { x: 1 }, result: 1 },
 				{ values: { x: -1 }, result: undefined },

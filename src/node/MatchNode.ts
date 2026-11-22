@@ -9,18 +9,18 @@ import { equals } from "../native/Unknown.js";
 
 export class MatchNode extends Node {
 
-	protected _vnode: Node;
+	protected _mnode: Node;
 	protected _subnodes: [Node, Node][];
 	protected _enode: Node;
 
 	constructor(
 		span: ParserSpan,
-		vnode: Node,
+		mnode: Node,
 		subnodes: [Node, Node][],
 		enode: Node = new ConstantNode(span, Constant.Null),
 	) {
 		super(span);
-		this._vnode = vnode;
+		this._mnode = mnode;
 		this._subnodes = subnodes;
 		this._enode = enode;
 	}
@@ -35,8 +35,8 @@ export class MatchNode extends Node {
 	}
 
 	override compile(type = Type.Any): Node {
-		this._vnode = this._vnode.compile();
-		let reachable = !this._vnode.type.isNever;
+		this._mnode = this._mnode.compile();
+		let reachable = !this._mnode.type.isNever;
 		this._subnodes = this._subnodes.map(([key, result]) => {
 			const compiledKey = key.compile();
 			reachable &&= !compiledKey.type.isNever;
@@ -47,7 +47,7 @@ export class MatchNode extends Node {
 	}
 
 	override evaluate(frame: CallFrame): Value {
-		const subject = this._vnode.evaluate(frame);
+		const subject = this._mnode.evaluate(frame);
 		for (const [key, result] of this._subnodes) {
 			if (equals(subject, key.evaluate(frame))) {
 				return result.evaluate(frame);
@@ -57,13 +57,13 @@ export class MatchNode extends Node {
 	}
 
 	override toString(ident = 0): string {
-		const children = [this._vnode, ...this._subnodes.flat(), this._enode];
+		const children = [this._mnode, ...this._subnodes.flat(), this._enode];
 		return `${super.toString(ident)} match node:\n` + children.map((node) => node.toString(ident + 1)).join("\n");
 	}
 
-	private _results(): Node[] {
+	protected _results(): Node[] {
 		const results: Node[] = [];
-		if (this._vnode.type.isNever) {
+		if (this._mnode.type.isNever) {
 			return results;
 		}
 		for (const [key, value] of this._subnodes) {

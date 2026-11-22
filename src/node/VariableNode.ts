@@ -51,7 +51,7 @@ export class VariableNode extends AssignableNode {
 			this._variable.declare(type);
 		}
 		if (!this.reduceAssignmentType(type)) {
-			this._throwTypeError(type);
+			this.throwError(`cannot assign ${type} to ${this.type}`);
 		}
 		return this;
 	}

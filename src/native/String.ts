@@ -384,8 +384,8 @@ export const funcUpperCase = new Constant(
 );
 
 export const funcSplit = new Constant(
-	(value: string, separator: string = " ") =>
-		value?.split(separator) ?? [],
+	(value: string, separator?: string) =>
+		value?.split(separator ?? " ") ?? [],
 	Type.functionType([[Type.arrayType(Type.String), [Type.String, Type.OptionalString]]]),
 );
 
@@ -425,8 +425,8 @@ const funcRandomString = new Constant(
 );
 
 const funcDecodeString = new Constant(
-	(value: ArrayBuffer | undefined, encoding: StringEncoding = "utf8", byteOffset?: bigint, byteLength?: bigint) =>
-		decodeString(value, encoding, byteOffset == null ? undefined : Number(byteOffset), byteLength == null ? undefined : Number(byteLength)),
+	(value: ArrayBuffer | undefined, encoding?: StringEncoding, byteOffset?: bigint, byteLength?: bigint) =>
+		decodeString(value, encoding ?? "utf8", byteOffset == null ? undefined : Number(byteOffset), byteLength == null ? undefined : Number(byteLength)),
 	Type.functionType([[Type.OptionalString, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger, Type.OptionalInteger]]]),
 );
 

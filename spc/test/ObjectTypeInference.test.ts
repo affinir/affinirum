@@ -78,7 +78,7 @@ describe("Object type inference test", () => {
 
 	it("requires a known named field in a loop result", () => {
 		const type = Type.union(Type.Null, Type.objectType([["a", Type.Integer]]));
-		expect(() => new Affinirum("var n=0;while n<1{n=1;[(key):1]}", { type }))
+		expect(() => new Affinirum("var n=0;while n<1 loop {n=1;[(key):1]}", { type }))
 			.toThrow(/mismatch with expected type/);
 	});
 

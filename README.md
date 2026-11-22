@@ -18,7 +18,7 @@ Affinirum runs in browsers and Node.js with an ES2022 runtime. The package provi
   - [Statements and literals](#statements-and-literals)
   - [Variables and values](#variables-and-values)
   - [Conditionals](#conditionals)
-  - [Matches](#matches)
+  - [Match expressions](#match-expressions)
   - [Loops](#loops)
   - [Functions and returns](#functions-and-returns)
   - [Arrays and objects](#arrays-and-objects)
@@ -130,7 +130,7 @@ A read or assignment expression can have a more specific type than the binding. 
 
 Bindings declared inside a block are local to that block. Names must start with an ASCII letter, `$`, or `_`,
 followed by any combination of those characters and digits, such as `x`, `_a1$`, or `abc25`.
-Language keywords, including `var`, `val`, `func`, `function`, `if`, `else`, `match`, `while`, `do`, `until`, `next`, and `exit`, are reserved,
+Language keywords, including `var`, `val`, `func`, `function`, `if`, `then`, `else`, `match`, `when`, `while`, `loop`, `until`, `next`, and `exit`, are reserved,
 as are type names and their aliases.
 
 Built-in methods that transform arrays or objects produce replacement values while preserving their inputs.
@@ -160,93 +160,100 @@ wider bindings and casts that reference the same array or object. After `var ite
 
 ### Conditionals
 
-`if condition { ... } else { ... }` is a conditional expression: it evaluates only the selected branch and returns
-that branch's value. The condition must be boolean. If `else` is omitted and the condition is false, the result is `null`.
-An unbraced first branch requires `then`, as in `if score >= 60 then "pass" else "fail"`.
-Before `{`, `then` is optional and is usually omitted. An `else` branch can use either a block or a single expression.
+`if condition then result else fallback` evaluates only the selected branch and returns its value. The condition must be boolean.
+`then` is required. Either branch can be a single expression or a braced block containing several statements.
+If `else` is omitted and the condition is false, the result is `null`. In nested conditionals, `else` belongs to the nearest
+conditional that can accept it. Use braces to make the intended nesting explicit.
 
 ```text
 val score = 82;
-val category = if score >= 60 { "pass" } else { "fail" };
+val category = if score >= 60 then "pass" else "fail";
 category // "pass"
 ```
 
-### Matches
+Use `match true` to test several conditions in order. The first true condition supplies the result.
 
-Use `match value { key: result, else: fallback }` to choose a result by value. Each comma-separated
-`key: result` pair is called an arm. Both the key and the result can be expressions. A trailing comma is allowed.
+```text
+val score = 82;
+match true
+    when score >= 90 then "A"
+    when score >= 80 then "B"
+    else "C" // "B"
+```
 
-Parentheses around the subject are optional, so `match status { ... }` and `match(status) { ... }` are equivalent.
-The subject can be a full expression, as in `match status + 1 { ... }`.
+### Match expressions
 
-`match` evaluates `value` once, then evaluates keys from left to right, comparing each with `==`. At the first
-equal key, it evaluates that arm's result and skips the remaining arms. Array and object keys use the same
-structural equality as `==`.
-If every key misses, the optional final `else:` arm supplies the result.
+Use `match value when key then result else fallback` to choose a result by value. Each `when` requires `then` after its key.
+The result and fallback can be single expressions or braced blocks. The subject can also be an expression, as in `match status + 1 when 201 then "Created"`.
+Parentheses around the subject are optional.
+
+`match` evaluates its subject once and compares it with each key in order using `==`, including structural equality
+for arrays and objects. It evaluates the result expression of the first matching arm. If every key misses,
+the optional final `else` supplies the result.
 
 ```text
 val status = 404;
-val label = match status {
-    200: "OK",
-    404: "Not found",
-    else: "Unknown"
-};
+val label = match status
+    when 200 then "OK"
+    when 404 then "Not found"
+    else "Unknown";
 label // "Not found"
 ```
 
 The result type is the union of the reachable arm result types, including the fallback. If no key matches
-and `else:` is omitted, the result is `null`. In the example below, the two integer results and the
-implicit `null` give the match expression type `integer?`.
+and `else` is omitted, the result is `null`. In the example below, the two integer results and the
+implicit `null` give the `match` expression type `integer?`.
 
 ```text
 val retryDelay = func(status:integer):integer? {
-    match status { 429: 60, 503: 10 }
+    match status when 429 then 60 when 503 then 10
 };
 [retryDelay(503), retryDelay(404)] // [10, null]
 ```
 
-`match value {}` evaluates `value` and returns `null`. Use `"else"` as a key to match the literal string.
+Each `match` requires at least one `when` or `else` arm. With only `else`, the subject is still evaluated.
+For example, `match value else {}` evaluates `value` and returns `null`.
 
 ### Loops
 
-`while condition { ... }` repeats while its boolean condition is true. An unbraced body requires `do`, as in
-`while i < 10 do i += 1`. Before `{`, `do` is optional and is usually omitted.
+`while condition loop body` tests its boolean condition before each iteration. The required `loop` introduces
+a single expression, as in `while i < 10 loop i += 1`, or a braced block.
 Use `next` to skip the rest of the current iteration, or `exit` to leave the innermost loop.
+Both apply only to loops in the current function or script.
 
 ```text
 var i = 0;
 var total = 0;
-while i < 10 {
+while i < 10 loop {
     i += 1;
-    if i == 3 { next };
-    if i == 6 { exit };
+    if i == 3 then next;
+    if i == 6 then exit;
     total += i
 };
 total // 12
 ```
 
-`do { ... } until condition` runs the body before testing a boolean stop condition. It repeats until the condition
-is true. An unbraced body is also allowed, as in `do i += 1 until i == 3`.
+An optional `until` tests a boolean stop condition after the body. The standalone form `loop i += 1 until i == 3`
+runs the body at least once.
 
 ```text
 var i = 0;
-do {
+loop {
     i += 1;
     i * 10
 } until i == 3 // 30
 ```
 
-A `while` loop can also end with `until`, as in `while i < 10 { i += 1 } until i == 3`.
-The `while` condition runs before each iteration; `until` runs afterward. A false `while` condition skips both the body
-and `until`. `next` still checks `until` before starting another iteration, while `exit` skips it.
-Without either condition, `do { ... }` repeats until an explicit jump stops it.
+In `while i < 10 loop i += 1 until i == 3`, a false `while` condition skips both the body and `until`.
+A true `until` condition ends the loop. `next` still checks `until` before starting another iteration, while `exit` skips it.
+Omitting both conditions gives `loop { ... }`, which repeats until an explicit jump stops it.
 
-Declare variables needed by `until` outside the body block; body-local bindings are not visible in the condition.
-Use braces around a body containing a nested loop so a trailing `until` belongs to the intended loop.
+Declare variables needed by `until` outside the body block. Use braces around a body containing a nested loop
+to make clear which loop a trailing `until` belongs to.
 
-A loop returns its last completed iteration's value, or `null` if no iteration completes. An iteration interrupted
-by `next` or `exit` does not replace that result. The inferred result type includes `null`, including for `do` loops.
-Neither keyword can jump from a called function into its caller's loop.
+A loop returns its last completed iteration's value, or `null` if no iteration completes.
+For example, `(while false loop 1) ?: 2` returns `2`. An iteration interrupted by `next` or `exit` preserves the previous result.
+The inferred result type includes `null` even when the loop has no precondition.
 
 ### Functions and returns
 
@@ -259,7 +266,7 @@ or `=> value` to finish the entire script.
 
 ```text
 val absolute = func(value: integer): integer {
-    if value < 0 { -> -value };
+    if value < 0 then -> -value;
     value
 };
 absolute(-5) // 5
@@ -465,8 +472,9 @@ and `a` has type `[...integer]` inside the function.
 ### Operators and precedence
 
 Expression operators are listed from highest precedence to lowest. Parentheses override grouping.
-The closing brace completes a match expression, so its result can be used directly as an operand, as in
-`match code { 200: 1 } ?: 0`. See [Match operator](#matches).
+The bodies of `if`, `match`, and loops are full expressions. In `if true then { 1 } else { 2 } + 3`, the addition
+belongs to the `else` branch, so the result is `1`. Group the whole expression to operate on its result,
+as in `(if true then 1 else 2) + 3` or `(match code when 200 then 1) ?: 0`.
 
 | Precedence | Operators | Meaning |
 | --- | --- | --- |
@@ -842,7 +850,7 @@ JSON.Format(["missing": null, "count": 1])  // '{"missing":null,"count":"1"}'
 - **[].Derive(transformation: {(any, integer, []):any}):[]** — Derived array
 - **[].Filter(condition: {(any, integer, []):boolean}):[]** — Filtered array
 - **[].Reduce(reducer: {(any, any, integer, []):any}, initial: any = null):any** — Reduced value
-- **[].Compose(generator: {([:], string, integer, []):any}):[:]** — Compose object from array
+- **[...string].Compose(generator: {([:], string, integer, []):any}):[:]** - Compose an object from an array of string keys
 
 `Reduce` uses `initial` as the accumulator when it is non-null. If `initial` is omitted or `null`, it starts with the
 first item and raises an error for an empty array.

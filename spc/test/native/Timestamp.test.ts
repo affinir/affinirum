@@ -23,7 +23,7 @@ describe("Timestamp function test", () => {
 			],
 		},
 		{
-			script: "val t = Timestamp.Decode(Timestamp.Epoch(v).Encode); if t != null { (t:timestamp).EpochTime }",
+			script: "val t = Timestamp.Decode(Timestamp.Epoch(v).Encode); if t != null then { (t:timestamp).EpochTime }",
 			cases: [
 				{ values: { v: 60n }, result: 60n },
 				{ values: { v: 1055n }, result: 1055n },
@@ -39,7 +39,7 @@ describe("Timestamp function test", () => {
 			],
 		},
 		{
-			script: "val t = Timestamp.Decode(v.Encode(enc), enc); if t != null { (t:timestamp).EpochTime }",
+			script: "val t = Timestamp.Decode(v.Encode(enc), enc); if t != null then { (t:timestamp).EpochTime }",
 			cases: [
 				{ values: { v: new Date(90999), enc: "i32" }, result: 60000n },
 				{ values: { v: new Date(-1), enc: "i32" }, result: 0n },
@@ -51,7 +51,7 @@ describe("Timestamp function test", () => {
 			],
 		},
 		{
-			script: "val t = Timestamp.Decode(v, enc, offset); if t != null { (t:timestamp).EpochTime }",
+			script: "val t = Timestamp.Decode(v, enc, offset); if t != null then { (t:timestamp).EpochTime }",
 			cases: [
 				{ values: { v: new Uint8Array([0xff, 0x00, 0x00, 0x01, 0x00]).buffer, enc: "i32", offset: 1n }, result: 15360000n },
 				{ values: { v: new Uint8Array([0xff, 0x00, 0x01, 0x00, 0x00]).buffer, enc: "i32le", offset: 1n }, result: 15360000n },

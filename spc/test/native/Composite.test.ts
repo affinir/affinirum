@@ -109,14 +109,14 @@ describe("Composite function test", () => {
 			],
 		},
 		{
-			script: "[if (x == `a`) { x } else { \"a\" } :1].a",
+			script: "[if (x == `a`) then { x } else { \"a\" } :1].a",
 			cases: [
 				{ values: { x: "a" }, result: 1n },
 				{ values: { x: "b" }, result: 1n },
 			],
 		},
 		{
-			script: "val entity=([\"entity\":[d.id:[\"a1\", \"a2\"]]].entity:[:]);if entity.?abc{(entity.abc:[])[0]}",
+			script: "val entity=([\"entity\":[d.id:[\"a1\", \"a2\"]]].entity:[:]);if entity.?abc then {(entity.abc:[])[0]}",
 			cases: [
 				{ values: { d: { id: "abc" } }, result: "a1" },
 				{ values: { d: { id: "a" } }, result: undefined },

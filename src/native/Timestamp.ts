@@ -191,8 +191,8 @@ export const funcMillisecond = new Constant(
 );
 
 export const funcEpochTime = new Constant(
-	(value: Date, epoch = new Date(0)) =>
-		value ? BigInt(value.getTime() - epoch.getTime()) : undefined,
+	(value: Date, epoch?: Date) =>
+		value ? BigInt(value.getTime() - (epoch?.getTime() ?? 0)) : undefined,
 	Type.functionType([[Type.Integer, [Type.Timestamp, Type.OptionalTimestamp]]]),
 );
 
@@ -221,16 +221,16 @@ export const funcSecondsSince = new Constant(
 );
 
 const funcEpochTimestamp = new Constant(
-	(value: number | bigint, epoch = new Date(0)) => {
-		const ts = new Date(Number(value ?? 0) + epoch?.getTime());
+	(value: number | bigint, epoch?: Date) => {
+		const ts = new Date(Number(value ?? 0) + (epoch?.getTime() ?? 0));
 		return Number.isNaN(ts.getTime()) ? undefined : ts;
 	},
 	Type.functionType([[Type.Timestamp, [Type.Number, Type.OptionalTimestamp]]]),
 );
 
 const funcDecodeTimestamp = new Constant(
-	(value: ArrayBuffer | undefined, encoding: TimestampEncoding = "i64", byteOffset?: bigint) =>
-		decodeTimestamp(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
+	(value: ArrayBuffer | undefined, encoding?: TimestampEncoding, byteOffset?: bigint) =>
+		decodeTimestamp(value, encoding ?? "i64", byteOffset == null ? undefined : Number(byteOffset)),
 	Type.functionType([[Type.OptionalTimestamp, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]]]),
 );
 

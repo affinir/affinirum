@@ -67,6 +67,9 @@ export const equals = (value1: Value, value2: Value, pairs?: WeakMap<object, Wea
 	}
 	const props = new Set([...Object.keys(value1), ...Object.keys(value2)]);
 	for (const prop of props) {
+		if (!Object.hasOwn(value1, prop) || !Object.hasOwn(value2 as object, prop)) {
+			return false;
+		}
 		if (!equals((value1 as any)[prop] as Value, (value2 as any)[prop] as Value, pairs)) {
 			return false;
 		}

@@ -19,7 +19,7 @@ describe("Execution timeout", () => {
 
 	it("checks the next loop condition against the outer evaluation's deadline", () => {
 		const inner = new Affinirum("1", { timeout: 100 });
-		const outer = new Affinirum("while condition(){next}", {
+		const outer = new Affinirum("while condition() loop {next}", {
 			timeout: 10,
 			variables: { condition: Type.functionType([[Type.Boolean, []]]) },
 		});
@@ -31,7 +31,7 @@ describe("Execution timeout", () => {
 		};
 		expect(() => outer.evaluate({ condition })).toThrow("execution timeout");
 		expect(conditions).toBe(1);
-		expect(new Affinirum("while false{0};1").evaluate()).toBe(1n);
+		expect(new Affinirum("while false loop {0};1").evaluate()).toBe(1n);
 	});
 
 	it("checks the shared deadline when invoking a script function from a child frame", () => {

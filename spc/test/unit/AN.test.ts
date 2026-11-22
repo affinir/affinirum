@@ -1,6 +1,13 @@
 import { Affinirum } from "../../../src/index.js";
 
 describe("AN function test", () => {
+	it("points to a non-string key in the first or a later object entry", () => {
+		for (const source of ["[123:3]", "['a':1, 123:3]"]) {
+			expect(() => Affinirum.parse(source))
+				.toThrow(`object key must be a string at position ${source.indexOf("123")}:`);
+		}
+	});
+
 	it("formats top-level null and undefined as null", () => {
 		for (const value of [undefined, null]) {
 			for (const whitespace of [undefined, " "]) {

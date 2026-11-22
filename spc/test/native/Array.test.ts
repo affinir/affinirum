@@ -33,7 +33,7 @@ describe("Array function test", () => {
 	});
 
 	it("gives composition callbacks immutable snapshots of the accumulated properties", () => {
-		const expression = new Affinirum("var first:[:]=[:];var second:[:]=[:];val built=['a','b'].Compose(func(acc:[:],key:string):integer { if key=='a'{first=acc}else{second=acc};1});[first,second,built]");
+		const expression = new Affinirum("var first:[:]=[:];var second:[:]=[:];val built=['a','b'].Compose(func(acc:[:],key:string):integer { if key=='a' then {first=acc}else{second=acc};1});[first,second,built]");
 		const result = expression.evaluate() as Value[];
 		expect(result).toEqual([{}, { a: 1n }, { a: 1n, b: 1n }]);
 		expect(result[0]).not.toBe(result[1]);
@@ -76,7 +76,7 @@ describe("Array function test", () => {
 			],
 		},
 		{
-			script: "[p,11].Derive(func (a:integer):integer? { val t=10; if (a>10){t}else{null} } )[i]",
+			script: "[p,11].Derive(func (a:integer):integer? { val t=10; if (a>10) then {t}else{null} } )[i]",
 			cases: [
 				{ values: { i: 1n, p: 10n }, result: 10n },
 				{ values: { i: 0n, p: 1n }, result: undefined },

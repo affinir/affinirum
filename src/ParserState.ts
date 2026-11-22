@@ -160,6 +160,9 @@ export class ParserState extends ParserSpan {
 					else if (token === "@") {
 						const [ts, tsEnd] = parseLiteralTimestamp(this._script, this._start);
 						this._end = tsEnd;
+						if (Number.isNaN(ts.getTime())) {
+							this.throwError("invalid timestamp");
+						}
 						this._value = new Literal(ts);
 					}
 					else if (token === "`") {
@@ -198,8 +201,9 @@ const tokens: [string, Type | Constant | Literal | false][] = [
 	["then", false],
 	["else", false],
 	["match", false],
+	["when", false],
 	["while", false],
-	["do", false],
+	["loop", false],
 	["until", false],
 	["next", false],
 	["exit", false],

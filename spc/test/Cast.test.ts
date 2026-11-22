@@ -41,15 +41,15 @@ describe("Cast test", () => {
 	it.each([
 		"(=>1:integer)",
 		"val f=func() { (->1:integer)};f()",
-		"while true {(exit:integer)}",
+		"while true loop {(exit:integer)}",
 		"({=>1;2}:integer)",
-		"(if true {=>1}else{2}:integer)",
+		"(if true then {=>1}else{2}:integer)",
 	])("rejects a cast operand that cannot produce a value in %s", (source) => {
 		expect(() => new Affinirum(source)).toThrow("cast operand must produce a value");
 	});
 
 	it("permits a cast operand that returns on only one branch", () => {
-		const expression = new Affinirum("(if stop {=>7}else{value}:integer)", {
+		const expression = new Affinirum("(if stop then {=>7}else{value}:integer)", {
 			variables: { stop: Type.Boolean, value: Type.Any },
 		});
 		expect(expression.evaluate({ stop: true, value: "unused" })).toBe(7n);

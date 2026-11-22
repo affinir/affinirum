@@ -152,8 +152,8 @@ const funcRandomFloat = new Constant(
 );
 
 const funcDecodeFloat = new Constant(
-	(value: ArrayBuffer | undefined, encoding: FloatEncoding = "f64", byteOffset?: bigint) =>
-		decodeFloat(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
+	(value: ArrayBuffer | undefined, encoding?: FloatEncoding, byteOffset?: bigint) =>
+		decodeFloat(value, encoding ?? "f64", byteOffset == null ? undefined : Number(byteOffset)),
 	Type.functionType([[Type.OptionalFloat, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]]]),
 );
 

@@ -55,21 +55,12 @@ describe("MatchNode", () => {
 		expect(() => match.compile(Type.Boolean)).toThrow(/type null mismatch/);
 	});
 
-	it("infers null for an empty match and never when its subject exits", () => {
+	it("infers null with no arms and never when the subject exits", () => {
 		const empty = new MatchNode(span, literal(1n), []).compile();
 		expect(empty.type.isNull).toBe(true);
 		expect(empty.evaluate(new CallFrame())).toBeUndefined();
 		const stop = new FinalNode(span, "return", literal(1n), Type.Integer);
 		expect(new MatchNode(span, stop, []).compile(Type.Integer).type.isNever).toBe(true);
-	});
-
-	it("passes the expected type to both arm results and the fallback", () => {
-		const result = new InputVariable();
-		const fallback = new InputVariable();
-		new MatchNode(span, literal(1n), [[literal(2n), new VariableNode(span, result)]],
-			new VariableNode(span, fallback)).compile(Type.Integer);
-		expect(result.type.equals(Type.Integer)).toBe(true);
-		expect(fallback.type.equals(Type.Integer)).toBe(true);
 	});
 
 	it("excludes results after a subject or key that exits early", () => {

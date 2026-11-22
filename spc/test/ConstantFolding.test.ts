@@ -28,7 +28,7 @@ describe("Constant folding test", () => {
 	});
 
 	it.each([true, false])("creates fresh nested arrays in the selected branch when the condition is %s", (condition) => {
-		const expression = new Affinirum(`val f=func():[] { if ${condition}{[1,[2]]}else{[3,[4]]}};[f(),f()]`);
+		const expression = new Affinirum(`val f=func():[] { if ${condition} then {[1,[2]]}else{[3,[4]]}};[f(),f()]`);
 		const expected = condition ? [1n, [2n]] : [3n, [4n]];
 		const first = expression.evaluate() as Value[][];
 		expect(first).toEqual([expected, expected]);
@@ -46,7 +46,7 @@ describe("Constant folding test", () => {
 		[true, Type.Integer, 5n],
 		[false, Type.String, "fallback"],
 	])("selects the compiled branch for condition %s even when a branch is non-constant", (condition, type, expected) => {
-		const expression = new Affinirum(`if ${condition}{value}else{'fallback'}`, {
+		const expression = new Affinirum(`if ${condition} then {value}else{'fallback'}`, {
 			variables: { value: Type.Integer },
 		});
 		expect(expression.type.equals(type)).toBe(true);
@@ -54,10 +54,10 @@ describe("Constant folding test", () => {
 	});
 
 	it("checks the selected result against the expected type after folding", () => {
-		const expression = new Affinirum("if true{1}else{'other'}", { type: Type.Integer });
+		const expression = new Affinirum("if true then {1}else{'other'}", { type: Type.Integer });
 		expect(expression.type.equals(Type.Integer)).toBe(true);
 		expect(expression.evaluate()).toBe(1n);
-		expect(() => new Affinirum("if false{1}else{'other'}", { type: Type.Integer }))
+		expect(() => new Affinirum("if false then {1}else{'other'}", { type: Type.Integer }))
 			.toThrow(/type string mismatch with expected type integer/);
 	});
 

@@ -69,8 +69,8 @@ export const funcAny = new Constant(
 );
 
 export const funcFlatten = new Constant(
-	(values: Value[], depth: bigint = 1n) =>
-		values ? (values as [])?.flat(Number(depth)) as Value : undefined,
+	(values: Value[], depth?: bigint) =>
+		values ? (values as [])?.flat(Number(depth ?? 1)) as Value : undefined,
 	Type.functionType([[Type.Array, [Type.Array, Type.OptionalInteger]]]),
 );
 
@@ -121,7 +121,7 @@ export const funcCompose = new Constant(
 		return obj;
 	},
 	Type.functionType([[Type.Object, [
-		Type.Array,
+		Type.arrayType(Type.String),
 		Type.functionType([[Type.Any, [Type.Object, Type.String, Type.Integer, Type.Array]]]),
 	]]]),
 );

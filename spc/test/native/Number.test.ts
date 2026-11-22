@@ -41,21 +41,21 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "100+ if c*2 > 10 { a*10 }else {b*20}",
+			script: "100+ if c*2 > 10 then { a*10 }else {b*20}",
 			cases: [
 				{ values: { c: 10n, a: 1n, b: 2n }, result: 110n },
 				{ values: { c: 1n, a: 1n, b: 2n }, result: 140n },
 			],
 		},
 		{
-			script: "100+(if (c*2 > 10) { a*10 } else {b*20-100})",
+			script: "100+(if (c*2 > 10) then { a*10 } else {b*20-100})",
 			cases: [
 				{ values: { c: 10n, a: 1n, b: 2n }, result: 110n },
 				{ values: { c: 1n, a: 1n, b: 2n }, result: 40n },
 			],
 		},
 		{
-			script: "100+(if c*2 > 10 { a*10 } else {b*20})-100",
+			script: "100+(if c*2 > 10 then { a*10 } else {b*20})-100",
 			cases: [
 				{ values: { c: 10n, a: 1n, b: 2n }, result: 10n },
 				{ values: { c: 1n, a: 1n, b: 2n }, result: 40n },
@@ -82,7 +82,7 @@ describe("Number function test", () => {
 			],
 		},
 		{
-			script: "((a:float) + b + c + d) * (a - b - c + 1) / b + 1 * (if (a < 23) { 10 } else { 20 })",
+			script: "((a:float) + b + c + d) * (a - b - c + 1) / b + 1 * (if (a < 23) then { 10 } else { 20 })",
 			cases: [
 				{ values: { a: 20, b: 10, c: 1, d: 2 }, result: 43 },
 			],

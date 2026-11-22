@@ -46,7 +46,7 @@ describe("Assignment test", () => {
 	});
 
 	it("keeps an inferred union from the initializer on later assignments", () => {
-		const expression = new Affinirum("var x=if condition{1}else{'two'};x=2;x='three';x", {
+		const expression = new Affinirum("var x=if condition then {1}else{'two'};x=2;x='three';x", {
 			variables: { condition: Type.Boolean },
 		});
 		expect(expression.type.equals(Type.union(Type.Integer, Type.String))).toBe(true);
@@ -61,12 +61,12 @@ describe("Assignment test", () => {
 
 	it("rejects assignments outside a declared union", () => {
 		expect(() => new Affinirum("var x:integer|string=1;x=true"))
-			.toThrow(/mismatch with expected type boolean/);
+			.toThrow("cannot assign boolean to integer|string");
 	});
 
 	it.each(["var y:integer=x;y", "var y:integer=0;y=x;y"])("rejects assigning a wider union in %s", (script) => {
 		expect(() => new Affinirum(script, { variables: { x: Type.union(Type.Integer, Type.String) } }))
-			.toThrow(/mismatch with expected type/);
+			.toThrow("cannot assign integer|string to integer");
 	});
 
 	it("allows reassignment with an explicit any type", () => {
@@ -131,8 +131,8 @@ describe("Assignment test", () => {
 	});
 
 	it.each([
-		"if false then val x:integer=1; x",
-		"while false do var x:integer=1; x",
+		"if (val x=true) then { x }",
+		"while (var x=false) loop { x }",
 		"1 ?: (var x:integer=1); x",
 		"val items:[]?=null; items?[(var x:integer=1)]; x",
 		"val text:string?=null; text?.CharAt((var x:integer=1)); x",
@@ -143,6 +143,6 @@ describe("Assignment test", () => {
 
 	it("rejects assignment of an incompatible type to a typed variable", () => {
 		expect(() => new Affinirum("var x:integer=0;x='text'"))
-			.toThrow(/type integer mismatch with expected type string/);
+			.toThrow("cannot assign string to integer");
 	});
 });

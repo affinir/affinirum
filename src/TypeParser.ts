@@ -1,24 +1,24 @@
 import { Type } from "./Type.js";
 import { ParserState } from "./ParserState.js";
-import { LexicalScope } from "./LexicalScope.js";
 
 export class TypeParser {
 
-	parse(state: ParserState, scope: LexicalScope): Type {
-		let type = this._function(state, scope);
+	parse(state: ParserState): Type {
+		let type = this._function(state);
 		while (state.equals("|")) { // type union
-			type = Type.union(type, this._function(state.next(), scope));
+			type = Type.union(type, this._function(state.next()));
 		}
 		return type;
 	}
 
-	protected _function(state: ParserState, scope: LexicalScope): Type {
-		let type = this._optional(state, scope);
+	protected _function(state: ParserState): Type {
+		let type = this._optional(state);
 		const signatures = type.functionSignatures();
 		while (type.isAtom && type.isFunction && state.equals("&")) {
-			const next = this._optional(state.next(), scope);
+			const span = state.next().start();
+			const next = this._optional(state);
 			if (!next.isAtom || !next.isFunction) {
-				state.throwError("missing function types");
+				span.throwError("missing function types");
 			}
 			signatures.push(...next.functionSignatures());
 			type = Type.functionType(signatures);
@@ -26,8 +26,8 @@ export class TypeParser {
 		return type;
 	}
 
-	protected _optional(state: ParserState, scope: LexicalScope): Type {
-		let type = this._element(state, scope);
+	protected _optional(state: ParserState): Type {
+		let type = this._element(state);
 		if (state.equals("?")) {
 			if (type.isNull || type.isNever) {
 				state.throwError(`optional suffix is invalid on type ${type}`);
@@ -38,7 +38,7 @@ export class TypeParser {
 		return type;
 	}
 
-	protected _element(state: ParserState, scope: LexicalScope): Type {
+	protected _element(state: ParserState): Type {
 		if (state.isType) { // literal type
 			const type = state.type;
 			state.next();
@@ -59,7 +59,7 @@ export class TypeParser {
 				if (object) {
 					state.next();
 				}
-				const valType = this.parse(state, scope);
+				const valType = this.parse(state);
 				state.closeBrackets();
 				state.next();
 				return object ? Type.objectType(valType) : Type.arrayType(valType);
@@ -73,11 +73,11 @@ export class TypeParser {
 				if (state.isLiteral && typeof state.literal.value === "string") {
 					const key = state.literal.value;
 					state.next().assertColon();
-					valTypes.push([key, this.parse(state.next(), scope)]);
+					valTypes.push([key, this.parse(state.next())]);
 					colon = true;
 				}
 				else {
-					valTypes.push([String(index++), this.parse(state, scope)]);
+					valTypes.push([String(index++), this.parse(state)]);
 				}
 				if (!state.equals(",")) {
 					break;
@@ -104,7 +104,7 @@ export class TypeParser {
 				if (variadic) {
 					state.next();
 				}
-				const argType = this.parse(state, scope);
+				const argType = this.parse(state);
 				argTypes.push(variadic ? Type.arrayType(argType) : argType);
 				if (variadic) {
 					break;
@@ -115,14 +115,14 @@ export class TypeParser {
 			}
 			state.closeParentheses();
 			state.next().assertColon();
-			const retType = this.parse(state.next(), scope);
+			const retType = this.parse(state.next());
 			state.closeBraces();
 			state.next();
 			return Type.functionType([[retType, argTypes, variadic]]);
 		}
 		else if (state.equals("(")) { // type grouping
 			state.next();
-			const type = this.parse(state, scope);
+			const type = this.parse(state);
 			state.closeParentheses();
 			state.next();
 			return type;

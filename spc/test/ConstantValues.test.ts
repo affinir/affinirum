@@ -1,15 +1,25 @@
-import { Affinirum } from "../../src/index.js";
+import { Affinirum, Value } from "../../src/index.js";
 import { runAffinirumTests } from "../util/AffinirumTest.js";
 
 describe("Constant value test", () => {
+	it.each<[string, string, Value]>([
+		["null", "null", undefined],
+		["false", "boolean", false],
+		["true", "boolean", true],
+		["0", "integer", 0n],
+		["\"\"", "string", ""],
+	])("infers the type and evaluates the literal %s", (source, type, value) => {
+		const expression = new Affinirum(source);
+		expect(expression.type.toString()).toBe(type);
+		expect(expression.evaluate()).toBe(value);
+	});
+
 	runAffinirumTests([
-		{ script: "null", cases: [{ result: undefined }] },
-		{ script: "false", cases: [{ result: false }] },
-		{ script: "true", cases: [{ result: true }] },
 		{ script: "@2020-01-02T16:10.Year", cases: [{ result: 2020n }] },
 		{ script: "@2020-01-02T16:10:10.120Z.Year(true)", cases: [{ result: 2020n }] },
 		{ script: "@2020-01-02T16:10:10.120.Month", cases: [{ result: 1n }] },
 		{ script: "@2020-01-02T16:10:10.120Z.Month(true)", cases: [{ result: 1n }] },
+		{ script: "@2000-01-02 .MonthIndex", cases: [{ result: 0n }] },
 		{ script: "@2000-01-02 03:04:05.999.MonthIndex", cases: [{ result: 0n }] },
 		{ script: "@2000-01-02 03:04:05.999Z.MonthIndex(true)", cases: [{ result: 0n }] },
 		{ script: "@2025-04-22 03:04:05.99.WeekdayIndex", cases: [{ result: 2n }] },
@@ -34,7 +44,6 @@ describe("Constant value test", () => {
 		{ script: "0.434e000002", cases: [{ result: 43.4 }] },
 		{ script: "4.1e-1", cases: [{ result: 0.41 }] },
 		{ script: "4.1e-01", cases: [{ result: 0.41 }] },
-		{ script: "0", cases: [{ result: 0n }] },
 		{ script: "123", cases: [{ result: 123n }] },
 		{ script: "100.Add(10)", cases: [{ result: 110n }] },
 		{ script: "100.Multiply(10)", cases: [{ result: 1000n }] },
@@ -43,7 +52,6 @@ describe("Constant value test", () => {
 		{ script: "`AAAA`.Format()", cases: [{ result: "aaaa" }] },
 		{ script: "``.Format()", cases: [{ result: "" }] },
 		{ script: "`ffff0001`.Slice(1).Format", cases: [{ result: "ff0001" }] },
-		{ script: "\"\"", cases: [{ result: "" }] },
 		{ script: "\"0 \"", cases: [{ result: "0 " }] },
 		{ script: "\"0\"+\"1\"+'2'", cases: [{ result: "012" }] },
 		{ script: "([100,200,300][1]:integer)+([1,2,3][0]:integer)", cases: [{ result: 201n }] },

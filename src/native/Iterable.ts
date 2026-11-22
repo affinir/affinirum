@@ -3,6 +3,7 @@ import { Value } from "../Value.js";
 import { Type } from "../Type.js";
 import { containsBuffer } from "./Buffer.js";
 import { containsString } from "./String.js";
+import { equals } from "./Unknown.js";
 
 export const funcLength = new Constant(
 	(value: ArrayBuffer | string | Value[] | { [ key: string ]: Value } | null | undefined) =>
@@ -25,8 +26,8 @@ export const funcContains = new Constant(
 				: typeof value === "string"
 					? containsString(value, search as string, start == null ? undefined : Number(start), ignoreCaseSpaceEtc)
 					: Array.isArray(value)
-						? value.includes(search, start == null ? undefined : Number(start))
-						: Object.values(value).includes(search),
+						? (start ? value.slice(Number(start)) : value).findIndex((item) => equals(item, search)) >= 0
+						: Object.values(value).some((item) => equals(item, search)),
 	Type.functionType([
 		[Type.Boolean, [Type.Buffer, Type.Buffer, Type.OptionalInteger]],
 		[Type.Boolean, [Type.String, Type.String, Type.OptionalInteger, Type.OptionalBoolean]],

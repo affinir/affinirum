@@ -153,8 +153,8 @@ const funcRandomInteger = new Constant(
 );
 
 const funcDecodeInteger = new Constant(
-	(value: ArrayBuffer | undefined, encoding: IntegerEncoding = "i64", byteOffset?: bigint) =>
-		decodeInteger(value, encoding, byteOffset == null ? undefined : Number(byteOffset)),
+	(value: ArrayBuffer | undefined, encoding?: IntegerEncoding, byteOffset?: bigint) =>
+		decodeInteger(value, encoding ?? "i64", byteOffset == null ? undefined : Number(byteOffset)),
 	Type.functionType([[Type.OptionalInteger, [Type.OptionalBuffer, Type.OptionalString, Type.OptionalInteger]]]),
 );
 

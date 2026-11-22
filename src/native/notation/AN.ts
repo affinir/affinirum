@@ -104,9 +104,10 @@ const parseObject = (state: ParserState, firstKey: string): { [key: string]: Val
 			state.next();
 			return obj;
 		}
+		const span = state.start();
 		const nextKey = parseLiteral(state);
 		if (typeof nextKey !== "string") {
-			state.throwError("object key must be a string");
+			return span.throwError("object key must be a string");
 		}
 		key = nextKey;
 	}
@@ -116,9 +117,6 @@ const parseObject = (state: ParserState, firstKey: string): { [key: string]: Val
 const parseLiteral = (state: ParserState): Value => {
 	if (state.isLiteral) {
 		const value = state.literal.value;
-		if (value instanceof Date && Number.isNaN(value.getTime())) {
-			state.throwError("invalid timestamp");
-		}
 		state.next();
 		return value;
 	}
@@ -171,10 +169,11 @@ const parseLiteral = (state: ParserState): Value => {
 		if (state.equals(",")) {
 			return parseArray(state, undefined);
 		}
+		const span = state.start();
 		const first = parseLiteral(state);
 		if (state.equals(":")) {
 			if (typeof first !== "string") {
-				state.throwError("object key must be a string");
+				return span.throwError("object key must be a string");
 			}
 			return parseObject(state, first);
 		}

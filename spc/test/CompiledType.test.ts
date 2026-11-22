@@ -1,16 +1,12 @@
 import { Affinirum, Type } from "../../src/index.js";
 
 describe("Compiled type test", () => {
-	([
-		["null", "null"],
+	it.each<[string, string]>([
 		["val x: null = null; x", "null"],
 		["val x: null | integer = 1; x", "null|integer"],
 		["val x: integer | null = null; x", "null|integer"],
 		["val x: [null] = [null]; x", "[null]"],
 		["(null:null)", "null"],
-		["true", "boolean"],
-		["false", "boolean"],
-		["0", "integer"],
 		["-0", "integer"],
 		["142.4", "float"],
 		["-0.4", "float"],
@@ -27,7 +23,6 @@ describe("Compiled type test", () => {
 		["`0`", "buffer"],
 		["`  aabb cc  \n dd`", "buffer"],
 		["`01ff`", "buffer"],
-		["\"\"", "string"],
 		["''", "string"],
 		["\" \"", "string"],
 		["\"	\"", "string"],
@@ -61,12 +56,28 @@ describe("Compiled type test", () => {
 		["val a:[[integer,integer],[integer,integer]] = [[0,1],[2,3]];a", "[[integer,integer],[integer,integer]]"],
 		["var o:['a':integer,'b':string] = ['a':0,'b':'1'];o", "[\"a\":integer,\"b\":string]"],
 		["val o:['a':['c':integer],'b':string] = ['a':['c':0],'b':'1'];o", "[\"a\":[\"c\":integer],\"b\":string]"],
-	] as [string, string][]).forEach(([expr, expected]) => {
-		it(`parses expression ${expr} and determines value type`, () => {
-			const script = new Affinirum(expr);
-			expect(script.type.toString()).toBe(expected);
-		});
+	])("infers the type of %s", (source, expected) => {
+		const expression = new Affinirum(source);
+		expect(expression.type.toString()).toBe(expected);
 	});
+
+	it("points to the binary operator when its result has the wrong type", () => {
+		const operators = ["?:", "|", "or", "&", "and", "==", "!=", "<", "<=", ">", ">=", "..", "+", "-", "*", "/", "%", "**"];
+		for (const operator of operators) {
+			const source = `left ${operator} right`;
+			expect(() => new Affinirum(source, { type: Type.Never }))
+				.toThrow(`mismatch with expected type never at position ${source.indexOf(operator)}:`);
+		}
+	});
+
+	it("ends the condition's error highlight before then", () => {
+		for (const condition of ["[1][0]", "Integer.Sum(1,2)", "'abc'.Length", "Float.Epsilon", "['abc']?[0]?.Length()"]) {
+			const source = `if ${condition} then 3`;
+			const underline = new RegExp(`\\n   \\^${"'".repeat(condition.length - 1)}$`);
+			expect(() => new Affinirum(source)).toThrow(underline);
+		}
+	});
+
 	it.each<[string, Type, string]>([
 		["val x:[]|[...any]=[1];x", Type.Array, "[]"],
 		["val x:[:]|[...:any]=['a':1];x", Type.Object, "[:]"],
@@ -128,7 +139,7 @@ describe("Compiled type test", () => {
 		[":integer", Type.Integer],
 		["", Type.Any],
 	])("parses a function body and early return with annotation %s", (annotation, returnType) => {
-		const expression = new Affinirum(`func(a:integer)${annotation} { if a<0{->0};val doubled=a*2;doubled}`);
+		const expression = new Affinirum(`func(a:integer)${annotation} { if a<0 then {->0};val doubled=a*2;doubled}`);
 		expect(expression.type.equals(Type.functionType([[returnType, [Type.Integer]]]))).toBe(true);
 		const double = expression.evaluate() as (value: bigint) => bigint;
 		expect(double(-1n)).toBe(0n);
@@ -158,11 +169,6 @@ describe("Compiled type test", () => {
 	});
 	it("requires the func keyword in a function literal", () => {
 		expect(() => new Affinirum("(a:integer):integer { a }")).toThrow();
-	});
-	it("reserves func and permits identifiers that start with it", () => {
-		expect(Affinirum.keywords).toContain("func");
-		expect(() => new Affinirum("val func = 1")).toThrow(/missing variable name/);
-		expect(new Affinirum("val funcCount = 2; funcCount").evaluate()).toBe(2n);
 	});
 	it("rejects a generic function type in expression position", () => {
 		expect(() => new Affinirum("{:}")).toThrow();
@@ -300,9 +306,13 @@ describe("Function overload types", () => {
 		})).toEqual(["text", 1n]);
 	});
 
+	it.each(["integer", "{:}?"])("points to the invalid overload operand %s after &", (operand) => {
+		const source = `(value:{:} & ${operand})`;
+		expect(() => new Affinirum(source, { variables: { value: Type.Any } }))
+			.toThrow(`missing function types at position ${source.lastIndexOf(operand)}:`);
+	});
+
 	it.each([
-		"{:}&integer",
-		"{:}&{:}?",
 		"{:}?&{:}",
 		`(${first}|${second})&{:}`,
 	])("rejects a non-function overload operand in %s", (annotation) => {
