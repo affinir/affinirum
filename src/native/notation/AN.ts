@@ -198,18 +198,40 @@ export const parseAN = (value: string | undefined): Value => {
 };
 
 const funcFormatAN = new Constant(
-	(value: Value, whitespace?: string) =>
-		formatAN(value, whitespace),
+	formatAN,
 	Type.functionType([[Type.String, [Type.Any, Type.OptionalString]]]),
 );
 
 const funcParseAN = new Constant(
-	(value: string | undefined) =>
-		parseAN(value),
+	parseAN,
 	Type.functionType([[typeAN, [Type.OptionalString]]]),
+);
+
+const funcParseANObject = new Constant(
+	(value: string | undefined) => {
+		const result = parseAN(value);
+		if (!Type.Object.acceptsValue(result)) {
+			throw new TypeError(`parsed value type ${Type.of(result)} mismatch with expected type ${Type.Object}`);
+		}
+		return result;
+	},
+	Type.functionType([[Type.Object, [Type.OptionalString]]]),
+);
+
+const funcParseANArray = new Constant(
+	(value: string | undefined) => {
+		const result = parseAN(value);
+		if (!Array.isArray(result)) {
+			throw new TypeError(`parsed value type ${Type.of(result)} mismatch with expected type ${Type.Array}`);
+		}
+		return result;
+	},
+	Type.functionType([[Type.Array, [Type.OptionalString]]]),
 );
 
 export const globAN = Object.assign(Object.create(null), {
 	Format: funcFormatAN,
 	Parse: funcParseAN,
+	ParseObject: funcParseANObject,
+	ParseArray: funcParseANArray,
 });

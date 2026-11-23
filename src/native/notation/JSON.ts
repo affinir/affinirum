@@ -11,19 +11,44 @@ export const formatJSON = (value: Value, whitespace?: string): string =>
 		whitespace,
 	);
 
+const parseJSON = (value: string | undefined): Value =>
+	value == null ? undefined : normalize(JSON.parse(value) as Value);
+
 const funcFormatJSON = new Constant(
-	(value: Value, whitespace?: string) =>
-		formatJSON(value, whitespace),
+	formatJSON,
 	Type.functionType([[Type.String, [typeJson, Type.OptionalString]]]),
 );
 
 const funcParseJSON = new Constant(
-	(value: string | undefined) =>
-		value == null ? undefined : normalize(JSON.parse(value) as Value),
+	parseJSON,
 	Type.functionType([[typeJson, [Type.OptionalString]]]),
+);
+
+const funcParseJSONObject = new Constant(
+	(value: string | undefined) => {
+		const result = parseJSON(value);
+		if (!Type.Object.acceptsValue(result)) {
+			throw new TypeError(`parsed value type ${Type.of(result)} mismatch with expected type ${Type.Object}`);
+		}
+		return result;
+	},
+	Type.functionType([[Type.Object, [Type.OptionalString]]]),
+);
+
+const funcParseJSONArray = new Constant(
+	(value: string | undefined) => {
+		const result = parseJSON(value);
+		if (!Array.isArray(result)) {
+			throw new TypeError(`parsed value type ${Type.of(result)} mismatch with expected type ${Type.Array}`);
+		}
+		return result;
+	},
+	Type.functionType([[Type.Array, [Type.OptionalString]]]),
 );
 
 export const globJSON = Object.assign(Object.create(null), {
 	Format: funcFormatJSON,
 	Parse: funcParseJSON,
+	ParseObject: funcParseJSONObject,
+	ParseArray: funcParseJSONArray,
 });

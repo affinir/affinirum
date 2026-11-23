@@ -792,11 +792,15 @@ Array.Join([[1,2]],[3])      // [[1,2],3]
 
 - **AN.Format(value: any, whitespace: string?):string** — Format a value as AN notation, including `null` values in arrays and objects
 - **AN.Parse(value: string?):(null | boolean | timestamp | float | integer | buffer | string | [] | [:])** — Parse an AN-formatted string; empty or `null` input returns `null`
+- **AN.ParseObject(value: string?):[:]** — Parse an AN object. Throws unless the top-level value is an object.
+- **AN.ParseArray(value: string?):[]** — Parse an AN array. Throws unless the top-level value is an array.
 
 #### JSON
 
 - **JSON.Format(value: (null | boolean | timestamp | float | integer | string | [] | [:]), whitespace: string?):string** — Format a value as JSON
 - **JSON.Parse(value: string?):(null | boolean | timestamp | float | integer | string | [] | [:])** — Parse a JSON-formatted string; standard JSON values are not revived as timestamps or integers
+- **JSON.ParseObject(value: string?):[:]** — Parse a JSON object. Throws unless the top-level value is an object.
+- **JSON.ParseArray(value: string?):[]** — Parse a JSON array. Throws unless the top-level value is an array.
 
 `JSON.Format` uses JavaScript `JSON.stringify`, with integers converted to decimal strings and JavaScript `null` or
 `undefined` values serialized as JSON `null` at every nesting level. Object keys and array positions are preserved.
