@@ -36,6 +36,7 @@ export class Affinirum {
 	protected readonly _script: string;
 	protected readonly _strict: boolean;
 	protected readonly _timeout: number;
+	protected readonly _parseOnly: boolean;
 	protected readonly _scope: LexicalScope;
 	protected readonly _root: Node;
 	protected readonly _type = new TypeParser();
@@ -53,16 +54,20 @@ export class Affinirum {
 			If expected type is provided then expression return type is matched against it.
 			If strict mode is set then undeclared variables will not be allowed in expression.
 			The default timeout is zero, which disables the timeout.
+			If parse-only mode is set then the script is parsed but not compiled: type checking and constant folding are skipped,
+			and the instance can only be used for syntax validation and toString(). Evaluation throws in this mode.
 	*/
 	constructor(script: string, config?: {
 		type?: Type,
 		strict?: boolean,
 		timeout?: number,
 		variables?: Record<string, Type>,
+		parseOnly?: boolean,
 	}) {
 		this._script = script;
 		this._scope = new LexicalScope(undefined, undefined, config?.type);
 		this._strict = config?.strict ?? false;
+		this._parseOnly = config?.parseOnly ?? false;
 		this._timeout = !config?.timeout || config.timeout < 0 ? 0 : config.timeout;
 		if (config?.variables) {
 			for (const [vname, vtype] of Object.entries(config.variables)) {
@@ -73,6 +78,9 @@ export class Affinirum {
 		this._root = this._list(state.next(), this._scope);
 		if (!state.isEnded) {
 			state.throwError("unexpected expression token or expression end");
+		}
+		if (this._parseOnly) {
+			return;
 		}
 		this._root = this._root.compile(this._scope.type);
 	}
@@ -118,6 +126,9 @@ export class Affinirum {
 		@throws If an input value is missing or evaluation fails.
 	*/
 	evaluate(values?: Record<string, Value>, timeout?: number): Value {
+		if (this._parseOnly) {
+			throw new Error("error: cannot evaluate an expression created in parse-only mode");
+		}
 		const timer = timeout && timeout >= 0
 			? timeout
 			: this._timeout;

@@ -567,6 +567,8 @@ console.log(expression.evaluate({ price: 12.5, quantity: 3n })); // 37.5
 - A referenced input declared as `Type.Never` causes a compilation error.
 - `strict: true` rejects undeclared input names during compilation. It does not change the language's type compatibility rules.
 - `type` specifies the expected result type to be checked during compilation.
+- `parseOnly: true` parses the script but skips type checking and constant folding. Use it to validate syntax; the instance
+  supports `toString()` but `evaluate()` throws. Errors raised by the parser itself, such as `->` outside a function, still occur.
 
 Every referenced input must be supplied as an own property of the object passed to `evaluate`, even if its value is `undefined`.
 Before checking input values against their inferred or declared types, `evaluate()` wraps input `bigint` values to the signed
