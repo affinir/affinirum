@@ -1,6 +1,14 @@
 import { Affinirum, Type, Value } from "../../src/index.js";
 
 describe("Cast test", () => {
+	it.each([
+		["(@2025-01-01:timestamp)", "2025-01-01T00:00:00.000Z"],
+		["(@2025-01-01 : timestamp)", "2025-01-01T00:00:00.000Z"],
+		["(@2025-01-01 12:34:56Z : timestamp)", "2025-01-01T12:34:56.000Z"],
+	])("casts the timestamp literal in %s", (source, expected) => {
+		expect(new Affinirum(source).evaluate()).toEqual(new Date(expected));
+	});
+
 	it.each(["boolean", "any"])("keeps Boolean operators outside a cast to %s", (type) => {
 		const expression = new Affinirum(`(value:${type}) & flag`);
 		expect(expression.evaluate({ value: true, flag: true })).toBe(true);

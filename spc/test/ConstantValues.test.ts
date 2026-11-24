@@ -1,4 +1,5 @@
 import { Affinirum, Value } from "../../src/index.js";
+import { parseLiteralNumber } from "../../src/native/Number.js";
 import { runAffinirumTests } from "../util/AffinirumTest.js";
 
 describe("Constant value test", () => {
@@ -7,11 +8,24 @@ describe("Constant value test", () => {
 		["false", "boolean", false],
 		["true", "boolean", true],
 		["0", "integer", 0n],
+		["if true then 1else 2", "integer", 1n],
+		["1e2", "float", 100],
+		["1e+2", "float", 100],
+		["1e-2", "float", 0.01],
 		["\"\"", "string", ""],
 	])("infers the type and evaluates the literal %s", (source, type, value) => {
 		const expression = new Affinirum(source);
 		expect(expression.type.toString()).toBe(type);
 		expect(expression.evaluate()).toBe(value);
+	});
+
+	it.each<[string, number | bigint, number]>([
+		["1e", 1n, 1],
+		["1e+", 1n, 1],
+		["1e-", 1n, 1],
+		["1.5e+x", 1.5, 3],
+	])("leaves an incomplete exponent for the next token in %s", (source, expected, end) => {
+		expect(parseLiteralNumber(source)).toEqual([expected, end]);
 	});
 
 	runAffinirumTests([

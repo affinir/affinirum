@@ -36,13 +36,16 @@ export const parseLiteralNumber = (value: string, offset = 0) => {
 	if (value.charAt(i) === "e") {
 		++i;
 		if (isNumericSymbol(value.charAt(i)) ||
-			isSignSymbol(value.charAt(i))) {
+			isSignSymbol(value.charAt(i)) && isNumericSymbol(value.charAt(i + 1))) {
 			++i;
 			while (isNumericSymbol(value.charAt(i))) {
 				++i;
 			}
+			integer = false;
 		}
-		integer = false;
+		else {
+			--i;
+		}
 	}
 	const str = value.slice(offset, i);
 	return [integer ? int64(BigInt(str)) : parseFloat(str), i] as const;
