@@ -31,6 +31,32 @@ describe("Value normalization test", () => {
 		expect(expression.evaluate({ values: [1n << 64n, 2n] })).toBe(2);
 	});
 
+	it("wraps scalar host results before the script compares them", () => {
+		const expression = new Affinirum("f()==expected", { variables: { f: Type.functionType([[Type.Integer, []]]) } });
+		const min = -0x8000000000000000n;
+		const max = 0x7FFFFFFFFFFFFFFFn;
+		expect(expression.evaluate({ f: () => max + 1n, expected: min })).toBe(true);
+		expect(expression.evaluate({ f: () => min - 1n, expected: max })).toBe(true);
+	});
+
+	it("wraps scalar results when Derive invokes an input callback", () => {
+		const transform = Type.functionType([[Type.Integer, [Type.Any, Type.Integer, Type.Array]]]);
+		const expression = new Affinirum("values.Derive(f)", { variables: { f: transform } });
+		const max = 0x7FFFFFFFFFFFFFFFn;
+		const f = (value: bigint, index: bigint) => value + index;
+		expect(expression.evaluate({ values: [max, max], f })).toEqual([max, -0x8000000000000000n]);
+	});
+
+	it("shares the wrapper across input references and preserves a function returned by the host", () => {
+		const f = () => 1n;
+		const type = Type.functionType([[Type.Integer, []]]);
+		const expression = new Affinirum("[f,nested[0],get()]", { variables: { get: Type.functionType([[type, []]]) } });
+		const [direct, nested, returned] = expression.evaluate({ f, nested: [f], get: () => f }) as Value[];
+		expect(direct).not.toBe(f);
+		expect(nested).toBe(direct);
+		expect(returned).toBe(f);
+	});
+
 	it.each([
 		"f()",
 		"=>f()",

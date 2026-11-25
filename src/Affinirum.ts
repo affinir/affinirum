@@ -124,12 +124,12 @@ export class Affinirum {
 		const stop = timer ? new Date(new Date().getTime() + timer) : undefined;
 		const frame = new CallFrame(stop, this._scope.variables());
 		try {
-			const composites = new WeakMap<object, Value>();
+			const normalized = new WeakMap<object, Value>();
 			for (const [name, variable] of this._variables) {
 				if (!values || !Object.hasOwn(values, name)) {
 					this._varspans.get(name)?.throwError(`undefined variable ${name}:\n`);
 				}
-				const value = normalize(values?.[name] ?? undefined, composites);
+				const value = normalize(values?.[name] ?? undefined, normalized);
 				if (!variable.type.acceptsValue(value)) {
 					this._varspans.get(name)?.throwError(`unexpected type ${Type.of(value)} for variable ${name} of type ${variable.type}:\n`);
 				}

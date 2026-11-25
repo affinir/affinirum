@@ -569,8 +569,9 @@ console.log(expression.evaluate({ price: 12.5, quantity: 3n })); // 37.5
 - `type` specifies the expected result type to be checked during compilation.
 
 Every referenced input must be supplied as an own property of the object passed to `evaluate`, even if its value is `undefined`.
-Before checking input values against their inferred or declared types, `evaluate()` wraps input `bigint` values to the signed
-64-bit range. Shared references are preserved within the copy.
+Before checking input types, `evaluate()` copies input arrays and records and converts all input `bigint` values to
+signed 64-bit integers, including those inside arrays and records. If two inputs refer to the same array or record,
+the script sees the same copy through both.
 
 | Instance member | Result |
 | --- | --- |
@@ -604,12 +605,20 @@ const result = expression.evaluate({
 }); // 90
 ```
 
-Affinirum checks that injected functions are callable and trusts their behavior and return values. Supply synchronous
-functions that return values matching their declared Affinirum types. Every returned `bigint` must be in the signed 64-bit
-range, including integers inside arrays and objects. Supply ordinary arrays with data elements and records created with
-`Object.create(null)` and enumerable string data fields. The same requirements apply to arguments when JavaScript calls a
-script function directly. `evaluate()` passes the final result through unchanged, with a top-level `null` returned as
-`undefined`.
+Affinirum checks that each input function is callable. The host must supply synchronous functions whose results match
+their declared Affinirum types. Each distinct input function gets one wrapper per evaluation, even if it appears in
+several places or inside an array or record.
+
+The wrapper forwards the arguments directly to the host function. If the function returns a `bigint`, the wrapper
+converts it to a signed 64-bit integer. For example, `2n ** 63n` becomes `-(2n ** 63n)`. The same rule applies when
+built-ins such as `Derive` or `Reduce` call the function.
+
+If the host function returns an array, a record, or another function, the script receives that same value by reference.
+The host must keep integers inside those arrays and records within the signed 64-bit range. The same requirement applies
+to integers produced by a returned function and to integers passed as arguments when JavaScript calls a script function
+directly. Use ordinary arrays with data elements. Create records with `Object.create(null)` and use enumerable string keys
+for their data fields.
+`evaluate()` returns the script result, converting a top-level `null` to `undefined`.
 
 List multiple signatures in one `Type.functionType` call when the implementation supports overloads:
 
